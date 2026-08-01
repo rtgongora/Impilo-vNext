@@ -12,13 +12,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.experience.client.IdentityAssuranceServiceClient;
 import zw.gov.mohcc.impilo.experience.client.KeycloakAdminClient;
 import zw.gov.mohcc.impilo.experience.service.ContactOtpService;
@@ -32,7 +29,6 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -45,13 +41,14 @@ class AuthContactOtpControllerTest {
 
     private static final Contact PHONE_CONTACT =
             new Contact("PHONE", "+263771234567", "+263*******67");
+    private static final Contact EMAIL_CONTACT =
+            new Contact("EMAIL", "person@example.test", "p***@example.test");
 
     @Mock private ContactOtpService contactOtpService;
     @Mock private KeycloakAdminClient keycloakAdminClient;
     @Mock private IdentityAssuranceServiceClient identityAssuranceClient;
     @Mock private ObjectProvider<JwtDecoder> jwtDecoderProvider;
     @Mock private JwtDecoder jwtDecoder;
-    @Mock private RestTemplate restTemplate;
     @Mock private HttpServletRequest servletRequest;
 
     private AuthContactOtpController controller;
@@ -59,7 +56,7 @@ class AuthContactOtpControllerTest {
     @BeforeEach
     void setUp() {
         controller = new AuthContactOtpController(contactOtpService, keycloakAdminClient,
-                identityAssuranceClient, jwtDecoderProvider, restTemplate);
+                identityAssuranceClient, jwtDecoderProvider);
         when(servletRequest.getRemoteAddr()).thenReturn("10.0.0.9");
         when(jwtDecoderProvider.getIfAvailable()).thenReturn(jwtDecoder);
     }
@@ -175,58 +172,53 @@ class AuthContactOtpControllerTest {
         @BeforeEach
         void otpPasses() {
             when(contactOtpService.verifyOtp(any(), any()))
-                    .thenReturn(new VerifyResult(VerifyOutcome.VERIFIED, PHONE_CONTACT));
+                    .thenReturn(new VerifyResult(VerifyOutcome.VERIFIED, EMAIL_CONTACT));
             when(keycloakAdminClient.createContactUser(any()))
                     .thenReturn(KeycloakAdminClient.KeycloakUserResult.created("kc-user-1"));
             when(keycloakAdminClient.serviceAccountBearer()).thenReturn("svc-token");
             when(identityAssuranceClient.recordContactVerified(any(), any(), any(), any()))
                     .thenReturn(new ObjectMapper().createObjectNode());
+            when(keycloakAdminClient.sendExecuteActionsEmail(
+                    eq("kc-user-1"), eq(java.util.List.of("UPDATE_PASSWORD")), eq(1800)))
+                    .thenReturn(true);
         }
 
         @Test
-        void createsCitizenUserRecordsAttestationAndFallsBackWhenAutoLoginFails() {
-            when(restTemplate.exchange(contains("openid-connect/token"), eq(HttpMethod.POST),
-                    any(HttpEntity.class), eq(com.fasterxml.jackson.databind.JsonNode.class)))
-                    .thenThrow(new RuntimeException("keycloak token endpoint down"));
-
+        void createsCitizenUserRecordsAttestationAndSendsNativeActivation() {
             ResponseEntity<Map<String, Object>> response = controller.verifyOtp(
                     "t1", "pod", "req", "corr", null,
-                    body("value", "0771234567", "code", "123456", "purpose", "REGISTER",
-                            "password", "Str0ng!Passw0rd"));
+                    body("value", "person@example.test", "code", "123456", "purpose", "REGISTER"));
 
             assertThat(response.getStatusCode().value()).isEqualTo(201);
             verify(keycloakAdminClient).createContactUser(any());
             verify(identityAssuranceClient).recordContactVerified(
-                    eq("kc-user-1"), eq("PHONE"), eq("+263*******67"), any());
+                    eq("kc-user-1"), eq("EMAIL"), eq("p***@example.test"), any());
+            verify(keycloakAdminClient).sendExecuteActionsEmail(
+                    "kc-user-1", java.util.List.of("UPDATE_PASSWORD"), 1800);
         }
 
         @Test
-        void autoLoginSuccessReturnsAuthTokenShape() throws Exception {
-            var token = new ObjectMapper().readTree(
-                    "{\"access_token\":\"at\",\"refresh_token\":\"rt\",\"expires_in\":300,\"refresh_expires_in\":1800}");
-            when(restTemplate.exchange(contains("openid-connect/token"), eq(HttpMethod.POST),
-                    any(HttpEntity.class), eq(com.fasterxml.jackson.databind.JsonNode.class)))
-                    .thenReturn(ResponseEntity.ok(token));
+        void registrationNeverReturnsBrowserTokenOrRefreshCookie() {
 
             ResponseEntity<Map<String, Object>> response = controller.verifyOtp(
                     "t1", "pod", "req", "corr", null,
-                    body("value", "0771234567", "code", "123456", "purpose", "REGISTER",
-                            "password", "Str0ng!Passw0rd"));
+                    body("value", "person@example.test", "code", "123456", "purpose", "REGISTER"));
 
-            assertThat(response.getStatusCode().value()).isEqualTo(200);
+            assertThat(response.getStatusCode().value()).isEqualTo(201);
             @SuppressWarnings("unchecked")
             Map<String, Object> data = (Map<String, Object>) response.getBody().get("data");
-            assertThat(data.get("type")).isEqualTo("auth_token");
-            assertThat(response.getHeaders().getFirst(HttpHeaders.SET_COOKIE))
-                    .contains("exp_refresh_token=rt");
+            assertThat(data.get("type")).isEqualTo("registration");
+            assertThat(response.getHeaders().getFirst(HttpHeaders.SET_COOKIE)).isNull();
+            assertThat(response.getBody().toString()).doesNotContain("access_token", "refresh_token");
         }
 
         @Test
-        void weakPasswordIs400_noUserCreated() {
+        void phoneVerificationCannotBootstrapAnAuthenticationCredential() {
+            when(contactOtpService.verifyOtp(any(), any()))
+                    .thenReturn(new VerifyResult(VerifyOutcome.VERIFIED, PHONE_CONTACT));
             ResponseEntity<Map<String, Object>> response = controller.verifyOtp(
                     "t1", "pod", "req", "corr", null,
-                    body("value", "0771234567", "code", "123456", "purpose", "REGISTER",
-                            "password", "short"));
+                    body("value", "0771234567", "code", "123456", "purpose", "REGISTER"));
             assertThat(response.getStatusCode().value()).isEqualTo(400);
             verify(keycloakAdminClient, never()).createContactUser(any());
         }
@@ -237,7 +229,7 @@ class AuthContactOtpControllerTest {
                     KeycloakAdminClient.KeycloakUserResult.failed("USER_EXISTS", "exists"));
             assertThat(controller.verifyOtp("t1", "pod", "req", "corr", null,
                     body("value", "0771234567", "code", "123456", "purpose", "REGISTER",
-                            "password", "Str0ng!Passw0rd")).getStatusCode().value()).isEqualTo(409);
+                            "email", "person@example.test")).getStatusCode().value()).isEqualTo(409);
         }
 
         @Test
@@ -247,8 +239,7 @@ class AuthContactOtpControllerTest {
 
             ResponseEntity<Map<String, Object>> response = controller.verifyOtp(
                     "t1", "pod", "req", "corr", null,
-                    body("value", "0771234567", "code", "123456", "purpose", "REGISTER",
-                            "password", "Str0ng!Passw0rd"));
+                    body("value", "person@example.test", "code", "123456", "purpose", "REGISTER"));
 
             assertThat(response.getStatusCode().value()).isEqualTo(503);
             verify(keycloakAdminClient).deleteUser("kc-user-1");

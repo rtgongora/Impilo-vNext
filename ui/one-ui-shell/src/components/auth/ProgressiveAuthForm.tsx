@@ -1,38 +1,18 @@
 "use client";
 
 /**
- * Progressive Auth Form — Unified "Sign in to Impilo" entry experience
- * with Express Entry Intent Selection and Progressive Credential Disclosure.
- *
- * Implements the doctrine:
- * 1. Single Door: "Sign in to Impilo" (no separate login products).
- * 2. Express Work Intent: Providers logging in for work select "Work & Practice" or arrive via work URLs,
- *    and land DIRECTLY in their work workspace (/work/facility, /ehr, /pharmacy) without personal citizen tabs.
- * 3. Progressive Disclosure: Step 1 Identifier -> Step 2 Credential Resolution.
+ * Single Impilo sign-in door. Identity intent is collected here; every password,
+ * passkey, TOTP and recovery-code interaction is hosted and verified by Keycloak.
+ * The shell never receives credentials or OAuth tokens.
  */
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { type FormEvent, useState } from "react";
-import {
-  ArrowRight,
-  BadgeCheck,
-  Building2,
-  ChevronDown,
-  ChevronUp,
-  Fingerprint,
-  KeyRound,
-  ScanFace,
-  Stethoscope,
-  UserCheck,
-} from "lucide-react";
-import { useLogin } from "@/hooks/queries/useAuth";
+import { useSearchParams } from "next/navigation";
+import { type FormEvent, type ReactNode, useState } from "react";
+import { ArrowRight, BadgeCheck, Building2, KeyRound, Stethoscope } from "lucide-react";
 import { INTENT_QUERY_PARAM } from "@/lib/gateway-intent";
 import { safePublicHref } from "@/components/public/ContinueWithoutSignIn";
-import { useAuthStore } from "@/hooks/useAuthStore";
-import { useConsentStore } from "@/hooks/useConsentStore";
-import { useWorkModeStore } from "@/hooks/useWorkModeStore";
-import { writeReturnHint } from "@/lib/return-hint";
+import { beginOidcLogin } from "@/lib/auth/web-session";
 
 type EntryIntent = "personal" | "work" | "regulatory";
 
@@ -41,382 +21,119 @@ interface ProgressiveAuthFormProps {
 }
 
 export function ProgressiveAuthForm({ returnTo }: ProgressiveAuthFormProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const intentToken = searchParams?.get(INTENT_QUERY_PARAM) || null;
-
-  // Auto-detect intent from return URL or query params
-  const defaultIntent: EntryIntent = (() => {
-    if (returnTo?.includes("/work") || returnTo?.includes("/provider") || returnTo?.includes("/ehr") || returnTo?.includes("/pharmacy")) {
-      return "work";
-    }
-    if (returnTo?.includes("/regulatory") || returnTo?.includes("/organization-admin")) {
-      return "regulatory";
-    }
-    return "personal";
-  })();
-
+  const defaultIntent: EntryIntent =
+    returnTo?.includes("/work") || returnTo?.includes("/provider") ||
+    returnTo?.includes("/ehr") || returnTo?.includes("/pharmacy")
+      ? "work"
+      : returnTo?.includes("/regulatory") || returnTo?.includes("/organization-admin")
+        ? "regulatory"
+        : "personal";
   const [intent, setIntent] = useState<EntryIntent>(defaultIntent);
-  const [step, setStep] = useState<"identifier" | "credential">("identifier");
   const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
-  const [showDevAccounts, setShowDevAccounts] = useState(false);
-  const [showAltMethods, setShowAltMethods] = useState(false);
-  const [rememberDevice, setRememberDevice] = useState(false);
 
-  const login = useLogin();
-  const setAuth = useAuthStore((s) => s.setAuth);
+  function destination(): string {
+    if (returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//")) return returnTo;
+    if (intent === "regulatory") return "/organization-admin";
+    return "/home";
+  }
 
-  /**
-   * Establish the client session from the login response.
-   *
-   * `useLogin` only posts and clears the query cache — it does not touch the auth
-   * store. Every other entry point (MFA, register, scan, passkey, provider-id) calls
-   * `setAuth` itself, and password login was the one path that never did: the token
-   * was discarded, `exp_has_session` was never written, and `middleware.ts` therefore
-   * bounced every guarded route straight back to /auth/login. A successful sign-in
-   * looked like nothing happening.
-   */
-  const establishSessionAndNavigate = (
-    attributes: { token: string; expiresAt: string; user: { id: string; email: string; displayName: string; roles: string[]; actorType: string } },
-  ) => {
-    const { token, expiresAt, user } = attributes;
-    setAuth(
-      {
-        id: user.id,
-        healthId: (user as { healthId?: string }).healthId ?? user.id,
-        email: user.email,
-        displayName: user.displayName,
-        roles: user.roles,
-        actorType: user.actorType as "PROVIDER" | "OPERATOR" | "CITIZEN" | "SYSTEM" | "CAREGIVER",
-        assuranceLevel: "VERIFIED",
-        providerActivated: false,
-        loginMethod: "email",
-      },
-      token,
-      null,
-      expiresAt,
-    );
-    // Both of these were in the pre-e1183d6ba login page and were dropped with it.
-    // deriveFromRoles seeds work mode; hydrate() loads an existing consent acceptance so
-    // the consent gate does not fire at /terms on a user who has already accepted.
-    useWorkModeStore.getState().deriveFromRoles(user.roles);
-    useConsentStore.getState().hydrate(user.id);
-    if (rememberDevice) writeReturnHint(user.displayName);
-    router.push(getTargetDestination());
-  };
-
-  const handleIdentifierSubmit = (e: FormEvent) => {
-    e.preventDefault();
+  function submit(event: FormEvent) {
+    event.preventDefault();
     if (!identifier.trim()) return;
-    setStep("credential");
-  };
-
-  const getTargetDestination = () => {
-    let target = returnTo;
-    if (intent === "work" && (!target || target === "/home" || target === "/")) {
-      // `/home` IS the work destination: app/home/page.tsx is the role-aware dashboard
-      // that carries the workplace hub and adapts on operationalMode. There is no
-      // `/home/workplace` route and there never has been — targeting it here sent every
-      // Work & Practice sign-in to a non-existent page after a successful login, which
-      // read to the user as "login does nothing".
-      target = "/home";
-    } else if (intent === "regulatory" && (!target || target === "/home" || target === "/")) {
-      target = "/organization-admin";
-    }
-    return target || "/home";
-  };
-
-  const handleFinalSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (!identifier || !password) return;
-
-    login.mutate(
-      {
-        email: identifier.trim(),
-        password,
-      },
-      {
-        onSuccess: (res) => {
-          establishSessionAndNavigate(res.data.attributes);
-        },
-      }
-    );
-  };
-
-  const handleQuickLogin = (email: string, pass: string) => {
-    setIdentifier(email);
-    setPassword(pass);
-    login.mutate(
-      { email, password: pass },
-      {
-        onSuccess: (res) => {
-          establishSessionAndNavigate(res.data.attributes);
-        },
-      }
-    );
-  };
+    beginOidcLogin({
+      returnTo: destination(),
+      loginHint: identifier,
+      requiredAcr: intent === "personal" ? null : "urn:impilo:aal2",
+    });
+  }
 
   return (
     <div className="w-full space-y-6" data-testid="progressive-auth-form">
-      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-          Sign in to Impilo
-        </h1>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Sign in to Impilo</h1>
         <p className="mt-1 text-sm text-slate-600">
           One identity entry for personal care, healthcare practice, and facility operations.
         </p>
       </div>
 
-      {/* Express Entry Intent Selector */}
       <div className="space-y-1.5" data-testid="express-intent-selector">
-        <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-          Sign-in Context
-        </label>
+        <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Sign-in context</span>
         <div className="grid grid-cols-3 gap-1.5 rounded-xl border border-slate-200 bg-slate-100/80 p-1">
-          <button
-            type="button"
-            onClick={() => setIntent("personal")}
-            className={`flex flex-col items-center justify-center rounded-lg py-2 px-1 text-center transition-all ${
-              intent === "personal"
-                ? "bg-white text-emerald-900 shadow-sm font-bold ring-1 ring-emerald-500/30"
-                : "text-slate-600 hover:text-slate-900 font-medium"
-            }`}
-          >
-            <span className="text-xs">Personal & Family</span>
-            <span className="text-[10px] text-slate-400 font-normal">My Impilo</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIntent("work")}
-            className={`flex flex-col items-center justify-center rounded-lg py-2 px-1 text-center transition-all ${
-              intent === "work"
-                ? "bg-amber-600 text-white shadow-sm font-bold ring-1 ring-amber-500"
-                : "text-slate-600 hover:text-slate-900 font-medium"
-            }`}
-          >
-            <span className="text-xs flex items-center gap-1">
-              <Stethoscope className="h-3 w-3 shrink-0" />
-              Work & Practice
-            </span>
-            <span className={intent === "work" ? "text-amber-100 text-[10px] font-normal" : "text-slate-400 text-[10px] font-normal"}>
-              Shift & Facility
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIntent("regulatory")}
-            className={`flex flex-col items-center justify-center rounded-lg py-2 px-1 text-center transition-all ${
-              intent === "regulatory"
-                ? "bg-slate-900 text-white shadow-sm font-bold ring-1 ring-slate-700"
-                : "text-slate-600 hover:text-slate-900 font-medium"
-            }`}
-          >
-            <span className="text-xs flex items-center gap-1">
-              <Building2 className="h-3 w-3 shrink-0" />
-              Regulatory
-            </span>
-            <span className={intent === "regulatory" ? "text-slate-300 text-[10px] font-normal" : "text-slate-400 text-[10px] font-normal"}>
-              Oversight
-            </span>
-          </button>
+          <IntentButton selected={intent === "personal"} onClick={() => setIntent("personal")}
+            title="Personal & Family" subtitle="My Impilo" />
+          <IntentButton selected={intent === "work"} onClick={() => setIntent("work")}
+            title="Work & Practice" subtitle="Shift & Facility" icon={<Stethoscope className="h-3 w-3" />} tone="amber" />
+          <IntentButton selected={intent === "regulatory"} onClick={() => setIntent("regulatory")}
+            title="Regulatory" subtitle="Oversight" icon={<Building2 className="h-3 w-3" />} tone="slate" />
         </div>
-
-        {intent === "work" && (
-          <p className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200/80 rounded-lg p-2 flex items-center gap-1.5">
-            <BadgeCheck className="h-4 w-4 text-amber-600 shrink-0" />
-            <span><strong>Work Context Active:</strong> After sign-in, you will land directly in your clinical workplace without personal citizen tabs.</span>
+        {intent !== "personal" && (
+          <p className="flex items-center gap-1.5 rounded-lg border border-amber-200/80 bg-amber-50 p-2 text-[11px] text-amber-800">
+            <BadgeCheck className="h-4 w-4 shrink-0 text-amber-600" />
+            Workforce sign-in requires multi-factor verification before access is granted.
           </p>
         )}
       </div>
 
-      {/* Step 1: Identifier Input */}
-      {step === "identifier" ? (
-        <form onSubmit={handleIdentifierSubmit} className="space-y-4">
-          <div className="space-y-1.5">
-            <label htmlFor="identifier-input" className="text-xs font-semibold text-slate-700">
-              Email, phone number, or Impilo ID
-            </label>
-            <input
-              id="identifier-input"
-              type="text"
-              required
-              placeholder="e.g. mapfumo@mohcc.gov.zw or 0771234567"
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-600/20"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={!identifier.trim()}
-            className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 px-4 text-sm font-semibold text-white shadow-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 disabled:opacity-50 transition-all"
-          >
-            Continue
-            <ArrowRight className="h-4 w-4" />
-          </button>
-
-          <div className="flex items-center justify-between pt-2 text-xs">
-            <Link
-              href={(() => {
-                const qs = new URLSearchParams();
-                if (returnTo) qs.set("returnTo", returnTo);
-                if (intentToken) qs.set(INTENT_QUERY_PARAM, intentToken);
-                const s = qs.toString();
-                return s ? `/auth/register/contact?${s}` : "/auth/register/contact";
-              })()}
-              className="font-medium text-emerald-700 hover:underline"
-            >
-              Create an account
-            </Link>
-            <Link href={safePublicHref(returnTo || "/")} className="text-slate-500 hover:text-slate-800">
-              Continue as guest
-            </Link>
-          </div>
-        </form>
-      ) : (
-        /* Step 2: Credential Resolution */
-        <form onSubmit={handleFinalSubmit} className="space-y-4">
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2 truncate">
-              <UserCheck className="h-4 w-4 text-emerald-600 shrink-0" />
-              <span className="font-semibold text-slate-800 truncate">{identifier}</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setStep("identifier")}
-              className="text-emerald-700 hover:underline font-medium shrink-0 ml-2"
-            >
-              Change
-            </button>
-          </div>
-
-          {login.isError && (
-            <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-xs text-red-800" role="alert">
-              {(login.error as Error)?.message || "Authentication failed. Please verify your credentials."}
-            </div>
-          )}
-
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
-              <label htmlFor="password-input">Password</label>
-              <Link href="/auth/forgot-password" className="text-emerald-700 hover:underline font-normal text-[11px]">
-                Forgot password?
-              </Link>
-            </div>
-            <input
-              id="password-input"
-              type="password"
-              required
-              autoFocus
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-600/20"
-            />
-          </div>
-
-          <label className="flex items-center gap-2 text-xs font-medium text-slate-600">
-            <input
-              type="checkbox"
-              checked={rememberDevice}
-              onChange={(e) => setRememberDevice(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-            />
-            Remember me on this device
+      <form onSubmit={submit} className="space-y-4">
+        <div className="space-y-1.5">
+          <label htmlFor="identifier-input" className="text-xs font-semibold text-slate-700">
+            Email, phone number, or Impilo ID / Provider ID
           </label>
-
-          <button
-            type="submit"
-            disabled={login.isPending || !password}
-            className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 px-4 text-sm font-semibold text-white shadow-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 disabled:opacity-50 transition-all"
-          >
-            {login.isPending ? "Signing in..." : "Sign in"}
-          </button>
-
-          {/* Progressive disclosure: Alternative sign-in methods */}
-          <div className="border-t border-slate-200 pt-3">
-            <button
-              type="button"
-              onClick={() => setShowAltMethods(!showAltMethods)}
-              className="w-full flex items-center justify-between text-xs text-slate-600 font-medium hover:text-slate-900"
-            >
-              <span className="flex items-center gap-1.5">
-                <KeyRound className="h-3.5 w-3.5 text-slate-500" />
-                Use another sign-in method
-              </span>
-              {showAltMethods ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-            </button>
-
-            {showAltMethods && (
-              <div className="mt-2.5 space-y-2 pt-1">
-                <Link
-                  href="/auth/login/biometric"
-                  className="flex items-center gap-2.5 rounded-lg border border-slate-200 p-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                >
-                  <Fingerprint className="h-4 w-4 text-emerald-600" />
-                  Sign in with Passkey
-                </Link>
-                <Link
-                  href="/auth/login/scan"
-                  className="flex items-center gap-2.5 rounded-lg border border-slate-200 p-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                >
-                  <ScanFace className="h-4 w-4 text-emerald-600" />
-                  Sign in with Fingerprint scan
-                </Link>
-              </div>
-            )}
-          </div>
-        </form>
-      )}
-
-      {/* Dev Quick-Login Drawer */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="border-t border-dashed border-amber-300 pt-3">
-          <button
-            type="button"
-            onClick={() => setShowDevAccounts(!showDevAccounts)}
-            className="w-full flex items-center justify-between text-xs font-semibold text-amber-700 hover:text-amber-900"
-          >
-            <span>DEV — Quick Test Personas</span>
-            {showDevAccounts ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-          </button>
-
-          {showDevAccounts && (
-            <div className="mt-2.5 grid grid-cols-2 gap-1.5 text-xs">
-              {/* These MUST match the seeded preview realm
-                  (deploy/helm/impilo-vnext/files/realm-impilo-preview.json).
-                  The previous list (mapfumo/chienda/zenda @mohcc.gov.zw, "test123") did not
-                  exist in that realm, so every quick-login could only ever 401. */}
-              {/* citizen.moyo's password is NOT the seed value in realm-impilo-preview.json.
-                  It was rotated, and the realm's passwordHistory(5) policy now permanently
-                  refuses the documented `Vashandi@2024!` — so the file cannot be made true
-                  for this account. `Vashandi@2026!` is the working value (verified: 200,
-                  actorType CITIZEN). See docs/runbooks/keycloak-auth-outage-runbook.md §8. */}
-              {[
-                { email: "citizen.moyo", password: "Vashandi@2026!", label: "Citizen", desc: "Citizen · PHR" },
-                { email: "vashandi.worker", password: "Vashandi@2024!", label: "Health worker", desc: "Nurse · Clinician" },
-                { email: "vashandi.facility", password: "Vashandi@2024!", label: "Facility admin", desc: "Facility admin · Clinician" },
-                { email: "superadmin", password: "Impilo@2024!", label: "Super admin", desc: "System admin · Developer" },
-              ].map((acct) => (
-                <button
-                  key={acct.email}
-                  type="button"
-                  onClick={() => handleQuickLogin(acct.email, acct.password)}
-                  className="text-left rounded-lg border border-amber-200 bg-amber-50/60 p-2 hover:bg-amber-100/80 transition-colors"
-                >
-                  <p className="font-bold text-amber-900 text-[11px]">{acct.label}</p>
-                  <p className="text-[10px] text-amber-700/80 truncate">{acct.desc}</p>
-                </button>
-              ))}
-            </div>
-          )}
+          <input id="identifier-input" type="text" required autoComplete="username"
+            placeholder="Enter your Impilo sign-in identifier" value={identifier}
+            onChange={(event) => setIdentifier(event.target.value)}
+            className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-600/20" />
         </div>
-      )}
+
+        <button type="submit" disabled={!identifier.trim()}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-md transition-all hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 disabled:opacity-50">
+          Continue to secure sign-in <ArrowRight className="h-4 w-4" />
+        </button>
+
+        <div className="flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 text-xs text-emerald-900">
+          <KeyRound className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>Password, passkey, authenticator and recovery-code checks happen on the protected Impilo identity service. This page never receives them.</span>
+        </div>
+
+        <div className="flex items-center justify-between pt-1 text-xs">
+          <Link href={registrationHref(returnTo, intentToken)} className="font-medium text-emerald-700 hover:underline">
+            Create an account
+          </Link>
+          <Link href={safePublicHref(returnTo || "/")} className="text-slate-500 hover:text-slate-800">
+            Continue as guest
+          </Link>
+        </div>
+      </form>
     </div>
+  );
+}
+
+function registrationHref(returnTo: string | null | undefined, intentToken: string | null): string {
+  const query = new URLSearchParams();
+  if (returnTo) query.set("returnTo", returnTo);
+  if (intentToken) query.set(INTENT_QUERY_PARAM, intentToken);
+  const suffix = query.toString();
+  return suffix ? `/auth/register/contact?${suffix}` : "/auth/register/contact";
+}
+
+function IntentButton({ selected, onClick, title, subtitle, icon, tone = "emerald" }: {
+  selected: boolean;
+  onClick: () => void;
+  title: string;
+  subtitle: string;
+  icon?: ReactNode;
+  tone?: "emerald" | "amber" | "slate";
+}) {
+  const selectedClass = tone === "amber" ? "bg-amber-600 text-white ring-amber-500" :
+    tone === "slate" ? "bg-slate-900 text-white ring-slate-700" :
+      "bg-white text-emerald-900 ring-emerald-500/30";
+  return (
+    <button type="button" onClick={onClick}
+      className={`flex flex-col items-center justify-center rounded-lg px-1 py-2 text-center transition-all ${selected ? `${selectedClass} font-bold shadow-sm ring-1` : "font-medium text-slate-600 hover:text-slate-900"}`}>
+      <span className="flex items-center gap-1 text-xs">{icon}{title}</span>
+      <span className={`text-[10px] font-normal ${selected && tone !== "emerald" ? "text-white/75" : "text-slate-400"}`}>{subtitle}</span>
+    </button>
   );
 }

@@ -177,14 +177,17 @@ public class SecurityConfig {
                             "/internal/v1/auth/oidc/callback",
                             "/internal/v1/auth/readiness").permitAll()
                     .requestMatchers("/internal/v1/auth/contact/otp/**").permitAll()
-                    // Legacy web/mobile bootstrap endpoints remain explicit during the ROPC cutover.
+                    // Fail closed on every legacy browser credential/token endpoint. Contact
+                    // verification above creates an account but passwords and authenticators
+                    // are set only through native Keycloak actions.
                     .requestMatchers(HttpMethod.POST,
                             "/internal/v1/auth/login",
-                            "/internal/v1/auth/register",
                             "/internal/v1/auth/refresh",
+                            "/internal/v1/auth/register",
                             "/internal/v1/auth/passkey/initiate",
                             "/internal/v1/auth/passkey/callback",
-                            "/internal/v1/auth/biometric/identify").permitAll()
+                            "/internal/v1/auth/biometric/identify-login",
+                            "/internal/v1/auth/mfa/verify").denyAll()
                     // Zero-to-one bootstrap: no national admin exists yet — policy enforced in BootstrapService/OPA
                     .requestMatchers(HttpMethod.GET, "/internal/v1/bootstrap/status").permitAll()
                     .requestMatchers(HttpMethod.POST, "/internal/v1/bootstrap/validate-token").permitAll()

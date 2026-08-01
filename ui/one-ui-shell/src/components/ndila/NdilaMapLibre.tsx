@@ -115,11 +115,6 @@ function markersFeatureCollection(markers: NdilaGeoMarker[]) {
   };
 }
 
-function readAuthToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return sessionStorage.getItem("exp:auth_token");
-}
-
 function ndilaTileTransformRequest(url: string): RequestParameters {
   if (url.includes("/internal/v1/ndila/tiles/") && (url.endsWith(".png") || url.endsWith(".mvt"))) {
     // MapLibre fetches tiles itself, bypassing api-client — synthesize the
@@ -130,8 +125,6 @@ function ndilaTileTransformRequest(url: string): RequestParameters {
       "X-Request-ID": crypto.randomUUID(),
       "X-Correlation-ID": sessionStorage.getItem("exp:correlation_id") ?? crypto.randomUUID(),
     };
-    const token = readAuthToken();
-    if (token) headers.Authorization = `Bearer ${token}`;
     return { url, headers, credentials: "include" };
   }
   return { url };

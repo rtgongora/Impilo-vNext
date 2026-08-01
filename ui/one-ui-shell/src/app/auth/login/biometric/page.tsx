@@ -19,43 +19,31 @@ import { useState } from "react";
 import { ArrowLeft, Fingerprint, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { AuthLayout } from "@/components/AuthLayout";
-import { usePasskeyInitiate } from "@/hooks/queries/useAuth";
 import { useAuthStore } from "@/hooks/useAuthStore";
-import { storePasskeyHandoff, isPasskeyNotEnabled } from "../passkey/passkey-session";
+import { beginKeycloakAction, beginOidcLogin } from "@/lib/auth/web-session";
 
 export default function BiometricLoginPage() {
-  const initiate = usePasskeyInitiate();
   const { isAuthenticated } = useAuthStore();
 
-  const [notEnabled, setNotEnabled] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [redirecting, setRedirecting] = useState(false);
 
-  function start(register: boolean) {
+  async function start(register: boolean) {
     setError(null);
-    setNotEnabled(false);
-    initiate.mutate(
-      { register },
-      {
-        onSuccess: (res) => {
-          const { authorizeUrl, state, codeVerifier } = res.data.attributes;
-          storePasskeyHandoff({ state, codeVerifier });
-          setRedirecting(true);
-          // Hand off to the Keycloak-hosted WebAuthn ceremony.
-          window.location.assign(authorizeUrl);
-        },
-        onError: (err: unknown) => {
-          if (isPasskeyNotEnabled(err)) {
-            setNotEnabled(true);
-          } else {
-            setError("Could not start passkey sign-in. Please try another method.");
-          }
-        },
-      }
-    );
+    setRedirecting(true);
+    if (!register) {
+      beginOidcLogin({ requiredAcr: "urn:impilo:aal2", returnTo: "/home" });
+      return;
+    }
+    try {
+      await beginKeycloakAction("webauthn-register-passwordless", "/settings/security");
+    } catch {
+      setRedirecting(false);
+      setError("Could not start passkey enrollment. Please try again.");
+    }
   }
 
-  const busy = initiate.isPending || redirecting;
+  const busy = redirecting;
 
   return (
     <AuthLayout>
@@ -88,22 +76,9 @@ export default function BiometricLoginPage() {
           {busy ? <Loader2 className="w-16 h-16 animate-spin" /> : <Fingerprint className="w-16 h-16" />}
         </div>
 
-        {notEnabled && (
-          <div
-            data-testid="passkey-not-enabled"
-            className="mt-6 w-full rounded-lg border border-border bg-muted/40 p-4 text-center"
-          >
-            <p className="text-sm font-medium text-foreground">Not available yet</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Passkey sign-in (WebAuthn) isn&apos;t enabled on this deployment yet. Please sign in with
-              your password or another method for now.
-            </p>
-          </div>
-        )}
       </div>
 
-      {!notEnabled && (
-        <button
+      <button
           type="button"
           data-testid="passkey-signin"
           disabled={busy}
@@ -121,10 +96,9 @@ export default function BiometricLoginPage() {
               Sign in with a passkey
             </>
           )}
-        </button>
-      )}
+      </button>
 
-      {!notEnabled && isAuthenticated && (
+      {isAuthenticated && (
         <button
           type="button"
           data-testid="passkey-register"

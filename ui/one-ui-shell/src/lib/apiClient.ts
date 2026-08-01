@@ -74,24 +74,16 @@ async function request<T>(
   const correlationId = randomUUID();
 
   // --- Build trust headers from stores ---
-  // Dynamic imports avoid circular deps and always read latest Zustand state
-  const { useSession } = await import("@/hooks/useSession");
+  // Context may describe the UI journey, but identity and assurance are always
+  // derived by the BFF from its opaque session and overwritten at the gateway.
   const { useWorkContext } = await import("@/hooks/useContext");
 
-  const session = useSession.getState().session;
   const ctx = useWorkContext.getState();
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     [TRUST_HEADERS.CORRELATION_ID]: correlationId,
   };
-
-  // Inject session-derived headers
-  if (session) {
-    headers["Authorization"] = `Bearer ${session.accessToken}`;
-    headers[TRUST_HEADERS.ACTOR_ID] = session.actorId;
-    headers[TRUST_HEADERS.ACTOR_TYPE] = session.actorType;
-  }
 
   // Inject work context headers
   if (ctx.workContext) {
@@ -121,6 +113,7 @@ async function request<T>(
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
+    credentials: "same-origin",
   });
 
   // --- Handle STEP_UP_REQUIRED (401) ---

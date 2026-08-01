@@ -22,7 +22,7 @@ import { useRequestAssuranceUpgrade, type AssuranceUpgradeTier } from "@/hooks/q
 
 export default function AssuranceChoicePage() {
   const router = useRouter();
-  const { user, setAuth, token, refreshToken, expiresAt } = useAuthStore();
+  const { user } = useAuthStore();
   const requestUpgrade = useRequestAssuranceUpgrade();
 
   const [selected, setSelected] = useState<AssuranceUpgradeTier | null>(null);
@@ -34,25 +34,14 @@ export default function AssuranceChoicePage() {
   }
 
   async function handleContinue() {
-    if (!selected || !user || !token) return;
+    if (!selected || !user) return;
     setSubmitting(true);
 
     try {
       setUpgradeError(null);
-      const assuranceLevel =
-        selected === "BASIC" ? "UNVERIFIED" as const
-        : selected === "TEMPORARY" ? "TEMPORARY" as const
-        : "VERIFIED" as const;
-
       await requestUpgrade.mutateAsync(selected);
-
-      setAuth(
-        { ...user, assuranceLevel },
-        token,
-        refreshToken,
-        expiresAt,
-      );
-
+      // The UI never promotes IAL locally. The next server-issued token/session
+      // carries the result after the governed proofing workflow completes.
       router.push("/consent?returnTo=/auth/register/status");
     } catch {
       setUpgradeError("Could not record your assurance choice. Please try again.");

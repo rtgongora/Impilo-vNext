@@ -7,8 +7,8 @@
  *   QueryClient > Auth > Facility > Workspace > Shift > Router
  *
  * Includes store hydration from session continuity on mount:
- * user metadata + continuity state in sessionStorage, access token in memory,
- * and session presence via cookie.
+ * user metadata + continuity state in sessionStorage, with OAuth tokens held
+ * only by the BFF in its encrypted server-side session.
  */
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -32,10 +32,11 @@ import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
 import { registerImpiloServiceWorker } from "@/lib/offline";
 import { apiClient } from "@/lib/api-client";
+import { authUserFromWebSession, type WebSessionResponse } from "@/lib/auth/web-session";
 
 function StoreHydrator({ children }: { children: ReactNode }) {
   const [, setHydrated] = useState(false);
-  const { setAuth, clearAuth } = useAuthStore();
+  const { hydrateSession, clearAuth } = useAuthStore();
   const { setFacility } = useFacilityStore();
   const { setWorkspace } = useWorkspaceStore();
   const { startShift } = useShiftStore();
@@ -43,49 +44,34 @@ function StoreHydrator({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    try {
-      const token = sessionStorage.getItem("exp:auth_token");
-      const userStr = sessionStorage.getItem("exp:auth_user");
-      const expiresAt = sessionStorage.getItem("exp:expires_at");
-      let hasAuthenticatedSession = false;
-
-      // Only hydrate session if a token exists and is valid
-      const isExpired = expiresAt ? new Date(expiresAt).getTime() - 60000 < Date.now() : false;
-
-      if (userStr && token && !isExpired) {
-        const user = JSON.parse(userStr);
-        setAuth(user, token, null, expiresAt);
+    const restore = async () => {
+      try {
+        // The cookie is HttpOnly, so server truth—not browser storage—decides whether
+        // a session exists. The BFF also refreshes its access token on this request.
+        const response = await apiClient.get<WebSessionResponse>("/internal/v1/auth/oidc/session");
+        const user = authUserFromWebSession(response.data);
+        hydrateSession(user, null, response.data.expiresAt ?? null);
         useOperationalContextStore.getState().ensureDefaultFromUser(user);
         useConsentStore.getState().hydrate(user.id);
         usePrivacyDisplayStore.getState().hydrate();
-        hasAuthenticatedSession = true;
-      } else {
-        // Clear stale unauthenticated session leftovers to prevent 401 redirect loops
+
+        const { facility, workspace, shift } = loadHydratedExperienceContinuity();
+        if (facility) setFacility(facility);
+        if (workspace) setWorkspace(workspace);
+        if (shift) startShift(shift);
+      } catch {
+        // No active opaque BFF session. Clear only authenticated/work continuity;
+        // public journey drafts live in their own stores and remain intact.
         clearAuth();
         resetExperienceContinuity();
+      } finally {
+        // The route guard waits for this signal before acting on missing auth.
+        useAuthStore.getState().markSessionRestoreAttempted();
+        setHydrated(true);
       }
-
-      if (hasAuthenticatedSession) {
-        const { facility, workspace, shift } = loadHydratedExperienceContinuity();
-        if (facility) {
-          setFacility(facility);
-        }
-        if (workspace) {
-          setWorkspace(workspace);
-        }
-        if (shift) {
-          startShift(shift);
-        }
-      }
-    } catch {
-      clearAuth();
-    }
-
-    // Announced on every path, including the catch: the route guard waits for this before it
-    // acts on a missing session, so failing to announce would leave guarded routes ungated.
-    useAuthStore.getState().markSessionRestoreAttempted();
-    setHydrated(true);
-  }, [setAuth, clearAuth, setFacility, setWorkspace, startShift]);
+    };
+    void restore();
+  }, [hydrateSession, clearAuth, setFacility, setWorkspace, startShift]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

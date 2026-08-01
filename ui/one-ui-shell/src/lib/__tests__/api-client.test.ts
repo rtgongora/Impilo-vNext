@@ -134,7 +134,7 @@ describe("apiClient", () => {
     expect(options.headers["X-Correlation-ID"]).toBe(MOCK_UUID);
   });
 
-  it("attaches Authorization header from the live auth store token", async () => {
+  it("never attaches a browser Authorization header even if legacy state contains a token", async () => {
     useAuthStore.setState({
       user: null,
       token: "my-jwt-token",
@@ -152,7 +152,7 @@ describe("apiClient", () => {
     await apiClient.get("/internal/v1/test");
 
     const [, options] = mockFetch.mock.calls[0];
-    expect(options.headers["Authorization"]).toBe("Bearer my-jwt-token");
+    expect(options.headers["Authorization"]).toBeUndefined();
   });
 
   it("does not attach Authorization header when no token exists", async () => {
@@ -413,7 +413,7 @@ describe("apiClient", () => {
       error: { code: "SESSION_EXPIRED", message: "Session expired" },
     });
 
-    expect(mockFetch.mock.calls[1]?.[0]).toBe("/internal/v1/auth/refresh");
+    expect(mockFetch.mock.calls[1]?.[0]).toBe("/internal/v1/auth/oidc/session");
     expect(mockFetch.mock.calls[1]?.[1]?.body).toBeUndefined();
     expect(mockFetch.mock.calls[1]?.[1]?.credentials).toBe("same-origin");
     expect(sessionStorageMock.getItem("exp:auth_token")).toBeNull();

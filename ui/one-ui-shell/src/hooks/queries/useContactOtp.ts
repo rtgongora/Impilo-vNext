@@ -13,7 +13,6 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
-import type { AuthTokenResource } from "@/hooks/queries/useAuth";
 
 // ── request ──────────────────────────────────────────────────────
 
@@ -54,7 +53,6 @@ export interface VerifyContactOtpPayload {
   value: string;
   code: string;
   purpose: "REGISTER";
-  password: string;
   firstName?: string;
   lastName?: string;
   fullName?: string;
@@ -79,12 +77,12 @@ export interface ContactRegistrationResource {
  */
 export function useVerifyContactOtp() {
   return useMutation<
-    ApiResponse<AuthTokenResource | ContactRegistrationResource>,
+    ApiResponse<ContactRegistrationResource>,
     unknown,
     VerifyContactOtpPayload
   >({
     mutationFn: (payload) =>
-      apiClient.post<ApiResponse<AuthTokenResource | ContactRegistrationResource>>(
+      apiClient.post<ApiResponse<ContactRegistrationResource>>(
         "/internal/v1/auth/contact/otp/verify",
         payload,
       ),

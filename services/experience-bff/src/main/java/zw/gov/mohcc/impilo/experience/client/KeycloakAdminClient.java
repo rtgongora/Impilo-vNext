@@ -139,11 +139,9 @@ public class KeycloakAdminClient {
             if (command.attributes() != null && !command.attributes().isEmpty()) {
                 userRep.put("attributes", command.attributes());
             }
-            userRep.put("credentials", List.of(Map.of(
-                    "type", "password",
-                    "value", command.password(),
-                    "temporary", false
-            )));
+            // Impilo never receives an initial password. Keycloak owns password
+            // creation through a short-lived native required-action link.
+            userRep.put("requiredActions", List.of("UPDATE_PASSWORD"));
 
             HttpHeaders adminHeaders = adminHeaders(adminToken);
             ResponseEntity<String> createResponse = restTemplate.exchange(
@@ -464,7 +462,6 @@ public class KeycloakAdminClient {
             String email,
             String firstName,
             String lastName,
-            String password,
             Map<String, List<String>> attributes,
             List<String> realmRoles,
             boolean emailVerified

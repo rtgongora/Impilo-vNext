@@ -1,209 +1,77 @@
 "use client";
 
-/**
- * Health Provider Login — identify-then-authenticate (D-P4, PJ5).
- *
- * The Provider ID only IDENTIFIES the account (it is often publicly known and
- * is never a secret); the person then authenticates with their own account
- * password. A Provider ID + short PIN as the sole credential is retired —
- * LOGIN-PROVIDERID-DENY (impilo.authz): a professional identifier never
- * authenticates by itself.
- *
- * Route: /auth/login/provider-id | pageTitle: "Health Provider Login"
- */
+/** Provider ID identifies an account; Keycloak performs every authentication step. */
 
 import { useState, type FormEvent } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, BadgeCheck, KeyRound, Loader2 } from "lucide-react";
+import { ArrowLeft, BadgeCheck, KeyRound } from "lucide-react";
 import { AuthLayout } from "@/components/AuthLayout";
-import { useLogin } from "@/hooks/queries/useAuth";
-import { useAuthStore } from "@/hooks/useAuthStore";
-import { useConsentStore } from "@/hooks/useConsentStore";
 import { useOperationalContextStore } from "@/hooks/useOperationalContextStore";
-import { useWorkModeStore } from "@/hooks/useWorkModeStore";
 import { buildPostLoginResolvingPath } from "@/lib/resolve-post-login-destination";
+import { beginOidcLogin } from "@/lib/auth/web-session";
 
 export default function ProviderIdLoginPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const returnTo = searchParams.get("returnTo");
-  const login = useLogin();
-  const setAuth = useAuthStore((s) => s.setAuth);
-  const setFocusedWorkMode = useOperationalContextStore((s) => s.setFocusedWorkMode);
-
+  const setFocusedWorkMode = useOperationalContextStore((state) => state.setFocusedWorkMode);
   const [providerId, setProviderId] = useState(searchParams.get("providerId") ?? "");
-  const [password, setPassword] = useState("");
-  const [signInFocusedWorkMode, setSignInFocusedWorkMode] = useState(false);
+  const [focused, setFocused] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setError(null);
-
+  function submit(event: FormEvent) {
+    event.preventDefault();
     if (!providerId.trim()) {
       setError("Please enter your Provider ID.");
       return;
     }
-
-    if (!password.trim() || password.length < 8) {
-      setError("Please enter your account password (at least 8 characters).");
-      return;
-    }
-
-    login.mutate(
-      {
-        email: providerId,
-        password,
-        method: "provider_id",
-      } as { email: string; password: string },
-      {
-        onSuccess: (res) => {
-          const { token, user } = res.data.attributes;
-          setAuth(
-            {
-              id: user.id,
-              email: user.email,
-              displayName: user.displayName,
-              roles: user.roles,
-              actorType: user.actorType as
-                | "PROVIDER"
-                | "OPERATOR"
-                | "CITIZEN"
-                | "SYSTEM",
-              assuranceLevel: "VERIFIED",
-              providerActivated: false,
-              loginMethod: "provider_id",
-            },
-            token,
-          );
-          useWorkModeStore.getState().deriveFromRoles(user.roles);
-          useConsentStore.getState().hydrate(user.id);
-          if (signInFocusedWorkMode) {
-            setFocusedWorkMode(true);
-          }
-          router.push(buildPostLoginResolvingPath(returnTo));
-        },
-        onError: () => {
-          // Generic on purpose — never confirm whether the Provider ID exists.
-          setError("We could not sign you in with those details. Please try again.");
-        },
-      },
-    );
+    if (focused) setFocusedWorkMode(true);
+    beginOidcLogin({
+      loginHint: providerId,
+      requiredAcr: "urn:impilo:aal2",
+      returnTo: buildPostLoginResolvingPath(returnTo),
+    });
   }
 
   return (
     <AuthLayout>
-      <div className="mb-4">
-        <Link
-          href="/auth/login"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to sign in
-        </Link>
-      </div>
-
-      <h2 className="text-xl font-semibold text-foreground mb-1">
-        Health Provider Login
-      </h2>
-      <p className="text-sm text-muted-foreground mb-6">
-        Your Provider ID identifies your account. You still sign in as yourself
-        — with your own password.
+      <Link href="/auth/login" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="h-4 w-4" /> Back to sign in
+      </Link>
+      <h2 className="mb-1 text-xl font-semibold text-foreground">Health Provider Login</h2>
+      <p className="mb-6 text-sm text-muted-foreground">
+        Your Provider ID identifies your account. Authentication and workforce MFA continue on the protected Impilo identity service.
       </p>
 
-      {error && (
-        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-danger">
-          {error}
-        </div>
-      )}
+      {error && <div role="alert" className="mb-4 rounded-lg border border-danger/28 bg-danger-soft p-3 text-sm text-danger">{error}</div>}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={submit} className="space-y-4">
         <div>
-          <label
-            htmlFor="provider-id"
-            className="block text-sm font-medium text-foreground mb-1"
-          >
-            Provider ID
-          </label>
+          <label htmlFor="provider-id" className="mb-1 block text-sm font-medium text-foreground">Provider ID</label>
           <div className="relative">
-            <BadgeCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              id="provider-id"
-              type="text"
-              required
-              value={providerId}
-              onChange={(e) => setProviderId(e.target.value)}
+            <BadgeCheck className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input id="provider-id" type="text" required autoComplete="username" value={providerId}
+              onChange={(event) => { setProviderId(event.target.value); setError(null); }}
               placeholder="e.g. PRV-2024-00001"
-              className="w-full pl-10 pr-4 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
-            />
+              className="w-full rounded-lg border border-border py-2.5 pl-10 pr-4 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-primary/40" />
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Identifies your account only — a Provider ID alone never signs you in
-          </p>
-        </div>
-
-        <div>
-          <label
-            htmlFor="account-password"
-            className="block text-sm font-medium text-foreground mb-1"
-          >
-            Account password
-          </label>
-          <div className="relative">
-            <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              id="account-password"
-              type="password"
-              required
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Your Impilo account password"
-              className="w-full pl-10 pr-4 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
-            />
-          </div>
+          <p className="mt-1 text-xs text-muted-foreground">A Provider ID alone never authenticates or grants authority.</p>
         </div>
 
         <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-background px-3 py-3">
-          <input
-            type="checkbox"
-            className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary/40"
-            checked={signInFocusedWorkMode}
-            onChange={(e) => setSignInFocusedWorkMode(e.target.checked)}
-          />
+          <input type="checkbox" checked={focused} onChange={(event) => setFocused(event.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary/40" />
           <span>
             <span className="block text-sm font-medium text-foreground">Sign in to focused work mode</span>
-            <span className="mt-0.5 block text-xs text-muted-foreground">
-              Hide personal and professional tabs; show only work zones after sign-in
-            </span>
+            <span className="mt-0.5 block text-xs text-muted-foreground">Show the work zones for your active role and context.</span>
           </span>
         </label>
 
-        <button
-          type="submit"
-          disabled={login.isPending || !providerId.trim() || !password.trim()}
-          className="w-full py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
-        >
-          {login.isPending ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Signing in...
-            </>
-          ) : (
-            "Sign In"
-          )}
+        <button type="submit" disabled={!providerId.trim()}
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-medium text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 disabled:opacity-50">
+          <KeyRound className="h-4 w-4" /> Continue to secure sign-in
         </button>
       </form>
-
-      <div className="mt-6 text-center">
-        <Link
-          href="/auth/login"
-          className="text-xs text-primary hover:text-primary-hover"
-        >
-          Sign in with email instead
-        </Link>
-      </div>
     </AuthLayout>
   );
 }

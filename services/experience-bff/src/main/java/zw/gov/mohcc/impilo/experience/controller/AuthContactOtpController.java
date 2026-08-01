@@ -1,28 +1,19 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.IdentityAssuranceServiceClient;
 import zw.gov.mohcc.impilo.experience.client.KeycloakAdminClient;
@@ -31,8 +22,6 @@ import zw.gov.mohcc.impilo.experience.service.ContactOtpService.Contact;
 import zw.gov.mohcc.impilo.experience.service.ContactOtpService.VerifyOutcome;
 import zw.gov.mohcc.impilo.experience.service.ContactOtpService.VerifyResult;
 
-import java.time.Duration;
-import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,63 +30,31 @@ import java.util.Map;
  * Contact verification + phone/email-OTP registration for the R1 "Reachable" rung
  * (gateway doctrine §4; roadmap W1 Workstream B; entitlements per PD-2).
  *
- * <p>All flows are app-layer: Keycloak realm files are untouched (KEYCLOAK-GATE).
- * Registration stays at the BFF door — the user is created server-side via the
+ * <p>Registration stays at the BFF door — the user is created server-side via the
  * Keycloak admin client with the CITIZEN role at LOA1, and the R1 rung is expressed
  * as a CONTACT_VERIFIED attestation in identity-assurance-service (the assurance SoR),
  * never as a parallel identity model.</p>
  *
- * <p>Deliberately absent: {@code POST /internal/v1/auth/login/otp}. Minting a session
- * for an <em>existing</em> user from OTP alone cannot be done with the current
- * server-side brokering (ROPC requires the password; Keycloak token-exchange /
- * impersonation would require realm + client configuration changes, violating
- * KEYCLOAK-GATE; the local fallback token is unsigned and rejected by every resource
- * server). Login remains password + existing flows.</p>
+ * <p>Contact OTP is registration/contact evidence only, never an authentication
+ * factor. Password creation and subsequent MFA are native Keycloak required actions.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/auth/contact/otp")
 public class AuthContactOtpController {
 
     private static final Logger log = LoggerFactory.getLogger(AuthContactOtpController.class);
-    private static final String REFRESH_COOKIE_NAME = "exp_refresh_token";
-
-    @Value("${KEYCLOAK_URL:http://localhost:8080}")
-    private String keycloakUrl;
-    @Value("${KEYCLOAK_REALM:impilo}")
-    private String realm;
-    @Value("${KEYCLOAK_CLIENT_ID:experience-ui}")
-    private String clientId;
-    @Value("${KEYCLOAK_TOKEN_SCOPE:openid profile email impilo-trust-headers}")
-    private String keycloakTokenScope;
-    @Value("${impilo.auth.refresh-cookie-secure:false}")
-    private boolean refreshCookieSecure;
-
     private final ContactOtpService contactOtpService;
     private final KeycloakAdminClient keycloakAdminClient;
     private final IdentityAssuranceServiceClient identityAssuranceClient;
     private final ObjectProvider<JwtDecoder> jwtDecoderProvider;
-    private final RestTemplate restTemplate;
-
-    /**
-     * The {@code RestTemplate} here serves exactly one call — the Keycloak ROPC exchange in
-     * {@link #ropcLogin} — so it takes the NON-intercepted {@code idpRestTemplate}. Found by the
-     * discovery rule in {@code IdentityProviderTemplateWiringTest}, not by the hand-built register
-     * of pre-set-Authorization sites: this class pre-sets nothing, it simply addressed the IdP on
-     * the intercepted template, so a password-grant token request carried the caller's bearer and
-     * ~30 Impilo trust headers. The identity-assurance hop in {@code serviceAccountHeaders()} is a
-     * different, typed client and correctly stays on the intercepted path.
-     */
     public AuthContactOtpController(ContactOtpService contactOtpService,
                                     KeycloakAdminClient keycloakAdminClient,
                                     IdentityAssuranceServiceClient identityAssuranceClient,
-                                    ObjectProvider<JwtDecoder> jwtDecoderProvider,
-                                    @org.springframework.beans.factory.annotation.Qualifier("idpRestTemplate")
-                                    RestTemplate idpRestTemplate) {
+                                    ObjectProvider<JwtDecoder> jwtDecoderProvider) {
         this.contactOtpService = contactOtpService;
         this.keycloakAdminClient = keycloakAdminClient;
         this.identityAssuranceClient = identityAssuranceClient;
         this.jwtDecoderProvider = jwtDecoderProvider;
-        this.restTemplate = idpRestTemplate;
     }
 
     /**
@@ -204,10 +161,9 @@ public class AuthContactOtpController {
     private ResponseEntity<Map<String, Object>> completeRegistration(
             Contact contact, Map<String, Object> body, String requestId, String correlationId) {
 
-        String password = str(body, "password");
-        if (password.length() < 12) {
-            return error(HttpStatus.BAD_REQUEST, "VALIDATION",
-                    "Password must be at least 12 characters and include upper, lower, digit, and special character");
+        if (!"EMAIL".equals(contact.channel())) {
+            return error(HttpStatus.BAD_REQUEST, "EMAIL_REQUIRED_FOR_ACTIVATION",
+                    "Account activation requires a verified email address. Phone verification may be attached after sign-in.");
         }
         String firstName = str(body, "firstName");
         String lastName = str(body, "lastName");
@@ -230,7 +186,7 @@ public class AuthContactOtpController {
                 new KeycloakAdminClient.ContactUserCommand(
                         contact.normalizedValue(),
                         "EMAIL".equals(contact.channel()) ? contact.normalizedValue() : null,
-                        firstName, lastName, password,
+                        firstName, lastName,
                         attributes, List.of("CITIZEN"),
                         "EMAIL".equals(contact.channel())));
 
@@ -252,92 +208,23 @@ public class AuthContactOtpController {
                     "Registration is temporarily unavailable. Please try again shortly.");
         }
 
+        if (!keycloakAdminClient.sendExecuteActionsEmail(
+                created.userId(), List.of("UPDATE_PASSWORD"), 1800)) {
+            keycloakAdminClient.deleteUser(created.userId());
+            return error(HttpStatus.SERVICE_UNAVAILABLE, "ACTIVATION_DELIVERY_UNAVAILABLE",
+                    "Account activation email could not be delivered. Please try again shortly.");
+        }
+
         log.info("R1 contact registration complete: channel={} contact={} keycloakId={}",
                 contact.channel(), contact.maskedValue(), created.userId());
-
-        // Auto-login via the existing ROPC brokering (password grant with the password
-        // chosen at registration; app-layer only, no realm change).
-        ResponseEntity<Map<String, Object>> login = ropcLogin(
-                contact, created.userId(), password, requestId, correlationId);
-        if (login != null) {
-            return login;
-        }
 
         Map<String, Object> attributesOut = new LinkedHashMap<>();
         attributesOut.put("status", "REGISTERED");
         attributesOut.put("channel", contact.channel());
         attributesOut.put("maskedValue", contact.maskedValue());
-        attributesOut.put("message", "Account created. Please sign in.");
+        attributesOut.put("message", "Account created. Use the secure activation email to set your password, then sign in.");
         return ResponseEntity.status(HttpStatus.CREATED).body(envelope(
                 "registration", attributesOut, requestId, correlationId));
-    }
-
-    private ResponseEntity<Map<String, Object>> ropcLogin(Contact contact, String userId,
-                                                          String password,
-                                                          String requestId, String correlationId) {
-        try {
-            String tokenUrl = keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/token";
-            MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
-            form.add("grant_type", "password");
-            form.add("client_id", clientId);
-            form.add("username", contact.normalizedValue());
-            form.add("password", password);
-            if (keycloakTokenScope != null && !keycloakTokenScope.isBlank()) {
-                form.add("scope", keycloakTokenScope.trim());
-            }
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-            ResponseEntity<JsonNode> tokenResponse = restTemplate.exchange(
-                    tokenUrl, HttpMethod.POST, new HttpEntity<>(form, headers), JsonNode.class);
-            if (!tokenResponse.getStatusCode().is2xxSuccessful() || tokenResponse.getBody() == null) {
-                return null;
-            }
-            JsonNode tokenData = tokenResponse.getBody();
-            String accessToken = tokenData.path("access_token").asText(null);
-            if (accessToken == null) {
-                return null;
-            }
-            String refreshToken = tokenData.hasNonNull("refresh_token")
-                    ? tokenData.get("refresh_token").asText() : null;
-            int expiresIn = tokenData.path("expires_in").asInt(28800);
-            int refreshExpiresIn = tokenData.path("refresh_expires_in").asInt(expiresIn * 6);
-
-            Map<String, Object> user = new LinkedHashMap<>();
-            user.put("id", userId);
-            user.put("healthId", userId);
-            user.put("identifier", contact.normalizedValue());
-            user.put("displayName", contact.maskedValue());
-            user.put("roles", List.of("CITIZEN"));
-            user.put("actorType", "CITIZEN");
-            user.put("method", "PHONE".equals(contact.channel()) ? "phone-otp" : "email-otp");
-
-            Map<String, Object> attributes = new LinkedHashMap<>();
-            attributes.put("token", accessToken);
-            attributes.put("expiresAt", OffsetDateTime.now().plusSeconds(expiresIn).toString());
-            attributes.put("expiresIn", expiresIn);
-            attributes.put("user", user);
-
-            Map<String, Object> response = new LinkedHashMap<>();
-            response.put("data", Map.of("id", userId, "type", "auth_token", "attributes", attributes));
-            response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-
-            ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
-            if (refreshToken != null && !refreshToken.isBlank()) {
-                builder.header(HttpHeaders.SET_COOKIE, ResponseCookie
-                        .from(REFRESH_COOKIE_NAME, refreshToken)
-                        .httpOnly(true)
-                        .secure(refreshCookieSecure)
-                        .sameSite("Lax")
-                        .path("/")
-                        .maxAge(Duration.ofSeconds(Math.max(refreshExpiresIn, 0)))
-                        .build().toString());
-            }
-            return builder.body(response);
-        } catch (Exception e) {
-            log.warn("Auto-login after contact registration failed: {}", e.getMessage());
-            return null;
-        }
     }
 
     // ── ATTACH ───────────────────────────────────────────────────────────────

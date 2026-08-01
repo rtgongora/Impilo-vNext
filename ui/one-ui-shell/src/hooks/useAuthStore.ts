@@ -6,7 +6,7 @@
  *
  * Provider tree position: QueryClient > [AuthProvider] > Facility > Workspace > Shift > Router
  * Persistence keys: exp:auth_user, exp:expires_at,
- *   exp:provider_id (sessionStorage). Access tokens stay in memory.
+ *   exp:provider_id (sessionStorage). OAuth tokens never enter the browser.
  */
 
 import { create } from "zustand";
@@ -117,7 +117,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   markSessionRestoreAttempted: () => set({ sessionRestoreAttempted: true }),
 
-  setAuth: (user, token, refreshToken, expiresAt) => {
+  setAuth: (user, _token, _refreshToken, expiresAt) => {
     const currentUser = get().user;
     const shouldResetContinuity = currentUser
       ? currentUser.id !== user.id
@@ -130,8 +130,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     if (typeof window !== "undefined") {
-      if (token) sessionStorage.setItem("exp:auth_token", token);
-      else sessionStorage.removeItem("exp:auth_token");
+      // Legacy callers may still pass a token while their journey is being migrated.
+      // Deliberately discard it: browser OAuth material is prohibited; the BFF-held
+      // opaque session cookie is the only authentication credential.
+      sessionStorage.removeItem("exp:auth_token");
       sessionStorage.setItem("exp:auth_user", JSON.stringify(user));
       if (expiresAt) sessionStorage.setItem("exp:expires_at", expiresAt);
       else sessionStorage.removeItem("exp:expires_at");
@@ -146,13 +148,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         sessionStorage.setItem("exp:assurance_level", user.assuranceLevel);
       }
     }
-    if (typeof document !== "undefined") {
-      document.cookie = "exp_has_session=1;path=/;SameSite=Lax";
-    }
-    set({ user, token, refreshToken: refreshToken ?? null, expiresAt: expiresAt ?? null, isAuthenticated: true });
+    set({ user, token: null, refreshToken: null, expiresAt: expiresAt ?? null, isAuthenticated: true });
   },
 
-  hydrateSession: (user, refreshToken, expiresAt) => {
+  hydrateSession: (user, _refreshToken, expiresAt) => {
     const currentUser = get().user;
     const shouldResetContinuity = currentUser
       ? currentUser.id !== user.id
@@ -177,18 +176,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         sessionStorage.setItem("exp:assurance_level", user.assuranceLevel);
       }
     }
-    if (typeof document !== "undefined") {
-      document.cookie = "exp_has_session=1;path=/;SameSite=Lax";
-    }
-    set({ user, token: null, refreshToken: refreshToken ?? null, expiresAt: expiresAt ?? null, isAuthenticated: true });
+    set({ user, token: null, refreshToken: null, expiresAt: expiresAt ?? null, isAuthenticated: true });
   },
 
-  setTokens: (token, refreshToken, expiresAt) => {
+  setTokens: (_token, _refreshToken, expiresAt) => {
     if (typeof window !== "undefined") {
       if (expiresAt) sessionStorage.setItem("exp:expires_at", expiresAt);
       else sessionStorage.removeItem("exp:expires_at");
     }
-    set({ token, refreshToken: refreshToken ?? get().refreshToken, expiresAt: expiresAt ?? get().expiresAt });
+    // Retained temporarily for source compatibility only. Never retain OAuth tokens.
+    set({ token: null, refreshToken: null, expiresAt: expiresAt ?? get().expiresAt });
   },
 
   clearAuth: () => {
@@ -198,9 +195,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       sessionStorage.removeItem("exp:expires_at");
       sessionStorage.removeItem("exp:consent_accepted");
       sessionStorage.removeItem("exp:consent_version");
-    }
-    if (typeof document !== "undefined") {
-      document.cookie = "exp_has_session=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT";
     }
     resetExperienceContinuity();
     if (typeof window !== "undefined") {
@@ -230,8 +224,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   activateProvider: (providerId?: string) => {
-    const { user, token } = get();
-    if (!user || !token) return;
+    const { user } = get();
+    if (!user) return;
     // Use the passed providerId, or fall back to linkedIds.providerId, or existing providerId
     const resolvedProviderId = providerId ?? user.linkedIds?.providerId ?? user.providerId;
     if (!resolvedProviderId) return;

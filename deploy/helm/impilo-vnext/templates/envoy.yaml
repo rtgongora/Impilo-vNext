@@ -45,6 +45,17 @@ data:
                               {{- end }}
                             - match: { prefix: "/internal/v1/auth/" }
                               route: { cluster: experience_bff }
+                              request_headers_to_remove:
+                                - "x-actor-id"
+                                - "x-actor-type"
+                                - "x-assurance-level"
+                                - "x-authentication-aal"
+                                - "x-authentication-amr"
+                                - "x-authentication-time"
+                                - "x-authentication-step-up-time"
+                                - "x-authentication-phishing-resistant"
+                                - "x-authentication-session-id"
+                                - "x-authentication-flow-id"
                               {{- if .Values.envoy.extAuthz.enabled }}
                               typed_per_filter_config:
                                 envoy.filters.http.ext_authz:
@@ -61,6 +72,15 @@ data:
                                 - "x-actor-id"
                                 - "x-actor-type"
                                 - "x-assurance-level"
+                                - "x-ial"
+                                - "x-aal"
+                                - "x-authentication-aal"
+                                - "x-authentication-amr"
+                                - "x-authentication-time"
+                                - "x-authentication-step-up-time"
+                                - "x-authentication-phishing-resistant"
+                                - "x-authentication-session-id"
+                                - "x-authentication-flow-id"
                                 - "x-purpose-of-use"
                                 - "x-subject-id"
                                 - "x-work-context-token"
@@ -92,6 +112,16 @@ data:
                               route:
                                 cluster: experience_bff
                               request_headers_to_remove:
+                                # Authentication assurance is derived from the validated
+                                # token by Tshepo and copied back below. A browser value
+                                # must never survive when a token has no such assurance.
+                                - "x-authentication-aal"
+                                - "x-authentication-amr"
+                                - "x-authentication-time"
+                                - "x-authentication-step-up-time"
+                                - "x-authentication-phishing-resistant"
+                                - "x-authentication-session-id"
+                                - "x-authentication-flow-id"
                                 - "x-obligations"
                                 - "x-visibility-tier"
                                 - "x-pii-access"
@@ -187,6 +217,13 @@ data:
                                 - exact: "x-provider-id"
                                 - exact: "x-subject-id"
                                 - exact: "x-assurance-level"
+                                - exact: "x-authentication-aal"
+                                - exact: "x-authentication-amr"
+                                - exact: "x-authentication-time"
+                                - exact: "x-authentication-step-up-time"
+                                - exact: "x-authentication-phishing-resistant"
+                                - exact: "x-authentication-session-id"
+                                - exact: "x-authentication-flow-id"
                                 # Visibility obligations. A service that masks or suppresses
                                 # fields cannot honour an obligation it never received.
                                 - exact: "x-visibility-tier"

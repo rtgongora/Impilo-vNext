@@ -2,32 +2,27 @@
 
 /**
  * Contact-first account creation — R1 "Reachable" rung (gateway doctrine §4).
- * Route: /auth/register/contact | pageTitle: "Create account with phone or email"
+ * Route: /auth/register/contact | pageTitle: "Create account with email"
  *
  * Two steps, one contact channel:
- *   1. Full name + a single phone/email + Privacy/Terms → request an OTP.
- *   2. Enter the code + choose a password → verify REGISTER.
+ *   1. Full name + email + Privacy/Terms → request an OTP.
+ *   2. Verify the code; Keycloak then emails its native password action.
  *
- * On verify the BFF returns the same `auth_token` envelope as login (HTTP 200,
- * auto-login) or a `registration` envelope (HTTP 201) when a token could not be
- * minted. Journey context (a pending gateway intent) survives the whole flow so
+ * Impilo never receives a password. Journey context (a pending gateway intent)
+ * survives the whole flow so
  * the person returns to the exact step they were on — never restarted.
  */
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, type FormEvent } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
   AtSign,
   CheckCircle2,
   Loader2,
-  Lock,
   Mail,
-  Phone,
   User,
-  Eye,
-  EyeOff,
 } from "lucide-react";
 import { AuthLayout } from "@/components/AuthLayout";
 import { OtpCodeInput } from "@/components/auth/OtpCodeInput";
@@ -36,13 +31,7 @@ import { NompiloHint } from "@/components/intelligent/NompiloHint";
 import {
   useRequestContactOtp,
   useVerifyContactOtp,
-  type ContactRegistrationResource,
 } from "@/hooks/queries/useContactOtp";
-import type { AuthTokenResource } from "@/hooks/queries/useAuth";
-import { useAuthStore } from "@/hooks/useAuthStore";
-import { useConsentStore, CURRENT_CONSENT_VERSION } from "@/hooks/useConsentStore";
-import { useAcceptPolicyConsent } from "@/hooks/queries/usePolicyConsent";
-import { useWorkModeStore } from "@/hooks/useWorkModeStore";
 import {
   INTENT_QUERY_PARAM,
   captureIntentFromToken,
@@ -50,15 +39,9 @@ import {
   peekIntent,
   type GatewayIntent,
 } from "@/lib/gateway-intent";
-import { buildPostLoginResolvingPath } from "@/lib/resolve-post-login-destination";
 
 const CODE_LENGTH = 6;
 const RESEND_COOLDOWN_SECONDS = 60;
-
-/** Infer the delivery channel the same way the BFF does: contains "@" → EMAIL. */
-function inferChannel(value: string): "PHONE" | "EMAIL" {
-  return value.includes("@") ? "EMAIL" : "PHONE";
-}
 
 function errorShape(err: unknown): { status?: number; code?: string; message?: string } {
   const e = err as { status?: number; error?: { code?: string; message?: string } };
@@ -66,14 +49,7 @@ function errorShape(err: unknown): { status?: number; code?: string; message?: s
 }
 
 export default function ContactRegisterPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const returnTo = searchParams.get("returnTo");
-
-  const { setAuth } = useAuthStore();
-  const { acceptConsent } = useConsentStore();
-  const acceptPolicyConsent = useAcceptPolicyConsent();
-
   const requestOtp = useRequestContactOtp();
   const verifyOtp = useVerifyContactOtp();
 
@@ -85,15 +61,12 @@ export default function ContactRegisterPage() {
 
   const [maskedValue, setMaskedValue] = useState("");
   const [code, setCode] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
   const [registered, setRegistered] = useState(false);
   const [resendIn, setResendIn] = useState(0);
 
-  const channel = useMemo(() => inferChannel(contact.trim()), [contact]);
+  const channel = "EMAIL" as const;
 
   // Gateway intent (doctrine §4.1 law 3): capture a ?gwi= token so the journey
   // survives this trust escalation, and read any pending intent so Nompilo can
@@ -134,7 +107,7 @@ export default function ContactRegisterPage() {
           } else if (status === 503 || errCode === "OTP_DELIVERY_UNAVAILABLE") {
             setError("Verification codes are temporarily unavailable. Please try again shortly.");
           } else if (status === 400 || errCode === "VALIDATION") {
-            setError(message ?? "Please enter a valid phone number or email address.");
+            setError(message ?? "Please enter a valid email address.");
           } else {
             setError("We couldn't send a verification code. Please try again.");
           }
@@ -151,7 +124,7 @@ export default function ContactRegisterPage() {
       return;
     }
     if (!contact.trim()) {
-      setError("Please enter your phone number or email address.");
+      setError("Please enter your email address.");
       return;
     }
     if (!acceptedPrivacy || !acceptedTerms) {
@@ -167,46 +140,6 @@ export default function ContactRegisterPage() {
     issueOtp();
   }
 
-  function completeAutoLogin(resource: AuthTokenResource) {
-    const attrs = resource.attributes;
-    const { token, user } = attrs;
-    const expiresAt = (attrs as Record<string, unknown>).expiresAt as string | undefined;
-    setAuth(
-      {
-        id: user.id,
-        healthId: (user as { healthId?: string }).healthId ?? user.id,
-        email: user.email,
-        displayName: user.displayName,
-        roles: user.roles,
-        actorType: user.actorType as "PROVIDER" | "OPERATOR" | "CITIZEN" | "SYSTEM",
-        // R1 "Reachable" = verified contact only, no identity proofing and no
-        // temporary Health ID — that is UNVERIFIED (LOA1). The person moves to
-        // TEMPORARY/VERIFIED only when a stronger rung (R2+, LOA2+) is reached.
-        assuranceLevel: "UNVERIFIED",
-        providerActivated: false,
-        // Contact-OTP (phone-otp/email-otp) is a contact-channel login; the auth
-        // store's loginMethod enum has no phone variant, so map to the closest.
-        loginMethod: "email",
-      },
-      token,
-      null,
-      expiresAt,
-    );
-    useWorkModeStore.getState().deriveFromRoles(user.roles);
-
-    // Consent captured on step 1 — record both client-side and server-side for audit.
-    acceptConsent(user.id);
-    acceptPolicyConsent.mutate({
-      version: CURRENT_CONSENT_VERSION,
-      privacyPolicyAccepted: true,
-      termsOfUseAccepted: true,
-      channel: "WEB",
-    });
-    useConsentStore.getState().hydrate(user.id);
-
-    router.push(buildPostLoginResolvingPath(returnTo));
-  }
-
   function handleVerify(e: FormEvent) {
     e.preventDefault();
     setError(null);
@@ -215,15 +148,6 @@ export default function ContactRegisterPage() {
       setError("Please enter the full 6-digit code.");
       return;
     }
-    if (password.length < 12) {
-      setError("Password must be at least 12 characters and include upper, lower, digit, and special character.");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-
     const nameParts = fullName.trim().split(/\s+/);
     const firstName = nameParts[0];
     const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : nameParts[0];
@@ -233,22 +157,14 @@ export default function ContactRegisterPage() {
         value: contact.trim(),
         code,
         purpose: "REGISTER",
-        password,
         firstName,
         lastName,
         fullName: fullName.trim(),
       },
       {
-        onSuccess: (res) => {
-          if (res.data.type === "auth_token") {
-            completeAutoLogin(res.data as AuthTokenResource);
-          } else {
-            // 201 REGISTERED — account created, but no session minted. Sign in next.
-            const attrs = (res.data as ContactRegistrationResource).attributes;
-            setRegistered(true);
-            setError(null);
-            void attrs; // status/message available if needed
-          }
+        onSuccess: () => {
+          setRegistered(true);
+          setError(null);
         },
         onError: (err) => {
           const { status, code: errCode, message } = errorShape(err);
@@ -283,7 +199,7 @@ export default function ContactRegisterPage() {
           <CheckCircle2 className="mx-auto h-10 w-10 text-primary" />
           <h2 className="mt-3 text-xl font-semibold text-foreground">Account created</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Your account for {maskedValue || "your contact"} is ready. Please sign in to continue.
+            Your account for {maskedValue || "your email"} is ready. Follow the secure Keycloak email to set your password, then sign in.
           </p>
           <Link
             href="/auth/login"
@@ -327,8 +243,8 @@ export default function ContactRegisterPage() {
       </h2>
       <p className="text-sm text-muted-foreground mb-6">
         {step === 1
-          ? "Start with your name and a phone number or email — we'll send a code to confirm it."
-          : `Enter the 6-digit code we sent to ${maskedValue} and choose a password.`}
+          ? "Start with your name and email address — we'll send a code to confirm it."
+          : `Enter the 6-digit code we sent to ${maskedValue}. Password setup stays inside Keycloak.`}
       </p>
 
       {error && (
@@ -360,28 +276,24 @@ export default function ContactRegisterPage() {
 
           <div>
             <label htmlFor="contact" className="block text-sm font-medium text-foreground mb-1">
-              Phone or email
+              Email address
             </label>
             <div className="relative">
-              {channel === "EMAIL" ? (
-                <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              ) : (
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              )}
+              <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 id="contact"
-                type="text"
-                inputMode="text"
-                autoComplete="username"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
                 required
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
-                placeholder="+263... or you@example.com"
+                placeholder="you@example.com"
                 className="w-full pl-10 pr-4 py-3 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
               />
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              We&apos;ll send a verification code by {channel === "EMAIL" ? "email" : "SMS"}.
+              We&apos;ll send a verification code by email. Password setup remains on Keycloak.
             </p>
           </div>
 
@@ -466,52 +378,6 @@ export default function ContactRegisterPage() {
               </div>
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1">
-                Create a password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="new-password"
-                  minLength={12}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 12 characters with upper, lower, digit, and symbol"
-                  className="w-full pl-10 pr-12 py-3 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground mb-1">
-                Confirm password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  id="confirmPassword"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="new-password"
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Repeat password"
-                  className="w-full pl-10 pr-4 py-3 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
-                />
-              </div>
-            </div>
-
             <button
               type="submit"
               disabled={verifyOtp.isPending || code.length !== CODE_LENGTH}
@@ -541,16 +407,13 @@ export default function ContactRegisterPage() {
 
       <div className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
         <Mail className="h-3.5 w-3.5" />
-        <span>Prefer a password sign-up? </span>
-        <Link href="/auth/register" className="text-primary hover:text-primary-hover">
-          Use the full form
-        </Link>
+        <span>Passwords and MFA are handled only by Keycloak.</span>
       </div>
 
       <NompiloHint
-        message="We only need one way to reach you to get started — a phone number or an email. You can add more details and verify your identity later."
+        message="We use your email to verify the account. Keycloak will then guide you through secure password and MFA setup without sharing those secrets with Impilo."
         suggestions={[
-          "Use a number you can receive an SMS on right now",
+          "Use an email account you can open right now",
           "The code expires in 5 minutes — request a new one if it lapses",
         ]}
       />

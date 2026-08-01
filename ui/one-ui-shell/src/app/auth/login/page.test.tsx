@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import LoginPage from "./page";
 
 const push = vi.fn();
+const { beginOidcLogin } = vi.hoisted(() => ({ beginOidcLogin: vi.fn() }));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push }),
@@ -14,12 +15,7 @@ vi.mock("@/components/AuthLayout", () => ({
   AuthLayout: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 
-vi.mock("@/hooks/queries/useAuth", () => ({
-  useLogin: () => ({
-    mutate: vi.fn(),
-    isPending: false,
-  }),
-}));
+vi.mock("@/lib/auth/web-session", () => ({ beginOidcLogin }));
 
 vi.mock("@/hooks/useAuthStore", () => ({
   useAuthStore: () => ({
@@ -57,19 +53,19 @@ describe("LoginPage — Progressive Auth Scene", () => {
     expect(screen.getByRole("button", { name: /Continue/i })).toBeInTheDocument();
   });
 
-  it("progresses to Step 2 credential resolution upon identifier submission", () => {
+  it("hands credentials to Keycloak without rendering a password input", () => {
     render(<LoginPage />);
 
     const input = screen.getByLabelText(/Email, phone number, or Impilo ID/i);
     fireEvent.change(input, { target: { value: "mapfumo@mohcc.gov.zw" } });
     fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
 
-    expect(screen.getByLabelText("Password")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Sign in" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Forgot password/i })).toHaveAttribute(
-      "href",
-      "/auth/forgot-password",
-    );
+    expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
+    expect(beginOidcLogin).toHaveBeenCalledWith({
+      returnTo: "/home",
+      loginHint: "mapfumo@mohcc.gov.zw",
+      requiredAcr: null,
+    });
   });
 
   it("shows registration and guest continuation options", () => {

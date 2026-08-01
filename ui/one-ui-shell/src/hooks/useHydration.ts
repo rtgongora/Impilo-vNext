@@ -18,7 +18,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
@@ -31,23 +30,6 @@ export function useHydration(): void {
     hydrated.current = true;
 
     // --- Auth ---
-    const token = sessionStorage.getItem("exp:auth_token");
-    const userJson = sessionStorage.getItem("exp:auth_user");
-    const expiresAt = sessionStorage.getItem("exp:expires_at");
-    const hasSessionCookie = document.cookie.includes("exp_has_session=1");
-    if (userJson && (token || hasSessionCookie)) {
-      try {
-        const user = JSON.parse(userJson);
-        if (token) {
-          useAuthStore.getState().setAuth(user, token, null, expiresAt);
-        } else {
-          useAuthStore.getState().hydrateSession(user, null, expiresAt);
-        }
-      } catch {
-        // Corrupted data — skip auth hydration
-      }
-    }
-
     // --- Facility ---
     const facilityJson = sessionStorage.getItem("exp:facility");
     if (facilityJson) {

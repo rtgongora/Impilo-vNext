@@ -88,13 +88,15 @@ public class OidcSessionController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletRequest request) {
+    public ResponseEntity<Map<String, Object>> logout(HttpServletRequest request) {
         String sessionId = SessionBearerTokenResolver.cookie(request, WebAuthSessionStore.SESSION_COOKIE);
         sessions.logout(sessionId);
-        return ResponseEntity.noContent()
+        return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, clearCookie(WebAuthSessionStore.SESSION_COOKIE, true).toString())
                 .header(HttpHeaders.SET_COOKIE, clearCookie(WebAuthSessionStore.CSRF_COOKIE, false).toString())
-                .build();
+                .header(HttpHeaders.SET_COOKIE, clearCookie("exp_refresh_token", true).toString())
+                .body(Map.of("data", Map.of(
+                        "id", "current-session", "type", "logout", "attributes", Map.of())));
     }
 
     private ResponseCookie sessionCookie(String value) {

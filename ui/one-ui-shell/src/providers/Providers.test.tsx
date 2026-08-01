@@ -7,6 +7,9 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 
+const { getSession } = vi.hoisted(() => ({ getSession: vi.fn() }));
+vi.mock("@/lib/api-client", () => ({ apiClient: { get: getSession, flushOfflineQueue: vi.fn() } }));
+
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
@@ -64,6 +67,18 @@ const authUser = {
   actorType: "PROVIDER" as const,
 };
 
+function activeSession(expiresAt = FUTURE_EXPIRY) {
+  return {
+    data: {
+      authenticated: true as const,
+      user: { ...authUser, identityAssuranceLevel: "VERIFIED" },
+      acr: "urn:impilo:aal2",
+      amr: ["pwd", "otp"],
+      expiresAt,
+    },
+  };
+}
+
 /**
  * Expiry is computed relative to now, not hardcoded. Providers only hydrates a session whose
  * access token is still valid, so an absolute date silently turns the "authenticated" case into
@@ -88,6 +103,7 @@ describe("Providers", () => {
     useAuthStore.setState({ sessionRestoreAttempted: false });
     sessionStorageMock.clear();
     vi.clearAllMocks();
+    getSession.mockRejectedValue(new Error("NO_ACTIVE_SESSION"));
     window.history.pushState({}, "", "/");
   });
 
@@ -134,6 +150,7 @@ describe("Providers", () => {
     sessionStorageMock.setItem("exp:auth_token", "token-1");
     sessionStorageMock.setItem("exp:expires_at", FUTURE_EXPIRY);
     sessionStorageMock.setItem("exp:auth_user", JSON.stringify(authUser));
+    getSession.mockResolvedValueOnce(activeSession());
     sessionStorageMock.setItem("exp:facility", JSON.stringify({
       id: "facility-1",
       name: "Central Hospital",
@@ -165,7 +182,7 @@ describe("Providers", () => {
     await waitFor(() => {
       expect(useFacilityStore.getState().facility?.id).toBe("facility-1");
     });
-    expect(useAuthStore.getState().token).toBe("token-1");
+    expect(useAuthStore.getState().token).toBeNull();
     expect(useAuthStore.getState().refreshToken).toBeNull();
     expect(useAuthStore.getState().expiresAt).toBe(FUTURE_EXPIRY);
     expect(useWorkspaceStore.getState().workspace).toBeNull();
@@ -179,7 +196,7 @@ describe("Providers", () => {
   // document.cookie is mocked to "exp_has_session=1" for every test in this file, so
   // the first case is exactly the stale-cookie resurrection the change set out to stop.
 
-  it("refuses to hydrate from a session cookie when no token is stored", async () => {
+  it("ignores browser session metadata when the BFF has no active session", async () => {
     sessionStorageMock.setItem("exp:auth_user", JSON.stringify(authUser));
     sessionStorageMock.setItem("exp:expires_at", FUTURE_EXPIRY);
     sessionStorageMock.setItem("exp:facility", JSON.stringify({
@@ -201,7 +218,7 @@ describe("Providers", () => {
     expect(useFacilityStore.getState().facility).toBeNull();
   });
 
-  it("refuses to hydrate an expired session even with a token", async () => {
+  it("ignores expired browser token metadata when the BFF has no active session", async () => {
     sessionStorageMock.setItem("exp:auth_token", "token-1");
     sessionStorageMock.setItem("exp:auth_user", JSON.stringify(authUser));
     sessionStorageMock.setItem("exp:expires_at", PAST_EXPIRY);
@@ -233,6 +250,7 @@ describe("Providers", () => {
     sessionStorageMock.setItem("exp:auth_token", "token-1");
     sessionStorageMock.setItem("exp:expires_at", futureExpiry());
     sessionStorageMock.setItem("exp:auth_user", JSON.stringify(authUser));
+    getSession.mockResolvedValueOnce(activeSession(futureExpiry()));
 
     const seen: boolean[] = [];
     render(

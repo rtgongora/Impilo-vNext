@@ -299,6 +299,13 @@ static_resources:
                             - "x-aal"
                             - "x-record-link-confidence"
                             - "x-session-assurance"
+                            - "x-authentication-aal"
+                            - "x-authentication-amr"
+                            - "x-authentication-time"
+                            - "x-authentication-step-up-time"
+                            - "x-authentication-phishing-resistant"
+                            - "x-authentication-session-id"
+                            - "x-authentication-flow-id"
                             - "x-obligations"
                             - "x-visibility-tier"
                             - "x-pii-access"
@@ -320,6 +327,13 @@ static_resources:
                         - match: { prefix: "/internal/v1/" }
                           route: { cluster: experience_bff }
                           request_headers_to_remove:
+                            - "x-authentication-aal"
+                            - "x-authentication-amr"
+                            - "x-authentication-time"
+                            - "x-authentication-step-up-time"
+                            - "x-authentication-phishing-resistant"
+                            - "x-authentication-session-id"
+                            - "x-authentication-flow-id"
                             - "x-obligations"
                             - "x-visibility-tier"
                             - "x-pii-access"

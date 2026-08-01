@@ -4,9 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
  * Server-side auth gate — Health OS Unified Experience Shell.
  *
  * Complements the client-side AuthGuardProvider by preventing unauthenticated
- * users from receiving protected page bundles. Token presence is checked via
- * the exp_has_session cookie (set by useAuthStore on login, cleared on logout).
- * Full token validation happens at the BFF layer via Envoy ext_authz.
+ * users from receiving protected page bundles. Only the opaque HttpOnly BFF
+ * session cookie is accepted in production; token validation stays server-side.
  */
 
 export const PUBLIC_PREFIXES = [
@@ -75,11 +74,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check for session cookie set by useAuthStore.setAuth()
-  // Cookie name: exp_has_session (underscore, not colon — cookies cannot contain colons)
-  const hasSession = request.cookies.get("exp_has_session")?.value === "1";
+  const hasSession = Boolean(request.cookies.get("__Host-impilo_session")?.value);
+  // Existing compose tests use a non-Secure localhost fixture. It is accepted only
+  // outside production and can never unlock the preview/production build.
+  const hasDevelopmentFixture =
+    process.env.NODE_ENV !== "production" && request.cookies.get("exp_has_session")?.value === "1";
 
-  if (!hasSession) {
+  if (!hasSession && !hasDevelopmentFixture) {
     const loginUrl = new URL("/auth/login", request.url);
     loginUrl.searchParams.set("returnTo", pathname);
     return NextResponse.redirect(loginUrl);

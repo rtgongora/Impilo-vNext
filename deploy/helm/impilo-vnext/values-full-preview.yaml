@@ -402,7 +402,9 @@ experienceBff:
     KEYCLOAK_BACKEND_CLIENT_ID: impilo-backend
     AUTH_FALLBACK_ENABLED: "false"
     IMPILO_SECURITY_ALLOW_ANONYMOUS: "false"
-    IMPILO_AUTH_WEB_SESSION_ENABLED: "false"
+    # Activation remains gated by the migration/restore rehearsal and targeted
+    # release runbook; this value makes the proven BFF session path the web default.
+    IMPILO_AUTH_WEB_SESSION_ENABLED: "true"
     IMPILO_AUTH_WEB_SESSION_COOKIE_SECURE: "true"
     IMPILO_AUTH_REDIRECT_URI: https://impilo.mohcc.gov.zw/internal/v1/auth/oidc/callback
     IMPILO_AUTH_POST_LOGOUT_REDIRECT_URI: https://impilo.mohcc.gov.zw/

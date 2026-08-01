@@ -15,7 +15,7 @@ import { apiClient, type ApiResponse } from "@/lib/api-client";
 import { HealthWorkerBenefitsCard } from "@/components/common/HealthWorkerBenefitsCard";
 
 export default function ProfilePage() {
-  const { user, setAuth, token } = useAuthStore();
+  const { user, hydrateSession, expiresAt } = useAuthStore();
 
   const [displayName, setDisplayName] = useState(user?.displayName ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
@@ -38,14 +38,15 @@ export default function ProfilePage() {
         payload,
       ),
     onSuccess: (res) => {
-      if (user && token) {
-        setAuth(
+      if (user) {
+        hydrateSession(
           {
             ...user,
             displayName: (res.data.attributes.displayName as string) || user.displayName,
             email: (res.data.attributes.email as string) || user.email,
           },
-          token,
+          null,
+          expiresAt,
         );
       }
     },

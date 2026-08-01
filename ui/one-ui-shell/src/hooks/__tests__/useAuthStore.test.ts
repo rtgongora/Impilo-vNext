@@ -58,13 +58,13 @@ describe("useAuthStore", () => {
     expect(state.isAuthenticated).toBe(false);
   });
 
-  it("setAuth updates user, token, and isAuthenticated", () => {
+  it("setAuth updates user but discards browser OAuth tokens", () => {
     useAuthStore.getState().setAuth(testUser, "tok-123", "ref-456", "2026-12-31T00:00:00Z");
 
     const state = useAuthStore.getState();
     expect(state.user).toEqual(testUser);
-    expect(state.token).toBe("tok-123");
-    expect(state.refreshToken).toBe("ref-456");
+    expect(state.token).toBeNull();
+    expect(state.refreshToken).toBeNull();
     expect(state.expiresAt).toBe("2026-12-31T00:00:00Z");
     expect(state.isAuthenticated).toBe(true);
   });
@@ -82,7 +82,7 @@ describe("useAuthStore", () => {
     const state = useAuthStore.getState();
     expect(state.user).toEqual(testUser);
     expect(state.token).toBeNull();
-    expect(state.refreshToken).toBe("ref-456");
+    expect(state.refreshToken).toBeNull();
     expect(state.expiresAt).toBe("2026-12-31T00:00:00Z");
     expect(state.isAuthenticated).toBe(true);
     expect(sessionStorageMock.setItem).not.toHaveBeenCalledWith("exp:auth_token", expect.anything());
@@ -94,7 +94,7 @@ describe("useAuthStore", () => {
 
     const state = useAuthStore.getState();
     expect(state.user).toEqual(testUser);
-    expect(state.token).toBe("tok-123");
+    expect(state.token).toBeNull();
     expect(state.refreshToken).toBeNull();
     expect(state.expiresAt).toBeNull();
     expect(state.isAuthenticated).toBe(true);
@@ -223,19 +223,19 @@ describe("useAuthStore", () => {
     expect(useAuthStore.getState().hasRole("PROVIDER")).toBe(false);
   });
 
-  it("setTokens updates tokens without changing user", () => {
+  it("setTokens updates expiry but never retains tokens", () => {
     useAuthStore.getState().setAuth(testUser, "tok-old", "ref-old");
 
     useAuthStore.getState().setTokens("tok-new", "ref-new", "2027-01-01T00:00:00Z");
 
     const state = useAuthStore.getState();
     expect(state.user).toEqual(testUser);
-    expect(state.token).toBe("tok-new");
-    expect(state.refreshToken).toBe("ref-new");
+    expect(state.token).toBeNull();
+    expect(state.refreshToken).toBeNull();
     expect(state.expiresAt).toBe("2027-01-01T00:00:00Z");
   });
 
-  it("setTokens keeps access tokens in memory while refreshing persisted refresh state", () => {
+  it("setTokens discards OAuth material while updating non-secret expiry metadata", () => {
     useAuthStore.getState().setAuth(testUser, "tok-old", "ref-old");
     vi.clearAllMocks();
 

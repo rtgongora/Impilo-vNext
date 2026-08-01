@@ -1,54 +1,24 @@
 /**
  * Citizen portal API — same contract as ui/portal `portalApi` (VITO `/v1/portal/*` via gateway).
- * Uses browser-relative `/api/v1/portal/...` with Next rewrites to the API gateway (see next.config.mjs).
- * Requires signed-in user with actor type CITIZEN and a valid in-memory bearer token.
- * A legacy sessionStorage token fallback remains only for compatibility during transition.
+ * Uses the BFF bridge so the browser presents only its opaque HttpOnly session.
+ * Bearer tokens and server-derived actor headers never enter browser JavaScript.
  */
 
-import { useAuthStore } from "@/hooks/useAuthStore";
-import { randomUUID } from "@/lib/uuid";
+import { apiClient, type ApiResponse } from "@/lib/api-client";
 
-const PREFIX = '/api/v1/portal';
-
-function readSessionHeaders(): Record<string, string> {
-  if (typeof window === 'undefined') {
-    return { 'Content-Type': 'application/json' };
-  }
-  const token = useAuthStore.getState().token ?? sessionStorage.getItem('exp:auth_token');
-  const rawUser = sessionStorage.getItem('exp:auth_user');
-  let actorId = '';
-  if (rawUser) {
-    try {
-      actorId = (JSON.parse(rawUser) as { id?: string }).id ?? '';
-    } catch {
-      /* ignore */
-    }
-  }
-  const tenant = sessionStorage.getItem('exp:tenant_id') ?? 'tenant-moh-zw';
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    'x-tenant-id': tenant,
-    'x-actor-id': actorId,
-    'x-actor-type': 'CITIZEN',
-    'x-purpose-of-use': 'SELF_SERVICE',
-    'x-correlation-id': randomUUID(),
-    'x-access-mode': 'EXTERNAL',
-  };
-  if (token) headers.Authorization = `Bearer ${token}`;
-  return headers;
-}
+const PREFIX = '/internal/v1/vito/portal';
 
 export async function citizenPortalFetch<T>(suffix: string, options: RequestInit = {}): Promise<T> {
   const path = suffix.startsWith('/') ? `${PREFIX}${suffix}` : `${PREFIX}/${suffix}`;
-  const res = await fetch(path, {
-    ...options,
-    headers: { ...readSessionHeaders(), ...(options.headers as Record<string, string>) },
-  });
-  if (!res.ok) {
-    throw new Error(`Portal API error: ${res.status}`);
-  }
-  const json = await res.json();
-  return (json.data ?? json) as T;
+  const method = (options.method ?? 'GET').toUpperCase();
+  const body = typeof options.body === 'string' ? JSON.parse(options.body) : options.body;
+  const extraHeaders = (options.headers as Record<string, string> | undefined) ?? {};
+  const response = method === 'GET'
+    ? await apiClient.get<ApiResponse<T> | T>(path, { extraHeaders })
+    : await apiClient.post<ApiResponse<T> | T>(path, body, { extraHeaders });
+  return ('data' in (response as object)
+    ? (response as ApiResponse<T>).data
+    : response) as T;
 }
 
 /** For tests: which URL suffix would be requested (no leading PREFIX). */

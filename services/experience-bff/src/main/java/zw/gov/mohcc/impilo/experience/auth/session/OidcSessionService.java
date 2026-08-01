@@ -217,6 +217,9 @@ public class OidcSessionService {
         profile.put("displayName", Optional.ofNullable(jwt.getClaimAsString("name"))
                 .orElse(Optional.ofNullable(jwt.getClaimAsString("preferred_username")).orElse("")));
         profile.put("roles", realmRoles(jwt));
+        // Identity assurance (IAL) is deliberately separate from OIDC `acr` (AAL).
+        // Missing legacy claims remain honest instead of being promoted to VERIFIED.
+        profile.put("identityAssuranceLevel", identityAssurance(jwt));
         String acr = Optional.ofNullable(jwt.getClaimAsString("acr")).orElse("urn:impilo:aal1");
         Instant authTime = claimInstant(jwt, "auth_time");
         Instant stepUp = tx.previousSessionId() == null ? null : Instant.now();
@@ -237,6 +240,14 @@ public class OidcSessionService {
         Object value = jwt.getClaims().get("amr");
         if (value instanceof List<?> list) return list.stream().map(String::valueOf).toList();
         return value == null ? List.of() : List.of(String.valueOf(value));
+    }
+
+    private static String identityAssurance(Jwt jwt) {
+        for (String claim : List.of("identity_assurance_level", "ial")) {
+            String value = jwt.getClaimAsString(claim);
+            if (value != null && !value.isBlank()) return value;
+        }
+        return "UNVERIFIED";
     }
 
     private static Instant claimInstant(Jwt jwt, String name) {

@@ -17,15 +17,15 @@
  *
  * Command requests (POST/PUT/PATCH) also carry Idempotency-Key.
  *
- * On 401 responses, attempts a single token refresh via the BFF /auth/refresh
- * endpoint using the HttpOnly refresh cookie before failing. If refresh succeeds, retries the original request
- * with the new token. If refresh fails, clears auth and redirects to login.
+ * On 401 responses, checks the opaque BFF OIDC session. The BFF refreshes its
+ * server-held access token when needed; no OAuth token is exposed to JavaScript.
  */
 
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { randomUUID } from "@/lib/uuid";
 import { isStepUpRequired } from "@/lib/stepUp";
 import { recordNompiloFailure } from "@/lib/nompilo-failure";
+import { authUserFromWebSession, type WebSessionResponse } from "@/lib/auth/web-session";
 import {
   enqueueOfflineWrite,
   flushOfflineQueue,
@@ -85,11 +85,6 @@ function getV12Headers(): Record<string, string> {
     "X-Request-ID": randomUUID(),
     "X-Correlation-ID": getCorrelationId(),
   };
-
-  const token = getAuthToken();
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
 
   // The BFF-managed OIDC session uses an opaque HttpOnly cookie. Its readable,
   // session-bound companion is copied to a header for double-submit CSRF checks;
@@ -277,17 +272,6 @@ function getCorrelationId(): string {
   return randomUUID();
 }
 
-function getAuthToken(): string | null {
-  const liveToken = useAuthStore.getState().token;
-  if (liveToken) {
-    return liveToken;
-  }
-  if (typeof window !== "undefined") {
-    return sessionStorage.getItem("exp:auth_token");
-  }
-  return null;
-}
-
 function getPurposeOfUse(): string {
   if (typeof window !== "undefined") {
     const stored = sessionStorage.getItem("exp:purpose_of_use");
@@ -313,60 +297,34 @@ function getPurposeOfUse(): string {
 }
 
 /**
- * Attempt to refresh the session token using the refresh_token.
- * Returns true if refresh succeeded, false otherwise.
- * Uses a singleton promise to prevent concurrent refresh attempts.
+ * Ask the BFF to resolve/refresh its opaque web session.
+ * Uses a singleton promise to prevent concurrent recovery attempts.
  */
 async function attemptRefresh(): Promise<boolean> {
   if (typeof window === "undefined") return false;
-  // When same-origin, the sentinel cookie is readable; skip refresh if absent.
-  // When cross-origin (BFF_BASE_URL set), document.cookie belongs to the UI
-  // origin and won't include cookies set by the BFF — skip the check to ensure
-  // the refresh attempt always reaches the server.
-  if (!BFF_BASE_URL) {
-    const hasSessionCookie = document.cookie.includes("exp_has_session=1");
-    if (!hasSessionCookie) return false;
-  }
-
   // If a refresh is already in progress, wait for it
   if (refreshPromise) return refreshPromise;
 
   refreshPromise = (async () => {
     try {
-      const headers = getV11Headers();
-      headers["Idempotency-Key"] = randomUUID();
-      // Don't send the expired token for the refresh call
-      delete headers["Authorization"];
-
-      const response = await fetch(`${BFF_BASE_URL}/internal/v1/auth/refresh`, {
-        method: "POST",
-        headers,
+      const response = await fetch(`${BFF_BASE_URL}/internal/v1/auth/oidc/session`, {
+        method: "GET",
+        headers: getV11Headers(),
         credentials: fetchCredentials,
       });
 
       if (!response.ok) return false;
 
-      const data = await response.json();
-      const attrs = data?.data?.attributes;
-      if (!attrs?.token) return false;
-
-      if (attrs.user) {
-        // Preserve person-first identity fields from the current session
-        const currentUser = useAuthStore.getState().user;
-        const mergedUser = {
-          ...attrs.user,
-          assuranceLevel: attrs.user.assuranceLevel ?? currentUser?.assuranceLevel ?? "VERIFIED",
-          providerActivated: attrs.user.providerActivated ?? currentUser?.providerActivated ?? false,
-          linkedIds: attrs.user.linkedIds ?? currentUser?.linkedIds,
-          healthId: attrs.user.healthId ?? currentUser?.healthId,
-          providerId: currentUser?.providerId,
-        };
-        useAuthStore
-          .getState()
-          .setAuth(mergedUser, attrs.token, null, attrs.expiresAt ?? null);
-      } else {
-        useAuthStore.getState().setTokens(attrs.token, null, attrs.expiresAt ?? null);
-      }
+      const envelope = (await response.json()) as WebSessionResponse;
+      if (!envelope.data?.authenticated || !envelope.data.user?.id) return false;
+      const current = useAuthStore.getState().user;
+      const restored = authUserFromWebSession(envelope.data);
+      useAuthStore.getState().hydrateSession({
+        ...restored,
+        linkedIds: current?.linkedIds,
+        providerId: current?.providerId,
+        providerActivated: current?.providerActivated ?? false,
+      }, null, envelope.data.expiresAt ?? null);
 
       return true;
     } catch {
@@ -392,10 +350,7 @@ function handleAuthFailure(): void {
       AUTH_BYPASS_PREFIXES.some((p) => p !== "/" && pathname.startsWith(p));
     if (isOnBypassPath) return;
 
-    const store = useAuthStore.getState();
-    if (!store.isTokenExpired()) return;
-
-    store.clearAuth();
+    useAuthStore.getState().clearAuth();
     window.location.href = "/auth/login";
   }
 }
