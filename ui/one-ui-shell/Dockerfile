@@ -42,8 +42,7 @@ RUN npm config set fetch-retries 5 \
     && npm config set fetch-retry-maxtimeout 120000 \
     && npm config set fetch-timeout 300000 \
     && npm config set strict-ssl false \
-    && npm install --legacy-peer-deps \
-    && npm install @next/swc-linux-x64-gnu@14.2.18 --legacy-peer-deps --no-save
+    && npm install --legacy-peer-deps
 
 WORKDIR /workspace
 # Runtime image truth: bust BuildKit cache for source+build layers when commit/content changes.
