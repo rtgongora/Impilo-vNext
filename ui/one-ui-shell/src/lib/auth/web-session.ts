@@ -16,7 +16,20 @@ export interface WebSessionResponse {
     authTime?: string;
     stepUpTime?: string | null;
     expiresAt?: string;
+    /** True when this session was established with recovery codes (constrained recovery). */
+    recovery?: boolean;
+    /** Absolute expiry of a constrained recovery session (ISO-8601), when applicable. */
+    recoveryExpiresAt?: string;
   };
+}
+
+/**
+ * A constrained recovery session may only reach account-recovery surfaces. The shell uses
+ * this to route the user into factor re-enrollment instead of the interrupted journey, and
+ * to keep the recovery banner visible until a fresh ordinary sign-in replaces the session.
+ */
+export function isConstrainedRecoverySession(session: WebSessionResponse["data"]): boolean {
+  return session.recovery === true;
 }
 
 function identityAssurance(value?: string): AuthUser["assuranceLevel"] {
