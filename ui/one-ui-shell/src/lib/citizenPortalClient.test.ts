@@ -3,7 +3,7 @@ import { citizenPortalPathForTests } from "./citizenPortalClient";
 
 describe("citizenPortalPathForTests", () => {
   it("prefixes gateway-relative portal paths", () => {
-    expect(citizenPortalPathForTests("/me")).toBe("/api/v1/portal/me");
-    expect(citizenPortalPathForTests("id/request")).toBe("/api/v1/portal/id/request");
+    expect(citizenPortalPathForTests("/me")).toBe("/internal/v1/vito/portal/me");
+    expect(citizenPortalPathForTests("id/request")).toBe("/internal/v1/vito/portal/id/request");
   });
 });

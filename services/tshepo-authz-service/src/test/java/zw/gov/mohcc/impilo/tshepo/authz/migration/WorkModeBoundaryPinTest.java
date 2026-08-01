@@ -136,7 +136,8 @@ class WorkModeBoundaryPinTest extends MigrationPolicyTestBase {
     /** Rule name to the {@code replace(conditions, from, to)} pair V059 applies to it. */
     private static Map<String, Map.Entry<String, String>> v059Replacements() throws IOException {
         Pattern stmt = Pattern.compile(
-                "replace\\(conditions,\\s*'([^']+)',\\s*'([^']+)'\\)\\s*\\n\\s*WHERE name = '([^']+)'");
+                "replace\\(conditions(?:::[a-z]+)?,\\s*'([^']+)',\\s*'([^']+)'\\)"
+                        + "(?:::[a-z]+)?\\s*\\n\\s*WHERE name = '([^']+)'");
         Matcher m = stmt.matcher(readMigration(V059));
 
         Map<String, Map.Entry<String, String>> byName = new LinkedHashMap<>();

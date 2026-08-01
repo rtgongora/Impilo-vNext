@@ -5,10 +5,15 @@ import { resolve } from "node:path";
 describe("citizen-onboarding golden thread", () => {
   const repoRoot = resolve(__dirname, "../../../../..");
 
-  it("UI route wires bounded-context client", () => {
+  it("registration enters the verified-contact journey without collecting a password", () => {
     const page = readFileSync(resolve(repoRoot, "ui/one-ui-shell/src/app/auth/register/page.tsx"), "utf8");
-    expect(page).toContain("apiClient");
-    expect(page).toContain("register");
+    const contact = readFileSync(resolve(repoRoot, "ui/one-ui-shell/src/app/auth/register/contact/page.tsx"), "utf8");
+    expect(page).toContain("/auth/register/contact");
+    expect(page).toContain("window.location.search");
+    expect(page).not.toContain('type="password"');
+    expect(contact).toContain("useRequestContactOtp");
+    expect(contact).toContain("useVerifyContactOtp");
+    expect(contact).toContain('purpose: "REGISTER"');
   });
 
   it("BFF controller exposes journey endpoints", () => {
