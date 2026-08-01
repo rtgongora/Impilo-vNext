@@ -178,7 +178,13 @@ if [[ "$user_count" != "$EXPECTED_USER_COUNT" ]]; then
 fi
 
 managed_filter='{
-  loginTheme, browserFlow, acrToLoAMapping,
+  loginTheme, browserFlow,
+  "acrToLoAMapping": (
+    if (((.attributes // {})["acr.loa.map"] // "") | length) == 0
+    then null
+    else ((.attributes // {})["acr.loa.map"] | fromjson)
+    end
+  ),
   sslRequired, bruteForceProtected, permanentLockout, failureFactor,
   waitIncrementSeconds, quickLoginCheckMilliSeconds, minimumQuickLoginWaitSeconds,
   maxFailureWaitSeconds, maxDeltaTimeSeconds,
@@ -323,8 +329,9 @@ ensure_impilo_flow
 # Merge only managed posture fields. Users, credentials, groups, roles, components,
 # keys, and unmanaged realm settings are not present in this update payload.
 jq --slurpfile desired "$tmp/desired-managed.json" --arg hash "$desired_hash" --arg version "$CONFIG_VERSION" '
-  . * $desired[0] |
+  . * ($desired[0] | del(.acrToLoAMapping)) |
   .attributes = ((.attributes // {}) + {
+    "acr.loa.map": ($desired[0].acrToLoAMapping | tojson),
     "impilo.mfa.configHash": $hash,
     "impilo.mfa.policyVersion": $version
   })
