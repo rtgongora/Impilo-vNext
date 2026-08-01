@@ -28,6 +28,15 @@ import org.springframework.web.util.UriComponentsBuilder;
 /** Keycloak authorization-code + PKCE orchestration for the web BFF. */
 @Service
 public class OidcSessionService {
+    /**
+     * Recovery audit channel: records recovery authentication, restriction, continuation use,
+     * termination and reauthentication. Entries carry a hashed session reference and never
+     * contain tokens, recovery codes, cookies or personal data.
+     */
+    private static final org.slf4j.Logger RECOVERY_AUDIT =
+            org.slf4j.LoggerFactory.getLogger("impilo.trust.recovery.audit");
+    private static final java.util.regex.Pattern OPAQUE_ID =
+            java.util.regex.Pattern.compile("[A-Za-z0-9_-]{16,128}");
     private static final List<String> ALLOWED_ACR = List.of(
             "urn:impilo:aal1", "urn:impilo:aal2", "urn:impilo:aal3");
     private static final List<String> ALLOWED_ACTIONS = List.of(
@@ -50,16 +59,23 @@ public class OidcSessionService {
 
     public URI begin(String returnTo, String requestedAcr, String requiredAction,
                      String previousSessionId, String loginHint) {
+        return begin(returnTo, requestedAcr, requiredAction, previousSessionId, loginHint, null);
+    }
+
+    public URI begin(String returnTo, String requestedAcr, String requiredAction,
+                     String previousSessionId, String loginHint, String continuationId) {
         requireEnabled();
         String safeReturnTo = safeReturnTo(returnTo);
         String acr = normalizeAcr(requestedAcr);
         String action = normalizeAction(requiredAction);
+        String continuation = normalizeContinuationId(continuationId);
         String state = store.newOpaqueValue();
         String nonce = store.newOpaqueValue();
         String verifier = store.newOpaqueValue() + store.newOpaqueValue();
         String challenge = base64Url(sha256(verifier));
         store.saveTransaction(new WebAuthSessionStore.AuthTransaction(
-                state, nonce, verifier, safeReturnTo, acr, action, previousSessionId, Instant.now()));
+                state, nonce, verifier, safeReturnTo, acr, action, previousSessionId, Instant.now(),
+                continuation));
 
         UriComponentsBuilder builder = UriComponentsBuilder
                 .fromUriString(properties.getPublicIssuer() + "/protocol/openid-connect/auth")
@@ -103,12 +119,61 @@ public class OidcSessionService {
         String sessionId = store.newOpaqueValue();
         String csrf = store.newOpaqueValue();
         int expiresIn = tokens.path("expires_in").asInt(300);
+        // Constrained recovery classification: a recovery-code login (AMR recovery marker) is a
+        // restricted recovery session with an absolute 15-minute default lifetime — never
+        // ordinary AAL2 authority, regardless of the numeric ACR Keycloak minted.
+        boolean recovery = isRecoveryAmr(amr(accessJwt));
+        Instant recoveryExpiresAt = recovery
+                ? Instant.now().plusSeconds(properties.getRecoverySessionTtlSeconds()) : null;
         WebAuthSessionStore.SessionData session = sessionFromTokens(
                 accessJwt, accessToken, refreshToken, idToken,
-                Instant.now().plusSeconds(expiresIn), csrf, tx);
+                Instant.now().plusSeconds(expiresIn), csrf, tx, recovery, recoveryExpiresAt);
         store.saveSession(sessionId, session);
-        if (tx.previousSessionId() != null) store.deleteSession(tx.previousSessionId());
-        return new EstablishedSession(sessionId, session, tx.returnTo());
+        if (tx.previousSessionId() != null) {
+            boolean previousWasRecovery = store.findSession(tx.previousSessionId())
+                    .map(WebAuthSessionStore.SessionData::recovery).orElse(false);
+            store.deleteSession(tx.previousSessionId());
+            if (previousWasRecovery) {
+                auditRecovery("recovery_session_terminated", tx.previousSessionId(),
+                        "reason=superseded_by_fresh_authentication");
+            }
+        }
+        String effectiveReturnTo = resolveReturnTo(tx, recovery, sessionId);
+        return new EstablishedSession(sessionId, session, effectiveReturnTo);
+    }
+
+    /**
+     * A recovery session is diverted to the account-security landing route carrying an opaque,
+     * single-use continuation of the interrupted destination. The continuation is only consumed
+     * by a later NON-recovery authentication — resuming the original protected journey requires
+     * a fresh ordinary login with a newly enrolled factor.
+     */
+    private String resolveReturnTo(WebAuthSessionStore.AuthTransaction tx, boolean recovery,
+                                   String sessionId) {
+        if (recovery) {
+            String continuationId = tx.continuationId() != null
+                    ? tx.continuationId()
+                    : store.saveContinuation(tx.returnTo());
+            auditRecovery("recovery_session_established", sessionId,
+                    "restriction=CONSTRAINED_RECOVERY ttlSeconds="
+                            + properties.getRecoverySessionTtlSeconds());
+            return properties.getRecoveryLandingPath() + "?recovery=1&continuation=" + continuationId;
+        }
+        if (tx.continuationId() != null) {
+            Optional<String> resumed = store.consumeContinuation(tx.continuationId());
+            auditRecovery(resumed.isPresent()
+                            ? "recovery_continuation_consumed"
+                            : "recovery_continuation_rejected", sessionId,
+                    resumed.isPresent() ? "singleUse=true" : "reason=expired_or_replayed");
+            if (resumed.isPresent()) {
+                try {
+                    return safeReturnTo(resumed.get());
+                } catch (OidcProtocolException invalidStored) {
+                    return "/";
+                }
+            }
+        }
+        return tx.returnTo();
     }
 
     public Optional<WebAuthSessionStore.SessionData> session(String sessionId) {
@@ -127,11 +192,14 @@ public class OidcSessionService {
             String accessToken = requiredText(tokens, "access_token");
             String refreshToken = tokens.path("refresh_token").asText(session.refreshToken());
             Jwt accessJwt = jwtDecoder.decode(accessToken);
+            // Refresh preserves the recovery classification and absolute expiry: a token refresh
+            // must never launder a constrained recovery session into an ordinary one.
             WebAuthSessionStore.SessionData refreshed = new WebAuthSessionStore.SessionData(
                     session.subject(), accessToken, refreshToken, session.idToken(),
                     Instant.now().plusSeconds(tokens.path("expires_in").asInt(300)),
                     session.csrfToken(), accessJwt.getClaimAsString("acr"), amr(accessJwt),
-                    claimInstant(accessJwt, "auth_time"), session.stepUpTime(), session.flowId(), session.profile());
+                    claimInstant(accessJwt, "auth_time"), session.stepUpTime(), session.flowId(), session.profile(),
+                    session.recovery() || isRecoveryAmr(amr(accessJwt)), session.recoveryExpiresAt());
             store.saveSession(sessionId, refreshed);
             return Optional.of(accessToken);
         } catch (Exception e) {
@@ -145,6 +213,9 @@ public class OidcSessionService {
         current.ifPresent(session -> {
             revoke(session.refreshToken(), "refresh_token");
             revoke(session.accessToken(), "access_token");
+            if (session.recovery()) {
+                auditRecovery("recovery_session_terminated", sessionId, "reason=logout");
+            }
         });
         store.deleteSession(sessionId);
     }
@@ -210,7 +281,8 @@ public class OidcSessionService {
 
     private static WebAuthSessionStore.SessionData sessionFromTokens(
             Jwt jwt, String accessToken, String refreshToken, String idToken,
-            Instant expiresAt, String csrf, WebAuthSessionStore.AuthTransaction tx) {
+            Instant expiresAt, String csrf, WebAuthSessionStore.AuthTransaction tx,
+            boolean recovery, Instant recoveryExpiresAt) {
         Map<String, Object> profile = new LinkedHashMap<>();
         profile.put("id", jwt.getSubject());
         profile.put("email", Optional.ofNullable(jwt.getClaimAsString("email")).orElse(""));
@@ -224,7 +296,36 @@ public class OidcSessionService {
         Instant authTime = claimInstant(jwt, "auth_time");
         Instant stepUp = tx.previousSessionId() == null ? null : Instant.now();
         return new WebAuthSessionStore.SessionData(jwt.getSubject(), accessToken, refreshToken, idToken,
-                expiresAt, csrf, acr, amr(jwt), authTime, stepUp, tx.state(), profile);
+                expiresAt, csrf, acr, amr(jwt), authTime, stepUp, tx.state(), profile,
+                recovery, recoveryExpiresAt);
+    }
+
+    /**
+     * Recovery classification via the canonical v1 contract — the same AMR markers the trust
+     * plane uses, so BFF and Tshepo authz can never disagree about what "recovery" means.
+     */
+    static boolean isRecoveryAmr(List<String> amr) {
+        return zw.gov.mohcc.impilo.tshepo.contracts.v1.AuthenticationAssurance.recoveryStateFromAmr(amr)
+                == zw.gov.mohcc.impilo.tshepo.contracts.v1.RecoveryAuthenticationState.CONSTRAINED_RECOVERY;
+    }
+
+    private static String normalizeContinuationId(String value) {
+        if (value == null || value.isBlank()) return null;
+        String trimmed = value.trim();
+        return OPAQUE_ID.matcher(trimmed).matches() ? trimmed : null;
+    }
+
+    /** Structured recovery audit line; session ids are hashed, never raw. No tokens, no codes. */
+    private static void auditRecovery(String event, String sessionId, String detail) {
+        RECOVERY_AUDIT.info("event={} sessionRef={} {}", event, hashedRef(sessionId), detail);
+    }
+
+    private static String hashedRef(String value) {
+        if (value == null || value.isBlank()) return "-";
+        byte[] digest = sha256(value);
+        StringBuilder hex = new StringBuilder();
+        for (int i = 0; i < 6; i++) hex.append(String.format("%02x", digest[i]));
+        return hex.toString();
     }
 
     @SuppressWarnings("unchecked")

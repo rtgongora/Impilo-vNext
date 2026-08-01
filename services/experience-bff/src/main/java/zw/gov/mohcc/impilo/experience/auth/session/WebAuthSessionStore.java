@@ -27,6 +27,7 @@ public class WebAuthSessionStore {
     public static final String CSRF_COOKIE = "__Host-impilo_csrf";
     private static final String SESSION_PREFIX = "experience:auth:session:";
     private static final String TRANSACTION_PREFIX = "experience:auth:transaction:";
+    private static final String CONTINUATION_PREFIX = "experience:auth:continuation:";
     private static final byte[] AAD = "impilo-web-auth-v1".getBytes(StandardCharsets.UTF_8);
 
     private final StringRedisTemplate redis;
@@ -81,14 +82,44 @@ public class WebAuthSessionStore {
 
     public void saveSession(String sessionId, SessionData session) {
         requireEnabled();
+        long ttlSeconds = session.recovery()
+                ? Math.min(properties.getSessionTtlSeconds(), properties.getRecoverySessionTtlSeconds())
+                : properties.getSessionTtlSeconds();
         redis.opsForValue().set(SESSION_PREFIX + sessionId, encrypt(session),
-                properties.getSessionTtlSeconds(), TimeUnit.SECONDS);
+                ttlSeconds, TimeUnit.SECONDS);
     }
 
     public Optional<SessionData> findSession(String sessionId) {
         if (!properties.isEnabled() || sessionId == null || sessionId.isBlank()) return Optional.empty();
         String encrypted = redis.opsForValue().get(SESSION_PREFIX + sessionId);
-        return encrypted == null ? Optional.empty() : Optional.of(decrypt(encrypted, SessionData.class));
+        if (encrypted == null) return Optional.empty();
+        SessionData session = decrypt(encrypted, SessionData.class);
+        // Constrained recovery sessions carry an absolute expiry that token refresh must not
+        // extend. Enforce it on every lookup so a stale recovery session is dead, not degraded.
+        if (session.recovery() && session.recoveryExpiresAt() != null
+                && session.recoveryExpiresAt().isBefore(Instant.now())) {
+            deleteSession(sessionId);
+            return Optional.empty();
+        }
+        return Optional.of(session);
+    }
+
+    /** Stores an opaque, single-use continuation for an interrupted journey; returns its id. */
+    public String saveContinuation(String returnTo) {
+        requireEnabled();
+        String id = newOpaqueValue();
+        redis.opsForValue().set(CONTINUATION_PREFIX + id, encrypt(new Continuation(returnTo, Instant.now())),
+                properties.getRecoveryContinuationTtlSeconds(), TimeUnit.SECONDS);
+        return id;
+    }
+
+    /** Consumes a continuation exactly once (atomic get-and-delete); replay yields empty. */
+    public Optional<String> consumeContinuation(String continuationId) {
+        requireEnabled();
+        if (continuationId == null || continuationId.isBlank()) return Optional.empty();
+        String encrypted = redis.opsForValue().getAndDelete(CONTINUATION_PREFIX + continuationId);
+        return encrypted == null ? Optional.empty()
+                : Optional.of(decrypt(encrypted, Continuation.class).returnTo());
     }
 
     public void deleteSession(String sessionId) {
@@ -142,10 +173,32 @@ public class WebAuthSessionStore {
 
     public record AuthTransaction(String state, String nonce, String codeVerifier, String returnTo,
                                   String requestedAcr, String requiredAction,
-                                  String previousSessionId, Instant createdAt) {}
+                                  String previousSessionId, Instant createdAt,
+                                  String continuationId) {
+        /** Compatibility constructor for pre-recovery transactions (no continuation). */
+        public AuthTransaction(String state, String nonce, String codeVerifier, String returnTo,
+                               String requestedAcr, String requiredAction,
+                               String previousSessionId, Instant createdAt) {
+            this(state, nonce, codeVerifier, returnTo, requestedAcr, requiredAction,
+                    previousSessionId, createdAt, null);
+        }
+    }
 
     public record SessionData(String subject, String accessToken, String refreshToken, String idToken,
                               Instant accessTokenExpiresAt, String csrfToken, String acr,
                               List<String> amr, Instant authTime, Instant stepUpTime,
-                              String flowId, Map<String, Object> profile) {}
+                              String flowId, Map<String, Object> profile,
+                              boolean recovery, Instant recoveryExpiresAt) {
+        /** Compatibility constructor for ordinary (non-recovery) sessions. */
+        public SessionData(String subject, String accessToken, String refreshToken, String idToken,
+                           Instant accessTokenExpiresAt, String csrfToken, String acr,
+                           List<String> amr, Instant authTime, Instant stepUpTime,
+                           String flowId, Map<String, Object> profile) {
+            this(subject, accessToken, refreshToken, idToken, accessTokenExpiresAt, csrfToken,
+                    acr, amr, authTime, stepUpTime, flowId, profile, false, null);
+        }
+    }
+
+    /** Opaque single-use continuation payload (destination only — never trust state). */
+    public record Continuation(String returnTo, Instant createdAt) {}
 }

@@ -80,7 +80,20 @@ public class PreviewVersionController {
         body.put("fullEstateCertifiedCommit", nonBlank(fullEstateCertifiedCommit, ""));
         body.put("helmRelease", nonBlank(helmRelease, ""));
         body.put("helmRevision", nonBlank(helmRevision, ""));
-        body.put("imageDigests", parseImageDigests(imageDigestsJson));
+
+        // The digest map is certified at Helm-release time for a specific estate commit. A
+        // later targeted image update (e.g. kubectl set image) changes this pod's runtime
+        // commit without regenerating the map, so its own entry can go stale. Report the map
+        // as a certification artifact, and say explicitly whether it still binds this runtime.
+        Map<String, String> digests = parseImageDigests(imageDigestsJson);
+        String certifiedForCommit = nonBlank(fullEstateCertifiedCommit, nonBlank(fullEstateCommit, ""));
+        boolean digestsBindThisRuntime = digests.isEmpty()
+                || certifiedForCommit.isBlank()
+                || certifiedForCommit.equals(effectiveBffCommit);
+        body.put("imageDigests", digests);
+        body.put("imageDigestsCertifiedForCommit", certifiedForCommit);
+        body.put("imageDigestsCertifiedAt", nonBlank(versionGeneratedAt, ""));
+        body.put("imageDigestsAuthoritativeForThisRuntime", digestsBindThisRuntime);
         body.put("generatedAt", nonBlank(versionGeneratedAt, Instant.now().toString()));
 
         return body;

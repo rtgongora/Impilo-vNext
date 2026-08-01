@@ -37,18 +37,22 @@ public class OidcSessionController {
     public ResponseEntity<Void> authorize(
             @RequestParam(defaultValue = "/") String returnTo,
             @RequestParam(required = false) String acr,
-            @RequestParam(required = false) String loginHint) {
+            @RequestParam(required = false) String loginHint,
+            @RequestParam(required = false) String continuation) {
         return ResponseEntity.status(HttpStatus.FOUND)
-                .location(sessions.begin(returnTo, acr, null, null, loginHint)).build();
+                .location(sessions.begin(returnTo, acr, null, null, loginHint, continuation)).build();
     }
 
     @GetMapping("/callback")
     public ResponseEntity<Void> callback(@RequestParam String state, @RequestParam String code) {
         OidcSessionService.EstablishedSession established = sessions.complete(state, code);
+        long cookieTtl = established.data().recovery()
+                ? Math.min(properties.getSessionTtlSeconds(), properties.getRecoverySessionTtlSeconds())
+                : properties.getSessionTtlSeconds();
         return ResponseEntity.status(HttpStatus.FOUND)
                 .location(URI.create(established.returnTo()))
-                .header(HttpHeaders.SET_COOKIE, sessionCookie(established.sessionId()).toString())
-                .header(HttpHeaders.SET_COOKIE, csrfCookie(established.data().csrfToken()).toString())
+                .header(HttpHeaders.SET_COOKIE, sessionCookie(established.sessionId(), cookieTtl).toString())
+                .header(HttpHeaders.SET_COOKIE, csrfCookie(established.data().csrfToken(), cookieTtl).toString())
                 .build();
     }
 
@@ -64,6 +68,10 @@ public class OidcSessionController {
             data.put("authTime", session.authTime());
             data.put("stepUpTime", session.stepUpTime());
             data.put("expiresAt", session.accessTokenExpiresAt());
+            data.put("recovery", session.recovery());
+            if (session.recovery() && session.recoveryExpiresAt() != null) {
+                data.put("recoveryExpiresAt", session.recoveryExpiresAt());
+            }
             return ResponseEntity.ok(Map.of("data", data));
         }).orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(Map.of("error", Map.of("code", "NO_ACTIVE_SESSION"))));
@@ -99,16 +107,16 @@ public class OidcSessionController {
                         "id", "current-session", "type", "logout", "attributes", Map.of())));
     }
 
-    private ResponseCookie sessionCookie(String value) {
+    private ResponseCookie sessionCookie(String value, long ttlSeconds) {
         return ResponseCookie.from(WebAuthSessionStore.SESSION_COOKIE, value).httpOnly(true)
                 .secure(properties.isCookieSecure()).sameSite("Lax").path("/")
-                .maxAge(Duration.ofSeconds(properties.getSessionTtlSeconds())).build();
+                .maxAge(Duration.ofSeconds(ttlSeconds)).build();
     }
 
-    private ResponseCookie csrfCookie(String value) {
+    private ResponseCookie csrfCookie(String value, long ttlSeconds) {
         return ResponseCookie.from(WebAuthSessionStore.CSRF_COOKIE, value).httpOnly(false)
                 .secure(properties.isCookieSecure()).sameSite("Lax").path("/")
-                .maxAge(Duration.ofSeconds(properties.getSessionTtlSeconds())).build();
+                .maxAge(Duration.ofSeconds(ttlSeconds)).build();
     }
 
     private ResponseCookie clearCookie(String name, boolean httpOnly) {

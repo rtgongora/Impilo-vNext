@@ -10,6 +10,14 @@ public class WebAuthSessionProperties {
     private boolean cookieSecure = true;
     private long sessionTtlSeconds = 28800;
     private long transactionTtlSeconds = 600;
+    // Constrained recovery: a recovery-code login yields a restricted session with this
+    // absolute maximum lifetime (doctrine default 15 minutes), never the ordinary TTL.
+    private long recoverySessionTtlSeconds = 900;
+    // Opaque single-use continuation preserving the interrupted destination across
+    // recovery -> enrollment -> fresh ordinary authentication.
+    private long recoveryContinuationTtlSeconds = 1800;
+    // Shell route where a constrained recovery session lands instead of the original journey.
+    private String recoveryLandingPath = "/settings/security";
     private String encryptionKey = "";
     private String publicIssuer = "https://impilo.mohcc.gov.zw:8480/realms/impilo";
     private String internalIssuer = "http://keycloak:8080/realms/impilo";
@@ -26,6 +34,12 @@ public class WebAuthSessionProperties {
     public void setSessionTtlSeconds(long sessionTtlSeconds) { this.sessionTtlSeconds = sessionTtlSeconds; }
     public long getTransactionTtlSeconds() { return transactionTtlSeconds; }
     public void setTransactionTtlSeconds(long transactionTtlSeconds) { this.transactionTtlSeconds = transactionTtlSeconds; }
+    public long getRecoverySessionTtlSeconds() { return recoverySessionTtlSeconds; }
+    public void setRecoverySessionTtlSeconds(long recoverySessionTtlSeconds) { this.recoverySessionTtlSeconds = recoverySessionTtlSeconds; }
+    public long getRecoveryContinuationTtlSeconds() { return recoveryContinuationTtlSeconds; }
+    public void setRecoveryContinuationTtlSeconds(long recoveryContinuationTtlSeconds) { this.recoveryContinuationTtlSeconds = recoveryContinuationTtlSeconds; }
+    public String getRecoveryLandingPath() { return recoveryLandingPath; }
+    public void setRecoveryLandingPath(String recoveryLandingPath) { this.recoveryLandingPath = recoveryLandingPath; }
     public String getEncryptionKey() { return encryptionKey; }
     public void setEncryptionKey(String encryptionKey) { this.encryptionKey = encryptionKey; }
     public String getPublicIssuer() { return publicIssuer; }
