@@ -75,7 +75,7 @@ public class OidcSessionService {
         if (action != null) builder.queryParam("kc_action", action);
         if (loginHint != null && !loginHint.isBlank()) builder.queryParam("login_hint", loginHint.trim());
         if (previousSessionId != null) builder.queryParam("prompt", "login").queryParam("max_age", 0);
-        return builder.build(true).toUri();
+        return builder.encode().build().toUri();
     }
 
     public EstablishedSession complete(String state, String code) {
