@@ -97,7 +97,7 @@ keycloak:
   # MFA-PROD: use the optimized in-repo image by immutable digest after the migration
   # rehearsal. Tag remains only as a local build fallback; release manifests must set digest.
   image:
-    repository: 127.0.0.1:5000/impilo/keycloak
+    repository: impilo/keycloak
     tag: "26.7.0"
     digest: ""
     pullPolicy: IfNotPresent
