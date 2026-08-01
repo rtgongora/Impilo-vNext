@@ -53,6 +53,10 @@ public class SecuritySettingsService {
     }
 
     public void removeCredential(Jwt jwt, String credentialId) {
+        // Constrained recovery may never delete credentials: an attacker holding only a
+        // recovery code could otherwise strip the account's last real factor. Enrolling a
+        // REPLACEMENT factor (CREATE) is the only credential mutation recovery permits.
+        requireNotConstrainedRecovery(jwt);
         requireFreshAal2(jwt);
         List<KeycloakAdminClient.CredentialMetadata> credentials = keycloak.credentials(jwt.getSubject());
         KeycloakAdminClient.CredentialMetadata target = credentials.stream()
@@ -73,7 +77,7 @@ public class SecuritySettingsService {
     }
 
     public void terminateSession(Jwt jwt, String sessionId) {
-        requireFreshAal2(jwt);
+        requireFreshAal2OrConstrainedRecovery(jwt);
         boolean owned = keycloak.sessions(jwt.getSubject()).stream().anyMatch(value -> value.id().equals(sessionId));
         if (!owned) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "SESSION_NOT_FOUND");
         if (!keycloak.terminateSession(sessionId)) {
@@ -82,7 +86,7 @@ public class SecuritySettingsService {
     }
 
     public int terminateOtherSessions(Jwt jwt) {
-        requireFreshAal2(jwt);
+        requireFreshAal2OrConstrainedRecovery(jwt);
         String current = jwt.getClaimAsString("sid");
         List<KeycloakAdminClient.SessionMetadata> others = keycloak.sessions(jwt.getSubject()).stream()
                 .filter(value -> current == null || !current.equals(value.id())).toList();
@@ -104,6 +108,30 @@ public class SecuritySettingsService {
         if (authTime == null || authTime.plusSeconds(300).isBefore(Instant.now())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "FRESH_AUTHENTICATION_REQUIRED");
         }
+    }
+
+    /**
+     * Session termination is access-REDUCING, so the Tshepo recovery doctrine explicitly
+     * permits it during CONSTRAINED_RECOVERY (a recovery session is AAL1 by construction and
+     * could otherwise never terminate the sessions it is required to be able to terminate).
+     * Ordinary sessions keep the strict fresh-AAL2 requirement unchanged.
+     */
+    private static void requireFreshAal2OrConstrainedRecovery(Jwt jwt) {
+        if (isConstrainedRecovery(jwt)) return;
+        requireFreshAal2(jwt);
+    }
+
+    /** Recovery may not delete credentials — fail with the canonical recovery decision. */
+    private static void requireNotConstrainedRecovery(Jwt jwt) {
+        if (isConstrainedRecovery(jwt)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "CONSTRAINED_RECOVERY_SESSION");
+        }
+    }
+
+    /** Canonical recovery classification — same v1 contract markers the trust plane uses. */
+    static boolean isConstrainedRecovery(Jwt jwt) {
+        return zw.gov.mohcc.impilo.tshepo.contracts.v1.AuthenticationAssurance.recoveryStateFromAmr(amr(jwt))
+                == zw.gov.mohcc.impilo.tshepo.contracts.v1.RecoveryAuthenticationState.CONSTRAINED_RECOVERY;
     }
 
     @SuppressWarnings("unchecked")

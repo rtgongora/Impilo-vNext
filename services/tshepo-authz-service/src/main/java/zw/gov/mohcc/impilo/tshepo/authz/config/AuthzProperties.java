@@ -20,13 +20,17 @@ public class AuthzProperties {
     // Constrained recovery (Tshepo doctrine): a session whose AMR carries a recovery marker is
     // restricted to account-recovery actions only. Entries are "ACTION:RESOURCE_TYPE"; either
     // side may be "*". Everything else returns RECOVERY_REQUIRED (legacy wire: fail-closed DENY).
+    // Deliberately EXCLUDED (CP3 closure): UPDATE/DELETE:AUTH_FACTOR (arbitrary credential
+    // mutation/deletion — could remove the last valid factor), recovery-code regeneration,
+    // password/email changes, and any administrative recovery action. A recovery session may
+    // only inspect factors, enroll a replacement approved factor, start a fresh ordinary
+    // authentication, terminate sessions and log out.
     private List<String> recoveryPermittedActions = List.of(
             "LOGOUT:*",
             "READ:ACCOUNT_SECURITY",
             "READ:AUTH_FACTOR",
             "CREATE:AUTH_FACTOR",
-            "UPDATE:AUTH_FACTOR",
-            "DELETE:AUTH_FACTOR",
+            "CREATE:AUTH_SESSION",
             "READ:AUTH_SESSION",
             "DELETE:AUTH_SESSION");
     private int breakGlassTtlMinutes = 60;
