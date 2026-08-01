@@ -24,6 +24,10 @@ import zw.gov.mohcc.impilo.tshepo.contracts.dto.VisibilityProfile;
 import zw.gov.mohcc.impilo.tshepo.contracts.enums.PurposeOfUse;
 import zw.gov.mohcc.impilo.tshepo.contracts.enums.Verdict;
 import zw.gov.mohcc.impilo.tshepo.contracts.headers.TrustHeaders;
+import zw.gov.mohcc.impilo.tshepo.contracts.v1.TrustChallengeDecision;
+import zw.gov.mohcc.impilo.tshepo.contracts.v1.TrustChallengeOutcome;
+import zw.gov.mohcc.impilo.tshepo.contracts.v1.adapter.AuthzResponseChallengeAdapter;
+import zw.gov.mohcc.impilo.tshepo.contracts.v1.adapter.LegacyAuthenticationAssuranceAdapter;
 
 import java.util.*;
 import java.time.Instant;
@@ -209,6 +213,20 @@ public class PolicyEngine {
                 && privilegeRevocationStore.isRevoked(request.providerId())) {
             return denyAndLog(request, "PROVIDER_PRIVILEGE_REVOKED",
                     "Provider privilege suspended or revoked (VARAPI)", 0, startTime);
+        }
+
+        // ────────────────────────────────────────────────────────────────
+        // Step 0: Constrained recovery gate (Tshepo trust doctrine, CP3).
+        // A session authenticated with recovery codes (AMR recovery marker) never carries
+        // ordinary workforce AAL2 authority. Only account-recovery actions are permitted;
+        // everything else returns the canonical RECOVERY_REQUIRED outcome, translated
+        // fail-closed onto the legacy AuthzResponse wire (DENY, never an accidental ALLOW).
+        // This gate runs before escalation resolution so a recovery session can never
+        // activate a visibility-escalation grant or any context/authority elevation.
+        // ────────────────────────────────────────────────────────────────
+        AuthzResponse recoveryRestriction = evaluateConstrainedRecovery(request, startTime);
+        if (recoveryRestriction != null) {
+            return recoveryRestriction;
         }
 
         Optional<EscalationGrantView> activeEscalation = Optional.empty();
@@ -925,6 +943,66 @@ public class PolicyEngine {
         if (acceptedMethods != null && !acceptedMethods.isEmpty()
                 && assurance.methods().stream().noneMatch(acceptedMethods::contains)) return false;
         return true;
+    }
+
+    /**
+     * Step 0: constrained recovery gate. Returns a decision when the current session is a
+     * recovery-code session attempting anything outside the recovery allowlist, else null.
+     *
+     * <p>The canonical decision is {@link TrustChallengeDecision#RECOVERY_REQUIRED}; the legacy
+     * wire receives it through {@link AuthzResponseChallengeAdapter#toLegacySafe} which maps it
+     * to a fail-closed DENY ({@code UNREPRESENTABLE_RECOVERY_REQUIRED}) rather than throwing.</p>
+     */
+    private AuthzResponse evaluateConstrainedRecovery(AuthzInternalRequest request, long startTime) {
+        zw.gov.mohcc.impilo.tshepo.contracts.v1.AuthenticationAssurance canonical =
+                LegacyAuthenticationAssuranceAdapter.toCanonical(request.authenticationAssurance());
+        if (!canonical.isConstrainedRecovery()) {
+            return null;
+        }
+        if (isRecoveryPermittedAction(request.action(), request.resourceType())) {
+            // Permitted recovery actions still flow through every later step (RBAC, consent,
+            // step-up) — the allowlist only exempts them from the blanket recovery restriction.
+            return null;
+        }
+        TrustChallengeOutcome outcome = TrustChallengeOutcome.of(
+                TrustChallengeDecision.RECOVERY_REQUIRED,
+                "CONSTRAINED_RECOVERY_SESSION",
+                "trust.recovery.enroll_required",
+                "ENROLL_REPLACEMENT_FACTOR",
+                2,
+                List.of("totp", "webauthn"),
+                List.of(),
+                null, null, null,
+                UUID.randomUUID().toString(),
+                null, null, null);
+
+        persistDecision(request, "RECOVERY_REQUIRED", 0,
+                "CONSTRAINED_RECOVERY_SESSION", null, null, startTime);
+        auditPublisher.queueAuditEvent(request, "RECOVERY_REQUIRED", 0,
+                "CONSTRAINED_RECOVERY_SESSION");
+        log.info("RECOVERY_REQUIRED: actor={}, action={}, resource={}, correlation={}",
+                request.actorId(), request.action(), request.resourceType(),
+                request.correlationId());
+
+        return AuthzResponseChallengeAdapter.toLegacySafe(outcome);
+    }
+
+    /** Matches action/resource against the configured "ACTION:RESOURCE_TYPE" recovery allowlist. */
+    private boolean isRecoveryPermittedAction(String action, String resourceType) {
+        String normalisedAction = action == null ? "" : action.trim().toUpperCase(Locale.ROOT);
+        String normalisedResource = resourceType == null ? "" : resourceType.trim().toUpperCase(Locale.ROOT);
+        for (String entry : properties.getRecoveryPermittedActions()) {
+            if (entry == null) continue;
+            String[] parts = entry.trim().toUpperCase(Locale.ROOT).split(":", 2);
+            String allowedAction = parts[0].trim();
+            String allowedResource = parts.length > 1 ? parts[1].trim() : "*";
+            boolean actionMatches = allowedAction.equals("*") || allowedAction.equals(normalisedAction);
+            boolean resourceMatches = allowedResource.equals("*") || allowedResource.equals(normalisedResource);
+            if (actionMatches && resourceMatches) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

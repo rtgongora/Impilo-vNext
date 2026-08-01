@@ -14,7 +14,21 @@ public class AuthzProperties {
     private RateLimit rateLimit = new RateLimit();
     private int stepUpWindowSeconds = 300;
     private int maxStepUpAttempts = 5;
-    private List<String> stepUpMethods = List.of("totp", "webauthn", "recovery");
+    // Recovery codes are deliberately NOT a step-up method: recovery authentication yields a
+    // constrained recovery session (see recoveryPermittedActions), never elevated authority.
+    private List<String> stepUpMethods = List.of("totp", "webauthn");
+    // Constrained recovery (Tshepo doctrine): a session whose AMR carries a recovery marker is
+    // restricted to account-recovery actions only. Entries are "ACTION:RESOURCE_TYPE"; either
+    // side may be "*". Everything else returns RECOVERY_REQUIRED (legacy wire: fail-closed DENY).
+    private List<String> recoveryPermittedActions = List.of(
+            "LOGOUT:*",
+            "READ:ACCOUNT_SECURITY",
+            "READ:AUTH_FACTOR",
+            "CREATE:AUTH_FACTOR",
+            "UPDATE:AUTH_FACTOR",
+            "DELETE:AUTH_FACTOR",
+            "READ:AUTH_SESSION",
+            "DELETE:AUTH_SESSION");
     private int breakGlassTtlMinutes = 60;
     private int breakGlassReviewSlaHours = 24;
     private RiskThresholds riskThresholds = new RiskThresholds();
@@ -186,6 +200,8 @@ public class AuthzProperties {
     public void setMaxStepUpAttempts(int maxStepUpAttempts) { this.maxStepUpAttempts = maxStepUpAttempts; }
     public List<String> getStepUpMethods() { return stepUpMethods; }
     public void setStepUpMethods(List<String> stepUpMethods) { this.stepUpMethods = stepUpMethods; }
+    public List<String> getRecoveryPermittedActions() { return recoveryPermittedActions; }
+    public void setRecoveryPermittedActions(List<String> recoveryPermittedActions) { this.recoveryPermittedActions = recoveryPermittedActions; }
     public int getBreakGlassTtlMinutes() { return breakGlassTtlMinutes; }
     public void setBreakGlassTtlMinutes(int breakGlassTtlMinutes) { this.breakGlassTtlMinutes = breakGlassTtlMinutes; }
     public int getBreakGlassReviewSlaHours() { return breakGlassReviewSlaHours; }

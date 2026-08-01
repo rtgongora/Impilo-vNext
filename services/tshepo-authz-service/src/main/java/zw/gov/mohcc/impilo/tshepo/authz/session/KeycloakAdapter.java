@@ -19,6 +19,7 @@ import java.net.URL;
 import java.time.Instant;
 import java.util.*;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.AuthenticationAssurance;
+import zw.gov.mohcc.impilo.tshepo.contracts.v1.adapter.LegacyAuthenticationAssuranceAdapter;
 
 /**
  * Keycloak OIDC session validation adapter.
@@ -200,8 +201,13 @@ public class KeycloakAdapter implements SessionAssurance {
             Instant stepUpTime = claimInstant(claims.getClaim("impilo_step_up_at"));
             boolean phishingResistant = methods.stream().anyMatch(method ->
                     method.equalsIgnoreCase("webauthn") || method.equalsIgnoreCase("hwk"));
-            return new AuthenticationAssurance(aal, methods, authTime, stepUpTime,
+            AuthenticationAssurance raw = new AuthenticationAssurance(aal, methods, authTime, stepUpTime,
                     phishingResistant, sessionId, claims.getStringClaim("impilo_flow_id"));
+            // Constrained recovery: a recovery-code login must not surface as ordinary workforce
+            // AAL2. The v1 round-trip classifies recovery from AMR and demotes numeric AAL to at
+            // most 1 while keeping the recovery marker visible to policy and downstream headers.
+            return LegacyAuthenticationAssuranceAdapter.toLegacy(
+                    LegacyAuthenticationAssuranceAdapter.toCanonical(raw));
         } catch (Exception e) {
             log.warn("Authentication-assurance claims could not be classified: {}", e.getMessage());
             return AuthenticationAssurance.none();
