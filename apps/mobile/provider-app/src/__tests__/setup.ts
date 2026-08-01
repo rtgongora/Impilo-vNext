@@ -80,6 +80,20 @@ vi.mock("expo-web-browser", () => ({
   openBrowserAsync: vi.fn(),
 }));
 
+vi.mock("expo-linking", () => ({
+  createURL: (path: string) => `impilo-provider://${path.replace(/^\/+/, "")}`,
+  parse: (value: string) => {
+    const parsed = new URL(value);
+    return {
+      hostname: parsed.hostname || null,
+      path: parsed.pathname.replace(/^\/+/, "") || null,
+      queryParams: Object.fromEntries(parsed.searchParams.entries()),
+    };
+  },
+  getInitialURL: vi.fn(async () => null),
+  addEventListener: vi.fn(() => ({ remove: vi.fn() })),
+}));
+
 vi.mock("expo-secure-store", () => ({
   getItemAsync: vi.fn(async () => null),
   setItemAsync: vi.fn(async () => undefined),
@@ -118,4 +132,3 @@ vi.mock("@livekit/react-native", async () => {
     useTracks: () => [],
   };
 });
-

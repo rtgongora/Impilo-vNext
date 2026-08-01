@@ -54,6 +54,9 @@ vi.mock("../../navigation/SupervisorTabs", () => ({
 vi.mock("../../navigation/OfflineTabs", () => ({
   OfflineTabs: () => React.createElement("div", { "data-testid": "offline-tabs" }),
 }));
+vi.mock("../../navigation/CourierTabs", () => ({
+  CourierTabs: () => React.createElement("div", { "data-testid": "courier-tabs" }),
+}));
 vi.mock("../../navigation/ModeSwitcher", () => ({
   ModeSwitcher: () => React.createElement("div", { "data-testid": "mode-switcher" }),
 }));
