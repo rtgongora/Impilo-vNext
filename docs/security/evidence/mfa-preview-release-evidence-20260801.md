@@ -73,8 +73,9 @@ above, rather than a misleading single global commit, are the release truth.
 ## Audit evidence
 
 Native Keycloak events are ingested by the dedicated event-reader identity. The final
-governed smoke returned HTTP 200 and `intact=true` after verifying all 218 events from
-genesis through the stored chain head.
+governed release smoke returned HTTP 200 and `intact=true` after verifying 218 events;
+the final post-push acceptance repeated the proof across all 352 events then present,
+from genesis through the stored chain head.
 
 The release also corrected a historical precision defect: old events were hashed with
 nanosecond timestamps before PostgreSQL stored microseconds. Verification now recovers
