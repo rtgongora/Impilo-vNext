@@ -108,7 +108,7 @@ impilo:
       session-ttl-seconds: ${IMPILO_AUTH_WEB_SESSION_TTL_SECONDS:28800}
       transaction-ttl-seconds: ${IMPILO_AUTH_TRANSACTION_TTL_SECONDS:300}
       encryption-key: ${IMPILO_AUTH_SESSION_ENCRYPTION_KEY:}
-      public-issuer: ${KEYCLOAK_ISSUER_URI:https://impilo.mohcc.gov.zw:8480/realms/impilo}
+      public-issuer: ${KEYCLOAK_ISSUER_URI:https://impilo.mohcc.gov.zw/realms/impilo}
       internal-issuer: ${KEYCLOAK_INTERNAL_ISSUER:http://keycloak:8080/realms/impilo}
       client-id: ${KEYCLOAK_CLIENT_ID:experience-ui}
       client-secret: ${KEYCLOAK_CLIENT_SECRET:}

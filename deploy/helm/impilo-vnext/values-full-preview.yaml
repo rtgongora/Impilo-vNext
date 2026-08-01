@@ -101,7 +101,7 @@ keycloak:
     tag: "26.7.0"
     digest: ""
     pullPolicy: IfNotPresent
-  hostname: "https://impilo.mohcc.gov.zw:8480"
+  hostname: "https://impilo.mohcc.gov.zw"
   database:
     vendor: postgres
     host: postgres
@@ -394,7 +394,7 @@ experienceBff:
     REDIS_HOST: redis
     REDIS_PORT: "6379"
     KEYCLOAK_URL: http://keycloak:8080
-    KEYCLOAK_ISSUER_URI: https://impilo.mohcc.gov.zw:8480/realms/impilo
+    KEYCLOAK_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
     KEYCLOAK_INTERNAL_ISSUER: http://keycloak:8080/realms/impilo
     KEYCLOAK_REALM: impilo
     KEYCLOAK_CLIENT_ID: experience-ui
@@ -518,7 +518,7 @@ fullBootServices:
     env:
       # MFA cohort: validate external issuer claims using the internal JWKS route.
       IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS: "false"
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw:8480/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
   tshepo-authz-service:
     env:
@@ -527,7 +527,7 @@ fullBootServices:
       SPRING_FLYWAY_OUT_OF_ORDER: "true"
       # MFA cohort: validate external issuer claims using the internal JWKS route.
       IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS: "false"
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw:8480/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
   llm-orchestration-service:
     env:
