@@ -23,6 +23,7 @@ CONFIG_VERSION="${IMPILO_MFA_POLICY_VERSION:-1.0.0}"
 EXPECTED_USER_COUNT="${EXPECTED_USER_COUNT:-42}"
 EXPECTED_CURRENT_HASH="${EXPECTED_CURRENT_HASH:-}"
 APPROVED_AAGUIDS="${IMPILO_AAL3_APPROVED_AAGUIDS:-}"
+FLOW_ALIAS="impilo-browser-step-up-v1"
 
 for command in curl jq sha256sum mktemp diff; do
   command -v "$command" >/dev/null || { echo "missing command: $command" >&2; exit 69; }
@@ -52,6 +53,113 @@ kc_post() {
     --data-binary "@$2" "$admin_base$1" >/dev/null
 }
 
+flow_exists() {
+  kc_get '/authentication/flows' | jq -e --arg alias "$1" '.[] | select(.alias == $alias)' >/dev/null
+}
+
+flow_executions() {
+  kc_get "/authentication/flows/$1/executions"
+}
+
+set_execution_requirement() {
+  local flow_alias="$1" execution_id="$2" requirement="$3"
+  flow_executions "$flow_alias" | jq -e --arg id "$execution_id" --arg requirement "$requirement" '
+    .[] | select(.id == $id) | .requirement = $requirement
+  ' >"$tmp/execution-update.json"
+  kc_put "/authentication/flows/$flow_alias/executions" "$tmp/execution-update.json"
+}
+
+add_execution() {
+  local flow_alias="$1" provider="$2" requirement="$3" id
+  jq -n --arg provider "$provider" '{provider: $provider}' >"$tmp/execution-create.json"
+  kc_post "/authentication/flows/$flow_alias/executions/execution" "$tmp/execution-create.json"
+  id="$(flow_executions "$flow_alias" | jq -er --arg provider "$provider" '
+    [.[] | select(.providerId == $provider)] | last | .id')"
+  set_execution_requirement "$flow_alias" "$id" "$requirement"
+  printf '%s' "$id"
+}
+
+add_subflow() {
+  local parent_alias="$1" alias="$2" requirement="$3" id
+  jq -n --arg alias "$alias" '{alias: $alias, type: "basic-flow", provider: "registration-page-form", description: "", builtIn: false}' \
+    >"$tmp/subflow-create.json"
+  kc_post "/authentication/flows/$parent_alias/executions/flow" "$tmp/subflow-create.json"
+  id="$(flow_executions "$parent_alias" | jq -er --arg alias "$alias" '
+    [.[] | select(.authenticationFlow == true and .displayName == $alias)] | last | .id')"
+  set_execution_requirement "$parent_alias" "$id" "$requirement"
+}
+
+configure_loa_condition() {
+  local execution_id="$1" alias="$2" level="$3" max_age="$4"
+  jq -n --arg alias "$alias" --arg level "$level" --arg maxAge "$max_age" '{
+    alias: $alias,
+    config: {"loa-condition-level": $level, "loa-max-age": $maxAge}
+  }' >"$tmp/loa-config.json"
+  kc_post "/authentication/executions/$execution_id/config" "$tmp/loa-config.json"
+}
+
+verify_impilo_flow() {
+  flow_exists "$FLOW_ALIAS" || return 1
+  flow_executions "$FLOW_ALIAS" | jq -e '
+    any(.providerId == "auth-cookie" and .requirement == "ALTERNATIVE") and
+    any(.authenticationFlow == true and .displayName == "impilo-auth" and .requirement == "ALTERNATIVE")
+  ' >/dev/null || return 1
+  flow_executions impilo-auth | jq -e '
+    any(.displayName == "impilo-loa1" and .requirement == "CONDITIONAL") and
+    any(.displayName == "impilo-loa2" and .requirement == "CONDITIONAL") and
+    any(.displayName == "impilo-loa3" and .requirement == "CONDITIONAL")
+  ' >/dev/null || return 1
+  flow_executions impilo-loa1 | jq -e '
+    any(.providerId == "conditional-level-of-authentication" and .requirement == "REQUIRED") and
+    any(.providerId == "auth-username-password-form" and .requirement == "REQUIRED")
+  ' >/dev/null || return 1
+  flow_executions impilo-aal2-methods | jq -e '
+    any(.providerId == "auth-otp-form" and .requirement == "ALTERNATIVE") and
+    any(.providerId == "auth-recovery-authn-code-form" and .requirement == "ALTERNATIVE") and
+    any(.providerId == "webauthn-authenticator-passwordless" and .requirement == "ALTERNATIVE")
+  ' >/dev/null || return 1
+  flow_executions impilo-loa3 | jq -e '
+    any(.providerId == "conditional-level-of-authentication" and .requirement == "REQUIRED") and
+    any(.providerId == "webauthn-authenticator" and .requirement == "REQUIRED")
+  ' >/dev/null
+}
+
+ensure_impilo_flow() {
+  if flow_exists "$FLOW_ALIAS"; then
+    verify_impilo_flow || {
+      echo "REFUSING: existing $FLOW_ALIAS flow differs from the governed v1 manifest" >&2
+      exit 68
+    }
+    return
+  fi
+
+  jq -n --arg alias "$FLOW_ALIAS" '{alias: $alias, description: "Impilo governed AAL1/AAL2/AAL3 browser flow", providerId: "basic-flow", topLevel: true, builtIn: false}' \
+    >"$tmp/flow-create.json"
+  kc_post '/authentication/flows' "$tmp/flow-create.json"
+  add_execution "$FLOW_ALIAS" auth-cookie ALTERNATIVE >/dev/null
+  add_subflow "$FLOW_ALIAS" impilo-auth ALTERNATIVE
+
+  add_subflow impilo-auth impilo-loa1 CONDITIONAL
+  configure_loa_condition "$(add_execution impilo-loa1 conditional-level-of-authentication REQUIRED)" "Impilo AAL1" 1 36000
+  add_execution impilo-loa1 auth-username-password-form REQUIRED >/dev/null
+
+  add_subflow impilo-auth impilo-loa2 CONDITIONAL
+  configure_loa_condition "$(add_execution impilo-loa2 conditional-level-of-authentication REQUIRED)" "Impilo AAL2" 2 0
+  add_subflow impilo-loa2 impilo-aal2-methods REQUIRED
+  add_execution impilo-aal2-methods auth-otp-form ALTERNATIVE >/dev/null
+  add_execution impilo-aal2-methods auth-recovery-authn-code-form ALTERNATIVE >/dev/null
+  add_execution impilo-aal2-methods webauthn-authenticator-passwordless ALTERNATIVE >/dev/null
+
+  add_subflow impilo-auth impilo-loa3 CONDITIONAL
+  configure_loa_condition "$(add_execution impilo-loa3 conditional-level-of-authentication REQUIRED)" "Impilo AAL3" 3 0
+  add_execution impilo-loa3 webauthn-authenticator REQUIRED >/dev/null
+
+  verify_impilo_flow || {
+    echo "REFUSING SUCCESS: governed browser flow did not match its manifest after creation" >&2
+    exit 70
+  }
+}
+
 kc_get '' >"$tmp/realm.json"
 user_count="$(kc_get '/users/count' | jq -er '.')"
 if [[ "$user_count" != "$EXPECTED_USER_COUNT" ]]; then
@@ -60,6 +168,7 @@ if [[ "$user_count" != "$EXPECTED_USER_COUNT" ]]; then
 fi
 
 managed_filter='{
+  loginTheme, browserFlow, acrToLoAMapping,
   sslRequired, bruteForceProtected, permanentLockout, failureFactor,
   waitIncrementSeconds, quickLoginCheckMilliSeconds, minimumQuickLoginWaitSeconds,
   maxFailureWaitSeconds, maxDeltaTimeSeconds,
@@ -88,6 +197,13 @@ else
 fi
 
 jq -S --arg host "$EXTERNAL_HOST" --slurpfile aaguids "$tmp/aaguids.json" '
+  .loginTheme = "impilo" |
+  .browserFlow = "impilo-browser-step-up-v1" |
+  .acrToLoAMapping = {
+    "urn:impilo:aal1": 1,
+    "urn:impilo:aal2": 2,
+    "urn:impilo:aal3": 3
+  } |
   .sslRequired = "external" |
   .bruteForceProtected = true |
   .permanentLockout = false |
@@ -148,6 +264,15 @@ for alias in CONFIGURE_TOTP webauthn-register webauthn-register-passwordless CON
   }
 done
 
+if verify_impilo_flow; then
+  echo "FLOW_STATE=governed-v1"
+elif flow_exists "$FLOW_ALIAS"; then
+  echo "FLOW_STATE=drifted"
+  exit 68
+else
+  echo "FLOW_STATE=absent (apply will create non-destructively)"
+fi
+
 if [[ "$MODE" == plan ]]; then
   echo "PLAN_ONLY: no realm, client, user, credential, or required-action state changed"
   exit 0
@@ -158,6 +283,8 @@ fi
   echo "REFUSING: live managed state changed after planning (expected $EXPECTED_CURRENT_HASH, got $current_hash)" >&2
   exit 65
 }
+
+ensure_impilo_flow
 
 # Merge only managed posture fields. Users, credentials, groups, roles, components,
 # keys, and unmanaged realm settings are not present in this update payload.
@@ -280,6 +407,10 @@ kc_get '' | jq -S "$managed_filter" >"$tmp/after-managed.json"
 after_hash="$(sha256sum "$tmp/after-managed.json" | awk '{print $1}')"
 [[ "$after_hash" == "$desired_hash" ]] || {
   echo "REFUSING SUCCESS: post-apply hash mismatch ($after_hash != $desired_hash)" >&2
+  exit 70
+}
+verify_impilo_flow || {
+  echo "REFUSING SUCCESS: governed browser flow verification failed" >&2
   exit 70
 }
 echo "APPLIED: policy=$CONFIG_VERSION hash=$after_hash workforce_required_actions_assigned=$workforce_assigned"

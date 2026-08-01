@@ -1,69 +1,43 @@
 package zw.gov.mohcc.impilo.tshepo.authz.api;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import zw.gov.mohcc.impilo.tshepo.authz.stepup.TotpEnrolmentService;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
-import java.util.UUID;
 
 /**
- * Authenticator-app TOTP enrolment endpoints (step-up). The enrolling actor's identity is taken
- * from the server-side trust context ({@code x-tenant-id} / {@code x-actor-id}) — an actor enrols
- * only their own secret; the body never carries the actor or the secret.
- *
- * <p>Registered only when {@code tshepo.authz.totp.enrolment-enabled=true}.</p>
+ * Compatibility tombstone for Tshepo's retired authenticator endpoints.
+ * Keycloak is the sole owner of TOTP secrets, passkeys and recovery codes. Keeping
+ * an explicit 410 response avoids silently breaking old callers while ensuring
+ * Tshepo can never receive or generate authenticator material.
  */
+@Deprecated(forRemoval = true)
 @RestController
 @RequestMapping("/v1/step-up/totp")
-@ConditionalOnProperty(name = "tshepo.authz.totp.enrolment-enabled", havingValue = "true")
 public class TotpEnrolmentController {
 
-    private static final Logger log = LoggerFactory.getLogger(TotpEnrolmentController.class);
-
-    private final TotpEnrolmentService enrolmentService;
-
-    public TotpEnrolmentController(TotpEnrolmentService enrolmentService) {
-        this.enrolmentService = enrolmentService;
-    }
-
-    /** Begin enrolment — returns the otpauth:// provisioning URI + base32 secret for the app. */
     @PostMapping("/enrolment")
-    public ResponseEntity<TotpEnrolmentService.EnrolmentResult> enrol(
-            @RequestHeader("x-tenant-id") UUID tenantId,
-            @RequestHeader("x-actor-id") String actorId) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(enrolmentService.enrol(tenantId, actorId));
+    public ResponseEntity<Map<String, Object>> enrol() {
+        return retired();
     }
 
-    /** Confirm a code to activate the pending enrolment. */
     @PostMapping("/enrolment/confirm")
-    public ResponseEntity<Map<String, Object>> confirm(
-            @RequestHeader("x-tenant-id") UUID tenantId,
-            @RequestHeader("x-actor-id") String actorId,
-            @RequestBody Map<String, String> body) {
-        String code = body == null ? null : body.get("code");
-        try {
-            boolean ok = enrolmentService.confirm(tenantId, actorId, code);
-            if (ok) {
-                return ResponseEntity.ok(Map.of("status", "ACTIVE"));
-            }
-            return ResponseEntity.badRequest().body(Map.of("status", "INVALID_CODE"));
-        } catch (IllegalArgumentException e) {
-            log.warn("TOTP confirm failed for actor {}: {}", actorId, e.getMessage());
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Map<String, Object>> confirm() {
+        return retired();
     }
 
-    /** Revoke the actor's enrolment. */
     @PostMapping("/enrolment/revoke")
-    public ResponseEntity<Map<String, Object>> revoke(
-            @RequestHeader("x-tenant-id") UUID tenantId,
-            @RequestHeader("x-actor-id") String actorId) {
-        enrolmentService.revoke(tenantId, actorId);
-        return ResponseEntity.ok(Map.of("status", "REVOKED"));
+    public ResponseEntity<Map<String, Object>> revoke() {
+        return retired();
+    }
+
+    private ResponseEntity<Map<String, Object>> retired() {
+        return ResponseEntity.status(HttpStatus.GONE).body(Map.of(
+                "code", "TSHEPO_AUTHENTICATOR_RETIRED",
+                "message", "Use the Keycloak-native OIDC enrollment or step-up action",
+                "action", "/internal/v1/auth/oidc/action"));
     }
 }

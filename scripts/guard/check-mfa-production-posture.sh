@@ -35,6 +35,29 @@ grep -q 'CONFIGURE_RECOVERY_AUTHN_CODES' "$ROOT/scripts/operator/keycloak-mfa-re
   && pass "recovery-code support is gated" \
   || reject "recovery-code required action is absent"
 
+grep -q 'impilo-browser-step-up-v1' "$ROOT/scripts/operator/keycloak-mfa-reconcile.sh" \
+  && grep -q 'conditional-level-of-authentication' "$ROOT/scripts/operator/keycloak-mfa-reconcile.sh" \
+  && pass "governed AAL browser flow is reconciled" \
+  || reject "governed AAL browser flow is absent"
+
+grep -q 'COPY --chown=1000:1000 themes/impilo/' "$ROOT/infra/keycloak/Dockerfile" \
+  && test -f "$ROOT/infra/keycloak/themes/impilo/login/theme.properties" \
+  && pass "Impilo Keycloak enrollment theme is packaged" \
+  || reject "Impilo Keycloak enrollment theme is not packaged"
+
+if grep -q 'default:[[:space:]]*$' "$ROOT/services/tshepo-authz-service/src/main/java/zw/gov/mohcc/impilo/tshepo/authz/stepup/StepUpMode.java" \
+  && grep -q 'return TOTP' "$ROOT/services/tshepo-authz-service/src/main/java/zw/gov/mohcc/impilo/tshepo/authz/stepup/StepUpMode.java"; then
+  reject "unknown Tshepo step-up methods still fall back to TOTP"
+else
+  pass "unknown and legacy Tshepo factor methods fail closed"
+fi
+
+if grep -q 'TotpEnrolmentService' "$ROOT/services/tshepo-authz-service/src/main/java/zw/gov/mohcc/impilo/tshepo/authz/api/TotpEnrolmentController.java"; then
+  reject "Tshepo TOTP endpoint still receives authenticator secrets"
+else
+  pass "Tshepo authenticator endpoint is a secret-free compatibility tombstone"
+fi
+
 if grep -R -n -E 'SMS.*MFA|messagingOtp:[[:space:]]*\n[[:space:]]*enabled:[[:space:]]*true' \
   "$ROOT/docs/security/mfa-policy-v1.yaml" >/dev/null 2>&1; then
   reject "messaging OTP is enabled as MFA"

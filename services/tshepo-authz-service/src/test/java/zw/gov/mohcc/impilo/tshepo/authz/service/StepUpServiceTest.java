@@ -4,7 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -19,9 +18,6 @@ import zw.gov.mohcc.impilo.tshepo.authz.stepup.StepUpProviders;
 import zw.gov.mohcc.impilo.tshepo.authz.stepup.StepUpUnavailableException;
 import zw.gov.mohcc.impilo.tshepo.authz.stepup.StepUpVerificationDispatcher;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -90,31 +86,16 @@ class StepUpServiceTest {
         return e;
     }
 
-    /** Compute a currently-valid RFC 6238 TOTP code for the test secret. */
-    private static String currentTotp() throws Exception {
-        long counter = Instant.now().getEpochSecond() / 30;
-        byte[] msg = ByteBuffer.allocate(8).putLong(counter).array();
-        Mac mac = Mac.getInstance("HmacSHA1");
-        mac.init(new SecretKeySpec(TOTP_SECRET, "HmacSHA1"));
-        byte[] h = mac.doFinal(msg);
-        int off = h[h.length - 1] & 0xF;
-        int bin = ((h[off] & 0x7f) << 24) | ((h[off + 1] & 0xff) << 16)
-                | ((h[off + 2] & 0xff) << 8) | (h[off + 3] & 0xff);
-        return String.format("%06d", bin % 1_000_000);
-    }
-
     // ── issue ────────────────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("issueChallenge: TOTP (MFA) creates a PENDING challenge with mode set")
-    void issueChallenge_totp_pending() {
-        StepUpChallengeResponse r = stepUpService.issueChallenge(
-                new StepUpChallengeRequest(TENANT_ID, ACTOR_ID, "MFA"));
-        ArgumentCaptor<StepUpChallengeEntity> c = ArgumentCaptor.forClass(StepUpChallengeEntity.class);
-        verify(challengeRepository).save(c.capture());
-        assertEquals("PENDING", c.getValue().getStatus());
-        assertEquals("TOTP", c.getValue().getMode());
-        assertEquals("PENDING", r.status());
+    @DisplayName("issueChallenge: legacy MFA is rejected because factors are Keycloak-native")
+    void issueChallenge_totp_failsClosed() {
+        StepUpUnavailableException error = assertThrows(StepUpUnavailableException.class,
+                () -> stepUpService.issueChallenge(
+                        new StepUpChallengeRequest(TENANT_ID, ACTOR_ID, "MFA")));
+        assertTrue(error.getMessage().contains("Keycloak-native"));
+        verify(challengeRepository, never()).save(any());
     }
 
     @Test
@@ -127,27 +108,26 @@ class StepUpServiceTest {
     // ── verify ────────────────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("verifyChallenge: valid TOTP code completes the challenge")
-    void verify_validTotp_completes() throws Exception {
+    @DisplayName("verifyChallenge: even a formerly valid TOTP is rejected by Tshepo")
+    void verify_validTotp_failsClosed() {
         StepUpChallengeEntity e = pending(ACTOR_ID, "TOTP");
         when(challengeRepository.findPendingById(eq(e.getId()), eq(TENANT_ID), any(Instant.class)))
                 .thenReturn(Optional.of(e));
 
-        StepUpChallengeResponse r = stepUpService.verifyChallenge(
-                new StepUpVerifyRequest(e.getId(), TENANT_ID, ACTOR_ID, currentTotp()));
-
-        assertEquals("COMPLETED", r.status());
-        assertNotNull(r.completedAt());
+        assertThrows(StepUpUnavailableException.class, () -> stepUpService.verifyChallenge(
+                new StepUpVerifyRequest(e.getId(), TENANT_ID, ACTOR_ID, "123456")));
+        assertEquals(1, e.getAttemptCount());
+        assertNotEquals("COMPLETED", e.getStatus());
     }
 
     @Test
-    @DisplayName("verifyChallenge: wrong TOTP code fails (no any-code bypass)")
+    @DisplayName("verifyChallenge: legacy TOTP never falls through to a verifier")
     void verify_wrongTotp_fails() {
         StepUpChallengeEntity e = pending(ACTOR_ID, "TOTP");
         when(challengeRepository.findPendingById(eq(e.getId()), eq(TENANT_ID), any(Instant.class)))
                 .thenReturn(Optional.of(e));
 
-        assertThrows(SecurityException.class, () -> stepUpService.verifyChallenge(
+        assertThrows(StepUpUnavailableException.class, () -> stepUpService.verifyChallenge(
                 new StepUpVerifyRequest(e.getId(), TENANT_ID, ACTOR_ID, "000000")));
         assertEquals(1, e.getAttemptCount());
         assertNotEquals("COMPLETED", e.getStatus());

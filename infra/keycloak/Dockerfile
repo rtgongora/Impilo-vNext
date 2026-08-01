@@ -9,6 +9,7 @@ RUN /opt/keycloak/bin/kc.sh build
 
 FROM quay.io/keycloak/keycloak:${KEYCLOAK_VERSION}
 COPY --from=builder /opt/keycloak/ /opt/keycloak/
+COPY --chown=1000:1000 themes/impilo/ /opt/keycloak/themes/impilo/
 
 USER 1000
 ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]

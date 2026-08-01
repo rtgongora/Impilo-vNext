@@ -1,11 +1,10 @@
 package zw.gov.mohcc.impilo.tshepo.authz.stepup;
 
 /**
- * Step-up verification modes. Each maps to a {@link StepUpVerifier}. TOTP and
- * SUPERVISOR_APPROVAL verify with self-contained server-side logic; SMS_OTP and
- * BIOMETRIC have fully-built verification logic but delegate their external
- * dependency (OTP delivery, biometric matching) to a fail-closed adapter that
- * must be configured before that mode can be used in production.
+ * Legacy governed-workflow step-up modes. Authentication factors are owned by
+ * Keycloak and therefore cannot be issued or verified by Tshepo. The TOTP and
+ * SMS values remain only so historical challenge rows can be interpreted and
+ * rejected explicitly instead of being silently reclassified.
  */
 public enum StepUpMode {
     TOTP,
@@ -14,27 +13,27 @@ public enum StepUpMode {
     SUPERVISOR_APPROVAL;
 
     /**
-     * Resolve a mode from an explicit mode string or the legacy challenge type.
-     * Legacy {@code MFA} maps to {@link #TOTP} (authenticator app) by default.
+     * Resolve a governed non-authenticator workflow. Keycloak-native factors and
+     * absent/unknown values fail closed; they never fall back to TOTP.
      */
     public static StepUpMode resolve(String modeOrChallengeType) {
         if (modeOrChallengeType == null || modeOrChallengeType.isBlank()) {
-            return TOTP;
+            throw new IllegalArgumentException("An explicit governed step-up mode is required");
         }
         switch (modeOrChallengeType.trim().toUpperCase()) {
             case "TOTP":
             case "MFA":
-                return TOTP;
             case "SMS_OTP":
             case "SMS":
-                return SMS_OTP;
+                throw new StepUpUnavailableException(
+                        "Authentication-factor challenges are Keycloak-native; start an OIDC step-up transaction");
             case "BIOMETRIC":
                 return BIOMETRIC;
             case "SUPERVISOR_APPROVAL":
             case "SUPERVISOR":
                 return SUPERVISOR_APPROVAL;
             default:
-                return TOTP;
+                throw new IllegalArgumentException("Unsupported step-up mode: " + modeOrChallengeType);
         }
     }
 }
