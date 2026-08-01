@@ -1,0 +1,302 @@
+openapi: 3.0.3
+info:
+  title: Tshepo Trust Decision Contracts
+  version: tshepo.trust.v1
+  description: |
+    Canonical Checkpoint-2 trust types. Additive contracts only — no enforcement
+    activation. Java source of truth: libs/tshepo-contracts/.../v1.
+    TypeScript mirror: contracts/trust-decision/v1.ts.
+paths: {}
+components:
+  schemas:
+    TrustChallengeDecision:
+      type: string
+      enum:
+        - ALLOW
+        - DENY
+        - AUTHENTICATION_REQUIRED
+        - STEP_UP_REQUIRED
+        - CONTEXT_REQUIRED
+        - AUTHORITY_REQUIRED
+        - CONSENT_REQUIRED
+        - APPROVAL_REQUIRED
+        - BREAK_GLASS_AVAILABLE
+        - REAUTHENTICATION_REQUIRED
+        - RECOVERY_REQUIRED
+        - TEMPORARILY_UNAVAILABLE
+    TrustChallengeOutcome:
+      type: object
+      additionalProperties: false
+      required: [contract_version, decision]
+      properties:
+        contract_version:
+          type: string
+          enum: [tshepo.trust.v1]
+        decision:
+          $ref: '#/components/schemas/TrustChallengeDecision'
+        reason_code:
+          type: string
+        user_message_key:
+          type: string
+        required_action:
+          type: string
+        required_assurance:
+          type: integer
+          minimum: 0
+          maximum: 3
+        allowed_authentication_methods:
+          type: array
+          items:
+            type: string
+        context_options:
+          type: array
+          items:
+            type: string
+        consent_request_reference:
+          type: string
+        approval_reference:
+          type: string
+        continuation_reference:
+          type: string
+        decision_id:
+          type: string
+        policy_version:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+        support_reference:
+          type: string
+    IdentityAssurance:
+      type: object
+      required: [contractVersion, ial]
+      properties:
+        contractVersion:
+          type: string
+          enum: [tshepo.trust.v1]
+        ial:
+          type: integer
+          minimum: 0
+          maximum: 4
+        proofingMethod:
+          type: string
+        evidenceReference:
+          type: string
+    AuthenticationAssurance:
+      type: object
+      required: [contractVersion, aal, amr, phishingResistant, recoveryState]
+      properties:
+        contractVersion:
+          type: string
+          enum: [tshepo.trust.v1]
+        aal:
+          type: integer
+          minimum: 0
+          maximum: 3
+        amr:
+          type: array
+          items:
+            type: string
+        authenticationTime:
+          type: string
+          format: date-time
+        stepUpTime:
+          type: string
+          format: date-time
+        phishingResistant:
+          type: boolean
+        sessionId:
+          type: string
+        flowId:
+          type: string
+        recoveryState:
+          type: string
+          enum: [NONE, CONSTRAINED_RECOVERY]
+    WorkloadSubject:
+      type: object
+      required: [contractVersion, workloadId]
+      properties:
+        contractVersion:
+          type: string
+          enum: [tshepo.trust.v1]
+        workloadId:
+          type: string
+        serviceName:
+          type: string
+        kubernetesServiceAccount:
+          type: string
+        keycloakClientId:
+          type: string
+        audience:
+          type: string
+    ConsentDecision:
+      type: object
+      required: [contractVersion, permitted]
+      properties:
+        contractVersion:
+          type: string
+          enum: [tshepo.trust.v1]
+        permitted:
+          type: boolean
+        consentId:
+          type: string
+        provision:
+          type: string
+        allowedScopes:
+          type: array
+          items:
+            type: string
+        deniedScopes:
+          type: array
+          items:
+            type: string
+        reasonCode:
+          type: string
+        subjectRef:
+          type: string
+        purpose:
+          type: string
+    LawfulBasisDecision:
+      type: object
+      required: [contractVersion, permitted, basisType]
+      properties:
+        contractVersion:
+          type: string
+          enum: [tshepo.trust.v1]
+        permitted:
+          type: boolean
+        basisType:
+          type: string
+          enum:
+            - DIRECT_CARE_RELATIONSHIP
+            - STATUTORY_AUTHORITY
+            - PUBLIC_HEALTH_AUTHORITY
+            - EMERGENCY_BREAK_GLASS
+            - OTHER_GOVERNED
+        basisReference:
+          type: string
+        reasonCode:
+          type: string
+        subjectRef:
+          type: string
+        purpose:
+          type: string
+    AsyncExecutionReference:
+      type: object
+      required: [contractVersion, referenceId, revoked, delegationDepth]
+      properties:
+        contractVersion:
+          type: string
+          enum: [tshepo.trust.v1]
+        referenceId:
+          type: string
+          description: Opaque revocable task reference — must not be a human access token
+        delegationDepth:
+          type: integer
+          minimum: 0
+        expiresAt:
+          type: string
+          format: date-time
+        revoked:
+          type: boolean
+        correlationId:
+          type: string
+    TrustAuditEvent:
+      type: object
+      required: [contractVersion, eventId, timestamp]
+      properties:
+        contractVersion:
+          type: string
+          enum: [tshepo.trust.v1]
+        eventId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+        traceId:
+          type: string
+        decisionId:
+          type: string
+        callingWorkloadId:
+          type: string
+        destinationWorkloadId:
+          type: string
+        humanActorId:
+          type: string
+        purposeOfUse:
+          type: string
+        action:
+          type: string
+        resourceReference:
+          type: string
+        credentialType:
+          type: string
+        identityAssuranceLevel:
+          type: integer
+        authenticationAal:
+          type: integer
+        recoveryState:
+          type: string
+          enum: [NONE, CONSTRAINED_RECOVERY]
+        policyVersion:
+          type: string
+        enforcementPoint:
+          type: string
+        result:
+          type: string
+    TrustDecisionInput:
+      type: object
+      required: [contractVersion, callingWorkload, destination, operatingMode]
+      description: Server-derived evidence only — not populated from unvalidated client headers
+      properties:
+        contractVersion:
+          type: string
+          enum: [tshepo.trust.v1]
+        callingWorkload:
+          $ref: '#/components/schemas/WorkloadSubject'
+        destination:
+          type: object
+          required: [contractVersion, destinationServiceId]
+          properties:
+            contractVersion:
+              type: string
+              enum: [tshepo.trust.v1]
+            destinationServiceId:
+              type: string
+            method:
+              type: string
+            path:
+              type: string
+            action:
+              type: string
+            resourceType:
+              type: string
+            resourceId:
+              type: string
+            sensitivityClass:
+              type: string
+        identityAssurance:
+          $ref: '#/components/schemas/IdentityAssurance'
+        authenticationAssurance:
+          $ref: '#/components/schemas/AuthenticationAssurance'
+        consentDecision:
+          $ref: '#/components/schemas/ConsentDecision'
+        lawfulBasisDecision:
+          $ref: '#/components/schemas/LawfulBasisDecision'
+        operatingMode:
+          type: string
+          enum: [NORMAL, DEGRADED, OFFLINE, RECOVERY, BREAK_GLASS, READ_ONLY_EMERGENCY]
+        emergencyBreakGlass:
+          type: boolean
+        policyVersion:
+          type: string
+        requestId:
+          type: string
+        traceId:
+          type: string
+        decisionId:
+          type: string
+        correlationId:
+          type: string

@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://impilo.mohcc.gov.zw/schemas/trust-decision-v1.schema.json",
+  "title": "Tshepo trust-decision contracts v1",
+  "description": "Canonical Checkpoint-2 trust types. Version: tshepo.trust.v1",
+  "type": "object",
+  "$defs": {
+    "contractVersion": {
+      "const": "tshepo.trust.v1"
+    },
+    "TrustChallengeDecision": {
+      "type": "string",
+      "enum": [
+        "ALLOW",
+        "DENY",
+        "AUTHENTICATION_REQUIRED",
+        "STEP_UP_REQUIRED",
+        "CONTEXT_REQUIRED",
+        "AUTHORITY_REQUIRED",
+        "CONSENT_REQUIRED",
+        "APPROVAL_REQUIRED",
+        "BREAK_GLASS_AVAILABLE",
+        "REAUTHENTICATION_REQUIRED",
+        "RECOVERY_REQUIRED",
+        "TEMPORARILY_UNAVAILABLE"
+      ]
+    },
+    "TrustChallengeOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_version", "decision"],
+      "properties": {
+        "contract_version": { "$ref": "#/$defs/contractVersion" },
+        "decision": { "$ref": "#/$defs/TrustChallengeDecision" },
+        "reason_code": { "type": "string" },
+        "user_message_key": { "type": "string" },
+        "required_action": { "type": "string" },
+        "required_assurance": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "allowed_authentication_methods": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "context_options": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "consent_request_reference": { "type": "string" },
+        "approval_reference": { "type": "string" },
+        "continuation_reference": { "type": "string" },
+        "decision_id": { "type": "string" },
+        "policy_version": { "type": "string" },
+        "expires_at": { "type": "string", "format": "date-time" },
+        "support_reference": { "type": "string" }
+      }
+    },
+    "AuthenticationAssurance": {
+      "type": "object",
+      "required": ["contractVersion", "aal", "amr", "phishingResistant", "recoveryState"],
+      "properties": {
+        "contractVersion": { "$ref": "#/$defs/contractVersion" },
+        "aal": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "amr": { "type": "array", "items": { "type": "string" } },
+        "authenticationTime": { "type": "string", "format": "date-time" },
+        "stepUpTime": { "type": "string", "format": "date-time" },
+        "phishingResistant": { "type": "boolean" },
+        "sessionId": { "type": "string" },
+        "flowId": { "type": "string" },
+        "recoveryState": {
+          "type": "string",
+          "enum": ["NONE", "CONSTRAINED_RECOVERY"]
+        }
+      }
+    },
+    "IdentityAssurance": {
+      "type": "object",
+      "required": ["contractVersion", "ial"],
+      "properties": {
+        "contractVersion": { "$ref": "#/$defs/contractVersion" },
+        "ial": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "proofingMethod": { "type": "string" },
+        "evidenceReference": { "type": "string" }
+      }
+    },
+    "AsyncExecutionReference": {
+      "type": "object",
+      "required": ["contractVersion", "referenceId", "allowedActions", "allowedScopes", "delegationDepth", "revoked"],
+      "properties": {
+        "contractVersion": { "$ref": "#/$defs/contractVersion" },
+        "referenceId": {
+          "type": "string",
+          "not": { "pattern": "(?i)(eyJ|bearer\\s+|access_token)" }
+        },
+        "allowedActions": { "type": "array", "items": { "type": "string" } },
+        "allowedScopes": { "type": "array", "items": { "type": "string" } },
+        "delegationDepth": { "type": "integer", "minimum": 0 },
+        "expiresAt": { "type": "string", "format": "date-time" },
+        "revoked": { "type": "boolean" },
+        "correlationId": { "type": "string" }
+      }
+    }
+  }
+}
