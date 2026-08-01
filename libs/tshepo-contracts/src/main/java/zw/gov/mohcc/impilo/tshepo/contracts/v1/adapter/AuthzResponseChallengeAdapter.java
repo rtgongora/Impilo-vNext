@@ -84,4 +84,24 @@ public final class AuthzResponseChallengeAdapter {
                             + " in legacy AuthzResponse without broadening or inventing authority");
         };
     }
+
+    /**
+     * Total reverse mapping for live legacy request paths. Unlike {@link #toLegacy}, this never
+     * throws: canonical outcomes the legacy wire cannot represent are mapped to a fail-closed
+     * legacy DENY carrying {@code UNREPRESENTABLE_<decision>} as the error code.
+     *
+     * <p>Expected legacy HTTP behavior: a legacy caller receiving this response follows its
+     * ordinary DENY path (HTTP 403 from AuthorizeController / ext_authz deny), never an
+     * unhandled 500 and never an accidental ALLOW.</p>
+     */
+    public static AuthzResponse toLegacySafe(TrustChallengeOutcome canonical) {
+        try {
+            return toLegacy(canonical);
+        } catch (UnsupportedOperationException unrepresentable) {
+            return AuthzResponse.deny(
+                    "UNREPRESENTABLE_" + canonical.decision().name(),
+                    "Action requires the trust challenge experience; legacy channel denies by default",
+                    0);
+        }
+    }
 }

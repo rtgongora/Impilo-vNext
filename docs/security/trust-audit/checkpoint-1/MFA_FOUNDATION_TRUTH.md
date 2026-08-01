@@ -9,8 +9,8 @@ That sentence collapsed independent truths. Split below. Layers: SOURCE / TEST /
 
 | Facet | SOURCE | TEST | PREVIEW_DEPLOYED | PREVIEW_ENFORCED | Evidence |
 |---|---|---|---|---|---|
-| Browser auth-code + PKCE via BFF | YES | PARTIAL | YES | YES | `OidcSessionService`, `OidcSessionController`; live `IMPILO_AUTH_WEB_SESSION_ENABLED=true` on `experience-bff@sha256:1948d8d3…` (commit `486b3a4f…`, branch `codex/mfa-production`) |
-| Encrypted Redis session + `__Host-impilo_session` + CSRF | YES | PARTIAL | YES | YES | `WebAuthSessionStore`, `SessionCsrfFilter`; `IMPILO_AUTH_WEB_SESSION_COOKIE_SECURE=true` |
+| Browser auth-code + PKCE via BFF | YES | PARTIAL | YES | YES (gating) / PARTIAL (authenticated body) | Fresh capture: [../checkpoint-2/BROWSER_BFF_SESSION_EVIDENCE.md](../checkpoint-2/BROWSER_BFF_SESSION_EVIDENCE.md). Live `IMPILO_AUTH_WEB_SESSION_ENABLED=true` on `experience-bff@sha256:1948d8d3…` (commit `486b3a4f…`). Unauthenticated session-status = HTTP 401 PREVIEW_ENFORCED; authenticated session-status body UNKNOWN this window. |
+| Encrypted Redis session + `__Host-impilo_session` + CSRF | YES | PARTIAL | YES | PARTIAL | Source + deploy flags proven; successful-login Set-Cookie wire attributes not freshly captured — see Checkpoint 2 evidence. |
 | Legacy browser ROPC | YES (residue) | denyAll tested | YES (code) | NO | Legacy controller denyAll in `SecurityConfig` |
 | Mobile PKCE + SecureStore | YES | PARTIAL | UNKNOWN | UNKNOWN | `apps/mobile/packages/mobile-auth`; no Redroid proof in this closure window |
 | Mobile residual password grant | YES | NO | UNKNOWN | NO | Sign-up residual |

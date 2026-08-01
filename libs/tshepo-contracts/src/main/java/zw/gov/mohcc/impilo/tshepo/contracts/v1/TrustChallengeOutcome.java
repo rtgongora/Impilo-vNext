@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.tshepo.contracts.v1;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -12,6 +13,7 @@ import java.util.regex.Pattern;
  * expressions, credentials, tokens, clinical data, or confidential denial details.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = false)
 public record TrustChallengeOutcome(
         @JsonProperty("contract_version") String contractVersion,
         TrustChallengeDecision decision,

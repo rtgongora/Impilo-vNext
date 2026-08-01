@@ -84,11 +84,36 @@ export interface HumanSubjectRef {
   providerId?: string;
 }
 
+export interface ActiveContext {
+  contractVersion: typeof TRUST_CONTRACT_VERSION_V1;
+  tenantId?: string;
+  facilityId?: string;
+  councilId?: string;
+  departmentId?: string;
+  wardId?: string;
+  workspaceId?: string;
+  programmeId?: string;
+  shiftId?: string;
+  workContextTokenId?: string;
+}
+
+export interface AuthorityBinding {
+  contractVersion: typeof TRUST_CONTRACT_VERSION_V1;
+  authorityType?: string;
+  authorityId?: string;
+  roles: string[];
+  licenceId?: string;
+  appointmentId?: string;
+  mandateId?: string;
+  expiresAt?: string;
+  suspended: boolean;
+}
+
 export interface DelegatedHumanContext {
   contractVersion: typeof TRUST_CONTRACT_VERSION_V1;
   humanSubject: HumanSubjectRef;
-  activeContext?: unknown;
-  authority?: unknown;
+  activeContext?: ActiveContext;
+  authority?: AuthorityBinding;
   purposeOfUse?: string;
   audience?: string;
   allowedActions: string[];
@@ -179,9 +204,12 @@ export interface TrustAuditEvent {
   attributes?: Record<string, string>;
 }
 
-/** Safe challenge fields only — no policy expressions, tokens, or clinical data. */
+/**
+ * Safe challenge fields only — no policy expressions, tokens, or clinical data.
+ * Wire shape is snake_case (matches the Java @JsonProperty serialization).
+ */
 export interface TrustChallengeOutcome {
-  contractVersion: typeof TRUST_CONTRACT_VERSION_V1;
+  contract_version: typeof TRUST_CONTRACT_VERSION_V1;
   decision: TrustChallengeDecision;
   reason_code?: string;
   user_message_key?: string;
@@ -209,8 +237,8 @@ export interface TrustDecisionInput {
   identityAssurance?: IdentityAssurance;
   authenticationAssurance?: AuthenticationAssurance;
   workloadAssurance?: WorkloadAssurance;
-  activeContext?: unknown;
-  authority?: unknown;
+  activeContext?: ActiveContext;
+  authority?: AuthorityBinding;
   tenantId?: string;
   facilityId?: string;
   councilId?: string;
