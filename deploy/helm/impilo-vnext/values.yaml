@@ -57,6 +57,32 @@ keycloak:
     passwordKey: keycloak-smtp-password
     fromKey: keycloak-smtp-from
 
+# Tshepo trust plane, Checkpoint 4 — per-workload identity.
+#
+# Two independent switches, deliberately separated:
+#   createServiceAccounts  creates the identities. Additive: a ServiceAccount that no
+#                          pod references changes nothing, so these land estate-wide
+#                          with zero pod churn.
+#   cohort                 the workloads whose pod spec actually uses its identity.
+#                          Empty by default, so the rendered Deployment is byte-identical
+#                          to the pre-Checkpoint-4 estate. Enforcement advances by adding
+#                          names here, one cohort at a time, each with its own rollback.
+workloadIdentity:
+  createServiceAccounts: true
+  cohort: []
+  environment: preview
+  cluster: k3s-impilo
+  audiencePrefix: "urn:impilo:tshepo"
+  # Short-lived by design; the kubelet rotates a projected token well before expiry.
+  tokenExpirationSeconds: 3600
+  tokenMountPath: /var/run/secrets/impilo/tshepo
+  # Workloads rendered by their own template rather than the fullBootServices loop.
+  additionalServiceAccounts:
+    - experience-bff
+    - one-ui-shell
+    - envoy
+    - matcher-engine
+
 experienceBff:
   enabled: true
   replicaCount: 1

@@ -22,6 +22,15 @@ spec:
         {{- include "impilo.labels" (dict "name" $name "Release" $.Release "Values" $.Values) | nindent 8 }}
     spec:
       enableServiceLinks: false
+      {{- if has $name $.Values.workloadIdentity.cohort }}
+      # Checkpoint 4 workload identity. Applied only to named cohort members so that
+      # enforcement advances one cohort at a time; an empty cohort renders the exact
+      # pre-Checkpoint-4 pod spec.
+      serviceAccountName: {{ $name }}
+      automountServiceAccountToken: false
+      volumes:
+        {{- include "impilo.workloadTokenVolume" (dict "root" $ "name" $name) | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ $name }}
           {{- $img := $svc.image | default dict }}
@@ -171,6 +180,10 @@ spec:
             {{- end }}
           resources:
             {{- toYaml ($svc.resources | default $.Values.global.defaultResources) | nindent 12 }}
+          {{- if has $name $.Values.workloadIdentity.cohort }}
+          volumeMounts:
+            {{- include "impilo.workloadTokenMount" (dict "root" $ "name" $name) | nindent 12 }}
+          {{- end }}
 ---
 apiVersion: v1
 kind: Service
