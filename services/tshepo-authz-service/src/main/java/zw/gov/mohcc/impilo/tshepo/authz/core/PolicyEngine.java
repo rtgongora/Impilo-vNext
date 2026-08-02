@@ -363,7 +363,22 @@ public class PolicyEngine {
         // ────────────────────────────────────────────────────────────────
         // Step 5: Consent evaluation (clinical resources)
         // ────────────────────────────────────────────────────────────────
-        if (requiresConsent(request.resourceType(), purpose)) {
+        // Which lawful basis permits this access? Consent is one ground among several, and a
+        // non-consent ground must not be refused for the absence of consent (doctrine §2, §7).
+        // BREAK_GLASS counts only where the upstream control actually verified a request --
+        // by the time execution reaches here, an unverified one has already been denied at step 3.
+        LawfulBasisEvaluator.Outcome lawfulBasis =
+                LawfulBasisEvaluator.evaluate(request, purpose, purpose == PurposeOfUse.BREAK_GLASS);
+        LawfulBasisEvaluator.Mode basisMode = lawfulBasisMode();
+        recordLawfulBasis(lawfulBasis, basisMode);
+
+        // ENFORCE lets an established non-consent basis stand on its own. SHADOW records what it
+        // WOULD have permitted and leaves the existing consent requirement in charge, so the
+        // change in denial behaviour can be measured before it is taken.
+        boolean basisSatisfiesAccess = basisMode == LawfulBasisEvaluator.Mode.ENFORCE
+                && !lawfulBasis.requiresExplicitConsent();
+
+        if (!basisSatisfiesAccess && requiresConsent(request.resourceType(), purpose)) {
             // subjectRef is the resourceId, and deliberately NOT request.subjectId().
             //
             // X-Subject-ID in this estate is the DELEGATION subject -- the person an actor
@@ -1501,6 +1516,31 @@ public class PolicyEngine {
             recordShadowOutcome("error", "none", (System.nanoTime() - started) / 1_000L);
             log.debug("OPA-SHADOW comparison skipped: {}", e.getMessage());
         }
+    }
+
+    /** Resolved lawful-basis mode; a runtime-invalid value degrades to SHADOW loudly. */
+    private LawfulBasisEvaluator.Mode lawfulBasisMode() {
+        try {
+            return LawfulBasisEvaluator.Mode.parse(properties.getLawfulBasisMode());
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid lawful-basis-mode, treating as SHADOW: {}", e.getMessage());
+            return LawfulBasisEvaluator.Mode.SHADOW;
+        }
+    }
+
+    /**
+     * Record which ground was relied on. This is the half that was missing entirely: skipping the
+     * consent check told the audit trail nothing about WHY an access was lawful, so afterwards it
+     * could not answer the only question that matters.
+     */
+    private void recordLawfulBasis(LawfulBasisEvaluator.Outcome outcome, LawfulBasisEvaluator.Mode mode) {
+        if (mode == LawfulBasisEvaluator.Mode.OFF || meterRegistry == null) {
+            return;
+        }
+        // Both tags are closed vocabularies -- a basis type name and a mode -- so no request data
+        // can grow the series.
+        meterRegistry.counter("tshepo.authz.lawful.basis",
+                "basis", outcome.metricLabel(), "mode", mode.name()).increment();
     }
 
     /** Resolved context-header mode; a runtime-invalid value degrades to PASSTHROUGH loudly. */

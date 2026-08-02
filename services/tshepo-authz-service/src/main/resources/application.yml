@@ -96,6 +96,10 @@ tshepo:
     # PASSTHROUGH (unchanged) | SHADOW (measure divergence, emit nothing) | AUTHORITATIVE (emit
     # duty-token-validated context). Default PASSTHROUGH -- zero behaviour change.
     context-header-mode: ${TSHEPO_AUTHZ_CONTEXT_HEADER_MODE:PASSTHROUGH}
+    # Lawful basis (Checkpoint 5). OFF | SHADOW (record only) | ENFORCE. Consent is one ground
+    # among several and a non-consent ground must not be refused for the absence of consent, but
+    # applying that CHANGES denial behaviour -- so it is measured in SHADOW first.
+    lawful-basis-mode: ${TSHEPO_AUTHZ_LAWFUL_BASIS_MODE:SHADOW}
     # Rate limiting
     rate-limit:
       max-requests-per-minute: 600
