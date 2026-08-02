@@ -69,15 +69,27 @@ fi
 # These are DECISION INPUTS: they select which resource the PDP authorizes the request against.
 # A client able to set them redirects the question rather than forging the answer, which is worse
 # than spoofing x-actor-id. They must therefore be stripped everywhere x-actor-id is stripped.
-# Nothing guarded this before: AuthorizeWireTest never reads the chart, and the block scan above
-# only ever looked for x-confidential-categories — so a values regeneration from an older file
-# could silently drop them.
+#
+# This is DEFENCE IN DEPTH, not the only cover. AuthorizeWireTest.aliasesAreStrippedAtTheEdge
+# already reads this same chart and asserts exact-strip-line count equality against x-actor-id.
+# (An earlier revision of this comment claimed that test does not read the chart. That was wrong
+# — it was asserted from a truncated read of the file that stopped two lines short of the method.)
+# The two differ usefully: that one is whole-file counts in the BFF suite, this one is per strip
+# block in the blocking change-safety phase, so it also catches counts that match while a single
+# block is unpaired.
 #
 # Asserted PER STRIP BLOCK, not per file: a whole-file count comparison is wrong, because
 # x-actor-id also appears outside request_headers_to_remove (regenerate/allowlist contexts),
 # so equality would fail on a correct chart. The invariant is narrower and exact — any block
 # that strips x-actor-id must strip both aliases too.
-CHART="deploy/helm/impilo-vnext/templates/envoy.yaml"
+# Every Envoy config that carries ext_authz, not only the deployed chart. The infra/ copies are
+# mounted by docker-compose.runtime.yml and never reach Kubernetes, so they are not a production
+# exposure -- but a developer running that stack would exercise a WEAKER trust boundary than
+# preview and see it pass, which is how a divergence becomes the thing someone later copies back
+# into the chart. Two lines each; no reason to let them drift.
+for CHART in deploy/helm/impilo-vnext/templates/envoy.yaml \
+             infra/envoy/envoy.yaml \
+             infra/envoy/envoy-runtime.yaml; do
 if [[ -f "$CHART" ]]; then
   if bad=$(awk '
       /request_headers_to_remove:/ { blk=NR; in_strip=1; a=0; m=0; p=0; next }
@@ -96,6 +108,7 @@ if [[ -f "$CHART" ]]; then
     guard_pass "$CHART pairs x-original-method/x-original-path in every x-actor-id strip block"
   fi
 fi
+done
 
 if [[ "$FAILED" == "1" ]]; then
   exit 1

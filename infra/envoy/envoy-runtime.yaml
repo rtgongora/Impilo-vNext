@@ -129,6 +129,10 @@ static_resources:
                           route: { cluster: experience_bff }
                           request_headers_to_remove:
                             - "x-actor-id"
+                            # Decision inputs: a client that could set these would choose which
+                            # resource its own request is authorized against.
+                            - "x-original-method"
+                            - "x-original-path"
                             - "x-actor-type"
                             - "x-assurance-level"
                             - "x-purpose-of-use"
