@@ -475,7 +475,62 @@ helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" \
 # Deployment natively (old pod terminates before new pod starts). No mass
 # rollout restart — that caused RollingUpdate surge pods and exceeded the node cap.
 echo "--- Waiting for estate rollouts (timeout ${FULL_BOOT_ROLLOUT_TIMEOUT:-45m}) ---"
+# The wait itself stays non-fatal: `kubectl rollout status` gives up on the FIRST
+# unready Deployment, so letting it exit here would hide every other one. The
+# assertion below is what decides, and it reports all of them.
 kubectl rollout status deployment -n "$NAMESPACE" --timeout="${FULL_BOOT_ROLLOUT_TIMEOUT:-45m}" || true
+
+# --- MANDATORY: every Deployment is actually ready. -----------------------------------
+# This line ended in `|| true` until 2026-08-02, so no service failing to come up could
+# fail the boot. The other post-rollout gates check specific things — Keycloak serving,
+# facility/geo reference data, persistence, BFF behaviour — and the wrapper asserts
+# /health/version carries the deployed SHA. But /health/version is served BY experience-bff,
+# so it proves two workloads are current and says nothing about the other ~100. A boot could
+# print SUCCESS with a third of the estate down.
+#
+# FULL_BOOT_ALLOW_NOT_READY is a comma-separated allowlist for workloads knowingly broken
+# for reasons outside this release. It is deliberately an explicit opt-in naming each one,
+# not a blanket skip: "we accept X and Y are down" is a decision worth recording in the
+# command line, whereas `|| true` accepted everything silently and forever.
+echo "--- Estate readiness (mandatory) ---"
+NOT_READY=""
+while read -r dep want have; do
+  [[ -z "$dep" ]] && continue
+  have="${have:-0}"
+  if [[ "${want:-0}" -gt 0 && "$have" -lt "${want:-0}" ]]; then
+    NOT_READY+="${dep}:${have}/${want} "
+  fi
+done < <(kubectl get deploy -n "$NAMESPACE" \
+           -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.spec.replicas}{" "}{.status.readyReplicas}{"\n"}{end}' 2>/dev/null)
+
+if [[ -n "$NOT_READY" ]]; then
+  ALLOWED="${FULL_BOOT_ALLOW_NOT_READY:-}"
+  STILL_BAD=""
+  for entry in $NOT_READY; do
+    name="${entry%%:*}"
+    if [[ ",${ALLOWED}," == *",${name},"* ]]; then
+      echo "ALLOWED  $entry (named in FULL_BOOT_ALLOW_NOT_READY)"
+    else
+      STILL_BAD+="$entry "
+    fi
+  done
+  if [[ -n "$STILL_BAD" ]]; then
+    echo ""
+    echo "FAIL  Estate readiness — these Deployments never became ready:"
+    for entry in $STILL_BAD; do
+      name="${entry%%:*}"
+      echo "  - $entry"
+      kubectl get pods -n "$NAMESPACE" -l "app=${name}" \
+        -o jsonpath='{range .items[*]}      {.metadata.name}  {.status.phase}  {range .status.containerStatuses[*]}{.state.waiting.reason}{.state.terminated.reason}{end}{"\n"}{end}' 2>/dev/null | head -3
+    done
+    echo ""
+    echo "A boot that leaves workloads down is a FAILED boot, not a partial success."
+    echo "To proceed anyway, name each one explicitly:"
+    echo "  FULL_BOOT_ALLOW_NOT_READY=$(echo "$STILL_BAD" | tr ' ' '\n' | sed 's/:.*//' | grep -v '^$' | paste -sd, -)"
+    exit 1
+  fi
+fi
+echo "PASS  Estate readiness — all Deployments report their full replica count"
 
 # Restore the public TLS/ingress edge wiped by the namespace teardown (IngressRoutes,
 # acme-host-nginx svc/endpoints). The root-only TLS secret step is printed as a reminder.
