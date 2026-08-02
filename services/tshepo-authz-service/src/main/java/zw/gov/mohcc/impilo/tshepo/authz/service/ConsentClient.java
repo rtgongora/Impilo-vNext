@@ -49,11 +49,19 @@ public class ConsentClient {
     private static final Logger log = LoggerFactory.getLogger(ConsentClient.class);
 
     /**
-     * The producer requires a scope and defines no default. Read access is the correct question for
-     * an authorization check — the PDP is asking "may this actor see this subject's data", and a
-     * broader scope would ask something the decision does not need.
+     * The producer requires a scope, and it must match what was actually GRANTED or the directive
+     * is found and then rejected as not-scope-matching.
+     *
+     * <p>{@code clinical-data} is the scope Mvumo records when a person grants consent
+     * ({@code MvumoService.buildTshepoCreateMap}). An earlier value of {@code "read"} was
+     * plausible and wrong: evaluation returned {@code NO_VALID_CONSENT} for a subject who had
+     * genuinely granted consent — which reads as a refusal by the person rather than as two
+     * services using different vocabularies for the same thing.</p>
+     *
+     * <p>This couples the PDP to the capture side, deliberately. The alternative is a PDP that
+     * asks a question no grant can answer.</p>
      */
-    static final String DEFAULT_SCOPE = "read";
+    static final String DEFAULT_SCOPE = "clinical-data";
 
     private final RestTemplate restTemplate;
     private final AuthzProperties properties;
