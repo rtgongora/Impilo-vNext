@@ -80,3 +80,42 @@ re-run on 2026-08-02 gave `PROBE OK positive control: pod-to-pod reachable with 
 `RESULT: NetworkPolicy is NOT ENFORCED`. The host lacks the `ipset` binary that k3s's kube-router
 needs to program match sets. Installing it requires interactive `sudo`, which this session does
 not hold. Until then any NetworkPolicy shipped here is decorative, so none has been written.
+
+---
+
+## Gap closed: the PDP now regenerates operating context
+
+The nine client-supplied headers above are no longer only documented. `ContextHeaderAuthority`
+regenerates six of them from the **introspected work-context token** — server-validated in a way a
+request header never is — and `x-purpose-of-use` from the closed `PurposeOfUse` vocabulary.
+
+Staged `PASSTHROUGH → SHADOW → AUTHORITATIVE` (default `PASSTHROUGH`).
+
+### Measured live in SHADOW (2026-08-02)
+
+```
+tshepo_authz_context_header_total{header="x-facility-id",  outcome="client_only"}   3
+tshepo_authz_context_header_total{header="x-workspace-id", outcome="client_only"}   3
+tshepo_authz_context_header_total{header="x-purpose-of-use", outcome="match"}       3
+```
+
+`client_only` is the finding: the caller asserted a facility and a workspace that the trust plane
+**cannot validate**, because no usable work-context token was presented. Those are precisely the
+claims `AUTHORITATIVE` drops. The rate is the evidence for whether enabling it is safe — turning it
+on blind would remove facility scope from every request whose duty token does not carry one.
+
+The first SHADOW run recorded **zero** metrics: the measurement was called from
+`buildHeaderMutations`, which only runs on an ALLOW, so denied traffic measured nothing. That is
+the same ALLOW-only blindness fixed earlier in this checkpoint for the OPA comparison, reintroduced
+in new code. Emission belongs where headers exist; measurement belongs on the terminal path.
+
+### Still not regenerated — named, not silently omitted
+
+| Header | Why |
+|---|---|
+| `x-shift-id` | no shift claim exists on the work-context token |
+| `x-workflow-state` | no server-validated workflow source exists |
+| `x-work-context-token` | a credential, self-authenticating via introspection |
+
+A test asserts the regenerated and unregenerated sets stay disjoint, so neither list can drift into
+claiming the other's members.
