@@ -213,6 +213,7 @@ vi.mock("@/hooks/useIdentityContext", () => ({
 }));
 
 vi.mock("@tanstack/react-query", () => ({
+  useQueryClient: () => ({ invalidateQueries: vi.fn() }),
   useQuery: ({ queryKey }: { queryKey: string[] }) => {
     switch (queryKey[0]) {
       case "home-recent-encounters":

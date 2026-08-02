@@ -46,6 +46,17 @@ const FORBIDDEN_PAGE_PATTERNS = [
     re: /const\s+CATEGORIES\s*=\s*\[[\s\S]*?(?:Haematology|Chemistry|Microbiology)/,
     message: "Lab catalog static CATEGORIES array — wire useLabCatalog BFF hook.",
   },
+  {
+    // The existing vocabulary matched IDENTIFIER NAMES (mockData/sampleData/…), so a
+    // fabricated-content array named `seededPosts` walked straight past every guard —
+    // 63 lines of invented announcements attributed to the real Ministry of Health sat
+    // in the citizen home feed undetected. Match the SHAPE (a hardcoded array of
+    // authored content) rather than one more name.
+    id: "fabricated-content-array",
+    re: /const\s+\w*(?:seed(?:ed)?|placeholder|demo|dummy|sample)\w*\s*(?::[^=]*)?=\s*\[[\s\S]{0,400}?\b(?:author|body|headline|excerpt)\s*:/i,
+    message:
+      "Hardcoded array of authored content in a production surface. Content shown to a person must come from a real source — never invent posts, announcements or engagement counts, least of all attributed to a named institution. Render an honest empty state instead.",
+  },
 ];
 
 function walk(dir, acc = []) {

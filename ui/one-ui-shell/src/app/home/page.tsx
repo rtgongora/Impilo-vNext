@@ -21,7 +21,7 @@ import {
   MessageSquare, Radio, TestTube2, Scan, Phone, Send, ThumbsUp, MessageCircle, GraduationCap,
   Wifi, Wrench, Layers, FlaskConical, FileCheck, Clipboard, Play, LayoutGrid, BedDouble, Wallet,
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ModuleCardIcon } from "@/components/branding/ModuleCardIcon";
 import { ServiceLogo } from "@/components/branding/ServiceLogo";
 import { AppLayout } from "@/components/AppLayout";
@@ -1732,22 +1732,32 @@ function TimelineComposer({ userName }: { userName: string }) {
   const [postText, setPostText] = useState("");
   const [posting, setPosting] = useState(false);
   const [posted, setPosted] = useState(false);
+  const [postError, setPostError] = useState("");
+  const queryClient = useQueryClient();
 
+  /**
+   * Only a genuine 2xx may claim success. A failed publish keeps the person's
+   * text in the composer — silently discarding what someone wrote while telling
+   * them it posted is data loss, not a degraded state.
+   */
   async function handlePost() {
     if (!postText.trim()) return;
     setPosting(true);
+    setPostError("");
     try {
       await apiClient.post("/internal/v1/mobile/citizen/feed", {
         body: postText.trim(),
         type: "STATUS_UPDATE",
       });
+      setPosted(true);
+      setPostText("");
+      setTimeout(() => setPosted(false), 3000);
+      void queryClient.invalidateQueries({ queryKey: ["personal-feed"] });
     } catch {
-      // BFF may not have this endpoint yet — that's OK, clear locally
+      setPostError("Your post could not be published. Your text has been kept — please try again.");
+    } finally {
+      setPosting(false);
     }
-    setPosting(false);
-    setPosted(true);
-    setPostText("");
-    setTimeout(() => setPosted(false), 3000);
   }
 
   return (
@@ -1770,6 +1780,9 @@ function TimelineComposer({ userName }: { userName: string }) {
         </div>
         {posted && (
           <p className="text-xs text-primary mt-1 ml-[52px]">Posted to your timeline</p>
+        )}
+        {postError && (
+          <p role="alert" className="text-xs text-red-600 mt-1 ml-[52px]">{postError}</p>
         )}
       </div>
       {/* Action bar */}
@@ -1802,69 +1815,6 @@ function TimelineFeed({ userId }: { userId?: string }) {
   });
   const liveItems = isError ? [] : (data?.data ?? []);
 
-  // Seeded posts so the timeline never looks empty
-  const seededPosts: Array<{
-    id: string;
-    author: string;
-    avatar: string;
-    time: string;
-    body: string;
-    likes: number;
-    comments: number;
-    type: "update" | "health_tip" | "announcement" | "milestone";
-  }> = [
-    {
-      id: "seed-1",
-      author: "Ministry of Health",
-      avatar: "MoH",
-      time: "2 hours ago",
-      body: "Flu season reminder: Free influenza vaccinations are available at all public health facilities. Bring your Health ID. Walk-ins welcome, no appointment needed.",
-      likes: 142,
-      comments: 23,
-      type: "announcement",
-    },
-    {
-      id: "seed-2",
-      author: "Nompilo Health AI",
-      avatar: "N",
-      time: "4 hours ago",
-      body: "Tip: Drinking 2 litres of water daily can improve energy levels, skin health, and kidney function. Track your hydration in the Wellness tab.",
-      likes: 89,
-      comments: 7,
-      type: "health_tip",
-    },
-    {
-      id: "seed-3",
-      author: "Harare Central Hospital",
-      avatar: "HCH",
-      time: "6 hours ago",
-      body: "New services available: Our Telemedicine clinic is now open for video consultations Monday–Friday 08:00–16:00. Book through Impilo or call +263 4 123 4567.",
-      likes: 67,
-      comments: 15,
-      type: "update",
-    },
-    {
-      id: "seed-4",
-      author: "Community Wellness",
-      avatar: "CW",
-      time: "Yesterday",
-      body: "Congratulations to 1,247 citizens who completed the 30-Day Walking Challenge! New challenge starting Monday: Sleep Better in 21 Days. Join in the Wellness tab.",
-      likes: 234,
-      comments: 41,
-      type: "milestone",
-    },
-    {
-      id: "seed-5",
-      author: "MOHCC Immunisation Programme",
-      avatar: "IP",
-      time: "Yesterday",
-      body: "Childhood immunisation week starts next Monday across all provinces. Check your child's vaccination schedule in Documents > Immunisation Record.",
-      likes: 178,
-      comments: 32,
-      type: "announcement",
-    },
-  ];
-
   const typeColors: Record<string, string> = {
     announcement: "bg-danger-soft text-red-600 border-red-100",
     health_tip: "bg-green-50 text-green-600 border-green-100",
@@ -1876,8 +1826,9 @@ function TimelineFeed({ userId }: { userId?: string }) {
     Y: "bg-primary-soft text-primary-hover",
   };
 
-  const livePosts = liveItems.length > 0 ? [
-    ...liveItems.map((item) => ({
+  // Real posts only. An empty or failed feed renders an honest state below —
+  // it must never be filled with invented posts attributed to real institutions.
+  const livePosts = liveItems.map((item) => ({
       id: item.id,
       author: (item.attributes.author as string) ?? "You",
       avatar: ((item.attributes.author as string) ?? "Y").charAt(0).toUpperCase(),
@@ -1888,8 +1839,7 @@ function TimelineFeed({ userId }: { userId?: string }) {
       likes: (item.attributes.likes as number) ?? 0,
       comments: (item.attributes.comments as number) ?? 0,
       type: "update" as const,
-    })),
-  ] : seededPosts;
+  }));
 
   return (
     <div className="space-y-4">
@@ -1911,7 +1861,7 @@ function TimelineFeed({ userId }: { userId?: string }) {
 
       {isError && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Live feed unavailable — showing community highlights. {formatServiceError(error)}
+          Your timeline could not be loaded. This is not an empty timeline — posts may exist that are not shown. {formatServiceError(error)}
         </div>
       )}
       {/* Timeline posts */}
