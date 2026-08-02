@@ -7,7 +7,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.experience.client.TshepoAuditServiceClient;
+import zw.gov.mohcc.impilo.experience.client.TrustDecisionResult;
 import zw.gov.mohcc.impilo.experience.client.TshepoAuthzServiceClient;
+import zw.gov.mohcc.impilo.experience.trust.TrustChallengeResponder;
 
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
@@ -24,6 +26,7 @@ public class TelemedicineGovernanceService {
 
     private final TshepoAuthzServiceClient tshepoAuthzServiceClient;
     private final TshepoAuditServiceClient tshepoAuditServiceClient;
+    private final TrustChallengeResponder challengeResponder;
 
     @Value("${impilo.security.allow-anonymous:false}")
     private boolean allowAnonymous;
@@ -48,21 +51,26 @@ public class TelemedicineGovernanceService {
 
     public TelemedicineGovernanceService(
             TshepoAuthzServiceClient tshepoAuthzServiceClient,
-            TshepoAuditServiceClient tshepoAuditServiceClient) {
+            TshepoAuditServiceClient tshepoAuditServiceClient,
+            TrustChallengeResponder challengeResponder) {
         this.tshepoAuthzServiceClient = tshepoAuthzServiceClient;
         this.tshepoAuditServiceClient = tshepoAuditServiceClient;
+        this.challengeResponder = challengeResponder;
     }
 
     public void assertGovernedRead() {
-        enforce(tshepoAuthzServiceClient.telemedicineReadAllowed(), "Tshepo PDP denied telemedicine read");
+        enforce(tshepoAuthzServiceClient.telemedicineRead(),
+                "Tshepo PDP denied telemedicine read");
     }
 
     public void assertGovernedMutate() {
-        enforce(tshepoAuthzServiceClient.telemedicineMutateAllowed(), "Tshepo PDP denied telemedicine mutation");
+        enforce(tshepoAuthzServiceClient.telemedicineMutate(),
+                "Tshepo PDP denied telemedicine mutation");
     }
 
     public void assertBreakGlassOverrideAllowed() {
-        enforce(tshepoAuthzServiceClient.telemedicineBreakGlassAllowed(), "Tshepo PDP denied telemedicine break-glass override");
+        enforce(tshepoAuthzServiceClient.telemedicineBreakGlass(),
+                "Tshepo PDP denied telemedicine break-glass override");
     }
 
     public String normalizePurposeOfUse(String rawPurposeOfUse) {
@@ -94,16 +102,32 @@ public class TelemedicineGovernanceService {
         }
     }
 
-    private void enforce(boolean allowed, String message) {
+    /**
+     * Refuses with the PDP's own reasoning instead of a bare 403 and a log sentence.
+     *
+     * <p>This used to throw {@code ResponseStatusException(FORBIDDEN, message)} for every
+     * non-ALLOW, so a step-up requirement, a missing consent and an unreachable PDP were the same
+     * response. {@code message} is now what it always was in substance — a log line — and the
+     * caller receives the canonical challenge instead.</p>
+     *
+     * <p>{@code tshepoPdpFallbackAllow} deliberately keeps its fail-open behaviour and its warning.
+     * Changing a fail-open default while restructuring how refusals are reported would mix a
+     * behavioural change into a presentation change; it is named for CP8, where it belongs.</p>
+     */
+    private void enforce(TrustDecisionResult decision, String message) {
         if (allowAnonymous || !requireTshepoAuthorize) {
             return;
         }
-        if (!allowed && !tshepoPdpFallbackAllow) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, message);
+        if (decision.allowed()) {
+            return;
         }
-        if (!allowed) {
-            log.warn("{}; continuing due to fallback policy", message);
+        if (tshepoPdpFallbackAllow) {
+            log.warn("{}; continuing due to fallback policy (decision={})", message, decision.decision());
+            return;
         }
+        // returnTo is null: a governance service does not know the browser destination, and
+        // inventing one would mint a continuation that resumes somewhere the user never was.
+        challengeResponder.enforce(decision, null, message);
     }
 
     public void audit(String tenantId,

@@ -221,6 +221,23 @@ public class TshepoAuthzServiceClient {
         return syntheticAuthorizeVerdict(httpMethod, "/internal/v1/shell/workspace-state");
     }
 
+    // ── Typed decisions ───────────────────────────────────────────────────────────────────
+    // These sit beside the boolean accessors and reuse their exact synthetic paths. The paths are
+    // what tshepo-authz matches its policy rules on, so they are declared HERE and nowhere else --
+    // a caller that spelled its own would silently stop matching any rule.
+
+    public TrustDecisionResult telemedicineRead() {
+        return authorize("GET", "/internal/v1/telemedicine-governed-read");
+    }
+
+    public TrustDecisionResult telemedicineMutate() {
+        return authorize("POST", "/internal/v1/telemedicine-governed-mutate");
+    }
+
+    public TrustDecisionResult telemedicineBreakGlass() {
+        return authorize("POST", "/internal/v1/telemedicine-break-glass-override");
+    }
+
     /**
      * @deprecated the boolean discards the decision. Prefer {@link #authorize(String, String)},
      *     which preserves the reason code and — critically — distinguishes a refusal from a PDP

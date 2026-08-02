@@ -35,6 +35,21 @@ public record TrustChallengeOutcome(
             "(?i)(eyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+|bearer\\s+|password|client_secret|"
                     + "private[_-]?key|recovery[_-]?code|policy_expr|rego\\b|deny_detail)");
 
+    /**
+     * Attaches a continuation reference to an existing outcome.
+     *
+     * <p>The PDP decides; only the BFF holds the session store that can mint a resume token, so the
+     * reference cannot be set where the outcome is built. Re-running the canonical constructor
+     * means the reference passes the same sensitive-value rejection as every other field — a
+     * continuation id is opaque by construction, and this keeps it so even if that changes.</p>
+     */
+    public TrustChallengeOutcome withContinuationReference(String continuationReference) {
+        return new TrustChallengeOutcome(contractVersion, decision, reasonCode, userMessageKey,
+                requiredAction, requiredAssurance, allowedAuthenticationMethods, contextOptions,
+                consentRequestReference, approvalReference, continuationReference, decisionId,
+                policyVersion, expiresAt, supportReference);
+    }
+
     public TrustChallengeOutcome {
         TrustContractVersion.requireV1(contractVersion);
         if (decision == null) {

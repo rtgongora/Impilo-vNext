@@ -94,6 +94,49 @@ public class GlobalExceptionHandler {
                 "Authentication request could not be completed. Start a new sign-in.", request);
     }
 
+    /**
+     * Renders a trust refusal as the canonical challenge envelope.
+     *
+     * <p>Registered ahead of the {@link ResponseStatusException} handler, which would otherwise
+     * flatten every one of these to {@code HTTP_ERROR} plus the log sentence the governance service
+     * happened to write.</p>
+     *
+     * <p>The status comes from the decision, not a constant: an outage answers 503 and a step-up
+     * answers 401, so a client can act on the status alone even before it reads the body.</p>
+     */
+    @ExceptionHandler(zw.gov.mohcc.impilo.experience.trust.TrustChallengeException.class)
+    public ResponseEntity<Map<String, Object>> handleTrustChallenge(
+            zw.gov.mohcc.impilo.experience.trust.TrustChallengeException ex,
+            HttpServletRequest request) {
+        var outcome = ex.outcome();
+        HttpStatus status = zw.gov.mohcc.impilo.experience.trust.TrustChallengeResponder
+                .statusFor(outcome == null ? null : outcome.decision());
+        log.warn("Trust challenge on {} {}: decision={} reason={}", request.getMethod(),
+                request.getRequestURI(), outcome == null ? null : outcome.decision(),
+                outcome == null ? null : outcome.reasonCode());
+
+        String requestId = request.getHeader(CompanionHeaders.REQUEST_ID);
+        String correlationId = request.getHeader(CompanionHeaders.CORRELATION_ID);
+        if (requestId == null) requestId = UUID.randomUUID().toString();
+        if (correlationId == null) correlationId = UUID.randomUUID().toString();
+
+        Map<String, Object> error = new LinkedHashMap<>();
+        error.put("code", outcome == null || outcome.reasonCode() == null
+                ? "TRUST_CHALLENGE" : outcome.reasonCode());
+        // The user-facing text is a message KEY, never a sentence. The governance services' own
+        // strings ("Tshepo PDP denied telemedicine read") are log lines; showing one to a person
+        // both leaks the internal topology and tells them nothing they can act on.
+        error.put("message", outcome == null || outcome.userMessageKey() == null
+                ? "trust.deny.generic" : outcome.userMessageKey());
+        // The whole canonical outcome, not a summary: reason code, permitted methods, required
+        // assurance and the continuation are exactly what the shell needs to offer a next step,
+        // and every one of them was being discarded here.
+        error.put("details", Map.of("trust_challenge", outcome == null ? Map.of() : outcome));
+        error.put("request_id", requestId);
+        error.put("correlation_id", correlationId);
+        return ResponseEntity.status(status).body(Map.of("error", error));
+    }
+
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<Map<String, Object>> handleResponseStatus(
             ResponseStatusException ex,
