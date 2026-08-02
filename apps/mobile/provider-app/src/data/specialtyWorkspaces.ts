@@ -18,6 +18,7 @@ export const SPECIALTY_WORKSPACES: readonly SpecialtyWorkspaceDef[] = [
   { id: "haematology", name: "Haematology", icon: "Droplet", tools: ["Blood Film Review", "Coagulation Panel", "Transfusion Request", "Sickle Cell Crisis Protocol", "Bone Marrow Report", "Anticoagulation Clinic"] },
   { id: "icu", name: "Intensive Care", icon: "Monitor", tools: ["APACHE II Score", "SOFA Score", "Ventilator Settings", "Sedation (RASS)", "Nutrition (NUTRIC)", "Daily ICU Checklist"] },
   { id: "neonatal", name: "Neonatal", icon: "Baby", tools: ["APGAR Record", "Gestational Age Assessment", "Growth Chart (Fenton)", "Surfactant Protocol", "Bilirubin Chart", "Feeding Plan"] },
+  { id: "paediatrics", name: "Paediatrics", icon: "Baby", tools: ["IMNCI Assess and Classify", "Paediatric Danger Signs", "Immunisation Forecast (EPI)", "Growth Interpretation"] },
   { id: "nephrology", name: "Nephrology", icon: "Filter", tools: ["eGFR Trend", "Urinalysis Review", "Biopsy Report", "Transplant Assessment", "Immunosuppression Protocol", "Dialysis Access"] },
   { id: "neurology", name: "Neurology", icon: "Brain", tools: ["NIHSS Score", "GCS Tracker", "Seizure Log", "Lumbar Puncture Record", "MS Relapse Assessment", "Cognitive Screen (MMSE/MoCA)"] },
   { id: "obstetrics", name: "Obstetrics", icon: "Baby", tools: ["Partograph", "CTG Interpretation", "Bishop Score", "PPH Protocol", "Eclampsia Protocol", "Neonatal Resuscitation", "Maternal Near-Miss Assessment", "ANC First Contact", "ANC Follow-up", "Facility PNC — Mother", "Facility PNC — Newborn", "FP Eligibility"] },
