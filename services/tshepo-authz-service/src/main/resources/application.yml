@@ -79,6 +79,27 @@ tshepo:
   authz:
     legacy-policy:
       base-url: ${TSHEPO_LEGACY_SERVICE_URL:http://localhost:8079}
+    # OPA strangler. OFF (no call) | SHADOW (call, compare, log; Java stays authoritative) | ENFORCE.
+    #
+    # These had no env binding at all, so the mode could not be changed without rebuilding the
+    # image — the shadow comparison was unreachable in every deployed environment regardless of
+    # what the sidecar was doing.
+    #
+    # ENFORCE is refused at startup unless opa-parity-evidence-path names a file that exists
+    # (see OpaEnforceGate). A mode string on its own must never be able to promote OPA to
+    # authoritative: the promotion is a claim about proven parity, so it has to cite the proof.
+    opa-url: ${TSHEPO_AUTHZ_OPA_URL:http://localhost:8181}
+    opa-mode: ${TSHEPO_AUTHZ_OPA_MODE:OFF}
+    opa-parity-evidence-path: ${TSHEPO_AUTHZ_OPA_PARITY_EVIDENCE:}
+    # Operating-context header regeneration (Checkpoint 4). The PDP regenerated identity but not
+    # context, so x-facility-id and its siblings reached every service as the browser set them.
+    # PASSTHROUGH (unchanged) | SHADOW (measure divergence, emit nothing) | AUTHORITATIVE (emit
+    # duty-token-validated context). Default PASSTHROUGH -- zero behaviour change.
+    context-header-mode: ${TSHEPO_AUTHZ_CONTEXT_HEADER_MODE:PASSTHROUGH}
+    # Lawful basis (Checkpoint 5). OFF | SHADOW (record only) | ENFORCE. Consent is one ground
+    # among several and a non-consent ground must not be refused for the absence of consent, but
+    # applying that CHANGES denial behaviour -- so it is measured in SHADOW first.
+    lawful-basis-mode: ${TSHEPO_AUTHZ_LAWFUL_BASIS_MODE:SHADOW}
     # Rate limiting
     rate-limit:
       max-requests-per-minute: 600

@@ -1,0 +1,230 @@
+package zw.gov.mohcc.impilo.tshepo.authz.service;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import zw.gov.mohcc.impilo.tshepo.authz.dto.AuthzInternalRequest;
+import zw.gov.mohcc.impilo.tshepo.authz.dto.DutyContext;
+import zw.gov.mohcc.impilo.tshepo.contracts.dto.AuthenticationAssurance;
+import zw.gov.mohcc.impilo.tshepo.contracts.enums.PurposeOfUse;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * Pins the OPA shadow input contract against the policy that consumes it.
+ *
+ * <p>The bug this exists to prevent already happened: the inline mapper sent {@code identity_loa}
+ * while {@code infra/opa/authz/authz.rego} reads {@code input.loa} / {@code input.assurance_loa}.
+ * Because the policy's accessors default to 0 on a missing key, nothing failed — the comparison
+ * simply measured a typo, and would have reported MIN_LOA divergence on essentially all traffic.
+ * A test that asserted only the Java side would not have caught it, so these tests read the
+ * <em>actual policy file</em> and assert the two agree.</p>
+ */
+class OpaShadowInputMapperTest {
+
+    private static final Path REGO = Path.of("../../infra/opa/authz/authz.rego");
+
+    private static AuthzInternalRequest request(String actorId, String subjectId, String providerId,
+                                                String assuranceLevel, DutyContext duty) {
+        return new AuthzInternalRequest(
+                UUID.randomUUID(), actorId, "PROVIDER", List.of("CLINICIAN"), "TREATMENT",
+                null, UUID.randomUUID(), null, null, null,
+                "GET", "/v1/patients/1", "GET:/v1/patients/1", "patients", "1",
+                0, "sess-1", null, AuthenticationAssurance.none(),
+                providerId, null, null, null, subjectId, assuranceLevel,
+                null, null, duty);
+    }
+
+    /** Every `input.<key>` the policy dereferences. */
+    private static Set<String> keysReadByPolicy() throws Exception {
+        String rego = Files.readString(REGO);
+        Matcher m = Pattern.compile("input\\.([a-z_]+)").matcher(rego);
+        Set<String> keys = new java.util.LinkedHashSet<>();
+        while (m.find()) {
+            keys.add(m.group(1));
+        }
+        // object.get(input, "x", …) is a dereference the regex above cannot see.
+        Matcher g = Pattern.compile("object\\.get\\(input,\\s*\"([a-z_]+)\"").matcher(rego);
+        while (g.find()) {
+            keys.add(g.group(1));
+        }
+        return keys;
+    }
+
+    @Test
+    @DisplayName("the policy file exists where the test expects it — otherwise every assertion is vacuous")
+    void policyFileIsReadable() throws Exception {
+        assertThat(Files.isRegularFile(REGO))
+                .as("authz.rego not found at %s; the contract assertions below would pass vacuously",
+                        REGO.toAbsolutePath())
+                .isTrue();
+        assertThat(keysReadByPolicy())
+                .as("parsed no input keys out of authz.rego — the regex is wrong and these tests prove nothing")
+                .isNotEmpty();
+    }
+
+    @Test
+    @DisplayName("every key the mapper emits is a key the policy actually reads")
+    void emittedKeysAreConsumedByPolicy() throws Exception {
+        Map<String, Object> input = OpaShadowInputMapper.build(
+                request("actor-1", "subject-1", "prov-1", "LOA3", DutyContext.absent()),
+                PurposeOfUse.TREATMENT, 2, 2, null, false, true, 3);
+
+        Set<String> policyKeys = keysReadByPolicy();
+        // actor_id is carried for correlation in the decision log rather than read by a rule.
+        Set<String> emitted = input.keySet().stream()
+                .filter(k -> !k.equals("actor_id"))
+                .collect(Collectors.toSet());
+
+        assertThat(policyKeys)
+                .as("mapper emits keys the policy never reads — a silent no-op like the identity_loa defect")
+                .containsAll(emitted);
+    }
+
+    @Test
+    @DisplayName("assurance LoA is sent under the key the policy reads, not the old identity_loa")
+    void assuranceLoaUsesThePolicysKey() throws Exception {
+        Map<String, Object> input = OpaShadowInputMapper.build(
+                request("actor-1", null, null, "LOA3", DutyContext.absent()),
+                PurposeOfUse.TREATMENT, null, null, null, false, false, 3);
+
+        assertThat(input).containsEntry("assurance_loa", 3);
+        assertThat(input)
+                .as("identity_loa was the defective key; re-emitting it would silently restore the bug")
+                .doesNotContainKey("identity_loa");
+
+        // authentication_aal WAS part of the original defect -- emitted while nothing read it.
+        // It is legitimate now only because the corpus gained a MIN_AAL rule. The durable
+        // invariant is not "never emit it" but "emit it only while the policy reads it", so this
+        // asserts against the policy rather than against a remembered verdict.
+        assertThat(keysReadByPolicy())
+                .as("authentication_aal is emitted; if the policy stops reading it, stop emitting it")
+                .contains("authentication_aal");
+        assertThat(input).containsEntry("authentication_aal", 0);
+    }
+
+    @Test
+    @DisplayName("fields whose vocabulary this service does not share are omitted, not approximated")
+    void unmappableFieldsAreAbsent() {
+        DutyContext duty = DutyContext.absent();
+        Map<String, Object> input = OpaShadowInputMapper.build(
+                request("actor-1", "subject-1", "prov-1", "LOA2", duty),
+                PurposeOfUse.TREATMENT, null, null, null, false, false, 2);
+
+        // access_mode expects an actor zone (WORK|PROFESSIONAL|LIFE); the nearest local value is a
+        // WorkMode (CLINICAL_CARE, …). Filling it would leave two rules permanently unmatched
+        // while appearing wired — the failure mode this whole class guards against.
+        assertThat(input).doesNotContainKey("access_mode");
+        // action expects a fine-grained verb; AuthzInternalRequest.action() is "METHOD:path".
+        assertThat(input).doesNotContainKey("action");
+        assertThat(input).doesNotContainKey("regulated_action");
+        assertThat(input).doesNotContainKey("identifier_kind");
+    }
+
+    @Test
+    @DisplayName("dimensions Java enforces but the policy has no rule for are declared, not silently emitted")
+    void policyCoverageGapsAreDeclaredAndNotEmitted() throws Exception {
+        Map<String, Object> input = OpaShadowInputMapper.build(
+                request("actor-1", null, null, "LOA3", DutyContext.absent()),
+                PurposeOfUse.TREATMENT, 2, 2, null, false, false, 3);
+
+        // min_aal IS now emitted: the corpus gained a MIN_AAL rule, so the key is read. The
+        // assertion below is the durable one -- whatever remains in the gap register must still
+        // be a dimension the policy genuinely does not read.
+        assertThat(input).containsKey("min_aal");
+
+        Set<String> policyKeys = keysReadByPolicy();
+        assertThat(OpaShadowInputMapper.POLICY_COVERAGE_GAPS.keySet())
+                .as("a declared coverage gap that the policy DOES read is a stale claim")
+                .allSatisfy(gap -> assertThat(policyKeys).doesNotContain(gap));
+    }
+
+    @Test
+    @DisplayName("the inert-rule register names every policy rule the mapping cannot exercise")
+    void inertRegisterMatchesThePolicy() throws Exception {
+        String rego = Files.readString(REGO);
+        Matcher m = Pattern.compile("deny_reasons contains \"([A-Z_]+)\"").matcher(rego);
+        Set<String> declared = new java.util.LinkedHashSet<>();
+        while (m.find()) {
+            declared.add(m.group(1));
+        }
+        assertThat(declared).as("parsed no deny reasons — this assertion would be vacuous").isNotEmpty();
+
+        Set<String> accounted = new java.util.LinkedHashSet<>(OpaShadowInputMapper.COMPARABLE_DENY_REASONS);
+        accounted.addAll(OpaShadowInputMapper.INERT_DENY_REASONS.keySet());
+
+        assertThat(accounted)
+                .as("a policy rule is neither declared comparable nor declared inert, so shadow "
+                        + "parity would be claimed over a rule nobody classified")
+                .containsAll(declared);
+    }
+
+    @Nested
+    @DisplayName("divergence attribution")
+    class DivergenceAttribution {
+
+        @Test
+        @DisplayName("OPA allowing where Java denied on a DB rule is a coverage gap, not a disagreement")
+        void javaRuleDenyAgainstOpaAllowIsCoverageGap() {
+            // Observed live the first time SHADOW was enabled: five requests produced
+            // java.verdict=DENY, opa.allow=true, opa.reasons=[]. The policy corpus states in its
+            // own header that the DB-rule RBAC/ABAC "is intentionally NOT decided here", so OPA was
+            // never asked the question Java answered. Counting this as divergence would report a
+            // permanent ~100% rate on all rule-governed traffic.
+            for (String javaCode : OpaShadowInputMapper.JAVA_ONLY_RULE_DENY_CODES) {
+                assertThat(OpaShadowInputMapper.classify(true, javaCode, List.of()))
+                        .as("java %s vs opa allow is a coverage gap", javaCode)
+                        .isEqualTo(OpaShadowInputMapper.DivergenceKind.NO_RULE_COVERAGE);
+            }
+        }
+
+        @Test
+        @DisplayName("a divergence caused only by unmappable rules is attributed to the mapping")
+        void unmappableOnlyDivergenceIsAttributedToMapping() {
+            assertThat(OpaShadowInputMapper.classify(false, null, List.of("WORK_REQUIRES_ASSIGNMENT")))
+                    .isEqualTo(OpaShadowInputMapper.DivergenceKind.UNMAPPABLE);
+            assertThat(OpaShadowInputMapper.classify(false, null, List.of("LOGIN_PERSON_FIRST")))
+                    .isEqualTo(OpaShadowInputMapper.DivergenceKind.UNMAPPABLE);
+        }
+
+        @Test
+        @DisplayName("a divergence citing an exercisable rule is a real disagreement")
+        void comparableDivergenceIsReal() {
+            assertThat(OpaShadowInputMapper.classify(false, null, List.of("MIN_LOA")))
+                    .isEqualTo(OpaShadowInputMapper.DivergenceKind.REAL);
+            assertThat(OpaShadowInputMapper.classify(false, null, List.of("WORK_REQUIRES_ASSIGNMENT", "MIN_LOA")))
+                    .isEqualTo(OpaShadowInputMapper.DivergenceKind.REAL);
+        }
+
+        @Test
+        @DisplayName("OPA allowing where Java denied for a NON-rule reason stays a real divergence")
+        void nonRuleJavaDenyAgainstOpaAllowIsReal() {
+            // CONSENT_DENIED is not a DB-rule outcome, so OPA allowing here is a genuine
+            // disagreement and must not be excused by the coverage-gap carve-out.
+            assertThat(OpaShadowInputMapper.classify(true, "CONSENT_DENIED", List.of()))
+                    .isEqualTo(OpaShadowInputMapper.DivergenceKind.REAL);
+            assertThat(OpaShadowInputMapper.classify(true, "DEVICE_BLOCKED", List.of()))
+                    .isEqualTo(OpaShadowInputMapper.DivergenceKind.REAL);
+        }
+
+        @Test
+        @DisplayName("metric reason stays inside the policy vocabulary — no request data becomes a tag")
+        void metricReasonIsBounded() {
+            assertThat(OpaShadowInputMapper.metricReason(List.of())).isEqualTo("none");
+            assertThat(OpaShadowInputMapper.metricReason(List.of("MIN_LOA"))).isEqualTo("MIN_LOA");
+            assertThat(OpaShadowInputMapper.metricReason(List.of("patient-4f2a-secret")))
+                    .as("an unrecognised reason must collapse to a constant, never become a metric tag")
+                    .isEqualTo("other");
+        }
+    }
+}

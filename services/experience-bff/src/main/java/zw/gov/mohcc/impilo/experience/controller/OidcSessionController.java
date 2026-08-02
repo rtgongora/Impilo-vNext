@@ -81,8 +81,12 @@ public class OidcSessionController {
     public ResponseEntity<Map<String, Object>> stepUp(HttpServletRequest request,
             @AuthenticationPrincipal Jwt jwt, @RequestBody Map<String, String> body) {
         String sessionId = SessionBearerTokenResolver.cookie(request, WebAuthSessionStore.SESSION_COOKIE);
+        // A step-up is raised BY a challenge, so it is the one flow guaranteed to have a
+        // continuation to carry. Dropping it here meant the interrupted journey could not be
+        // resumed after the round trip -- the user re-authenticated and landed nowhere useful.
         URI location = sessions.begin(body.get("returnTo"), body.get("requiredAcr"), null,
-                sessionId, jwt == null ? null : jwt.getClaimAsString("preferred_username"));
+                sessionId, jwt == null ? null : jwt.getClaimAsString("preferred_username"),
+                body.get("continuation"));
         return ResponseEntity.ok(Map.of("data", Map.of("authorizeUrl", location.toString())));
     }
 

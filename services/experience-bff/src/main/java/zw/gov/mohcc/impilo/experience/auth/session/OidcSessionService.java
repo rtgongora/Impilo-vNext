@@ -28,6 +28,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 /** Keycloak authorization-code + PKCE orchestration for the web BFF. */
 @Service
 public class OidcSessionService {
+    private static final org.slf4j.Logger log =
+            org.slf4j.LoggerFactory.getLogger(OidcSessionService.class);
     /**
      * Recovery audit channel: records recovery authentication, restriction, continuation use,
      * termination and reauthentication. Entries carry a hashed session reference and never
@@ -239,9 +241,32 @@ public class OidcSessionService {
         form.add("client_secret", properties.getClientSecret());
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        ResponseEntity<JsonNode> response = restTemplate.exchange(
-                properties.getInternalIssuer() + "/protocol/openid-connect/token", HttpMethod.POST,
-                new HttpEntity<>(form, headers), JsonNode.class);
+        ResponseEntity<JsonNode> response;
+        try {
+            response = restTemplate.exchange(
+                    properties.getInternalIssuer() + "/protocol/openid-connect/token", HttpMethod.POST,
+                    new HttpEntity<>(form, headers), JsonNode.class);
+        } catch (org.springframework.web.client.RestClientResponseException e) {
+            // RestTemplate throws on any 4xx/5xx, so the status check below was unreachable for
+            // exactly the failures it was written for: a Keycloak rejection escaped as a raw
+            // exception, hit the generic handler and surfaced as 500 INTERNAL_ERROR. An identity
+            // provider refusing a code is an authentication failure, not a server fault, and the
+            // trust doctrine requires those to stay distinct outcomes.
+            //
+            // Only Keycloak's short `error` code is logged. The body can carry token material and
+            // is never logged wholesale.
+            String oauthError = "unparsed";
+            try {
+                JsonNode body = new com.fasterxml.jackson.databind.ObjectMapper()
+                        .readTree(e.getResponseBodyAsString());
+                oauthError = body.path("error").asText("absent");
+            } catch (Exception ignored) {
+                // Body was not JSON; the status alone is still the useful signal.
+            }
+            log.warn("OIDC token exchange rejected by the identity provider: status={} error={}",
+                    e.getStatusCode().value(), oauthError);
+            throw new OidcProtocolException("OIDC_TOKEN_EXCHANGE_FAILED");
+        }
         if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
             throw new OidcProtocolException("OIDC_TOKEN_EXCHANGE_FAILED");
         }

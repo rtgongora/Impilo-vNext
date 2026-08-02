@@ -62,7 +62,18 @@ vashandi:
   v11:
     emit-mode: ${VASHANDI_EMIT_MODE:DUAL}
 
+# Vashandi's OWN workload credential for service-to-service calls (Checkpoint 4.3).
+# Off until this workload is given a dedicated Keycloak client -- leaving client-id unset means
+# no token is minted and no Authorization header is sent, so the callee decides. Deliberately
+# per-workload: a shared client would leave every callee unable to tell one caller from another.
 impilo:
+  s2s:
+    token:
+      enabled: ${IMPILO_S2S_TOKEN_ENABLED:false}
+      token-uri: ${IMPILO_S2S_TOKEN_URI:${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}/protocol/openid-connect/token}
+      client-id: ${IMPILO_S2S_CLIENT_ID:}
+      client-secret: ${IMPILO_S2S_CLIENT_SECRET:}
+      scope: ${IMPILO_S2S_TOKEN_SCOPE:}
   companion:
     enabled: true
   vashandi:

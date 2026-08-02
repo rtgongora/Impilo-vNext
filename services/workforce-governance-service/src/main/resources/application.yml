@@ -29,11 +29,22 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}
+          # Keycloak advertises the PUBLIC issuer even on the internal URL, so a token's `iss` is
+          # the public one and validating against the in-cluster address rejects every token.
+          # The JWK set must still be fetched internally: this host cannot reach its own public
+          # address (hairpin NAT), so discovery against the public issuer would hang.
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}}
+          jwk-set-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}/protocol/openid-connect/certs
 
 impilo:
   companion:
     enabled: true
+  # Checkpoint 7: reject a token minted for a DIFFERENT service (cross-service replay).
+  # Empty by default -- the validator stays inert until this names an audience, because
+  # switching it on before Keycloak mints `aud` for a caller rejects that caller. Provision the
+  # mapper, verify a real token carries the claim, THEN set this.
+  s2s:
+    required-audience: ${IMPILO_S2S_REQUIRED_AUDIENCE:}
   security:
     disable-oauth-for-tests: ${IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS:false}
   governance:

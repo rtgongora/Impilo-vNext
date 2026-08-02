@@ -34,11 +34,6 @@ class WorkHomeControllerTest {
     // components, which @WebMvcTest instantiates; they need the session service bean.
 
     @MockBean
-
-    private zw.gov.mohcc.impilo.experience.auth.session.OidcSessionService oidcSessionService;
-
-
-    @MockBean
     private WorkHomeCompositionService compositionService;
 
     @MockBean

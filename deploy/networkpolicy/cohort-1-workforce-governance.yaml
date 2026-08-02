@@ -1,0 +1,66 @@
+# Checkpoint 7 — first enforced cohort: network containment for workforce-governance-service.
+#
+# NetworkPolicy became genuinely enforcing on this cluster on 2026-08-02 (previously it was
+# accepted and silently inert -- see docs/environment/NETWORK_POLICY_ENFORCEMENT_DEPENDENCY.md).
+# Every rule here is therefore load-bearing, and a wrong one partitions the service rather than
+# decorating it.
+#
+# CONTAINMENT IS NOT AUTHORIZATION. This policy narrows who can *reach* the service; it does not
+# decide who may *do* what. That is the resource server plus the PDP. Both halves are required:
+# reachability alone was the estate's entire east-west control until now.
+#
+# The two allowed callers are the complete enumerated set from
+# reports/estate/service-caller-graph.json -- experience-bff and vashandi-workforce-service, both
+# with RUNTIME_ENV evidence (a live URL in the caller's own container environment), not merely a
+# source-level default.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cohort1-workforce-governance-ingress
+  namespace: impilo-full-preview
+  labels:
+    impilo.io/trust-cohort: "1"
+  annotations:
+    impilo.io/rollback: "kubectl -n impilo-full-preview delete networkpolicy cohort1-workforce-governance-ingress"
+    impilo.io/caller-evidence: "reports/estate/service-caller-graph.json (RUNTIME_ENV both)"
+spec:
+  podSelector:
+    matchLabels:
+      app: workforce-governance-service
+  policyTypes:
+    - Ingress
+  ingress:
+    # The two enumerated callers.
+    - from:
+        - podSelector:
+            matchLabels:
+              app: experience-bff
+        - podSelector:
+            matchLabels:
+              app: vashandi-workforce-service
+      ports:
+        - protocol: TCP
+          port: 8165
+
+    # Kubelet liveness/readiness probes originate from the NODE, not from any pod, so no
+    # podSelector can match them. Selecting a pod with any ingress rule denies everything else --
+    # omitting this would make the kubelet's probe fail, mark the pod unready, and take the
+    # service down while the policy looked like a security improvement.
+    #
+    # Scoped to SINGLE ADDRESSES, never the pod CIDR.
+    #
+    # The first version of this rule allowed 10.42.0.0/24 "for probes" -- which is the pod CIDR,
+    # so it permitted every pod in the cluster. The negative control caught it immediately:
+    # oros-service, which is not a caller, still got 200. A containment policy that admits
+    # everything is worse than none, because it reads as a control.
+    #
+    # 10.42.0.1 is the cni0 bridge address the node uses to reach pods, which is the source the
+    # kubelet's probe actually arrives from; the node's own address is included for completeness.
+    - from:
+        - ipBlock:
+            cidr: 10.42.0.1/32
+        - ipBlock:
+            cidr: 10.50.1.67/32
+      ports:
+        - protocol: TCP
+          port: 8165

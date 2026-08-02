@@ -6,11 +6,21 @@
 
 import type { ApiErrorDetail } from "@impilo/mobile-trust";
 
+import type { TrustChallenge } from "@impilo/mobile-trust";
+
 export class ApiError extends Error {
   public readonly code: string;
   public readonly status: number;
   public readonly correlationId: string;
   public readonly details?: Record<string, unknown>;
+  /**
+   * The governed decision behind this error, when the trust plane made one.
+   *
+   * Present means the refusal was DECIDED, not merely a failure: `trustChallenge.kind`
+   * separates a refusal from an actionable next step from an outage. Absent means an ordinary
+   * error, so a caller that ignores this field behaves exactly as it did before.
+   */
+  public readonly trustChallenge?: TrustChallenge;
 
   constructor(params: {
     code: string;
@@ -18,6 +28,7 @@ export class ApiError extends Error {
     status: number;
     correlationId: string;
     details?: Record<string, unknown>;
+    trustChallenge?: TrustChallenge;
   }) {
     super(params.message);
     this.name = "ApiError";
@@ -25,6 +36,33 @@ export class ApiError extends Error {
     this.status = params.status;
     this.correlationId = params.correlationId;
     this.details = params.details;
+    this.trustChallenge = params.trustChallenge;
+  }
+
+  /**
+   * Builds an error that carries the trust decision alongside the usual fields.
+   *
+   * Deliberately an ApiError rather than a new exception type: every existing
+   * `catch (e) { if (e instanceof ApiError) ... }` in the app keeps working, and only code that
+   * wants the decision needs to know it exists.
+   */
+  static withTrustChallenge(
+    status: number,
+    correlationId: string,
+    body: unknown,
+    challenge: TrustChallenge,
+  ): ApiError {
+    const base = ApiError.fromResponse(status, correlationId, body);
+    return new ApiError({
+      // The reason code is a better error code than HTTP_403 whenever the PDP gave one.
+      code: challenge.reasonCode ?? base.code,
+      // A message KEY, never policy prose: the canonical contract has no free-text field.
+      message: challenge.userMessageKey ?? base.message,
+      status,
+      correlationId,
+      details: base.details,
+      trustChallenge: challenge,
+    });
   }
 
   static fromEnvelope(error: ApiErrorDetail, correlationId: string): ApiError {

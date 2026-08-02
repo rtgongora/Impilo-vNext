@@ -16,6 +16,8 @@ import zw.gov.mohcc.impilo.tshepo.authz.persistence.repository.PolicyDecisionLog
 import zw.gov.mohcc.impilo.tshepo.authz.service.*;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.AuthzResponse;
 import zw.gov.mohcc.impilo.tshepo.contracts.enums.WorkMode;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -44,6 +46,9 @@ import static org.mockito.Mockito.*;
  */
 @ExtendWith(MockitoExtension.class)
 abstract class MigrationPolicyTestBase {
+
+    /** Real registry: the shadow metrics are asserted, not stubbed away. */
+    protected final MeterRegistry meterRegistry = new SimpleMeterRegistry();
 
     protected static final UUID TENANT_ID = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     protected static final UUID CORRELATION_ID = UUID.fromString("cccccccc-cccc-cccc-cccc-cccccccccccc");
@@ -98,7 +103,7 @@ abstract class MigrationPolicyTestBase {
                 stepUpService, breakGlassService, decisionLogRepository,
                 auditPublisher, props, new ObjectMapper(), visibilityEscalationService,
                 delegationClient, opaDecisionClient, roleTemplateCatalog, confidentialityPack,
-                decisionEnvelopeSigner);
+                decisionEnvelopeSigner, meterRegistry);
     }
 
     /**

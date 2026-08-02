@@ -15,6 +15,8 @@ import zw.gov.mohcc.impilo.tshepo.authz.persistence.repository.PolicyDecisionLog
 import zw.gov.mohcc.impilo.tshepo.authz.service.*;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.AuthzResponse;
 import zw.gov.mohcc.impilo.tshepo.contracts.enums.Verdict;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +50,9 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 class TheatreAuthzMatrixTest {
+
+    /** Real registry: the shadow metrics are asserted, not stubbed away. */
+    protected final MeterRegistry meterRegistry = new SimpleMeterRegistry();
 
     @Mock private DeviceRiskScoreEvaluator riskScoring;
     @Mock private PolicyCacheService policyCacheService;
@@ -100,7 +105,7 @@ class TheatreAuthzMatrixTest {
                 consentClient, stepUpService, breakGlassService, decisionLogRepository,
                 auditPublisher, props, objectMapper, visibilityEscalationService,
                 delegationClient, opaDecisionClient, roleTemplateCatalog, confidentialityPack,
-                decisionEnvelopeSigner);
+                decisionEnvelopeSigner, meterRegistry);
     }
 
     // ── request + rule fixtures ──────────────────────────────────────────────

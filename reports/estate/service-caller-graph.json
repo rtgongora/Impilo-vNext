@@ -1,0 +1,2139 @@
+{
+  "generated_by": "scripts/security/build-service-caller-graph.py",
+  "edge_sources": [
+    "SOURCE_DEFAULT",
+    "SOURCE_DIRECT",
+    "RUNTIME_ENV"
+  ],
+  "caveat": "Absence of an edge is not proof of no caller. Kafka topics, runtime-built URLs and gateway-mediated calls are not visible to this method.",
+  "service_count": 116,
+  "edge_count": 363,
+  "services": [
+    {
+      "service": "abis-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "RUNTIME_ENV"
+        ]
+      },
+      "outbound_callee_count": 2,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "ai-model-registry-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "analytics-pipeline-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "asset-registry-service",
+      "inbound_caller_count": 2,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "telemonitoring-service": [
+          "SOURCE_DIRECT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "audit-ledger-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "booking-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "RUNTIME_ENV"
+        ]
+      },
+      "outbound_callee_count": 12,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "butano-fhir",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "butano-service",
+      "inbound_caller_count": 4,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "madi-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "mushe-wallet-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "oros-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 3,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "campaigns-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 2,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "card-print-agent",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 4,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "channels-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "khuluma-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 2,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "clinical-knowledge-platform-service",
+      "inbound_caller_count": 3,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "pct-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "procedures-service": [
+          "SOURCE_DIRECT"
+        ]
+      },
+      "outbound_callee_count": 3,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "community-service",
+      "inbound_caller_count": 2,
+      "inbound_callers": {
+        "booking-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "connector-fhir-adapter",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "costing-engine-service",
+      "inbound_caller_count": 4,
+      "inbound_callers": {
+        "booking-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "inpatient-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "msika-flow-service": [
+          "RUNTIME_ENV"
+        ]
+      },
+      "outbound_callee_count": 3,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "coverage-service",
+      "inbound_caller_count": 5,
+      "inbound_callers": {
+        "booking-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "costing-engine-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "msika-flow-service": [
+          "RUNTIME_ENV"
+        ],
+        "mushex-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 2,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "credential-verification-service",
+      "inbound_caller_count": 3,
+      "inbound_callers": {
+        "daidzai-service": [
+          "SOURCE_DIRECT"
+        ],
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "mushex-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "daidzai-service",
+      "inbound_caller_count": 2,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "telemonitoring-service": [
+          "SOURCE_DIRECT"
+        ]
+      },
+      "outbound_callee_count": 10,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "data-access-governance-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "data-governance-service",
+      "inbound_caller_count": 2,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "ndr-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 2,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "data-ingestion-service",
+      "inbound_caller_count": 0,
+      "inbound_callers": {},
+      "outbound_callee_count": 1,
+      "cohort_signal": "NO_OBSERVED_CALLER"
+    },
+    {
+      "service": "data-pipeline-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "data-warehouse-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "developer-portal-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "dispatch-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "document-service",
+      "inbound_caller_count": 2,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "live-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 2,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "envoy",
+      "inbound_caller_count": 0,
+      "inbound_callers": {},
+      "outbound_callee_count": 0,
+      "cohort_signal": "NO_OBSERVED_CALLER"
+    },
+    {
+      "service": "experience-bff",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "one-ui-shell": [
+          "RUNTIME_ENV"
+        ]
+      },
+      "outbound_callee_count": 98,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "fhir-gateway-service",
+      "inbound_caller_count": 2,
+      "inbound_callers": {
+        "experience-bff": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "telemonitoring-service": [
+          "SOURCE_DIRECT"
+        ]
+      },
+      "outbound_callee_count": 3,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "forms-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "general-ledger-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "guidance-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 2,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "hapi-fhir",
+      "inbound_caller_count": 3,
+      "inbound_callers": {
+        "butano-service": [
+          "RUNTIME_ENV"
+        ],
+        "experience-bff": [
+          "RUNTIME_ENV"
+        ],
+        "fhir-gateway-service": [
+          "RUNTIME_ENV"
+        ]
+      },
+      "outbound_callee_count": 0,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "hr-payroll-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "identity-assurance-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "indawo-service",
+      "inbound_caller_count": 2,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "madi-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "inpatient-service",
+      "inbound_caller_count": 4,
+      "inbound_callers": {
+        "booking-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "procedures-service": [
+          "SOURCE_DIRECT"
+        ],
+        "surgery-service": [
+          "SOURCE_DIRECT"
+        ]
+      },
+      "outbound_callee_count": 11,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "integration-hub",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "inventory-elmis-adapter",
+      "inbound_caller_count": 2,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "madi-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "inventory-service",
+      "inbound_caller_count": 3,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "inpatient-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "msika-flow-service": [
+          "SOURCE_DIRECT"
+        ]
+      },
+      "outbound_callee_count": 3,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "iot-ingestion-service",
+      "inbound_caller_count": 2,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "telemonitoring-service": [
+          "SOURCE_DIRECT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "jobs-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "kafka",
+      "inbound_caller_count": 0,
+      "inbound_callers": {},
+      "outbound_callee_count": 0,
+      "cohort_signal": "NO_OBSERVED_CALLER"
+    },
+    {
+      "service": "keycloak",
+      "inbound_caller_count": 103,
+      "inbound_callers": {
+        "abis-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "ai-model-registry-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "analytics-pipeline-service": [
+          "RUNTIME_ENV"
+        ],
+        "asset-registry-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "audit-ledger-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "booking-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "butano-fhir": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "butano-service": [
+          "RUNTIME_ENV"
+        ],
+        "campaigns-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "card-print-agent": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "channels-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "clinical-knowledge-platform-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "community-service": [
+          "RUNTIME_ENV"
+        ],
+        "connector-fhir-adapter": [
+          "RUNTIME_ENV"
+        ],
+        "costing-engine-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "coverage-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "credential-verification-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "daidzai-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "data-access-governance-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "data-governance-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "data-ingestion-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "data-pipeline-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "data-warehouse-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "developer-portal-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "dispatch-service": [
+          "RUNTIME_ENV"
+        ],
+        "document-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "experience-bff": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT",
+          "SOURCE_DIRECT"
+        ],
+        "fhir-gateway-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "forms-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "general-ledger-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "guidance-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "hr-payroll-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "identity-assurance-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "indawo-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "inpatient-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "integration-hub": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "inventory-elmis-adapter": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "inventory-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "iot-ingestion-service": [
+          "RUNTIME_ENV"
+        ],
+        "jobs-service": [
+          "RUNTIME_ENV"
+        ],
+        "khuluma-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "landela-adapter-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "learning-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "live-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "llm-orchestration-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "madi-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "mental-health-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "msika-apps-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "msika-flow-service": [
+          "RUNTIME_ENV"
+        ],
+        "msika-service": [
+          "RUNTIME_ENV"
+        ],
+        "mushe-wallet-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "mushex-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "mvumo-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "national-data-repository-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "ndila-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "ndr-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "nhume-service": [
+          "RUNTIME_ENV"
+        ],
+        "notification-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "observability-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "offline-edge-service": [
+          "RUNTIME_ENV"
+        ],
+        "offline-sync-service": [
+          "RUNTIME_ENV"
+        ],
+        "organization-registry-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "oros-service": [
+          "RUNTIME_ENV"
+        ],
+        "pacs-adapter-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "participation-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "patient-safety-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "pct-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "pharmacy-elmis-adapter": [
+          "RUNTIME_ENV"
+        ],
+        "pharmacy-service": [
+          "RUNTIME_ENV"
+        ],
+        "procedures-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "procurement-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "product-registry-service": [
+          "RUNTIME_ENV"
+        ],
+        "referral-service": [
+          "RUNTIME_ENV"
+        ],
+        "reporting-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "rito-quality-safety-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "rtc-gateway-service": [
+          "RUNTIME_ENV"
+        ],
+        "rules-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "scheduling-service": [
+          "RUNTIME_ENV"
+        ],
+        "schema-registry-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "search-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "security-hardening-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "share-slip-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "simba-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "support-service": [
+          "RUNTIME_ENV"
+        ],
+        "surgery-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "surveillance-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "telemonitoring-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "tshepo-audit-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT",
+          "SOURCE_DIRECT"
+        ],
+        "tshepo-authz-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "tshepo-consent-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "tshepo-identity-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "tshepo-keys-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "tshepo-offline-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "tshepo-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "tuso-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "ubomi-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "varapi-service": [
+          "RUNTIME_ENV"
+        ],
+        "vashandi-workforce-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "vito-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "wellness-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "workflow-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "workforce-governance-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "zibo-service": [
+          "RUNTIME_ENV"
+        ]
+      },
+      "outbound_callee_count": 0,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "khuluma-service",
+      "inbound_caller_count": 2,
+      "inbound_callers": {
+        "daidzai-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 5,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "landela-adapter-service",
+      "inbound_caller_count": 3,
+      "inbound_callers": {
+        "card-print-agent": [
+          "SOURCE_DEFAULT"
+        ],
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "share-slip-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "learning-service",
+      "inbound_caller_count": 5,
+      "inbound_callers": {
+        "booking-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "inpatient-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "live-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "vashandi-workforce-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 4,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "live-service",
+      "inbound_caller_count": 5,
+      "inbound_callers": {
+        "campaigns-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "khuluma-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "learning-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "pct-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 9,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "livekit",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "rtc-gateway-service": [
+          "RUNTIME_ENV"
+        ]
+      },
+      "outbound_callee_count": 0,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "llm-orchestration-service",
+      "inbound_caller_count": 6,
+      "inbound_callers": {
+        "clinical-knowledge-platform-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "inpatient-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "learning-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "surveillance-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "tuso-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "madi-service",
+      "inbound_caller_count": 4,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "inpatient-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "live-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "nhume-service": [
+          "SOURCE_DIRECT"
+        ]
+      },
+      "outbound_callee_count": 8,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "matcher-engine",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "abis-service": [
+          "RUNTIME_ENV"
+        ]
+      },
+      "outbound_callee_count": 0,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "mental-health-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 2,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "minio",
+      "inbound_caller_count": 2,
+      "inbound_callers": {
+        "document-service": [
+          "RUNTIME_ENV"
+        ],
+        "rtc-gateway-service": [
+          "RUNTIME_ENV"
+        ]
+      },
+      "outbound_callee_count": 0,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "msika-apps-service",
+      "inbound_caller_count": 0,
+      "inbound_callers": {},
+      "outbound_callee_count": 1,
+      "cohort_signal": "NO_OBSERVED_CALLER"
+    },
+    {
+      "service": "msika-flow-service",
+      "inbound_caller_count": 2,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "nhume-service": [
+          "SOURCE_DIRECT"
+        ]
+      },
+      "outbound_callee_count": 13,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "msika-service",
+      "inbound_caller_count": 2,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "msika-flow-service": [
+          "SOURCE_DEFAULT",
+          "SOURCE_DIRECT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "mushe-wallet-service",
+      "inbound_caller_count": 4,
+      "inbound_callers": {
+        "channels-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "daidzai-service": [
+          "SOURCE_DIRECT"
+        ],
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "mushex-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 4,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "mushex-service",
+      "inbound_caller_count": 8,
+      "inbound_callers": {
+        "booking-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "costing-engine-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "coverage-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "msika-flow-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "mushe-wallet-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "tuso-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "varapi-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 4,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "mvumo-service",
+      "inbound_caller_count": 0,
+      "inbound_callers": {},
+      "outbound_callee_count": 2,
+      "cohort_signal": "NO_OBSERVED_CALLER"
+    },
+    {
+      "service": "national-data-repository-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "ndila-martin",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "ndila-service": [
+          "RUNTIME_ENV"
+        ]
+      },
+      "outbound_callee_count": 0,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "ndila-service",
+      "inbound_caller_count": 2,
+      "inbound_callers": {
+        "daidzai-service": [
+          "SOURCE_DEFAULT",
+          "SOURCE_DIRECT"
+        ],
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 2,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "ndr-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 2,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "nhume-service",
+      "inbound_caller_count": 6,
+      "inbound_callers": {
+        "booking-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "daidzai-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "inpatient-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "madi-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "msika-flow-service": [
+          "SOURCE_DIRECT"
+        ]
+      },
+      "outbound_callee_count": 5,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "notification-service",
+      "inbound_caller_count": 6,
+      "inbound_callers": {
+        "daidzai-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "experience-bff": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "khuluma-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "learning-service": [
+          "RUNTIME_ENV"
+        ],
+        "live-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "rito-quality-safety-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "observability-service",
+      "inbound_caller_count": 2,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "madi-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "offline-edge-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "offline-sync-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "one-ui-shell",
+      "inbound_caller_count": 3,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "tuso-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "vito-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "opa",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "tshepo-authz-service": [
+          "RUNTIME_ENV"
+        ]
+      },
+      "outbound_callee_count": 0,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "organization-registry-service",
+      "inbound_caller_count": 3,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "varapi-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "workforce-governance-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 2,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "oros-service",
+      "inbound_caller_count": 9,
+      "inbound_callers": {
+        "booking-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "inpatient-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "madi-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "msika-flow-service": [
+          "SOURCE_DIRECT"
+        ],
+        "nhume-service": [
+          "SOURCE_DIRECT"
+        ],
+        "pct-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "pharmacy-service": [
+          "RUNTIME_ENV"
+        ],
+        "procedures-service": [
+          "SOURCE_DIRECT"
+        ]
+      },
+      "outbound_callee_count": 7,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "orthanc",
+      "inbound_caller_count": 2,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "pacs-adapter-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 0,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "pacs-adapter-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 2,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "participation-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "patient-safety-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "pct-service",
+      "inbound_caller_count": 10,
+      "inbound_callers": {
+        "booking-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "daidzai-service": [
+          "SOURCE_DEFAULT",
+          "SOURCE_DIRECT"
+        ],
+        "experience-bff": [
+          "SOURCE_DEFAULT",
+          "SOURCE_DIRECT"
+        ],
+        "inpatient-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "mental-health-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "nhume-service": [
+          "SOURCE_DIRECT"
+        ],
+        "oros-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "surgery-service": [
+          "SOURCE_DIRECT"
+        ],
+        "telemonitoring-service": [
+          "SOURCE_DIRECT"
+        ],
+        "vito-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 5,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "pharmacy-elmis-adapter",
+      "inbound_caller_count": 2,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "inventory-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "pharmacy-service",
+      "inbound_caller_count": 2,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "inventory-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 2,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "postgres",
+      "inbound_caller_count": 0,
+      "inbound_callers": {},
+      "outbound_callee_count": 0,
+      "cohort_signal": "NO_OBSERVED_CALLER"
+    },
+    {
+      "service": "procedures-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 8,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "procurement-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "product-registry-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "redis",
+      "inbound_caller_count": 0,
+      "inbound_callers": {},
+      "outbound_callee_count": 0,
+      "cohort_signal": "NO_OBSERVED_CALLER"
+    },
+    {
+      "service": "referral-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "reporting-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "rito-quality-safety-service",
+      "inbound_caller_count": 5,
+      "inbound_callers": {
+        "daidzai-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "inpatient-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "tuso-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "varapi-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 2,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "rtc-gateway-service",
+      "inbound_caller_count": 2,
+      "inbound_callers": {
+        "khuluma-service": [
+          "RUNTIME_ENV"
+        ],
+        "live-service": [
+          "RUNTIME_ENV"
+        ]
+      },
+      "outbound_callee_count": 3,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "rules-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "scheduling-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "schema-registry-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "search-service",
+      "inbound_caller_count": 3,
+      "inbound_callers": {
+        "clinical-knowledge-platform-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "guidance-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "security-hardening-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "share-slip-service",
+      "inbound_caller_count": 3,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "msika-flow-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "oros-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 2,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "simba-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "support-service",
+      "inbound_caller_count": 0,
+      "inbound_callers": {},
+      "outbound_callee_count": 1,
+      "cohort_signal": "NO_OBSERVED_CALLER"
+    },
+    {
+      "service": "surgery-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 3,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "surveillance-service",
+      "inbound_caller_count": 2,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "madi-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 2,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "telemonitoring-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 6,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "tshepo-audit-service",
+      "inbound_caller_count": 2,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "tshepo-authz-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 2,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "tshepo-authz-service",
+      "inbound_caller_count": 5,
+      "inbound_callers": {
+        "experience-bff": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "msika-flow-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "tshepo-offline-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "varapi-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "vito-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 6,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "tshepo-consent-service",
+      "inbound_caller_count": 4,
+      "inbound_callers": {
+        "experience-bff": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "fhir-gateway-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "mvumo-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "tshepo-authz-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "tshepo-identity-service",
+      "inbound_caller_count": 3,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "tshepo-authz-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "tshepo-offline-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 3,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "tshepo-keys-service",
+      "inbound_caller_count": 10,
+      "inbound_callers": {
+        "card-print-agent": [
+          "SOURCE_DIRECT"
+        ],
+        "data-governance-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "experience-bff": [
+          "SOURCE_DEFAULT",
+          "SOURCE_DIRECT"
+        ],
+        "mushe-wallet-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "oros-service": [
+          "SOURCE_DIRECT"
+        ],
+        "tshepo-audit-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "tshepo-authz-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "tshepo-identity-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "tshepo-offline-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "vito-service": [
+          "SOURCE_DIRECT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "tshepo-offline-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 4,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "tshepo-service",
+      "inbound_caller_count": 0,
+      "inbound_callers": {},
+      "outbound_callee_count": 2,
+      "cohort_signal": "NO_OBSERVED_CALLER"
+    },
+    {
+      "service": "tuso-service",
+      "inbound_caller_count": 11,
+      "inbound_callers": {
+        "booking-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "daidzai-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "experience-bff": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "inpatient-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "live-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "msika-flow-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "oros-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "pct-service": [
+          "RUNTIME_ENV"
+        ],
+        "procedures-service": [
+          "SOURCE_DIRECT"
+        ],
+        "tshepo-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "vashandi-workforce-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 7,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "ubomi-service",
+      "inbound_caller_count": 1,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "SINGLE_CALLER"
+    },
+    {
+      "service": "varapi-service",
+      "inbound_caller_count": 9,
+      "inbound_callers": {
+        "booking-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "experience-bff": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "live-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "msika-flow-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "oros-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "procedures-service": [
+          "SOURCE_DIRECT"
+        ],
+        "tuso-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "vashandi-workforce-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "vito-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 5,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "vashandi-workforce-service",
+      "inbound_caller_count": 3,
+      "inbound_callers": {
+        "experience-bff": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "msika-flow-service": [
+          "SOURCE_DIRECT"
+        ],
+        "procedures-service": [
+          "SOURCE_DIRECT"
+        ]
+      },
+      "outbound_callee_count": 5,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "vito-service",
+      "inbound_caller_count": 4,
+      "inbound_callers": {
+        "card-print-agent": [
+          "SOURCE_DEFAULT"
+        ],
+        "experience-bff": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "live-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "tshepo-identity-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 6,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "wellness-service",
+      "inbound_caller_count": 0,
+      "inbound_callers": {},
+      "outbound_callee_count": 1,
+      "cohort_signal": "NO_OBSERVED_CALLER"
+    },
+    {
+      "service": "workflow-service",
+      "inbound_caller_count": 2,
+      "inbound_callers": {
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "organization-registry-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "workforce-governance-service",
+      "inbound_caller_count": 2,
+      "inbound_callers": {
+        "experience-bff": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ],
+        "vashandi-workforce-service": [
+          "RUNTIME_ENV",
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 2,
+      "cohort_signal": "MULTI_CALLER"
+    },
+    {
+      "service": "zibo-service",
+      "inbound_caller_count": 4,
+      "inbound_callers": {
+        "butano-service": [
+          "SOURCE_DEFAULT"
+        ],
+        "experience-bff": [
+          "SOURCE_DEFAULT"
+        ],
+        "procedures-service": [
+          "SOURCE_DIRECT"
+        ],
+        "tuso-service": [
+          "SOURCE_DEFAULT"
+        ]
+      },
+      "outbound_callee_count": 1,
+      "cohort_signal": "MULTI_CALLER"
+    }
+  ]
+}

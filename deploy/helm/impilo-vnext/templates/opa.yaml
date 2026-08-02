@@ -1,0 +1,109 @@
+{{/*
+OPA decision sidecar for the Tshepo policy strangler (Checkpoint 4).
+
+`tshepo-authz-service` remains the sole authorization decision API. OPA is queried at
+POST /v1/data/impilo/authz/decision and its verdict is compared to the Java PolicyEngine's;
+it is never authoritative. tshepo-authz refuses to start in ENFORCE mode unless it can cite
+parity evidence (see OpaEnforceGate), so deploying this workload cannot promote OPA on its own.
+
+The policy ConfigMap is deliberately NOT rendered here. Helm's .Files cannot read outside the
+chart directory, so embedding the corpus would mean a second copy of infra/opa/authz/*.rego in
+the chart — and a policy that exists twice is a policy that drifts. The ConfigMap is built
+directly from the canonical source by scripts/deploy/apply-opa-shadow.sh, and
+scripts/guard/check-opa-policy-drift.sh fails if the deployed content stops matching the repo.
+*/}}
+{{- if .Values.opa.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opa
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "impilo.labels" (dict "name" "opa" "Release" .Release "Values" .Values) | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opa
+  template:
+    metadata:
+      labels:
+        app: opa
+        {{- include "impilo.labels" (dict "name" "opa" "Release" .Release "Values" .Values) | nindent 8 }}
+      annotations:
+        # Roll the pod when the policy changes; without this a ConfigMap update is picked up only
+        # on the kubelet's own sync interval, so a "policy deployed" claim could outrun reality.
+        impilo.io/policy-checksum: {{ .Values.opa.policyChecksum | default "unset" | quote }}
+    spec:
+      enableServiceLinks: false
+      serviceAccountName: opa
+      automountServiceAccountToken: false
+      containers:
+        - name: opa
+          image: "{{ include "impilo.image" (dict "repository" .Values.opa.image.repository "tag" .Values.opa.image.tag "digest" .Values.opa.image.digest) }}"
+          imagePullPolicy: {{ .Values.opa.image.pullPolicy }}
+          args:
+            - "run"
+            - "--server"
+            - "--addr=0.0.0.0:8181"
+            # Bind diagnostics to loopback: /metrics and /health must not be reachable from the
+            # pod network alongside the decision API.
+            - "--diagnostic-addr=127.0.0.1:8282"
+            - "--set=decision_logs.console={{ .Values.opa.decisionLogs }}"
+            - "--log-level={{ .Values.opa.logLevel }}"
+            # A ConfigMap volume is not a flat directory: the kubelet writes the real files into a
+            # timestamped `..2026_..._` directory and links `..data` and each key to it. Loading
+            # /policies recursively therefore parses every policy TWICE and OPA refuses to start
+            # with "multiple default rules data.impilo.authz.allow found". Ignoring the dot-prefixed
+            # entries leaves exactly one copy — the symlinked key — reachable.
+            - "--ignore=..*"
+            - "/policies"
+          ports:
+            - name: decision
+              containerPort: 8181
+          volumeMounts:
+            - name: policies
+              mountPath: /policies
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /health?bundles
+              port: 8181
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8181
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            {{- toYaml .Values.opa.resources | nindent 12 }}
+      volumes:
+        - name: policies
+          configMap:
+            name: {{ .Values.opa.policyConfigMap }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opa
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "impilo.labels" (dict "name" "opa" "Release" .Release "Values" .Values) | nindent 4 }}
+spec:
+  selector:
+    app: opa
+  ports:
+    - name: decision
+      port: 8181
+      targetPort: 8181
+{{- end }}

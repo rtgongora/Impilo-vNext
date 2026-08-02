@@ -5,6 +5,8 @@ import { useAuthStore } from "@/hooks/useAuthStore";
 import { useWorkModeStore } from "@/hooks/useWorkModeStore";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { apiClient } from "../api-client";
+import { isStepUpRequired } from "../stepUp";
+import { TRUST_CONTRACT_VERSION_V1 } from "../../../../../contracts/trust-decision/v1";
 
 // Mock sessionStorage
 const sessionStorageMock = (() => {
@@ -426,5 +428,246 @@ describe("apiClient", () => {
     expect(useWorkspaceStore.getState().workspace).toBeNull();
     expect(useShiftStore.getState().shift).toBeNull();
     expect(useWorkModeStore.getState().mode).toBe("general");
+  });
+});
+
+/**
+ * Checkpoint 6 — a trust decision must reach the caller as a decision.
+ *
+ * Before this, the client handled 401 only: a 403 fell through as a generic error, so
+ * "you may not", "here is what to do first" and "the trust plane is briefly down" were
+ * indistinguishable. These tests fence both directions: a challenge is recognised, and an
+ * ordinary error is NOT promoted into one.
+ */
+type Rejection = Record<string, any>;
+
+/** Await a call that must reject, and hand back the rejection value. */
+async function rejection(promise: Promise<unknown>): Promise<Rejection> {
+  return promise.then(
+    () => {
+      throw new Error("expected the request to reject");
+    },
+    (e) => e as Rejection,
+  );
+}
+
+describe("apiClient — trust challenges (401 / 403)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    sessionStorageMock.clear();
+    useAuthStore.getState().clearAuth();
+    cookieStore = "exp_has_session=1";
+    window.history.pushState({}, "", "/");
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("surfaces a canonical 403 challenge as a typed error the caller can branch on", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      headers: { get: () => null },
+      json: () =>
+        Promise.resolve({
+          contract_version: TRUST_CONTRACT_VERSION_V1,
+          decision: "CONSENT_REQUIRED",
+          reason_code: "CONSENT_REQUIRED",
+          user_message_key: "trust.consent.required",
+          support_reference: "SUP-9",
+        }),
+    });
+
+    const err = await rejection(apiClient.get("/internal/v1/patients/p-1/records"));
+
+    expect(err.status).toBe(403);
+    expect(err.isTrustChallenge).toBe(true);
+    expect(err.trustChallenge.kind).toBe("actionable");
+    expect(err.trustChallenge.decision).toBe("CONSENT_REQUIRED");
+    expect(err.trustChallenge.outcome.support_reference).toBe("SUP-9");
+    // Additive: the original body is still spread onto the rejection.
+    expect(err.reason_code).toBe("CONSENT_REQUIRED");
+  });
+
+  it("recognises the legacy ext_authz 403 that tshepo-authz emits today", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      headers: { get: () => null },
+      json: () =>
+        Promise.resolve({
+          error: "CONSENT_REQUIRED",
+          message: "no consent covering this access has been granted yet",
+        }),
+    });
+
+    const err = await rejection(apiClient.get("/internal/v1/patients/p-1/records"));
+
+    expect(err.trustChallenge.decision).toBe("CONSENT_REQUIRED");
+    expect(err.trustChallenge.kind).toBe("actionable");
+  });
+
+  it("classifies an unrecognised ext_authz deny as a refusal, not an actionable challenge", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      headers: { get: () => null },
+      json: () => Promise.resolve({ error: "RBAC_NO_MATCHING_RULE", message: "denied" }),
+    });
+
+    const err = await rejection(apiClient.get("/internal/v1/orders"));
+
+    expect(err.trustChallenge.kind).toBe("refusal");
+    expect(err.trustChallenge.decision).toBe("DENY");
+  });
+
+  it("does NOT turn an ordinary 403 into a trust challenge", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      headers: { get: () => null },
+      json: () =>
+        Promise.resolve({
+          error: { code: "VALIDATION_FAILED", message: "bad request", request_id: "r-1" },
+        }),
+    });
+
+    const err = await rejection(apiClient.get("/internal/v1/orders"));
+
+    expect(err.status).toBe(403);
+    expect(err.isTrustChallenge).toBeUndefined();
+    expect(err.trustChallenge).toBeUndefined();
+    expect(err.error.code).toBe("VALIDATION_FAILED");
+  });
+
+  it("reads the BFF challenge envelope (error.details.trust_challenge) verbatim", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      headers: { get: () => null },
+      json: () =>
+        Promise.resolve({
+          error: {
+            code: "NO_ACTIVE_CONSENT",
+            message: "trust.consent.required",
+            details: {
+              trust_challenge: {
+                contract_version: TRUST_CONTRACT_VERSION_V1,
+                decision: "CONSENT_REQUIRED",
+                reason_code: "NO_ACTIVE_CONSENT",
+                user_message_key: "trust.consent.required",
+                required_action: "OBTAIN_CONSENT",
+                continuation_reference: "cont-42",
+              },
+            },
+            request_id: "req-1",
+            correlation_id: "cor-1",
+          },
+        }),
+    });
+
+    const err = await rejection(apiClient.get("/internal/v1/records/x"));
+
+    expect(err.trustChallenge.kind).toBe("actionable");
+    expect(err.trustChallenge.outcome.continuation_reference).toBe("cont-42");
+  });
+
+  it("recognises a TEMPORARILY_UNAVAILABLE challenge on 503, which is not a permissions failure", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 503,
+      headers: { get: () => null },
+      json: () =>
+        Promise.resolve({
+          error: {
+            code: "PDP_UNAVAILABLE",
+            message: "trust.unavailable",
+            details: {
+              trust_challenge: {
+                contract_version: TRUST_CONTRACT_VERSION_V1,
+                decision: "TEMPORARILY_UNAVAILABLE",
+                reason_code: "PDP_UNAVAILABLE",
+              },
+            },
+          },
+        }),
+    });
+
+    const err = await rejection(apiClient.get("/internal/v1/records/x"));
+
+    expect(err.status).toBe(503);
+    expect(err.trustChallenge.kind).toBe("unavailable");
+  });
+
+  it("leaves an ordinary 503 alone — an outage without a challenge body is not a decision", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 503,
+      headers: { get: () => null },
+      json: () => Promise.resolve({ error: { code: "UPSTREAM_UNAVAILABLE" } }),
+    });
+
+    const err = await rejection(apiClient.get("/internal/v1/records/x"));
+
+    expect(err.status).toBe(503);
+    expect(err.trustChallenge).toBeUndefined();
+  });
+
+  it("leaves 401 session expiry exactly as before — refresh is still attempted", async () => {
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        headers: { get: () => null },
+        json: () => Promise.resolve({ error: { code: "UNAUTHORIZED", message: "Expired" } }),
+      })
+      .mockResolvedValueOnce({ ok: false, status: 401, json: () => Promise.resolve({}) });
+
+    const err = await rejection(apiClient.get("/internal/v1/test"));
+
+    expect(mockFetch.mock.calls[1]?.[0]).toBe("/internal/v1/auth/oidc/session");
+    expect(err).toMatchObject({
+      status: 401,
+      error: { code: "SESSION_EXPIRED", message: "Session expired" },
+    });
+    expect(err.trustChallenge).toBeUndefined();
+  });
+
+  it("keeps the legacy 401 step-up short-circuit (no refresh) and adds the typed challenge", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 401,
+      headers: { get: () => null },
+      json: () => Promise.resolve({ decision: "STEP_UP_REQUIRED", stepUpMethods: ["MFA"] }),
+    });
+
+    const err = await rejection(apiClient.post("/internal/v1/records/share", {}));
+
+    // No session refresh was attempted — a challenge is not a session expiry.
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    // The pre-existing consumer contract still holds.
+    expect(isStepUpRequired(err)).toBe(true);
+    expect(err.stepUpMethods).toEqual(["MFA"]);
+    expect(err.trustChallenge.decision).toBe("STEP_UP_REQUIRED");
+    expect(err.trustChallenge.outcome.allowed_authentication_methods).toEqual(["MFA"]);
+  });
+
+  it("recognises the ext_authz 401 step-up wire, which the old check missed entirely", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 401,
+      headers: { get: () => null },
+      json: () => Promise.resolve({ error: "STEP_UP_REQUIRED", methods: ["SMS_OTP"] }),
+    });
+
+    const err = await rejection(apiClient.get("/internal/v1/records/sensitive"));
+
+    // Old behaviour: isStepUpRequired only reads decision/verdict/errorCode, so this body
+    // fell through to session refresh and a login redirect.
+    expect(isStepUpRequired(err)).toBe(false);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(err.trustChallenge.decision).toBe("STEP_UP_REQUIRED");
+    expect(err.trustChallenge.outcome.allowed_authentication_methods).toEqual(["SMS_OTP"]);
   });
 });

@@ -13,8 +13,12 @@ spec:
       kind: Rule
       priority: 100000
       services:
-        - name: experience-bff
-          port: 8160
+        # Stage 1 (Checkpoint 4.7): the BFF lane can be routed through Envoy so client-supplied
+        # trust headers are stripped at the edge. This was applied live by kubectl patch first;
+        # expressing it here is what stops the next `helm upgrade` from silently reverting it --
+        # the IngressRoute is Helm-managed, so live-only state is state with a countdown on it.
+        - name: {{ .Values.ingress.bffService | default "experience-bff" }}
+          port: {{ .Values.ingress.bffPort | default 8160 }}
 ---
 # UI catch-all excluding BFF paths. Kubernetes Ingress PathPrefix("/") also matches
 # /internal/* and can win over lower-priority BFF rules for specific paths in Traefik 3.x.

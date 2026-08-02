@@ -53,12 +53,26 @@ public class TshepoConsentClient {
     }
 
     /**
-     * POST /v1/consent — returns Tshepo directive id or throws.
+     * POST /v1/consent — returns the Tshepo directive id, or throws.
+     *
+     * <p>Disabling the integration used to log a warning and return {@code null}: the grant was
+     * captured in Mvumo, never reached the system of record, and <em>nothing downstream failed</em>.
+     * A single configuration flag could therefore silently de-designate the source of record while
+     * consent capture appeared to keep working — and the divergence would only surface later, as a
+     * patient's directive that no enforcement point could find.</p>
+     *
+     * <p>Mvumo owns the consent <em>experience</em>; {@code tshepo-consent-service} owns
+     * grant state (see checkpoint-5/CONSENT_SOURCE_OF_RECORD.md). A consent record that does not
+     * reach the source of record is not a consent record, so failing to materialise is now a
+     * failure of the capture, not a skipped optional step.</p>
      */
     public UUID createDirective(Map<String, Object> createBody) {
         if (!enabled) {
-            log.warn("Tshepo consent integration disabled; skipping createDirective");
-            return null;
+            throw new IllegalStateException(
+                    "mvumo.tshepo-consent.enabled=false: refusing to capture a consent grant that "
+                            + "cannot reach the source of record. Mvumo owns the consent experience, "
+                            + "not grant state -- a directive held only here is invisible to every "
+                            + "enforcement point.");
         }
         if (tracer == null) {
             return doCreateDirect(createBody);

@@ -158,6 +158,98 @@ deny_reasons contains "WORK_TOKEN_CONTEXT_MISMATCH" if {
 	lower(token_workspace) != lower(request_workspace)
 }
 
+# ── Authentication assurance (closes OpaShadowInputMapper.POLICY_COVERAGE_GAPS) ─────────
+#
+# Three dimensions the Java PolicyEngine enforces in `evaluateConditions` /
+# `meetsAuthenticationRequirement` that this corpus had NO rule for, so OPA allowed wherever Java
+# denied on them. They are mirrored here literally — no stricter, no looser — so the shadow
+# comparison measures policy disagreement rather than missing coverage.
+#
+# AAL is NOT LoA. `min_loa` above is decided against the propagated identity assurance
+# (`effective_loa`), exactly as Java's min_loa check reads `identityLoa(request)` alone. The
+# authentication AAL below is a separate scale and must never be folded into `effective_loa` —
+# doing so would let a strong login satisfy an identity-proofing minimum it never met.
+#
+# Input contract additions (rule conditions, from the matched policy_rule's JSONB):
+#   input.min_aal                     number   minimum authentication assurance level
+#   input.max_auth_age_seconds        number   maximum age of the authentication event
+#   input.phishing_resistant_required boolean  true when the factor must be phishing-resistant
+# Input contract additions (request facts, from AuthzInternalRequest.authenticationAssurance()):
+#   input.authentication_aal                number   assurance.aal(); 0 when no assurance exists
+#                                                    (mirrors AuthenticationAssurance.none())
+#   input.authentication_age_seconds        number   seconds elapsed since the freshness reference
+#                                                    instant, computed by Java (see below)
+#   input.authentication_phishing_resistant boolean  assurance.phishingResistant()
+#
+# WHY AN AGE, NOT A TIMESTAMP. Java's `AuthenticationAssurance.isFresh` compares a reference instant
+# to `Instant.now()`. A policy cannot do that: reading wall-clock time inside a rule (`time.now_ns()`)
+# makes the decision non-deterministic — the same input yields different verdicts, the decision
+# cannot be replayed from an audit record, and no unit test can pin a boundary without freezing the
+# clock. So the CLOCK stays on the Java side and the POLICY compares two numbers. Java must compute
+#     reference = stepUpTime != null ? stepUpTime : authenticationTime      (NOT max() — Java prefers
+#                                                                            stepUpTime whenever set)
+#     authentication_age_seconds = now - reference, in seconds
+# and OMIT the key entirely when `reference` is null, which is the case Java denies via
+# `isFresh(...) == false` — see the second AUTH_TOO_OLD rule.
+#
+# Deny-safe strangler, as with every rule above: each fires only when both its condition key and its
+# fact key are present. Until the mapper emits the fact keys the rules are inert and cannot cause a
+# false denial. Note the resulting deliberate, temporary asymmetry: Java substitutes
+# `AuthenticationAssurance.none()` (aal 0, phishingResistant false) for a missing assurance and
+# therefore DENIES, whereas an absent fact key leaves the policy silent. The mapper closes that by
+# always emitting `authentication_aal` and `authentication_phishing_resistant` — 0 and false when
+# the request carries no assurance — at which point the two engines agree on every input.
+
+# MIN-AAL: mirrors `if (assurance.aal() < minAal) return false;`.
+# Boundary: aal == min_aal PASSES (Java uses `<`, not `<=`).
+deny_reasons contains "MIN_AAL" if {
+	is_number(input.min_aal)
+	is_number(input.authentication_aal)
+	input.authentication_aal < input.min_aal
+}
+
+# AUTH-TOO-OLD: mirrors `if (maxAgeSeconds > 0 && !assurance.isFresh(maxAgeSeconds, now)) return false;`
+# where `isFresh` is `!reference.plusSeconds(maxAge).isBefore(now)` — i.e. fresh while
+# age <= maxAge, stale once age > maxAge. Boundary: age == max_auth_age_seconds PASSES.
+# The `maxAgeSeconds > 0` gate is mirrored exactly: a zero or negative maximum disables the check.
+deny_reasons contains "AUTH_TOO_OLD" if {
+	is_number(input.max_auth_age_seconds)
+	input.max_auth_age_seconds > 0
+	is_number(input.authentication_age_seconds)
+	input.authentication_age_seconds > input.max_auth_age_seconds
+}
+
+# AUTH-TOO-OLD (no authentication instant at all): `isFresh` returns false when BOTH stepUpTime and
+# authenticationTime are null, so Java denies. There is no age to send, so the mapper omits
+# `authentication_age_seconds`; `authentication_aal` (always emitted on the new contract) is the
+# discriminator that distinguishes "never authenticated" from "mapper not upgraded yet", keeping the
+# rule deny-safe during the strangler.
+deny_reasons contains "AUTH_TOO_OLD" if {
+	is_number(input.max_auth_age_seconds)
+	input.max_auth_age_seconds > 0
+	is_number(input.authentication_aal)
+	not authentication_age_present
+}
+
+# A helper rule, not an inline `not is_number(...)`: OPA hoists a built-in call out of the
+# negation, so `not is_number(input.x)` is UNDEFINED (never true) when `input.x` is absent —
+# exactly the case this branch has to catch. Negating a rule reference behaves correctly.
+authentication_age_present if is_number(input.authentication_age_seconds)
+
+# PHISHING-RESISTANCE-REQUIRED: mirrors
+# `if (phishingResistant && !assurance.phishingResistant()) return false;`.
+# Java derives the condition with `Boolean.TRUE.equals(...)`, so only a literal `true` arms it.
+deny_reasons contains "PHISHING_RESISTANCE_REQUIRED" if {
+	input.phishing_resistant_required == true
+	is_boolean(input.authentication_phishing_resistant)
+	not input.authentication_phishing_resistant
+}
+
+# NOT YET MIRRORED: Java's `accepted_amr` condition (`assurance.methods()` must intersect the rule's
+# accepted list) is enforced in the same `meetsAuthenticationRequirement` call and has no rule here.
+# It is a fourth coverage gap and is NOT registered in POLICY_COVERAGE_GAPS on the Java side. It is
+# out of scope for this change and is called out rather than silently left as an unexplained hole.
+
 # ── Derived values ──────────────────────────────────────────────────────────
 
 acr_loa := x if {

@@ -43,6 +43,25 @@ public class AuthzProperties {
     // Java authoritative) | ENFORCE (not yet wired). Default OFF — zero behaviour change.
     private String opaUrl = "http://localhost:8181";
     private String opaMode = "OFF";
+    /**
+     * Path to the parity evidence that justifies ENFORCE. Empty, or naming a file that does not
+     * exist, means ENFORCE is refused at startup — see {@code OpaEnforceGate}. Promoting OPA to
+     * authoritative is a claim about proven parity, so the configuration must cite the proof
+     * rather than assert the conclusion.
+     */
+    private String opaParityEvidencePath = "";
+    /**
+     * Operating-context header regeneration. PASSTHROUGH (client values travel unchanged) |
+     * SHADOW (measure client-vs-validated divergence, emit nothing) | AUTHORITATIVE (emit
+     * duty-token-validated context; Envoy strips the client's). See ContextHeaderAuthority.
+     */
+    private String contextHeaderMode = "PASSTHROUGH";
+    /**
+     * Lawful-basis evaluation. OFF | SHADOW (record only) | ENFORCE (an established non-consent
+     * basis permits without asking for consent). Default SHADOW -- it changes denial behaviour,
+     * so the rate is measured before it is taken.
+     */
+    private String lawfulBasisMode = "SHADOW";
     private String identityServiceUrl = "http://localhost:8181";
     // WORK_CONTEXT duty-token binding. Mode: OFF (never read the token) | SHADOW (introspect +
     // compare token↔headers + audit divergence, decision UNCHANGED) | ENFORCE (mismatch/revoked
@@ -220,6 +239,14 @@ public class AuthzProperties {
     public void setOpaUrl(String opaUrl) { this.opaUrl = opaUrl; }
     public String getOpaMode() { return opaMode; }
     public void setOpaMode(String opaMode) { this.opaMode = opaMode; }
+    public String getLawfulBasisMode() { return lawfulBasisMode; }
+    public void setLawfulBasisMode(String lawfulBasisMode) { this.lawfulBasisMode = lawfulBasisMode; }
+    public String getContextHeaderMode() { return contextHeaderMode; }
+    public void setContextHeaderMode(String contextHeaderMode) { this.contextHeaderMode = contextHeaderMode; }
+    public String getOpaParityEvidencePath() { return opaParityEvidencePath; }
+    public void setOpaParityEvidencePath(String opaParityEvidencePath) {
+        this.opaParityEvidencePath = opaParityEvidencePath;
+    }
     public String getConsentEvaluatePath() { return consentEvaluatePath; }
     public void setConsentEvaluatePath(String consentEvaluatePath) { this.consentEvaluatePath = consentEvaluatePath; }
     public String getIdentityServiceUrl() { return identityServiceUrl; }

@@ -136,6 +136,23 @@ public final class TrustHeaders {
     public static final String SERVICE_ID    = "x-service-id";
     public static final String MTLS_IDENTITY = "x-mtls-identity";
 
+    /**
+     * The action a caller is asking the PDP about, when it cannot use HTTP/2 pseudo-headers.
+     *
+     * <p>Envoy's ext_authz conveys the original request as {@code :method} / {@code :path}. A
+     * service calling {@code POST /v1/authorize} directly over HTTP/1.1 cannot: Java rejects a
+     * header whose name begins with a colon as invalid, and the PDP's servlet fallback would
+     * otherwise evaluate the literal {@code POST /v1/authorize} — the wrong resource, matching no
+     * rule.</p>
+     *
+     * <p><strong>These are decision inputs and MUST be stripped at the edge.</strong> A client that
+     * could set them would choose which resource its own request is authorized against. They
+     * belong in the same Envoy strip list as every other trust header, for exactly the reason
+     * {@code x-actor-id} does.</p>
+     */
+    public static final String ORIGINAL_METHOD = "x-original-method";
+    public static final String ORIGINAL_PATH   = "x-original-path";
+
     /** Mandatory request headers that must be present on every inbound request. */
     public static final String[] MANDATORY = {
             TENANT_ID, ACTOR_ID, ACTOR_TYPE,

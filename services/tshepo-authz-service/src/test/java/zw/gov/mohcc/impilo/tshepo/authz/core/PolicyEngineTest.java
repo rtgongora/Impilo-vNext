@@ -19,6 +19,8 @@ import zw.gov.mohcc.impilo.tshepo.contracts.dto.AuthenticationAssurance;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.AuthzResponse;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.ConsentDecision;
 import zw.gov.mohcc.impilo.tshepo.contracts.enums.Verdict;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -44,6 +46,9 @@ import static org.mockito.Mockito.*;
  */
 @ExtendWith(MockitoExtension.class)
 class PolicyEngineTest {
+
+    /** Real registry: the shadow metrics are asserted, not stubbed away. */
+    protected final MeterRegistry meterRegistry = new SimpleMeterRegistry();
 
     @Mock private DeviceRiskScoreEvaluator riskScoring;
     @Mock private PolicyCacheService policyCacheService;
@@ -88,7 +93,8 @@ class PolicyEngineTest {
                 stepUpService, breakGlassService, decisionLogRepository,
                 auditPublisher, properties, objectMapper, visibilityEscalationService,
                 delegationClient, opaDecisionClient, roleTemplateCatalog, confidentialityPack,
-                decisionEnvelopeSigner
+                decisionEnvelopeSigner,
+                meterRegistry
         );
     }
 

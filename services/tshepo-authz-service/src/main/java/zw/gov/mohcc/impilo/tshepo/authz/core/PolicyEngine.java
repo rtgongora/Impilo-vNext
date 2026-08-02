@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.tshepo.authz.core;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ import zw.gov.mohcc.impilo.tshepo.contracts.dto.Obligations;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.StepUpRequirement;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.VisibilityProfile;
 import zw.gov.mohcc.impilo.tshepo.contracts.enums.PurposeOfUse;
+import zw.gov.mohcc.impilo.tshepo.contracts.v1.AuthorityBinding;
 import zw.gov.mohcc.impilo.tshepo.contracts.enums.Verdict;
 import zw.gov.mohcc.impilo.tshepo.contracts.headers.TrustHeaders;
 import zw.gov.mohcc.impilo.tshepo.contracts.v1.TrustChallengeDecision;
@@ -158,6 +160,25 @@ public class PolicyEngine {
     private final RoleTemplateCatalog roleTemplateCatalog;
     private final ConfidentialityPolicyPack confidentialityPack;
     private final DecisionEnvelopeSigner decisionEnvelopeSigner;
+    private final MeterRegistry meterRegistry;
+
+    /**
+     * Identifies the rego corpus the shadow comparison is scored against. Divergence counts from
+     * two different policy versions are not the same measurement, so the version is a metric tag.
+     */
+    static final String OPA_SHADOW_POLICY_VERSION = "impilo.authz/v1";
+
+    /**
+     * Consent-service reasons that mean "no consent covers this yet", as opposed to "consent
+     * exists and refuses this". Only the first kind is worth telling a user how to resolve.
+     *
+     * <p>Deliberately an allowlist. An unrecognised reason falls through to the non-actionable
+     * message, so a new refusal reason can never be silently presented as "just ask again".</p>
+     */
+    static final Set<String> CONSENT_OBTAINABLE_REASONS = Set.of(
+            "NO_ACTIVE_CONSENT",
+            "CONSENT_EXPIRED",
+            "NO_CONSENT_FOUND");
 
     public PolicyEngine(DeviceRiskScoreEvaluator riskScoring,
                         PolicyCacheService policyCacheService,
@@ -174,7 +195,8 @@ public class PolicyEngine {
                         OpaDecisionClient opaDecisionClient,
                         RoleTemplateCatalog roleTemplateCatalog,
                         ConfidentialityPolicyPack confidentialityPack,
-                        DecisionEnvelopeSigner decisionEnvelopeSigner) {
+                        DecisionEnvelopeSigner decisionEnvelopeSigner,
+                        MeterRegistry meterRegistry) {
         this.riskScoring = riskScoring;
         this.policyCacheService = policyCacheService;
         this.privilegeRevocationStore = privilegeRevocationStore;
@@ -191,6 +213,7 @@ public class PolicyEngine {
         this.roleTemplateCatalog = roleTemplateCatalog;
         this.confidentialityPack = confidentialityPack;
         this.decisionEnvelopeSigner = decisionEnvelopeSigner;
+        this.meterRegistry = meterRegistry;
     }
 
     /**
@@ -202,6 +225,29 @@ public class PolicyEngine {
      */
     @Transactional
     public AuthzResponse evaluate(AuthzInternalRequest request) {
+        ShadowCapture capture = new ShadowCapture();
+        AuthzResponse response = evaluateInternal(request, capture);
+        // Compare against the FINAL verdict, on every terminal path. The previous call site sat on
+        // the ALLOW path with javaAllow hard-coded true, so every Java DENY was invisible to the
+        // comparison — the divergence rate measured only false-deny risk and said nothing about
+        // false-allow risk, which is the direction that matters for a policy cut-over.
+        shadowCompareOpa(request, capture, response);
+        measureContextDivergence(request, capture);
+        recordAuthority(capture, response);
+        return response;
+    }
+
+    /**
+     * Carries what the OPA shadow needs out of the evaluation, as the evaluation discovers it.
+     * Purpose and the matched rule are resolved mid-flight and are not reachable from the response.
+     */
+    private static final class ShadowCapture {
+        private PurposeOfUse purpose;
+        private PolicyRuleEntity matchedRule;
+        private AuthorityBinding authority;
+    }
+
+    private AuthzResponse evaluateInternal(AuthzInternalRequest request, ShadowCapture shadowCapture) {
         long startTime = System.nanoTime();
 
         UUID tenantId = request.tenantId();
@@ -266,9 +312,25 @@ public class PolicyEngine {
         }
 
         // ────────────────────────────────────────────────────────────────
+        // Step 1.5: Authority resolution (Checkpoint 5.4)
+        // Assemble the single answer to "what activated right is being relied on, and is it still
+        // valid?" from validated evidence only. AuthorityBinding had no production writer at all
+        // before this, so authority was implicit -- a role list plus whatever a rule happened to
+        // check -- and nothing could audit or deny on it.
+        //
+        // Recorded on every decision, not just allowed ones: an access refused for want of
+        // authority is exactly the case the audit trail needs to be able to explain.
+        // ────────────────────────────────────────────────────────────────
+        AuthorityBinding authority = AuthorityResolver.resolve(request,
+                request.providerId() != null && !request.providerId().isBlank()
+                        && privilegeRevocationStore.isRevoked(request.providerId()));
+        shadowCapture.authority = authority;
+
+        // ────────────────────────────────────────────────────────────────
         // Step 2: Purpose-of-use validation
         // ────────────────────────────────────────────────────────────────
         PurposeOfUse purpose = parsePurpose(request.purposeOfUse());
+        shadowCapture.purpose = purpose;
         if (purpose == null) {
             return denyAndLog(request, "INVALID_PURPOSE",
                     "Missing or unrecognized purpose-of-use: " + request.purposeOfUse(),
@@ -290,6 +352,7 @@ public class PolicyEngine {
             return step4.deny();
         }
         PolicyRuleEntity matchedAllowRule = step4.matchedAllowRule();
+        shadowCapture.matchedRule = matchedAllowRule;
 
         // ────────────────────────────────────────────────────────────────
         // Step 4.5: Delegated / act-on-behalf authorization (L5, G-CZO-03)
@@ -330,15 +393,59 @@ public class PolicyEngine {
         // ────────────────────────────────────────────────────────────────
         // Step 5: Consent evaluation (clinical resources)
         // ────────────────────────────────────────────────────────────────
-        if (requiresConsent(request.resourceType(), purpose)) {
+        // Which lawful basis permits this access? Consent is one ground among several, and a
+        // non-consent ground must not be refused for the absence of consent (doctrine §2, §7).
+        // BREAK_GLASS counts only where the upstream control actually verified a request --
+        // by the time execution reaches here, an unverified one has already been denied at step 3.
+        LawfulBasisEvaluator.Outcome lawfulBasis =
+                LawfulBasisEvaluator.evaluate(request, purpose, purpose == PurposeOfUse.BREAK_GLASS);
+        LawfulBasisEvaluator.Mode basisMode = lawfulBasisMode();
+        recordLawfulBasis(lawfulBasis, basisMode);
+
+        // ENFORCE lets an established non-consent basis stand on its own. SHADOW records what it
+        // WOULD have permitted and leaves the existing consent requirement in charge, so the
+        // change in denial behaviour can be measured before it is taken.
+        boolean basisSatisfiesAccess = basisMode == LawfulBasisEvaluator.Mode.ENFORCE
+                && !lawfulBasis.requiresExplicitConsent();
+
+        if (!basisSatisfiesAccess && requiresConsent(request.resourceType(), purpose)) {
+            // subjectRef is the resourceId, and deliberately NOT request.subjectId().
+            //
+            // X-Subject-ID in this estate is the DELEGATION subject -- the person an actor
+            // declares they are acting for -- not the subject of the record being read. For a
+            // Patient resource the CPID *is* the resourceId, so this is correct. An earlier
+            // attempt to "improve" this by preferring subjectId was caught by
+            // PolicyEngineTest.evaluate_delegated_activeInScope_allows, where the two differ:
+            // it would have evaluated the guardian's consent instead of the patient's.
+            //
+            // KNOWN GAP: for a non-Patient clinical resource (Observation, MedicationRequest)
+            // the resourceId is the record's own id and AuthzInternalRequest carries no field
+            // naming the patient it concerns, so consent for those resources cannot be evaluated
+            // against the right subject. Recorded in checkpoint-4/CP5_CONSENT_CONVERGENCE.md
+            // rather than approximated -- a wrong subject fails closed and would read as an
+            // unexplained denial on exactly the resources consent exists to govern.
             ConsentDecision consent = consentClient.evaluateConsent(
                     tenantId, request.resourceType(), request.resourceId(),
                     request.actorId(), purpose.name());
 
             if (!consent.permitted()) {
-                return denyAndLog(request, "CONSENT_DENIED",
-                        "Consent not granted: " + consent.reason(),
-                        riskScore, startTime);
+                // A refusal for want of consent and a refusal because consent was WITHDRAWN are
+                // different outcomes and must not be collapsed. The first is actionable -- the
+                // person can be asked -- and the second is not; telling a user "access denied"
+                // when the honest answer is "nobody has asked you yet" is the difference between
+                // a dead end and a next step.
+                //
+                // Both still refuse the request. This changes what the caller is TOLD, not
+                // whether access is granted.
+                boolean consentCanBeObtained = CONSENT_OBTAINABLE_REASONS.contains(
+                        consent.reason() == null ? "NO_ACTIVE_CONSENT" : consent.reason());
+                String code = consentCanBeObtained ? "CONSENT_REQUIRED" : "CONSENT_DENIED";
+                String message = consentCanBeObtained
+                        ? "This record is protected by the person's consent, and no consent "
+                          + "covering this access has been granted yet. Ask the person to grant "
+                          + "consent, or record an alternative lawful basis."
+                        : "The person's consent does not permit this access.";
+                return denyAndLog(request, code, message, riskScore, startTime);
             }
         }
 
@@ -362,10 +469,7 @@ public class PolicyEngine {
         Obligations obligations = VisibilityObligationComposer.compose(
                 request, purpose, riskScore, matchedAllowRule, activeEscalation, objectMapper,
                 protectedAccess.grantedCategories());
-        Map<String, String> headerMutations = buildHeaderMutations(obligations, request);
-
-        // Phase 3 strangler: SHADOW-compare the OPA gate decision (Java stays authoritative).
-        shadowCompareOpa(request, purpose, matchedAllowRule, true);
+        Map<String, String> headerMutations = buildHeaderMutations(obligations, request, purpose);
 
         auditConfidentialGrant(request, obligations, protectedAccess.grantBasis());
 
@@ -414,7 +518,9 @@ public class PolicyEngine {
         Obligations obligations = VisibilityObligationComposer.compose(
                 request, PurposeOfUse.BREAK_GLASS, riskScore, null, Optional.empty(), objectMapper,
                 List.of("*"));
-        Map<String, String> headers = buildHeaderMutations(obligations, request);
+        // BREAK_GLASS is the validated purpose on this path, so pass it explicitly rather than
+        // letting the header default to the client's own x-purpose-of-use.
+        Map<String, String> headers = buildHeaderMutations(obligations, request, PurposeOfUse.BREAK_GLASS);
 
         log.warn("BREAK-GLASS ALLOW: actor={}, provider={}, facility={}, patient={}, resource={}/{}, "
                         + "correlation={} — queued for retrospective supervisor review",
@@ -1372,47 +1478,190 @@ public class PolicyEngine {
     // ════════════════════════════════════════════════════════════════════
 
     /**
-     * In SHADOW mode, evaluate the OPA gate decision (purpose/min_loa/account-assurance) on a
-     * prepared input and log when it diverges from the Java verdict. OPA is never authoritative
-     * here; any error is swallowed. OFF by default → no-op, zero behaviour change. (The full
-     * DB-rule RBAC/ABAC requires policy_rules delivered as OPA bundle data — a later increment.)
+     * In SHADOW mode, evaluate the OPA gate decision on a prepared input and record how it compares
+     * to the Java verdict. OPA is never authoritative here and every error is swallowed, so a policy
+     * or sidecar fault can never change an authorization outcome. OFF ⇒ no-op.
+     *
+     * <p>Runs on every terminal path, from {@link #evaluate}, against the final response. Comparing
+     * only ALLOW (as this did previously, with {@code javaAllow} hard-coded {@code true}) measures
+     * false-deny risk alone and is silent about false-allow risk — the direction that decides
+     * whether a cut-over is safe.</p>
+     *
+     * <p>{@code STEP_UP_REQUIRED} is not folded into "deny": the policy has no risk/step-up
+     * dimension, so it is counted in its own bucket rather than being scored as agreement or
+     * divergence against a question the policy was never asked.</p>
      */
-    private void shadowCompareOpa(AuthzInternalRequest request, PurposeOfUse purpose,
-                                  PolicyRuleEntity matchedRule, boolean javaAllow) {
+    private void shadowCompareOpa(AuthzInternalRequest request, ShadowCapture capture,
+                                  AuthzResponse response) {
         String mode = properties.getOpaMode();
         if (mode == null || "OFF".equalsIgnoreCase(mode)) {
             return;
         }
+        long started = System.nanoTime();
         try {
-            Map<String, Object> input = new LinkedHashMap<>();
-            input.put("actor_id", request.actorId() != null ? request.actorId() : "");
-            input.put("purpose", purpose != null ? purpose.name() : "");
-            input.put("identity_loa", identityLoa(request));
-            input.put("authentication_aal", request.authenticationAssurance().aal());
-            Map<String, Object> conditions = parseConditions(matchedRule);
-            if (conditions.get("min_loa") instanceof Number n) {
-                input.put("min_loa", n.intValue());
-            }
-            if (conditions.get("min_aal") instanceof Number n) {
-                input.put("min_aal", n.intValue());
-            }
-            if (Boolean.TRUE.equals(conditions.get("account_assurance_required"))) {
-                input.put("account_assurance_required", true);
-            }
+            Map<String, Object> conditions = parseConditions(capture.matchedRule);
+            Integer minLoa = conditions.get("min_loa") instanceof Number n ? n.intValue() : null;
+            Integer minAal = conditions.get("min_aal") instanceof Number n ? n.intValue() : null;
+            Integer maxAuthAge = conditions.get("max_auth_age_seconds") instanceof Number n ? n.intValue() : null;
+            boolean phishingResistant = Boolean.TRUE.equals(conditions.get("phishing_resistant_required"));
+            boolean accountAssurance = Boolean.TRUE.equals(conditions.get("account_assurance_required"));
+
+            Map<String, Object> input = OpaShadowInputMapper.build(
+                    request, capture.purpose, minLoa, minAal, maxAuthAge, phishingResistant,
+                    accountAssurance, identityLoa(request));
+
             OpaDecision opa = opaDecisionClient.decide(input);
+            long micros = (System.nanoTime() - started) / 1_000L;
             if (opa == null) {
-                return; // OPA undefined / unreachable — no signal
+                recordShadowOutcome("no_signal", "none", micros);
+                return;
             }
-            if (opa.allow() != javaAllow) {
-                log.warn("OPA-SHADOW divergence: java.allow={} opa.allow={} reasons={} actor={} purpose={} correlation={}",
-                        javaAllow, opa.allow(), opa.denyReasons(), request.actorId(),
-                        purpose != null ? purpose.name() : null, request.correlationId());
+
+            Verdict verdict = response.verdict();
+            if (verdict == Verdict.STEP_UP_REQUIRED) {
+                recordShadowOutcome("step_up_not_comparable",
+                        OpaShadowInputMapper.metricReason(opa.denyReasons()), micros);
+                return;
+            }
+
+            boolean javaAllow = verdict == Verdict.ALLOW;
+            if (opa.allow() == javaAllow) {
+                recordShadowOutcome("agree", OpaShadowInputMapper.metricReason(opa.denyReasons()), micros);
+                return;
+            }
+
+            // Not every disagreement is a policy disagreement. Attribute it, because a cut-over
+            // decision rests on the REAL count alone: NO_RULE_COVERAGE is OPA not implementing the
+            // rule class at all (its own header says the DB-rule RBAC/ABAC is out of scope), and
+            // UNMAPPABLE is a field this service cannot supply. Folding either into "divergence"
+            // produces a permanent near-100% rate that buries the disagreements that matter.
+            OpaShadowInputMapper.DivergenceKind kind =
+                    OpaShadowInputMapper.classify(opa.allow(), response.errorCode(), opa.denyReasons());
+            String outcome = switch (kind) {
+                case REAL -> "divergence";
+                case NO_RULE_COVERAGE -> "divergence_no_rule_coverage";
+                case UNMAPPABLE -> "divergence_unmappable";
+            };
+            recordShadowOutcome(outcome, OpaShadowInputMapper.metricReason(opa.denyReasons()), micros);
+
+            // Only a REAL divergence is a warning; the other two are expected states of a
+            // deliberately partial strangler and must not train anyone to ignore this log line.
+            String message = "OPA-SHADOW {}: java.verdict={} java.reason={} opa.allow={} opa.reasons={} "
+                    + "actor={} purpose={} resource={} correlation={}";
+            Object[] args = {outcome, verdict, response.errorCode(), opa.allow(), opa.denyReasons(),
+                    request.actorId(), capture.purpose != null ? capture.purpose.name() : null,
+                    request.resourceType(), request.correlationId()};
+            if (kind == OpaShadowInputMapper.DivergenceKind.REAL) {
+                log.warn(message, args);
             } else {
-                log.debug("OPA-SHADOW agree: allow={} actor={}", javaAllow, request.actorId());
+                log.info(message, args);
             }
         } catch (Exception e) {
+            recordShadowOutcome("error", "none", (System.nanoTime() - started) / 1_000L);
             log.debug("OPA-SHADOW comparison skipped: {}", e.getMessage());
         }
+    }
+
+    /**
+     * Record the activated right this decision rested on, or the reason there was none.
+     *
+     * <p>Bounded tags only: an authority state from a closed vocabulary and the verdict. The
+     * appointment and licence identifiers are real operational data and stay out of metrics.</p>
+     */
+    private void recordAuthority(ShadowCapture capture, AuthzResponse response) {
+        if (meterRegistry == null) {
+            return;
+        }
+        meterRegistry.counter("tshepo.authz.authority",
+                "state", AuthorityResolver.metricLabel(capture.authority, Instant.now()),
+                "verdict", response.verdict().name()).increment();
+    }
+
+    /** Resolved lawful-basis mode; a runtime-invalid value degrades to SHADOW loudly. */
+    private LawfulBasisEvaluator.Mode lawfulBasisMode() {
+        try {
+            return LawfulBasisEvaluator.Mode.parse(properties.getLawfulBasisMode());
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid lawful-basis-mode, treating as SHADOW: {}", e.getMessage());
+            return LawfulBasisEvaluator.Mode.SHADOW;
+        }
+    }
+
+    /**
+     * Record which ground was relied on. This is the half that was missing entirely: skipping the
+     * consent check told the audit trail nothing about WHY an access was lawful, so afterwards it
+     * could not answer the only question that matters.
+     */
+    private void recordLawfulBasis(LawfulBasisEvaluator.Outcome outcome, LawfulBasisEvaluator.Mode mode) {
+        if (mode == LawfulBasisEvaluator.Mode.OFF || meterRegistry == null) {
+            return;
+        }
+        // Both tags are closed vocabularies -- a basis type name and a mode -- so no request data
+        // can grow the series.
+        meterRegistry.counter("tshepo.authz.lawful.basis",
+                "basis", outcome.metricLabel(), "mode", mode.name()).increment();
+    }
+
+    /** Resolved context-header mode; a runtime-invalid value degrades to PASSTHROUGH loudly. */
+    private ContextHeaderAuthority.Mode contextHeaderMode() {
+        try {
+            return ContextHeaderAuthority.Mode.parse(properties.getContextHeaderMode());
+        } catch (IllegalArgumentException e) {
+            // Startup validation rejects a bad value, so reaching here means it changed at runtime.
+            log.error("Invalid context-header-mode, treating as PASSTHROUGH: {}", e.getMessage());
+            return ContextHeaderAuthority.Mode.PASSTHROUGH;
+        }
+    }
+
+    /**
+     * Measure how often the caller's claimed operating context differs from what the work-context
+     * token validates. Runs on every terminal decision, allowed or denied.
+     *
+     * <p>This count is the evidence for whether AUTHORITATIVE is safe to enable: flipping it
+     * without knowing the rate would silently take facility scope away from every request whose
+     * duty token happens not to carry one.</p>
+     */
+    private void measureContextDivergence(AuthzInternalRequest request, ShadowCapture capture) {
+        ContextHeaderAuthority.Mode mode = contextHeaderMode();
+        if (mode == ContextHeaderAuthority.Mode.PASSTHROUGH || meterRegistry == null) {
+            return;
+        }
+        for (ContextHeaderAuthority.ContextDivergence d
+                : ContextHeaderAuthority.compare(request, capture.purpose)) {
+            String outcome;
+            if (d.differs()) {
+                outcome = "differs";
+            } else if (d.clientSupplied() && !d.validatedPresent()) {
+                // The caller claimed a context the trust plane cannot validate. Under
+                // AUTHORITATIVE this claim is dropped -- the case that matters most.
+                outcome = "client_only";
+            } else if (!d.clientSupplied() && d.validatedPresent()) {
+                outcome = "validated_only";
+            } else {
+                outcome = "match";
+            }
+            // Header NAME only. The values are facility and programme identifiers -- real
+            // operational data that must never become a metric tag.
+            meterRegistry.counter("tshepo.authz.context.header",
+                    "header", d.header(), "outcome", outcome, "mode", mode.name()).increment();
+        }
+    }
+
+    /**
+     * Bounded-cardinality shadow metrics. Both tag values come from closed vocabularies — the
+     * outcome set below and the policy's own deny-reason names — so no request-derived string can
+     * grow the series.
+     */
+    private void recordShadowOutcome(String outcome, String reason, long micros) {
+        if (meterRegistry == null) {
+            return;
+        }
+        meterRegistry.counter("tshepo.authz.opa.shadow",
+                "outcome", outcome,
+                "reason", reason,
+                "policy_version", OPA_SHADOW_POLICY_VERSION).increment();
+        meterRegistry.timer("tshepo.authz.opa.shadow.latency", "outcome", outcome)
+                .record(micros, java.util.concurrent.TimeUnit.MICROSECONDS);
     }
 
     /** Query/matrix/fragment delimiters — literal and percent-encoded — that end the route path. */
@@ -1522,6 +1771,12 @@ public class PolicyEngine {
 
     private Map<String, String> buildHeaderMutations(Obligations obligations,
                                                       AuthzInternalRequest request) {
+        return buildHeaderMutations(obligations, request, null);
+    }
+
+    private Map<String, String> buildHeaderMutations(Obligations obligations,
+                                                      AuthzInternalRequest request,
+                                                      PurposeOfUse purpose) {
         Map<String, String> headers = new LinkedHashMap<>();
         headers.put(TrustHeaders.DECISION, "ALLOW");
         headers.put(TrustHeaders.ACTOR_ID, request.actorId() != null ? request.actorId() : "");
@@ -1560,6 +1815,20 @@ public class PolicyEngine {
             if (authentication.flowId() != null) {
                 headers.put(TrustHeaders.AUTHENTICATION_FLOW_ID, authentication.flowId());
             }
+        }
+
+        // Operating context, regenerated from the introspected work-context token. Until this
+        // existed the PDP regenerated identity but not context, so x-facility-id and its siblings
+        // reached every service exactly as the browser set them — and they could not simply be
+        // stripped at Envoy, because stripping without a regenerator deletes the context the
+        // estate runs on.
+        //
+        // EMISSION belongs here: headers exist only on an ALLOW. The SHADOW MEASUREMENT does not,
+        // and lives in evaluate() instead — a measurement that only fires on ALLOW records nothing
+        // in an estate where most traffic denies, which is exactly how the OPA shadow was blind to
+        // every Java DENY before this checkpoint. Same mistake, same fix.
+        if (contextHeaderMode() == ContextHeaderAuthority.Mode.AUTHORITATIVE) {
+            headers.putAll(ContextHeaderAuthority.validatedContext(request, purpose));
         }
 
         if (obligations != null) {

@@ -1,5 +1,33 @@
 ---
-# ClusterRole for Impilo microservices — minimal permissions
+# Impilo microservice RBAC.
+#
+# Doctrine (tshepo-trust-plane-doctrine §2, §6): "Network position / namespace / internal
+# header ≠ identity", and Kubernetes must not "be treated as an authorization control".
+#
+# Two corrections were made here in Checkpoint 4:
+#
+#   1. `secrets: ["get"]` was removed from the ClusterRole. No Impilo workload reads a
+#      Secret through the API server -- every one receives its configuration through
+#      envFrom/secretKeyRef, which the kubelet resolves without granting the pod any API
+#      access at all. Since Checkpoint 4 every workload ServiceAccount is created with
+#      `automountServiceAccountToken: false`, so a pod has no API credential to use this
+#      grant with. Keeping it would have described a capability the estate does not need
+#      and cannot exercise.
+#
+#   2. The three `system:serviceaccounts:<namespace>` **Group** subjects were removed.
+#      Binding a role to that group grants it to *every* ServiceAccount in the namespace,
+#      including `default` -- which is precisely "namespace membership confers authority".
+#      A workload that needs a cluster permission gets its own RoleBinding naming its own
+#      ServiceAccount, as `tshepo-leader-election-binding` below does.
+#
+# `scripts/guard/check-workload-rbac-subjects.sh` fails the build if a
+# `system:serviceaccounts:` group subject reappears anywhere.
+#
+# Note on scope: these manifests target the plane namespaces (impilo-trust,
+# impilo-clinical, impilo-ops, impilo-finance), which are applied only by
+# .github/workflows/deploy.yml. The live preview estate runs in `impilo-full-preview`
+# and never received these bindings -- so this is a source-level correction, not a
+# change to a control that was ever in force.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -10,9 +38,6 @@ rules:
   - apiGroups: [""]
     resources: ["configmaps"]
     verbs: ["get", "watch"]
-  - apiGroups: [""]
-    resources: ["secrets"]
-    verbs: ["get"]
   - apiGroups: [""]
     resources: ["services", "endpoints"]
     verbs: ["get", "list"]
@@ -31,7 +56,9 @@ rules:
     resources: ["configmaps"]
     verbs: ["get", "create", "update"]
 ---
-# RoleBinding for trust plane services
+# RoleBinding for trust plane services.
+# This is the shape every future binding must follow: a named ServiceAccount subject,
+# never a `system:serviceaccounts:` group.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -44,49 +71,4 @@ subjects:
 roleRef:
   kind: Role
   name: tshepo-leader-election
-  apiGroup: rbac.authorization.k8s.io
----
-# RoleBinding for clinical namespace
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: clinical-service-binding
-  namespace: impilo-clinical
-subjects:
-  - kind: Group
-    name: system:serviceaccounts:impilo-clinical
-    apiGroup: rbac.authorization.k8s.io
-roleRef:
-  kind: ClusterRole
-  name: impilo-service-role
-  apiGroup: rbac.authorization.k8s.io
----
-# RoleBinding for ops namespace
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: ops-service-binding
-  namespace: impilo-ops
-subjects:
-  - kind: Group
-    name: system:serviceaccounts:impilo-ops
-    apiGroup: rbac.authorization.k8s.io
-roleRef:
-  kind: ClusterRole
-  name: impilo-service-role
-  apiGroup: rbac.authorization.k8s.io
----
-# RoleBinding for finance namespace
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: finance-service-binding
-  namespace: impilo-finance
-subjects:
-  - kind: Group
-    name: system:serviceaccounts:impilo-finance
-    apiGroup: rbac.authorization.k8s.io
-roleRef:
-  kind: ClusterRole
-  name: impilo-service-role
   apiGroup: rbac.authorization.k8s.io

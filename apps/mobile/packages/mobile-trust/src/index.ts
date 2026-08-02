@@ -57,3 +57,12 @@ export {
   buildGenericHealthNotificationBody,
   genericNotificationTitle,
 } from "./pushNotificationPrivacy";
+
+export {
+  isTrustChallengeStatus,
+  parseTrustChallenge,
+  TRUST_CHALLENGE_STATUSES,
+  type TrustChallenge,
+  type TrustChallengeDecisionName,
+  type TrustChallengeKind,
+} from "./challenge";

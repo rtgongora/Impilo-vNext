@@ -28,11 +28,6 @@ class SessionExperienceControllerTest {
     // components, which @WebMvcTest instantiates; they need the session service bean.
 
     @MockBean
-
-    private zw.gov.mohcc.impilo.experience.auth.session.OidcSessionService oidcSessionService;
-
-
-    @MockBean
     private SessionExperienceService sessionExperienceService;
 
     @MockBean

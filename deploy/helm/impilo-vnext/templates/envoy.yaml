@@ -47,6 +47,10 @@ data:
                               route: { cluster: experience_bff }
                               request_headers_to_remove:
                                 - "x-actor-id"
+                                # Decision inputs: a client that could set these would choose which
+                                # resource its own request is authorized against.
+                                - "x-original-method"
+                                - "x-original-path"
                                 - "x-actor-type"
                                 - "x-assurance-level"
                                 - "x-authentication-aal"
@@ -70,6 +74,10 @@ data:
                               route: { cluster: experience_bff }
                               request_headers_to_remove:
                                 - "x-actor-id"
+                                # Decision inputs: a client that could set these would choose which
+                                # resource its own request is authorized against.
+                                - "x-original-method"
+                                - "x-original-path"
                                 - "x-actor-type"
                                 - "x-assurance-level"
                                 - "x-ial"
@@ -112,6 +120,39 @@ data:
                               route:
                                 cluster: experience_bff
                               request_headers_to_remove:
+                                {{- if .Values.envoy.extAuthz.enabled }}
+                                # ── Identity, stripped ONLY when the PDP can regenerate it ──
+                                # Checkpoint 4. These were never stripped on this route, so a
+                                # client could set its own x-actor-id / x-tenant-id /
+                                # x-provider-id and have it survive to the service — the
+                                # anti-impersonation control ended at the gate.
+                                #
+                                # Strip and regenerate are ONE control, and this list is
+                                # deliberately gated on extAuthz being enabled: every header
+                                # below is re-added from validated evidence by
+                                # PolicyEngine.buildHeaderMutations via allowed_upstream_headers.
+                                # Stripping them with the PDP off would not harden anything, it
+                                # would DELETE the identity the upstream needs.
+                                #
+                                # Context headers (x-facility-id, x-workspace-id, x-department-id,
+                                # x-ward-id, x-programme-id, x-shift-id, x-work-context-token,
+                                # x-purpose-of-use, x-workflow-state) are deliberately NOT here:
+                                # the browser shell genuinely supplies them and the PDP does not
+                                # regenerate them, so stripping would remove real operating
+                                # context. They remain client-supplied — a retained gap recorded
+                                # in checkpoint-4/HEADER_CONTAINMENT.md, to be closed by teaching
+                                # the PDP to emit them, not by stripping them blind.
+                                - "x-actor-id"
+                                # Decision inputs: a client that could set these would choose which
+                                # resource its own request is authorized against.
+                                - "x-original-method"
+                                - "x-original-path"
+                                - "x-actor-type"
+                                - "x-tenant-id"
+                                - "x-subject-id"
+                                - "x-provider-id"
+                                - "x-assurance-level"
+                                {{- end }}
                                 # Authentication assurance is derived from the validated
                                 # token by Tshepo and copied back below. A browser value
                                 # must never survive when a token has no such assurance.
