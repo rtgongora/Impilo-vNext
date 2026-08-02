@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -58,13 +59,23 @@ public class GlobalExceptionHandler {
      * unspecified, so this mapping must exist here as well as in
      * BffGlobalExceptionHandler or the 500 catch-all can shadow it.
      */
-    @ExceptionHandler({MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class})
+    @ExceptionHandler({MissingServletRequestParameterException.class,
+            MissingRequestHeaderException.class, MethodArgumentTypeMismatchException.class})
     public ResponseEntity<Map<String, Object>> handleMalformedParams(
             Exception ex,
             HttpServletRequest request) {
-        String message = ex instanceof MissingServletRequestParameterException missing
-                ? "Missing required parameter: " + missing.getParameterName()
-                : "A request parameter has the wrong type";
+        // MissingRequestHeaderException was NOT mapped, so a caller omitting a required trust
+        // header got 500 INTERNAL_ERROR -- the BFF blaming itself for the caller's malformed
+        // request. Found the moment the catch-all started logging what it had been discarding:
+        // POST /internal/v1/nompilo/context was returning 500 for a missing header.
+        String message;
+        if (ex instanceof MissingServletRequestParameterException missing) {
+            message = "Missing required parameter: " + missing.getParameterName();
+        } else if (ex instanceof MissingRequestHeaderException header) {
+            message = "Missing required header: " + header.getHeaderName();
+        } else {
+            message = "A request parameter has the wrong type";
+        }
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "BAD_REQUEST", message, request);
     }
 
