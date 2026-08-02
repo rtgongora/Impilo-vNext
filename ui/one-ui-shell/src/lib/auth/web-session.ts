@@ -67,11 +67,20 @@ export function beginOidcLogin(input: {
   returnTo?: string | null;
   loginHint?: string | null;
   requiredAcr?: "urn:impilo:aal1" | "urn:impilo:aal2" | "urn:impilo:aal3" | null;
+  /**
+   * Opaque, single-use continuation id issued when a trust challenge interrupted a journey.
+   *
+   * The BFF's authorize endpoint has always accepted this parameter; this function never sent
+   * it, so a challenge could not survive a full re-authentication round trip — the user came
+   * back signed in and whatever they were doing was gone.
+   */
+  continuation?: string | null;
 }): void {
   const query = new URLSearchParams();
   query.set("returnTo", input.returnTo || "/home");
   if (input.loginHint?.trim()) query.set("loginHint", input.loginHint.trim());
   if (input.requiredAcr) query.set("acr", input.requiredAcr);
+  if (input.continuation?.trim()) query.set("continuation", input.continuation.trim());
   window.location.assign(`/internal/v1/auth/oidc/authorize?${query.toString()}`);
 }
 
