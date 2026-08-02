@@ -1,0 +1,24 @@
+# Services that are open regardless of any bypass flag — CP8 baseline, 2026-08-02.
+#
+# These declare NO bypass flag, so retiring the estate's 95 declared bypasses leaves every
+# one of them untouched while the report reads 'bypasses retired'. Each needs a real
+# securityFilterChain, not a flag flip. Shrinking this file IS the CP8 work.
+#
+# Enforced by scripts/guard/check-enforcement-posture.sh in BOTH directions.
+
+abis-service
+analytics-pipeline-service
+audit-ledger-service
+connector-fhir-adapter
+indawo-service
+iot-ingestion-service
+jobs-service
+matcher-engine
+ndila-service
+nhume-service
+offline-edge-service
+offline-sync-service
+pharmacy-elmis-adapter
+shared-core
+support-service
+wellness-service
