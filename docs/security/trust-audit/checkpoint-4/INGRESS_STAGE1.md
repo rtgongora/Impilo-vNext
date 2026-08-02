@@ -1,6 +1,6 @@
 # Ingress Stage 1 (Envoy on-path) — Checkpoint 4.7
 
-**Status: NOT ACTIVATED. Rolled back. Blocked on a pre-existing login defect.**
+**Status: ACTIVATED. Browser proof green through Envoy (12/12).**
 
 **Captured:** 2026-08-02 · **Namespace:** `impilo-full-preview`
 
@@ -77,3 +77,68 @@ workload nothing routes to, so it changes no live behaviour and keeps Stage 1 on
 
 Post-rollback verification: BFF health `200`, UI `200`, Keycloak `200`, no unhealthy pods beyond
 the two pre-existing `estate-health-watch` job errors.
+
+
+---
+
+# Resolution — Stage 1 is live
+
+## The callback 500 was a stale deployed image, not a code defect
+
+The running `experience-bff` was built from `235db2ec3`, which is **not an ancestor of this
+branch** — a divergent line 24 commits back that **predates `dc875e22f`**, the merge bringing
+Checkpoints 1–3 in. The estate was therefore running an experience-bff without the CP3 OIDC
+session work at all, while the branch containing that work sat merged and undeployed. Classic
+image drift: source truth and deployed truth had silently diverged on the single service that
+owns browser authentication.
+
+Ruled out first, by measurement rather than assumption:
+
+| Hypothesis | Test | Result |
+|---|---|---|
+| Wrong client secret | token exchange with the BFF's real secret + bogus code | `invalid_grant` — **client auth succeeded** |
+| Broken Keycloak client auth generally | `impilo-backend` client_credentials | `200` |
+| Issuer mismatch | internal discovery document | advertises the **public** issuer — matches |
+| Envoy caused it | roll ingress back, re-run identical proof | **identical failure** — not Envoy |
+
+## Two real defects fixed on the way
+
+1. **`GlobalExceptionHandler` discarded every unexpected exception** — no log, no stack. That is
+   why a 500 on the callback had no diagnosis anywhere, and it applied to *every* unhandled
+   failure in the BFF. Now logged with class, path and correlation id; the response body stays
+   generic so internal detail never reaches a caller.
+2. **`RestTemplate.exchange` throws on 4xx**, making the `!is2xxSuccessful()` check beneath it
+   unreachable for exactly the failures it guarded. A Keycloak rejection escaped as a raw
+   exception and surfaced as `500 INTERNAL_ERROR`. An IdP refusing a code is an authentication
+   failure, not a server fault — now `OIDC_TOKEN_EXCHANGE_FAILED` (400).
+
+The logging change then immediately earned its keep by exposing a third defect it had been
+hiding: `MissingRequestHeaderException` was unmapped, so a caller omitting a required trust
+header got `500` instead of `400`. Fixed.
+
+Also repaired six BFF test classes left uncompilable by the CP1–3 merge (duplicate
+`OidcSessionService` `@MockBean`), which had made `mvn package` fail at `testCompile` — the module
+could not be built at all, which is how the deployed image came to be so far behind.
+
+## Proof
+
+| Check | Result |
+|---|---|
+| Browser proof, direct-BFF routing | **12/12**, twice, 0 unhandled exceptions |
+| Browser proof, **through Envoy** | **12/12** |
+| Live Envoy route table | 4 routes, **60 client trust headers stripped** (was 0) |
+| Estate after flip | BFF `200`, UI `200`, Keycloak `200`, no unhealthy pods |
+
+The 12 assertions include: PKCE login establishes a session through the BFF callback; the session
+cookie is opaque and never a JWT; no token material in browser storage; a cookie-authenticated
+mutation without the CSRF header is rejected; logout fails closed; and a replayed callback never
+re-establishes a session.
+
+## What Stage 1 does and does not give
+
+**Does:** every client-supplied trust header on the four routes is now stripped at the edge — 60
+of them, up from 0. Envoy is on the live path and proven under real browser traffic.
+
+**Does not:** `extAuthz` remains **false**, so there is still no PDP gate at the edge, and the six
+identity headers stay unstripped by design (their strip is gated on the regenerator being
+present — see `HEADER_CONTAINMENT.md`). Stage 2 is the gate, and it waits on OPA shadow parity.
