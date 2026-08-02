@@ -185,3 +185,55 @@ restart is for certainty, and the `modules-load.d` entry is what survives a rebo
 Then re-run `scripts/guard/probe-network-policy-enforcement.sh` — it must exit **0**. Until it
 does, no NetworkPolicy manifests should be written: a control that is accepted and silently inert
 is one nobody re-tests.
+
+
+---
+
+## RESOLVED 2026-08-02 — NetworkPolicy is now ENFORCED
+
+```
+sudo modprobe ip_set_hash_ip ip_set_hash_net
+printf 'ip_set_hash_ip\nip_set_hash_net\n' | sudo tee /etc/modules-load.d/ipset-kube-router.conf
+sudo systemctl restart k3s
+```
+
+```
+scripts/guard/probe-network-policy-enforcement.sh
+  PROBE OK    positive control: pod-to-pod reachable with no policy
+  RESULT: NetworkPolicy IS ENFORCED on this cluster.
+  exit 0
+```
+
+`lsmod` shows `ip_set_hash_ip` loaded and referenced by `ip_set`. Only the `hash:ip` type was
+actually required — `ip_set_hash_net` is in `modules-load.d` for the reboot but was not needed to
+flip the result.
+
+### Safety at the moment of flip
+
+Enforcement became real estate-wide in one step, so the question that mattered was what it would
+immediately start blocking. **Nothing:** `kubectl get netpol -A` returned exactly one policy, in
+the probe's own terminating namespace. No production namespace has ever had one, which is why a
+control that was inert for months went unnoticed.
+
+Verified after the flip: 117 pods Running, BFF `200`, UI `200`, Keycloak `200`, and the
+authenticated browser proof **12/12**.
+
+### What this changes
+
+Pod isolation moves from **ABSENT and unachievable** to **available and unused**. Every
+NetworkPolicy written from here is load-bearing rather than decorative — which also means the
+first wrong one can partition the estate. Cohort policies must therefore be written one at a
+time, each with the probe re-run and a recorded rollback, exactly as the Checkpoint 4 plan
+requires.
+
+### The lesson worth keeping
+
+The original diagnosis in this document was confident, specific, and wrong. The host `ipset`
+package was installed and changed nothing, because k3s prepends its own bundled `ipset` to `PATH`.
+The real cause was two layers down: a missing kernel *set-type* module producing
+*"set type not supported"*, while kube-router happily programmed 1270 iptables rules and 2236 nft
+entries that referenced sets which never existed.
+
+A rule table that looks complete and matches nothing is the most deceptive failure mode
+available. Only the probe — which runs a **positive control first**, so a false negative is
+detectable — could tell the difference.
