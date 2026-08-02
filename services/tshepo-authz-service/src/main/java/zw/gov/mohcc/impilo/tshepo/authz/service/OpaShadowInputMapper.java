@@ -1,9 +1,12 @@
 package zw.gov.mohcc.impilo.tshepo.authz.service;
 
 import zw.gov.mohcc.impilo.tshepo.authz.dto.AuthzInternalRequest;
+import zw.gov.mohcc.impilo.tshepo.contracts.dto.AuthenticationAssurance;
 import zw.gov.mohcc.impilo.tshepo.authz.dto.DutyContext;
 import zw.gov.mohcc.impilo.tshepo.contracts.enums.PurposeOfUse;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -51,7 +54,11 @@ public final class OpaShadowInputMapper {
             "INVALID_PURPOSE",
             "MIN_LOA",
             "ACCOUNT_NOT_VERIFIED",
-            "SELF_TREATMENT");
+            "SELF_TREATMENT",
+            // Added when the corpus gained the authentication-assurance rules these mirror.
+            "MIN_AAL",
+            "AUTH_TOO_OLD",
+            "PHISHING_RESISTANCE_REQUIRED");
 
     /**
      * Dimensions the Java engine enforces that the policy corpus has no rule for. These are the
@@ -65,9 +72,9 @@ public final class OpaShadowInputMapper {
      * defect. Closing this gap means adding the rule to the corpus, not adding the key here.</p>
      */
     public static final Map<String, String> POLICY_COVERAGE_GAPS = Map.of(
-            "min_aal", "Java enforces a minimum AAL; the policy defines no MIN_AAL rule",
-            "max_auth_age_seconds", "Java enforces authentication freshness; the policy has no equivalent",
-            "phishing_resistant_required", "Java enforces phishing resistance; the policy has no equivalent");
+            "accepted_amr",
+            "Java requires the session's AMR to intersect the rule's accepted list "
+                    + "(meetsAuthenticationRequirement); the corpus defines no rule for it");
 
     /** Rules the policy defines but this mapping cannot exercise, with the field that is missing. */
     public static final Map<String, String> INERT_DENY_REASONS = Map.of(
@@ -87,12 +94,16 @@ public final class OpaShadowInputMapper {
      * @param purpose      resolved purpose of use, or null when the request never got that far
      * @param ruleMinLoa   {@code min_loa} from the matched rule, or null when no rule matched
      * @param ruleMinAal   {@code min_aal} from the matched rule, or null
+     * @param ruleMaxAuthAgeSeconds {@code max_auth_age_seconds} from the matched rule, or null
+     * @param rulePhishingResistantRequired whether the matched rule demands a phishing-resistant factor
      * @param accountAssuranceRequired whether the matched rule demands a verified account
      */
     public static Map<String, Object> build(AuthzInternalRequest request,
                                             PurposeOfUse purpose,
                                             Integer ruleMinLoa,
                                             Integer ruleMinAal,
+                                            Integer ruleMaxAuthAgeSeconds,
+                                            boolean rulePhishingResistantRequired,
                                             boolean accountAssuranceRequired,
                                             int identityLoa) {
         Map<String, Object> input = new LinkedHashMap<>();
@@ -108,9 +119,44 @@ public final class OpaShadowInputMapper {
         if (ruleMinLoa != null) {
             input.put("min_loa", ruleMinLoa);
         }
-        // ruleMinAal is deliberately NOT emitted -- see POLICY_COVERAGE_GAPS. The policy defines no
-        // MIN_AAL rule, so the key would be read by nothing. It stays in the signature because the
-        // gap register is asserted against what the caller actually has available.
+        if (ruleMinAal != null) {
+            input.put("min_aal", ruleMinAal);
+        }
+
+        // Authentication-assurance facts. Java substitutes AuthenticationAssurance.none() for a
+        // missing assurance and therefore denies; a deny-safe rego rule with an absent fact stays
+        // silent. Emitting aal and phishing-resistance ALWAYS (0 / false when there is no
+        // assurance) is what makes the two engines agree instead of diverging on the null case.
+        AuthenticationAssurance assurance = request.authenticationAssurance() == null
+                ? AuthenticationAssurance.none()
+                : request.authenticationAssurance();
+        input.put("authentication_aal", assurance.aal());
+        input.put("authentication_phishing_resistant", assurance.phishingResistant());
+
+        // The clock stays here. A policy that calls time.now_ns() is non-deterministic: the same
+        // input yields different verdicts, the decision cannot be replayed from an audit record,
+        // and no test can pin a boundary without freezing the clock. Java computes the age; the
+        // policy compares two numbers.
+        //
+        // Java PREFERS stepUpTime over authenticationTime (it does not take a max), so this
+        // mirrors that exactly. Absent reference instant => key omitted, which is the wire signal
+        // for Java's isFresh(...) == false null case.
+        Instant reference = assurance.stepUpTime() != null
+                ? assurance.stepUpTime()
+                : assurance.authenticationTime();
+        if (reference != null) {
+            long age = Duration.between(reference, Instant.now()).getSeconds();
+            input.put("authentication_age_seconds", Math.max(0L, age));
+        }
+
+        if (ruleMaxAuthAgeSeconds != null && ruleMaxAuthAgeSeconds > 0) {
+            // Java gates on maxAgeSeconds > 0; mirroring that here keeps a rule with an explicit
+            // 0 (meaning "no freshness requirement") from arming the policy rule.
+            input.put("max_auth_age_seconds", ruleMaxAuthAgeSeconds);
+        }
+        if (rulePhishingResistantRequired) {
+            input.put("phishing_resistant_required", true);
+        }
         if (accountAssuranceRequired) {
             input.put("account_assurance_required", true);
         }

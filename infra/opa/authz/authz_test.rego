@@ -259,3 +259,258 @@ test_deny_authenticate_with_badge_serial if {
 	d.allow == false
 	"BADGE_NEVER_AUTHORISES" in d.deny_reasons
 }
+
+# ── Authentication assurance: MIN_AAL / AUTH_TOO_OLD / PHISHING_RESISTANCE_REQUIRED ──────
+# These close the three POLICY_COVERAGE_GAPS registered in OpaShadowInputMapper (dimensions the
+# Java PolicyEngine enforces where the corpus had no rule, so OPA allowed while Java denied).
+
+# ── MIN_AAL ──────────────────────────────────────────────────────────────────
+
+test_deny_below_min_aal if {
+	d := authz.decision with input as {
+		"actor_id": "a", "purpose": "TREATMENT", "assurance_loa": 3,
+		"min_aal": 2, "authentication_aal": 1,
+	}
+	d.allow == false
+	"MIN_AAL" in d.deny_reasons
+}
+
+test_min_aal_satisfied_exactly_at_the_minimum if {
+	# Boundary: Java is `aal < minAal`, so equality PASSES.
+	d := authz.decision with input as {
+		"actor_id": "a", "purpose": "TREATMENT", "assurance_loa": 3,
+		"min_aal": 2, "authentication_aal": 2,
+	}
+	d.allow == true
+	not "MIN_AAL" in d.deny_reasons
+}
+
+test_deny_one_below_min_aal_boundary if {
+	d := authz.decision with input as {
+		"actor_id": "a", "purpose": "TREATMENT", "assurance_loa": 3,
+		"min_aal": 3, "authentication_aal": 2,
+	}
+	d.allow == false
+	"MIN_AAL" in d.deny_reasons
+}
+
+test_min_aal_satisfied_above_the_minimum if {
+	d := authz.decision with input as {
+		"actor_id": "a", "purpose": "TREATMENT", "assurance_loa": 3,
+		"min_aal": 1, "authentication_aal": 3,
+	}
+	d.allow == true
+}
+
+test_deny_min_aal_with_no_authentication_at_all if {
+	# The mapper emits aal 0 for a request with no AuthenticationAssurance, mirroring none().
+	d := authz.decision with input as {
+		"actor_id": "a", "purpose": "TREATMENT", "assurance_loa": 3,
+		"min_aal": 1, "authentication_aal": 0,
+	}
+	d.allow == false
+	"MIN_AAL" in d.deny_reasons
+}
+
+test_min_aal_inert_without_the_rule_condition if {
+	# Deny-safe: no min_aal on the matched rule => the check never fires, however weak the login.
+	d := authz.decision with input as {
+		"actor_id": "a", "purpose": "TREATMENT", "assurance_loa": 3,
+		"authentication_aal": 0,
+	}
+	d.allow == true
+	not "MIN_AAL" in d.deny_reasons
+}
+
+test_min_aal_inert_without_the_assurance_fact if {
+	# Deny-safe strangler: until the mapper emits authentication_aal the rule cannot deny.
+	d := authz.decision with input as {"actor_id": "a", "purpose": "TREATMENT", "assurance_loa": 3, "min_aal": 3}
+	d.allow == true
+	not "MIN_AAL" in d.deny_reasons
+}
+
+test_min_aal_does_not_feed_effective_loa if {
+	# AAL is a separate scale from LoA: a strong login must NOT satisfy an identity-proofing
+	# minimum. Mirrors PolicyEngineTest "identity LOA never substitutes for authentication min_aal",
+	# in the other direction — assurance_loa 1 with min_loa 3 still denies at AAL 3.
+	d := authz.decision with input as {
+		"actor_id": "a", "purpose": "TREATMENT", "assurance_loa": 1, "min_loa": 3,
+		"min_aal": 2, "authentication_aal": 3,
+	}
+	d.allow == false
+	"MIN_LOA" in d.deny_reasons
+	not "MIN_AAL" in d.deny_reasons
+}
+
+# ── AUTH_TOO_OLD ─────────────────────────────────────────────────────────────
+
+test_deny_authentication_too_old if {
+	d := authz.decision with input as {
+		"actor_id": "a", "purpose": "TREATMENT", "assurance_loa": 3, "authentication_aal": 2,
+		"max_auth_age_seconds": 300, "authentication_age_seconds": 900,
+	}
+	d.allow == false
+	"AUTH_TOO_OLD" in d.deny_reasons
+}
+
+test_authentication_age_exactly_at_the_maximum_passes if {
+	# Boundary: isFresh is `!reference.plusSeconds(max).isBefore(now)` — age == max is still FRESH.
+	d := authz.decision with input as {
+		"actor_id": "a", "purpose": "TREATMENT", "assurance_loa": 3, "authentication_aal": 2,
+		"max_auth_age_seconds": 300, "authentication_age_seconds": 300,
+	}
+	d.allow == true
+	not "AUTH_TOO_OLD" in d.deny_reasons
+}
+
+test_deny_authentication_one_second_over_the_maximum if {
+	d := authz.decision with input as {
+		"actor_id": "a", "purpose": "TREATMENT", "assurance_loa": 3, "authentication_aal": 2,
+		"max_auth_age_seconds": 300, "authentication_age_seconds": 301,
+	}
+	d.allow == false
+	"AUTH_TOO_OLD" in d.deny_reasons
+}
+
+test_fresh_authentication_allows if {
+	d := authz.decision with input as {
+		"actor_id": "a", "purpose": "TREATMENT", "assurance_loa": 3, "authentication_aal": 2,
+		"max_auth_age_seconds": 300, "authentication_age_seconds": 0,
+	}
+	d.allow == true
+}
+
+test_deny_when_no_authentication_instant_exists if {
+	# Java: isFresh returns false when both stepUpTime and authenticationTime are null. The mapper
+	# signals it by omitting the age while still sending authentication_aal.
+	d := authz.decision with input as {
+		"actor_id": "a", "purpose": "TREATMENT", "assurance_loa": 3, "authentication_aal": 0,
+		"max_auth_age_seconds": 300,
+	}
+	d.allow == false
+	"AUTH_TOO_OLD" in d.deny_reasons
+}
+
+test_auth_age_inert_without_the_rule_condition if {
+	# Deny-safe: no max_auth_age_seconds on the matched rule => freshness is not evaluated.
+	d := authz.decision with input as {
+		"actor_id": "a", "purpose": "TREATMENT", "assurance_loa": 3, "authentication_aal": 2,
+		"authentication_age_seconds": 99999,
+	}
+	d.allow == true
+	not "AUTH_TOO_OLD" in d.deny_reasons
+}
+
+test_auth_age_inert_when_mapper_sends_neither_fact if {
+	# Deny-safe strangler: an un-upgraded mapper sends no authentication_* facts at all, and the
+	# "no authentication instant" branch must NOT fire on that — otherwise the rule would deny every
+	# request in SHADOW the moment a max_auth_age_seconds rule matched.
+	d := authz.decision with input as {
+		"actor_id": "a", "purpose": "TREATMENT", "assurance_loa": 3,
+		"max_auth_age_seconds": 300,
+	}
+	d.allow == true
+	not "AUTH_TOO_OLD" in d.deny_reasons
+}
+
+test_zero_max_auth_age_disables_the_freshness_check if {
+	# Java gates on `maxAgeSeconds > 0`; a zero maximum disables the check rather than denying all.
+	d := authz.decision with input as {
+		"actor_id": "a", "purpose": "TREATMENT", "assurance_loa": 3, "authentication_aal": 2,
+		"max_auth_age_seconds": 0, "authentication_age_seconds": 99999,
+	}
+	d.allow == true
+	not "AUTH_TOO_OLD" in d.deny_reasons
+}
+
+test_zero_max_auth_age_does_not_deny_a_missing_instant if {
+	d := authz.decision with input as {
+		"actor_id": "a", "purpose": "TREATMENT", "assurance_loa": 3, "authentication_aal": 2,
+		"max_auth_age_seconds": 0,
+	}
+	d.allow == true
+	not "AUTH_TOO_OLD" in d.deny_reasons
+}
+
+# ── PHISHING_RESISTANCE_REQUIRED ─────────────────────────────────────────────
+
+test_deny_when_phishing_resistance_required_and_absent if {
+	d := authz.decision with input as {
+		"actor_id": "a", "purpose": "TREATMENT", "assurance_loa": 3, "authentication_aal": 2,
+		"phishing_resistant_required": true, "authentication_phishing_resistant": false,
+	}
+	d.allow == false
+	"PHISHING_RESISTANCE_REQUIRED" in d.deny_reasons
+}
+
+test_allow_when_phishing_resistance_required_and_present if {
+	d := authz.decision with input as {
+		"actor_id": "a", "purpose": "TREATMENT", "assurance_loa": 3, "authentication_aal": 2,
+		"phishing_resistant_required": true, "authentication_phishing_resistant": true,
+	}
+	d.allow == true
+	not "PHISHING_RESISTANCE_REQUIRED" in d.deny_reasons
+}
+
+test_phishing_resistance_not_required_permits_a_weak_factor if {
+	d := authz.decision with input as {
+		"actor_id": "a", "purpose": "TREATMENT", "assurance_loa": 3, "authentication_aal": 2,
+		"phishing_resistant_required": false, "authentication_phishing_resistant": false,
+	}
+	d.allow == true
+	not "PHISHING_RESISTANCE_REQUIRED" in d.deny_reasons
+}
+
+test_phishing_rule_inert_without_the_rule_condition if {
+	# Deny-safe: no phishing_resistant_required on the matched rule => the check never fires.
+	d := authz.decision with input as {
+		"actor_id": "a", "purpose": "TREATMENT", "assurance_loa": 3, "authentication_aal": 2,
+		"authentication_phishing_resistant": false,
+	}
+	d.allow == true
+	not "PHISHING_RESISTANCE_REQUIRED" in d.deny_reasons
+}
+
+test_phishing_rule_inert_without_the_assurance_fact if {
+	# Deny-safe strangler: until the mapper emits the fact the rule cannot deny.
+	d := authz.decision with input as {
+		"actor_id": "a", "purpose": "TREATMENT", "assurance_loa": 3, "authentication_aal": 2,
+		"phishing_resistant_required": true,
+	}
+	d.allow == true
+	not "PHISHING_RESISTANCE_REQUIRED" in d.deny_reasons
+}
+
+# ── Composition ──────────────────────────────────────────────────────────────
+
+test_all_three_authentication_reasons_compose_and_sort if {
+	# Java evaluates all four sub-checks in one meetsAuthenticationRequirement call; the policy
+	# reports each independently so audit shows which dimension failed.
+	d := authz.decision with input as {
+		"actor_id": "a", "purpose": "TREATMENT", "assurance_loa": 3,
+		"min_aal": 3, "authentication_aal": 1,
+		"max_auth_age_seconds": 300, "authentication_age_seconds": 600,
+		"phishing_resistant_required": true, "authentication_phishing_resistant": false,
+	}
+	d.allow == false
+	d.deny_reasons == ["AUTH_TOO_OLD", "MIN_AAL", "PHISHING_RESISTANCE_REQUIRED"]
+}
+
+test_strong_recent_phishing_resistant_login_allows if {
+	d := authz.decision with input as {
+		"actor_id": "a", "purpose": "TREATMENT", "assurance_loa": 3, "min_loa": 3,
+		"min_aal": 2, "authentication_aal": 2,
+		"max_auth_age_seconds": 300, "authentication_age_seconds": 12,
+		"phishing_resistant_required": true, "authentication_phishing_resistant": true,
+	}
+	d.allow == true
+	count(d.deny_reasons) == 0
+}
+
+test_existing_decisions_untouched_by_the_new_rules if {
+	# Regression guard: the shape of input the mapper sends TODAY (no authentication_* keys) must
+	# produce exactly the verdict it did before these rules existed.
+	d := authz.decision with input as {"actor_id": "a", "purpose": "TREATMENT", "assurance_loa": 3, "min_loa": 3}
+	d.allow == true
+	count(d.deny_reasons) == 0
+}

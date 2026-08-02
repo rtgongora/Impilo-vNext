@@ -42,6 +42,16 @@ public class OpaEnforceGate implements InitializingBean {
     @Override
     public void afterPropertiesSet() {
         validate(properties.getOpaMode(), properties.getOpaParityEvidencePath());
+        // Same reasoning as the OPA mode: an unrecognised context-header mode must not degrade to
+        // PASSTHROUGH, which would leave client-supplied facility and purpose flowing while the
+        // configuration says the control is on.
+        var contextMode = zw.gov.mohcc.impilo.tshepo.authz.core.ContextHeaderAuthority.Mode
+                .parse(properties.getContextHeaderMode());
+        log.info("Context-header mode {} — {}", contextMode, switch (contextMode) {
+            case PASSTHROUGH -> "client-supplied operating context travels unchanged";
+            case SHADOW -> "measuring client-vs-validated divergence, emitting nothing";
+            case AUTHORITATIVE -> "emitting duty-token-validated context; client values are replaced";
+        });
     }
 
     /** Package-visible so the gate can be exercised directly, without a Spring context. */

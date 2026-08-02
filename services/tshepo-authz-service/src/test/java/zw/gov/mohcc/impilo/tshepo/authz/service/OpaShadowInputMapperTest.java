@@ -78,7 +78,7 @@ class OpaShadowInputMapperTest {
     void emittedKeysAreConsumedByPolicy() throws Exception {
         Map<String, Object> input = OpaShadowInputMapper.build(
                 request("actor-1", "subject-1", "prov-1", "LOA3", DutyContext.absent()),
-                PurposeOfUse.TREATMENT, 2, 2, true, 3);
+                PurposeOfUse.TREATMENT, 2, 2, null, false, true, 3);
 
         Set<String> policyKeys = keysReadByPolicy();
         // actor_id is carried for correlation in the decision log rather than read by a rule.
@@ -93,16 +93,24 @@ class OpaShadowInputMapperTest {
 
     @Test
     @DisplayName("assurance LoA is sent under the key the policy reads, not the old identity_loa")
-    void assuranceLoaUsesThePolicysKey() {
+    void assuranceLoaUsesThePolicysKey() throws Exception {
         Map<String, Object> input = OpaShadowInputMapper.build(
                 request("actor-1", null, null, "LOA3", DutyContext.absent()),
-                PurposeOfUse.TREATMENT, null, null, false, 3);
+                PurposeOfUse.TREATMENT, null, null, null, false, false, 3);
 
         assertThat(input).containsEntry("assurance_loa", 3);
         assertThat(input)
                 .as("identity_loa was the defective key; re-emitting it would silently restore the bug")
-                .doesNotContainKey("identity_loa")
-                .doesNotContainKey("authentication_aal");
+                .doesNotContainKey("identity_loa");
+
+        // authentication_aal WAS part of the original defect -- emitted while nothing read it.
+        // It is legitimate now only because the corpus gained a MIN_AAL rule. The durable
+        // invariant is not "never emit it" but "emit it only while the policy reads it", so this
+        // asserts against the policy rather than against a remembered verdict.
+        assertThat(keysReadByPolicy())
+                .as("authentication_aal is emitted; if the policy stops reading it, stop emitting it")
+                .contains("authentication_aal");
+        assertThat(input).containsEntry("authentication_aal", 0);
     }
 
     @Test
@@ -111,7 +119,7 @@ class OpaShadowInputMapperTest {
         DutyContext duty = DutyContext.absent();
         Map<String, Object> input = OpaShadowInputMapper.build(
                 request("actor-1", "subject-1", "prov-1", "LOA2", duty),
-                PurposeOfUse.TREATMENT, null, null, false, 2);
+                PurposeOfUse.TREATMENT, null, null, null, false, false, 2);
 
         // access_mode expects an actor zone (WORK|PROFESSIONAL|LIFE); the nearest local value is a
         // WorkMode (CLINICAL_CARE, …). Filling it would leave two rules permanently unmatched
@@ -128,13 +136,12 @@ class OpaShadowInputMapperTest {
     void policyCoverageGapsAreDeclaredAndNotEmitted() throws Exception {
         Map<String, Object> input = OpaShadowInputMapper.build(
                 request("actor-1", null, null, "LOA3", DutyContext.absent()),
-                PurposeOfUse.TREATMENT, 2, 2, false, 3);
+                PurposeOfUse.TREATMENT, 2, 2, null, false, false, 3);
 
-        // min_aal is supplied by the caller and enforced by PolicyEngine, but the policy defines no
-        // MIN_AAL rule. Emitting it would be read by nothing — the identity_loa defect again.
-        assertThat(input)
-                .as("min_aal is emitted but no policy rule reads it")
-                .doesNotContainKey("min_aal");
+        // min_aal IS now emitted: the corpus gained a MIN_AAL rule, so the key is read. The
+        // assertion below is the durable one -- whatever remains in the gap register must still
+        // be a dimension the policy genuinely does not read.
+        assertThat(input).containsKey("min_aal");
 
         Set<String> policyKeys = keysReadByPolicy();
         assertThat(OpaShadowInputMapper.POLICY_COVERAGE_GAPS.keySet())

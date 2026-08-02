@@ -91,6 +91,11 @@ tshepo:
     opa-url: ${TSHEPO_AUTHZ_OPA_URL:http://localhost:8181}
     opa-mode: ${TSHEPO_AUTHZ_OPA_MODE:OFF}
     opa-parity-evidence-path: ${TSHEPO_AUTHZ_OPA_PARITY_EVIDENCE:}
+    # Operating-context header regeneration (Checkpoint 4). The PDP regenerated identity but not
+    # context, so x-facility-id and its siblings reached every service as the browser set them.
+    # PASSTHROUGH (unchanged) | SHADOW (measure divergence, emit nothing) | AUTHORITATIVE (emit
+    # duty-token-validated context). Default PASSTHROUGH -- zero behaviour change.
+    context-header-mode: ${TSHEPO_AUTHZ_CONTEXT_HEADER_MODE:PASSTHROUGH}
     # Rate limiting
     rate-limit:
       max-requests-per-minute: 600

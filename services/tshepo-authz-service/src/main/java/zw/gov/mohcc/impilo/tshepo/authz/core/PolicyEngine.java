@@ -394,7 +394,7 @@ public class PolicyEngine {
         Obligations obligations = VisibilityObligationComposer.compose(
                 request, purpose, riskScore, matchedAllowRule, activeEscalation, objectMapper,
                 protectedAccess.grantedCategories());
-        Map<String, String> headerMutations = buildHeaderMutations(obligations, request);
+        Map<String, String> headerMutations = buildHeaderMutations(obligations, request, purpose);
 
         auditConfidentialGrant(request, obligations, protectedAccess.grantBasis());
 
@@ -443,7 +443,9 @@ public class PolicyEngine {
         Obligations obligations = VisibilityObligationComposer.compose(
                 request, PurposeOfUse.BREAK_GLASS, riskScore, null, Optional.empty(), objectMapper,
                 List.of("*"));
-        Map<String, String> headers = buildHeaderMutations(obligations, request);
+        // BREAK_GLASS is the validated purpose on this path, so pass it explicitly rather than
+        // letting the header default to the client's own x-purpose-of-use.
+        Map<String, String> headers = buildHeaderMutations(obligations, request, PurposeOfUse.BREAK_GLASS);
 
         log.warn("BREAK-GLASS ALLOW: actor={}, provider={}, facility={}, patient={}, resource={}/{}, "
                         + "correlation={} — queued for retrospective supervisor review",
@@ -1425,10 +1427,13 @@ public class PolicyEngine {
             Map<String, Object> conditions = parseConditions(capture.matchedRule);
             Integer minLoa = conditions.get("min_loa") instanceof Number n ? n.intValue() : null;
             Integer minAal = conditions.get("min_aal") instanceof Number n ? n.intValue() : null;
+            Integer maxAuthAge = conditions.get("max_auth_age_seconds") instanceof Number n ? n.intValue() : null;
+            boolean phishingResistant = Boolean.TRUE.equals(conditions.get("phishing_resistant_required"));
             boolean accountAssurance = Boolean.TRUE.equals(conditions.get("account_assurance_required"));
 
             Map<String, Object> input = OpaShadowInputMapper.build(
-                    request, capture.purpose, minLoa, minAal, accountAssurance, identityLoa(request));
+                    request, capture.purpose, minLoa, minAal, maxAuthAge, phishingResistant,
+                    accountAssurance, identityLoa(request));
 
             OpaDecision opa = opaDecisionClient.decide(input);
             long micros = (System.nanoTime() - started) / 1_000L;
@@ -1479,6 +1484,55 @@ public class PolicyEngine {
         } catch (Exception e) {
             recordShadowOutcome("error", "none", (System.nanoTime() - started) / 1_000L);
             log.debug("OPA-SHADOW comparison skipped: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Emit (AUTHORITATIVE) or measure (SHADOW) the validated operating context.
+     *
+     * <p>In SHADOW nothing is emitted and nothing changes downstream; the divergence between what
+     * the client claimed and what the duty token validates is counted instead. That count is the
+     * evidence for whether AUTHORITATIVE is safe — flipping it without knowing the rate would take
+     * facility scope away from every request whose duty token happens not to carry one.</p>
+     */
+    private void emitValidatedContext(Map<String, String> headers, AuthzInternalRequest request,
+                                      PurposeOfUse purpose) {
+        ContextHeaderAuthority.Mode mode;
+        try {
+            mode = ContextHeaderAuthority.Mode.parse(properties.getContextHeaderMode());
+        } catch (IllegalArgumentException e) {
+            // Startup validation rejects a bad value, so reaching here means it changed at runtime.
+            log.error("Invalid context-header-mode, treating as PASSTHROUGH: {}", e.getMessage());
+            return;
+        }
+        if (mode == ContextHeaderAuthority.Mode.PASSTHROUGH) {
+            return;
+        }
+
+        if (mode == ContextHeaderAuthority.Mode.AUTHORITATIVE) {
+            headers.putAll(ContextHeaderAuthority.validatedContext(request, purpose));
+        }
+
+        if (meterRegistry == null) {
+            return;
+        }
+        for (ContextHeaderAuthority.ContextDivergence d : ContextHeaderAuthority.compare(request, purpose)) {
+            String outcome;
+            if (d.differs()) {
+                outcome = "differs";
+            } else if (d.clientSupplied() && !d.validatedPresent()) {
+                // The client claimed a context the trust plane cannot validate. Under
+                // AUTHORITATIVE this claim is dropped -- the case that matters most.
+                outcome = "client_only";
+            } else if (!d.clientSupplied() && d.validatedPresent()) {
+                outcome = "validated_only";
+            } else {
+                outcome = "match";
+            }
+            // Header NAME only. The values are facility and programme identifiers -- real
+            // operational data that must not become a metric tag.
+            meterRegistry.counter("tshepo.authz.context.header",
+                    "header", d.header(), "outcome", outcome, "mode", mode.name()).increment();
         }
     }
 
@@ -1606,6 +1660,12 @@ public class PolicyEngine {
 
     private Map<String, String> buildHeaderMutations(Obligations obligations,
                                                       AuthzInternalRequest request) {
+        return buildHeaderMutations(obligations, request, null);
+    }
+
+    private Map<String, String> buildHeaderMutations(Obligations obligations,
+                                                      AuthzInternalRequest request,
+                                                      PurposeOfUse purpose) {
         Map<String, String> headers = new LinkedHashMap<>();
         headers.put(TrustHeaders.DECISION, "ALLOW");
         headers.put(TrustHeaders.ACTOR_ID, request.actorId() != null ? request.actorId() : "");
@@ -1645,6 +1705,13 @@ public class PolicyEngine {
                 headers.put(TrustHeaders.AUTHENTICATION_FLOW_ID, authentication.flowId());
             }
         }
+
+        // Operating context, regenerated from the introspected work-context token. Until this
+        // existed the PDP regenerated identity but not context, so x-facility-id and its siblings
+        // reached every service exactly as the browser set them — and they could not simply be
+        // stripped at Envoy, because stripping without a regenerator deletes the context the
+        // estate runs on. Staged: emits only in AUTHORITATIVE, measures in SHADOW.
+        emitValidatedContext(headers, request, purpose);
 
         if (obligations != null) {
             if (obligations.maxScope() != null) {

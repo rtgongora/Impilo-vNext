@@ -50,6 +50,12 @@ public class AuthzProperties {
      * rather than assert the conclusion.
      */
     private String opaParityEvidencePath = "";
+    /**
+     * Operating-context header regeneration. PASSTHROUGH (client values travel unchanged) |
+     * SHADOW (measure client-vs-validated divergence, emit nothing) | AUTHORITATIVE (emit
+     * duty-token-validated context; Envoy strips the client's). See ContextHeaderAuthority.
+     */
+    private String contextHeaderMode = "PASSTHROUGH";
     private String identityServiceUrl = "http://localhost:8181";
     // WORK_CONTEXT duty-token binding. Mode: OFF (never read the token) | SHADOW (introspect +
     // compare token↔headers + audit divergence, decision UNCHANGED) | ENFORCE (mismatch/revoked
@@ -227,6 +233,8 @@ public class AuthzProperties {
     public void setOpaUrl(String opaUrl) { this.opaUrl = opaUrl; }
     public String getOpaMode() { return opaMode; }
     public void setOpaMode(String opaMode) { this.opaMode = opaMode; }
+    public String getContextHeaderMode() { return contextHeaderMode; }
+    public void setContextHeaderMode(String contextHeaderMode) { this.contextHeaderMode = contextHeaderMode; }
     public String getOpaParityEvidencePath() { return opaParityEvidencePath; }
     public void setOpaParityEvidencePath(String opaParityEvidencePath) {
         this.opaParityEvidencePath = opaParityEvidencePath;
