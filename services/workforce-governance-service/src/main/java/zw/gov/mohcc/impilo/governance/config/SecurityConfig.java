@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.Ordered;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -15,6 +16,11 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextFilter;
 
 @Configuration
 @EnableWebSecurity
+// Audience validation for this service's resource server. shared-core lives outside this
+// application's component scan, so the import is explicit -- and the config itself is
+// @ConditionalOnProperty(impilo.s2s.required-audience), making activation doubly opt-in:
+// a service must both import it AND be told its audience.
+@Import(zw.gov.mohcc.impilo.shared.auth.WorkloadAudienceJwtConfig.class)
 public class SecurityConfig {
 
     @Bean

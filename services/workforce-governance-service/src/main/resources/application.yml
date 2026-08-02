@@ -68,3 +68,11 @@ management:
   metrics:
     tags:
       application: workforce-governance-service
+
+# Checkpoint 7: reject a token minted for a different service (cross-service replay).
+# Empty by default -- the validator is inert until this names an audience, because switching it
+# on before Keycloak mints `aud` for a caller rejects that caller. Provision the mapper, verify a
+# real token carries the claim, THEN set this.
+impilo:
+  s2s:
+    required-audience: ${IMPILO_S2S_REQUIRED_AUDIENCE:}
