@@ -140,6 +140,49 @@ class TrustChallengeResponderTest {
                 TrustChallengeOutcome.allow("dec-1", "v1")), "/x", "should not throw");
     }
 
+    // ── survival through the controllers' own catch blocks ────────────────────
+
+    @Test
+    @DisplayName("a controller catch-all must not turn a refusal into a 502 upstream outage")
+    void survivesControllerCatchAll() {
+        // Measured on a live pod, not reasoned about: the first version of this exception was a
+        // plain RuntimeException, so TeleconsultController's `catch (Exception)` reported a
+        // governance refusal as `502 PCT_UNAVAILABLE` -- a downstream service outage. The
+        // refusals it replaced were ResponseStatusExceptions, which that controller handles
+        // separately, so the regression appeared only once deployed.
+        TrustChallengeException ex = new TrustChallengeException(
+                outcome(TrustChallengeDecision.CONSENT_REQUIRED, "CONSENT_REQUIRED"), "denied");
+
+        assertThat(ex)
+                .as("controllers branch on ResponseStatusException; anything else hits the catch-all")
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
+        assertThat(ex.getStatusCode().value()).isEqualTo(403);
+    }
+
+    @Test
+    @DisplayName("the reason those catch blocks echo is a message key, not our internal prose")
+    void reasonIsNotInternalProse() {
+        // Several controllers pass getReason() straight to the client.
+        TrustChallengeException ex = new TrustChallengeException(
+                outcome(TrustChallengeDecision.DENY, "NO_MATCHING_RULE"),
+                "Tshepo PDP denied telemedicine read");
+
+        assertThat(ex.getReason()).isEqualTo("trust.k");
+        assertThat(ex.getReason()).doesNotContain("Tshepo PDP");
+        assertThat(ex.logMessage())
+                .as("the log description must survive; getMessage() returns the status line")
+                .isEqualTo("Tshepo PDP denied telemedicine read");
+    }
+
+    @Test
+    @DisplayName("an outage reaching a catch block still carries 503, not 403")
+    void outageKeepsItsStatusThroughCatchBlocks() {
+        assertThat(new TrustChallengeException(
+                outcome(TrustChallengeDecision.TEMPORARILY_UNAVAILABLE, "AUTHZ_UNREACHABLE"), "x")
+                .getStatusCode().value())
+                .isEqualTo(503);
+    }
+
     // ── the HTTP envelope ─────────────────────────────────────────────────────
 
     @Test
