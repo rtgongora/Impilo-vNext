@@ -33,7 +33,16 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
-                        .requestMatchers(disableOauthForTests ? "/v1/**" : "/__disabled_test_auth_bypass__").permitAll()
+                        // The test bypass must cover BOTH of this service's internal path families.
+                        // It named only "/v1/**", which covers the 2 controllers under /v1/internal
+                        // and none of the 7 under /internal/v1 — so EmploymentMatchWebMvcTest and
+                        // AdjudicationDecisionWebMvcTest 403'd on every request while
+                        // GovernanceOnboardingWebMvcTest passed, purely because of which prefix each
+                        // happened to use. Unreachable in production: gated on disableOauthForTests,
+                        // which is false everywhere except @ActiveProfiles("test").
+                        .requestMatchers(disableOauthForTests
+                                ? new String[] {"/v1/**", "/internal/v1/**"}
+                                : new String[] {"/__disabled_test_auth_bypass__"}).permitAll()
                         // Checkpoint 7 first enforced cohort.
                         //
                         // This was `.anyRequest().permitAll()` unconditionally, which made
