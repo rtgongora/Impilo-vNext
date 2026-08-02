@@ -1819,6 +1819,17 @@ public class TeleconsultController {
      * fake outages. 5xx and transport failures keep the upstream-failure shape.
      */
     private ResponseEntity<Map<String, Object>> upstreamFailure(String code, Exception e, String requestId, String correlationId) {
+        // A trust decision made HERE is subject to the same principle this method already states
+        // for upstream 4xx: masking a governed refusal as an outage is a lie about its cause, and
+        // an outage is exactly what PCT_UNAVAILABLE claims. Rethrow so the advice renders the
+        // canonical challenge -- reason code, permitted next step, continuation -- instead of a
+        // 502 that tells the user their consent problem is a downstream service being down.
+        //
+        // Fixed here rather than at each `catch (Exception)` because this controller has 53 of
+        // them around 39 governance calls; one shared exit is the only tractable seam.
+        if (e instanceof zw.gov.mohcc.impilo.experience.trust.TrustChallengeException challenge) {
+            throw challenge;
+        }
         if (e instanceof org.springframework.web.client.HttpStatusCodeException http
                 && http.getStatusCode().is4xxClientError()) {
             String upstreamCode = code;
