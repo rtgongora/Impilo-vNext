@@ -6131,15 +6131,15 @@ workloads:
     mtls: ABSENT
     network_policy: NOT_ENFORCED_BY_CLUSTER
   migration_cohort: UNASSIGNED
-- workload_id: urn:impilo:workload:preview:k3s-impilo:impilo-full-preview:estate-health-watch-29761090:estate-health-watch-29761090
-  workload: estate-health-watch-29761090
+- workload_id: urn:impilo:workload:preview:k3s-impilo:impilo-full-preview:estate-health-watch-29761230:estate-health-watch-29761230
+  workload: estate-health-watch-29761230
   kind: Job
   environment: preview
   cluster: k3s-impilo
   namespace: impilo-full-preview
   service_account:
     current: estate-health-watch
-    target: estate-health-watch-29761090
+    target: estate-health-watch-29761230
     automount_current: DEFAULT_TRUE
     automount_target: false
   owner:
@@ -6159,7 +6159,7 @@ workloads:
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
     audience_current: NONE_CONFIGURED
     audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
-    audience_target: urn:impilo:tshepo:estate-health-watch-29761090
+    audience_target: urn:impilo:tshepo:estate-health-watch-29761230
     secret_refs: []
   destinations:
     measured_from_env: []

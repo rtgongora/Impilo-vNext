@@ -135,6 +135,19 @@ keycloak:
       cpu: "1"
       memory: 1Gi
 
+# Checkpoint 4 OPA shadow: the evaluator is deployed in this environment. Without this the
+# chart would render the estate WITHOUT opa on the next upgrade, and the shadow comparison
+# tshepo-authz is configured for would silently have nothing to talk to.
+opa:
+  enabled: true
+
+# Checkpoint 4.7 Stage 1: the BFF lane is routed through Envoy in this environment, so the
+# edge strips client-supplied trust headers. Proven with the authenticated browser proof
+# (12/12 through Envoy). Without this the chart would revert the live topology on next upgrade.
+ingress:
+  bffService: envoy
+  bffPort: 10000
+
 envoy:
   enabled: true
   image:

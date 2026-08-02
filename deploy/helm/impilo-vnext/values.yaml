@@ -15,6 +15,11 @@ images:
 ingress:
   enabled: true
   className: traefik
+  # Where the BFF lane (/internal, /actuator, /health) terminates. Defaults to the BFF directly,
+  # which is the pre-Checkpoint-4 topology. Set to envoy/10000 to put the edge PEP on the path
+  # (Stage 1: header stripping, no PDP gate -- see checkpoint-4/INGRESS_STAGE1.md).
+  bffService: experience-bff
+  bffPort: 8160
 
 redis:
   enabled: true
