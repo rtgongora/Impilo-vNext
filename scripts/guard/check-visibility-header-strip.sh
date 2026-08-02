@@ -33,11 +33,16 @@ for f in "${ENVoy_FILES[@]}"; do
       if ($0 ~ /x-confidential-categories/) has_conf=1
       next
     }
-    in_strip && !/^[[:space:]]*- "/ {
+    # A comment, a Helm directive or a blank line does NOT end the list. Treating them as
+    # terminators closed every block on its first "# Decision inputs:" line, two lines after
+    # it opened, so the scan never reached the headers below and the guard failed on ANY
+    # input — including a correct chart. A check that cannot pass proves nothing when it fails.
+    in_strip && /^[[:space:]]*(#|\{\{|$)/ { next }
+    in_strip {
       if (has_conf) found=1
       in_strip=0
     }
-    END { exit(found ? 0 : 1) }
+    END { if (in_strip && has_conf) found=1; exit(found ? 0 : 1) }
   ' "$f"; then
     guard_fail "$f lists $REQUIRED_HEADER but not inside a request_headers_to_remove block" || FAILED=1
   else
@@ -58,6 +63,38 @@ elif [[ "$A" != "$B" ]]; then
   guard_fail "public-lane route blocks differ between envoy.yaml and envoy-runtime.yaml (ENVOY-GATE)" || FAILED=1
 else
   guard_pass "infra public-lane parity (ENVOY-GATE)"
+fi
+
+# --- x-original-method / x-original-path pairing (CP6) -------------------------------------
+# These are DECISION INPUTS: they select which resource the PDP authorizes the request against.
+# A client able to set them redirects the question rather than forging the answer, which is worse
+# than spoofing x-actor-id. They must therefore be stripped everywhere x-actor-id is stripped.
+# Nothing guarded this before: AuthorizeWireTest never reads the chart, and the block scan above
+# only ever looked for x-confidential-categories — so a values regeneration from an older file
+# could silently drop them.
+#
+# Asserted PER STRIP BLOCK, not per file: a whole-file count comparison is wrong, because
+# x-actor-id also appears outside request_headers_to_remove (regenerate/allowlist contexts),
+# so equality would fail on a correct chart. The invariant is narrower and exact — any block
+# that strips x-actor-id must strip both aliases too.
+CHART="deploy/helm/impilo-vnext/templates/envoy.yaml"
+if [[ -f "$CHART" ]]; then
+  if bad=$(awk '
+      /request_headers_to_remove:/ { blk=NR; in_strip=1; a=0; m=0; p=0; next }
+      in_strip && /^[[:space:]]*- "[^"]+"/ {
+        if ($0 ~ /"x-actor-id"/)        a=1
+        if ($0 ~ /"x-original-method"/) m=1
+        if ($0 ~ /"x-original-path"/)   p=1
+        next
+      }
+      in_strip && /^[[:space:]]*(#|\{\{|$)/ { next }
+      in_strip { if (a && (!m || !p)) printf "block@L%d strips x-actor-id but method=%d path=%d\n", blk, m, p; in_strip=0 }
+      END { if (in_strip && a && (!m || !p)) printf "block@L%d strips x-actor-id but method=%d path=%d\n", blk, m, p }
+    ' "$CHART") && [[ -n "$bad" ]]; then
+    guard_fail "$CHART: $bad" || FAILED=1
+  else
+    guard_pass "$CHART pairs x-original-method/x-original-path in every x-actor-id strip block"
+  fi
 fi
 
 if [[ "$FAILED" == "1" ]]; then
