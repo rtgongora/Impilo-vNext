@@ -1,37 +1,53 @@
-# Checkpoint 3 — Keycloak Migration Rollback-Retention Governance Record
+# Checkpoint 3 — Keycloak Migration Rollback-Retention Governance
 
-Date recorded: 2026-08-01 · Branch: `claude/tshepo-trust-cp1-truth-audit`
+Date recorded: 2026-08-01 · Policy adopted: 2026-08-02  
+Branch: `claude/tshepo-trust-cp1-truth-audit`
 
-This record inventories the retained rollback artifacts for the H2 → Keycloak 25/
-PostgreSQL → Keycloak 26.7 migration and states the governance decisions that exist
-versus those that remain outstanding. Nothing was deleted, extended, or re-created in
-producing this record; artifact verification was read-only (names, sizes, hashes).
+Authority: Product Owner authorization to adopt rollback retention through final trust
+activation plus 30 stable calendar days, with Product Owner and Security Owner written
+approval required before deletion.
 
-## Retained artifacts (verified live 2026-08-01)
+**Nothing was deleted by this checkpoint.** Artifacts remain in place.
 
-| Artifact | Storage location / reference | Created | Integrity | Verified |
-|---|---|---|---|---|
-| Pre-migration H2 snapshot (rollback source) | PVC `keycloak-data` (2Gi, `impilo-full-preview`, volume `pvc-fb9c8728…`); never mounted by export jobs since freeze | 2026-07-18 (PVC age 14d at verification) | Filesystem-level; frozen read-only copy was the rehearsal source | Bound, present |
-| Migration working backup | PVC `keycloak-migration-backup` (5Gi, `impilo-full-preview`, volume `pvc-f4b5b8b3…`) | 2026-07-31/08-01 (migration window) | Job-produced snapshot artifacts | Bound, present |
-| PostgreSQL pre-26.7-upgrade dump (encrypted) | VM `impilo.mohcc.gov.zw`: `/home/robert/impilo-backups/keycloak/rehearsals/20260801T013548Z/keycloak25-preupgrade.dump.gpg` (88 997 bytes, mode `-rw-------`) | 2026-08-01 03:42 | Encrypted SHA-256 `70581147…a2d91b` — **re-verified matching** the committed evidence; content SHA-256 `fe2609b9…` in sidecar `keycloak25-preupgrade.dump.sha256` | Present, hash match |
-| Identity signatures (source / kc25 / kc25-restore / kc26) | Same rehearsal directory, four `*.signature.json` files (46 823 bytes each, mode `-rw-------`) | 2026-08-01 03:36–03:38 | Deterministic identity-set signatures used for the parity comparison | Present |
-| Pre-MFA rollback image digests (BFF/shell/authz/audit/Keycloak 25) | `docs/security/evidence/mfa-preview-release-evidence-20260801.md` (committed) | 2026-08-01 | Git history | Present |
+## Adopted retention policy
+
+| Item | Policy |
+|---|---|
+| Trigger | **Final trust activation** (workforce MFA / OAuth / OPA / Envoy enforcement activation that retires the pre-migration rollback path) |
+| Duration | **30 stable calendar days** after the trigger (stable = no rollback to the retained artifacts during the window) |
+| Owners | **Product Owner** and **Security Owner** (joint) |
+| Deletion approval | Written approval from **both** Product Owner and Security Owner, referencing this document |
+| Pre-deletion checks | Verify backup hashes still match the recorded sidecars; confirm rollback obsolescence (the activated trust path no longer depends on these artifacts) |
+| Hold | Preserve artifacts under any incident, legal or investigation hold — the 30-day clock does not authorize deletion while a hold is active |
+| Audit | Record every deletion (or approved destruction) in the trust-audit evidence trail with approver names, dates, hash verification results and hold status |
+| Immediate action | **Do not delete anything now** |
+
+Until the trigger occurs, artifacts are retained indefinitely under this policy.
+
+## Retained artifacts (verified live 2026-08-01; reaffirmed 2026-08-02)
+
+| Artifact | Storage location / reference | Created | Integrity |
+|---|---|---|---|
+| Pre-migration H2 snapshot (rollback source) | PVC `keycloak-data` (2Gi, `impilo-full-preview`, volume `pvc-fb9c8728…`) | 2026-07-18 | Filesystem-level; frozen read-only copy was the rehearsal source |
+| Migration working backup | PVC `keycloak-migration-backup` (5Gi, `impilo-full-preview`, volume `pvc-f4b5b8b3…`) | 2026-07-31/08-01 | Job-produced snapshot artifacts |
+| PostgreSQL pre-26.7-upgrade dump (encrypted) | VM `impilo.mohcc.gov.zw`: `/home/robert/impilo-backups/keycloak/rehearsals/20260801T013548Z/keycloak25-preupgrade.dump.gpg` (88 997 bytes, mode `-rw-------`) | 2026-08-01 03:42 | Encrypted SHA-256 `70581147…a2d91b` (re-verified 2026-08-01); content SHA-256 in sidecar `keycloak25-preupgrade.dump.sha256` |
+| Identity signatures (source / kc25 / kc25-restore / kc26) | Same rehearsal directory, four `*.signature.json` files | 2026-08-01 03:36–03:38 | Deterministic identity-set signatures |
+| Pre-MFA rollback image digests | `docs/security/evidence/mfa-preview-release-evidence-20260801.md` | 2026-08-01 | Git history |
 
 ## Governance state
 
-| Governance requirement | State |
+| Requirement | State |
 |---|---|
-| Storage location/reference | **RECORDED** (table above) |
+| Storage location/reference | **RECORDED** |
 | Creation date | **RECORDED** |
-| Integrity/hash check | **RECORDED and re-verified** for the encrypted dump; signatures present |
-| Retention owner | **OUTSTANDING** — no named owner exists in any committed policy. De facto custodian: VM operator account `robert` (files) and `impilo-full-preview` namespace admin (PVCs). Requires product-owner designation. |
-| Rollback expiry date | **OUTSTANDING** — no approved retention duration (e.g. N days after workforce-MFA activation) exists anywhere in the repository. Until one is approved, artifacts must be treated as retain-indefinitely. |
-| Deletion approval requirement | **OUTSTANDING as formal policy.** Interim rule recorded here: none of the artifacts above may be deleted without explicit product-owner written approval referencing this document; the H2 PVC additionally remains the last-resort rollback source and must outlive every other artifact. |
+| Integrity/hash check | **RECORDED and re-verified** for the encrypted dump |
+| Retention owner | **ADOPTED** — Product Owner + Security Owner |
+| Rollback expiry | **ADOPTED** — final trust activation + 30 stable calendar days (clock not started; trigger has not occurred) |
+| Deletion approval | **ADOPTED** — written approval from both owners; hash + obsolescence checks; hold override; audit record |
 
 ## Explicit statement
 
-**The rollback-retention governance decision is outstanding.** Artifact inventory,
-locations, dates, and integrity are now recorded; the retention owner, the approved
-retention window, and the formal deletion-approval procedure require a product-owner
-decision that Checkpoint 3 cannot make unilaterally. No live retention was extended
-or shortened by this checkpoint.
+The previously outstanding retention-governance decision is **closed by Product Owner
+authorization on 2026-08-02**. No artifact was deleted or retention-extended beyond this
+policy. The H2 PVC remains the last-resort rollback source and must outlive every other
+artifact until both owners approve deletion after the retention window.

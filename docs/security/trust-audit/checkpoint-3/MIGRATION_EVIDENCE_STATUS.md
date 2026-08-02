@@ -20,7 +20,7 @@ Primary sources:
 | Keycloak 26.7 reconciliation | **PRESENT** | Jobs `keycloak-create-reconciler-mfa`, bootstrap/admin/event-reader COMPLETE; realm hash `9c903e22…` with no post-apply drift (release evidence) |
 | Post-upgrade comparison | **PRESENT** | Rehearsal: Keycloak 26.7 identities and active credential hashes PASS; `kc26.signature.json` retained |
 | Rollback artifacts | **PRESENT** | Retained: original H2 PVC, migration-backup PVC, postgres PVCs, encrypted dump + key directory, pre-MFA rollback digests (BFF/shell/authz/audit/Keycloak 25) in release evidence |
-| Retention window | **RECORDED / GOVERNANCE OUTSTANDING** | Artifact inventory, locations, dates and hashes recorded and re-verified in [`ROLLBACK_RETENTION_GOVERNANCE.md`](ROLLBACK_RETENTION_GOVERNANCE.md); retention owner, approved duration and formal deletion-approval procedure remain an outstanding product-owner decision |
+| Retention window | **ADOPTED** | Product Owner authorized 2026-08-02: retain through final trust activation + 30 stable calendar days; Product Owner + Security Owner written approval required before deletion; hash/obsolescence/hold/audit rules in [`ROLLBACK_RETENTION_GOVERNANCE.md`](ROLLBACK_RETENTION_GOVERNANCE.md). Nothing deleted. |
 
 ## Isolated disposable rehearsal
 
