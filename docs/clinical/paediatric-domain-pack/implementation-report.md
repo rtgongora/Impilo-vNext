@@ -356,6 +356,74 @@ data path under them is proven; what has not been done is a human walking the re
 
 ---
 
+## 4c. The UI and mobile-parity wave (2026-08-02)
+
+Waves 1-4 left five engines deployed and live-proven that **no clinician could reach**: IMNCI
+classification, the EPI immunisation forecast, growth intelligence, the danger-sign engine and the
+`pct_observations` registry were reachable only by `curl`. Nothing in experience-bff proxied any of
+the four CKP paediatric endpoints, so the web shell — which talks to the BFF, not to CKP — could not
+call them at all, and the mobile provider app had no paediatric screen of any kind.
+
+**The blocker first.** `PaediatricDecisionSupportController` proxies all four endpoints, handling two
+failure modes in opposite directions. An unreachable engine is a 502 with no `data` key, because
+every empty answer these endpoints can give is the most reassuring sentence a clinical surface could
+show — no classifications reads as no illness, no danger signs as a child who was checked and is
+well, no due doses as up to date, no growth signals as growing normally. An engine's *own* refusal
+is a success and passes through untouched: `INDETERMINATE` with its `missing_inputs`, `incomplete`
+with the unassessed signs named, `interpretation_blocked`, and a 400 for a forecast asked for
+without a date of birth — something the caller can fix rather than an outage.
+
+**The surfaces.** `/ehr/[patientId]/imnci` is new and carries the whole assessment: the danger-sign
+screen, the governed capture form age-routed to the same chart the engine will route to
+(`impilo.young-infant.imci.v1` under two months, `impilo.child.imci.v1` above), and the
+classification. The immunisation page leads with what the schedule says can be given today. The
+growth chart gained the interpretation the plot never carried. The maternity summary's partograph
+verdict — previously the raw status enum in muted grey — became an instruction.
+
+Each holds the property the engines were built for, and each was proven by breaking it:
+
+- **An unresolved row is never the green row.** Tone is decided from `status` before `colour`, so a
+  row carrying a stale or defaulted GREEN alongside `INDETERMINATE` still presents as unresolved —
+  dashed, uncoloured, naming the observation that would settle it, and sorted *above* the treat-here
+  rows because it is the one with an outstanding action. Collapsing `INDETERMINATE` into the green
+  row turns 4 of the 17 tests red.
+- **A dose that would not immunise is never actionable.** Giveability is read from the engine's
+  `actionable_today` and never re-derived from a status name or a date comparison; a local
+  re-derivation would be a second copy of the interval and age-ceiling rules in the browser.
+  `BLOCKED_BY_INTERVAL` carries the date the gate opens — "not yet" with no date is what brings a
+  child back tomorrow to be turned away again — and `AGED_OUT` carries the engine's safety reason,
+  because "too old" alone reads as a technicality and invites someone to give it anyway.
+- **`interpretation_blocked` suppresses the clinical signals on screen** exactly as the engine
+  suppresses them, checked before any branch that would describe a clinical reading, and defended
+  even against an engine that sent signals alongside the block.
+- **An incomplete danger-sign screen never carries an all-clear**, whether or not alerts already
+  fired.
+
+**Mobile parity is the same clinical properties, not the same layout.** `PaediatricWorkspaces`
+reaches the same engines through the same BFF routes; no engine is reimplemented on the device, so
+phone and web cannot drift apart about the same child. On a small screen the unresolved row also
+sorts above treat-here so the fold cannot bury it.
+
+**The two-observations question, resolved before any observation UI was built.** The BFF/inpatient
+`/internal/v1/observations` endpoint delegates to `recordChartEntry`, so it is the ward chart under
+an alias — an opaque jsonb bag with no code, no units, no absent-reason and no path to the SHR.
+`pct.pct_observations` is the coded clinical fact. Different things, so the duplicate-system-of-record
+guardrail is not breached, but the alias is what makes them look identical and is now commented at
+the call site. Full ruling, including the gap it exposed — nothing derives a `pct_observations` row
+from a ward chart entry, so a charted temperature never reaches the record —
+[`observations-system-of-record-ruling.md`](observations-system-of-record-ruling.md).
+
+**Browser proof was NOT completed, and the wave should not be read as fully proven.** The only
+governed preview test identity is CITIZEN-only with explicitly no clinical authority, so it cannot
+reach a clinician EHR surface, and widening it to make a test pass would defeat the point of a
+scoped test identity. What *was* verified on the estate — the deployed BFF jar byte-identical to a
+build confirmed to contain the controller, and the running shell bundle carrying the new route and
+the honesty strings — and what was not, is recorded in
+[`ui-wave-runtime-evidence.md`](ui-wave-runtime-evidence.md) along with the journey spec that will
+pass the moment a clinically-scoped identity exists.
+
+---
+
 ## 4a. Maternity — a broken vertical closed alongside this pack
 
 Not part of the original paediatric brief, but adjacent to it: the newborn record begins at a

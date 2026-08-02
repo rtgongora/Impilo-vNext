@@ -153,7 +153,10 @@ describe("what is due today", () => {
   });
 
   it("says what it cannot determine about immunisation rather than implying nothing is due", () => {
-    // The schedule forecast is not built. Silence here would read as an all-clear.
+    // The schedule forecast now exists and drives this item (see the immunisation feature tests).
+    // The property this test has always protected is unchanged and is the one that matters: when
+    // the forecast did not run, silence would read as an all-clear, so the caller supplying no
+    // forecast at all must still produce an explicit "not established" rather than nothing.
     const items = computeDueToday({
       patientId: "p1",
       age,
@@ -162,9 +165,10 @@ describe("what is due today", () => {
       immunisationCount: 4,
       now: NOW,
     });
-    const immunisation = items.find((i) => i.id === "immunisation-review");
+    const immunisation = items.find((i) => i.id === "immunisation-unknown");
     expect(immunisation?.urgency).toBe("unknown");
-    expect(immunisation?.detail).toContain("cannot be determined");
+    expect(immunisation?.detail).toContain("has not been established");
+    expect(immunisation?.detail).toContain("Do not read this as up to date");
   });
 
   it("prompts the age-appropriate danger signs", () => {

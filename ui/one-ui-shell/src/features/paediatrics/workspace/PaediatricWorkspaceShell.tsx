@@ -92,6 +92,18 @@ export function PaediatricWorkspaceShell({ patientId }: PaediatricWorkspaceShell
         <ul className="mt-2 grid gap-2 sm:grid-cols-2">
           <li>
             <Link
+              href={`/ehr/${patientId}/imnci`}
+              className="block min-h-[44px] rounded-md border border-border px-3 py-2 text-sm hover:bg-muted"
+              data-testid="link-imnci"
+            >
+              IMNCI assessment
+              <span className="block text-xs text-muted-foreground">
+                Assess and classify, with the danger-sign screen
+              </span>
+            </Link>
+          </li>
+          <li>
+            <Link
               href={`/ehr/${patientId}/growth-chart`}
               className="block min-h-[44px] rounded-md border border-border px-3 py-2 text-sm hover:bg-muted"
               data-testid="link-growth-chart"
@@ -122,7 +134,7 @@ export function PaediatricWorkspaceShell({ patientId }: PaediatricWorkspaceShell
             >
               Immunisations
               <span className="block text-xs text-muted-foreground">
-                Doses given; the schedule forecast is not available yet
+                Doses given, and what the national schedule says is due
               </span>
             </Link>
           </li>

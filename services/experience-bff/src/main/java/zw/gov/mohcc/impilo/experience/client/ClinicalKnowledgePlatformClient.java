@@ -233,6 +233,77 @@ public class ClinicalKnowledgePlatformClient {
         return extractData(response);
     }
 
+    /**
+     * IMNCI assess-and-classify, age-routed between the child chart (2 months to 5 years) and the
+     * sick young infant chart (birth to 2 months) behind one endpoint.
+     *
+     * <p>The body is passed through as built and the response back as returned. Both directions
+     * matter here. An omitted sign must stay omitted, because the engine's whole value is that it
+     * distinguishes a sign ruled out from a sign never looked for — filling absences with false
+     * would turn every unasked question into a negative finding and produce a confident all-clear
+     * on a child nobody examined. And an {@code INDETERMINATE} outcome with its
+     * {@code missing_inputs} is a successful call, not an error: it is the engine saying what it
+     * would need to answer, and converting it to a failure or an empty result would lose exactly
+     * the information a clinician needs to act on.</p>
+     */
+    public JsonNode paediatricImnciClassify(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/paediatric/imnci/classify";
+        log.debug("Clinical platform: IMNCI classify");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                url, body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * The Zimbabwe EPI immunisation forecast for one child.
+     *
+     * <p>Stateless: the dose history is clinical record owned by pct-service, so the caller
+     * supplies it. Per dose the engine reports not only whether it is due but why not — too young,
+     * the minimum interval since the previous dose has not elapsed, or the window has closed for
+     * safety — and those need different actions from the health worker, so this client normalises
+     * none of them into a single "not due".</p>
+     */
+    public JsonNode paediatricImmunisationForecast(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/paediatric/immunisation/forecast";
+        log.debug("Clinical platform: EPI immunisation forecast");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                url, body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Interprets a child's growth trajectory and says what to do about it.
+     *
+     * <p>The engine never recomputes a z-score — pct-service stamps those at measurement — so its
+     * interpretation cannot drift from what the record says. {@code interpretation_blocked} is a
+     * load-bearing part of the response: when a measurement is in question the engine suppresses
+     * the clinical signals entirely rather than reporting them alongside, and any caller that
+     * re-adds them would raise a severe-faltering alert off a transcription error.</p>
+     */
+    public JsonNode paediatricGrowthInterpret(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/paediatric/growth/interpret";
+        log.debug("Clinical platform: growth interpret");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                url, body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * The paediatric danger-sign engine — ETAT emergency signs, the IMNCI general danger signs and
+     * the young-infant signs of possible serious bacterial infection.
+     *
+     * <p>The response separates what fired from what was never looked at, and reports itself
+     * {@code incomplete} with the unassessed signs named. That distinction is the point of the
+     * endpoint and survives this hop untouched.</p>
+     */
+    public JsonNode paediatricDangerSigns(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/paediatric/danger-signs/evaluate";
+        log.debug("Clinical platform: paediatric danger signs evaluate");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                url, body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
     /** Context-aware interpretation of vitals/labs against patient-appropriate reference intervals. */
     public JsonNode interpretationEvaluate(Map<String, Object> body) {
         String url = baseUrl + "/internal/v1/clinical/interpretation/evaluate";

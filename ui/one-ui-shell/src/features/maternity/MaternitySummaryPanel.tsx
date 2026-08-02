@@ -11,6 +11,7 @@
  */
 
 import { AlertTriangle, Baby, HeartPulse, Loader2 } from "lucide-react";
+import { PartographProgressPanel } from "./partograph/PartographProgressPanel";
 import {
   isMaternitySummaryUnavailable,
   useMaternitySummary,
@@ -77,9 +78,6 @@ export function MaternitySummaryPanel({ patientId, encounterId }: MaternitySumma
           <span className="font-medium text-foreground">
             Partograph: {data.partograph_active ? "Active" : "No open session"}
           </span>
-          {data.partograph_active && data.progress?.status && (
-            <span className="text-xs text-muted-foreground">({data.progress.status.replace(/_/g, " ").toLowerCase()})</span>
-          )}
         </div>
         <div className="flex items-center gap-2 text-sm" data-testid="maternity-summary-ctg">
           <HeartPulse className={`h-4 w-4 ${data.ctg_active ? "text-rose-600" : "text-muted-foreground"}`} />
@@ -88,6 +86,13 @@ export function MaternitySummaryPanel({ patientId, encounterId }: MaternitySumma
           </span>
         </div>
       </div>
+      {/*
+        The alert/action line verdict. Previously this was the status enum in muted grey, so
+        "at or right of action" — intervene now — read the same as everything else, and
+        INSUFFICIENT_DATA read as reassurance beside a green "Active".
+      */}
+      {data.partograph_active && data.progress && <PartographProgressPanel progress={data.progress} />}
+
       <div className="mt-2 flex flex-wrap gap-4 text-xs text-muted-foreground">
         <span data-testid="maternity-summary-observation-count">
           {data.observation_count} labour observation{data.observation_count === 1 ? "" : "s"} recorded

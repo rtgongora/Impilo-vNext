@@ -31,7 +31,7 @@ const ALL_LABELS = SPECIALTY_WORKSPACES.flatMap((w) => w.tools);
 
 describe("every advertised tool is registered", () => {
   it("covers all advertised labels", () => {
-    expect(ALL_LABELS.length).toBe(114);
+    expect(ALL_LABELS.length).toBe(118);
     expect(ALL_LABELS.filter((t) => !resolveTool(t))).toEqual([]);
   });
 

@@ -46,6 +46,13 @@ vi.mock("@/hooks/queries/useGrowth", () => ({
   useRecordGrowth: () => mockUseRecordGrowth(),
 }));
 
+// The growth-intelligence engine is exercised directly in
+// features/paediatrics/growth/__tests__/growth-signals.test.tsx; here it is stubbed so this page
+// test keeps testing the page.
+vi.mock("@/hooks/queries/usePaediatricDecisionSupport", () => ({
+  useGrowthInterpretation: () => ({ data: undefined, isLoading: false, isError: false, refetch: () => {} }),
+}));
+
 vi.mock("@/hooks/queries/useGrowthReferenceCurves", () => ({
   useGrowthReferenceCurves: () => mockUseGrowthReferenceCurves(),
 }));

@@ -48,6 +48,17 @@ vi.mock("@/hooks/queries/useEncounters", () => ({
   }),
 }));
 
+vi.mock("@/hooks/queries/usePatients", () => ({
+  usePatient: () => ({ data: { data: { attributes: { dateOfBirth: "2026-01-01", sex: "FEMALE" } } } }),
+}));
+
+// The EPI forecast engine is exercised directly in
+// features/paediatrics/immunisation/__tests__/forecast.test.tsx; stubbed here so this page test
+// keeps testing the page.
+vi.mock("@/hooks/queries/usePaediatricDecisionSupport", () => ({
+  useImmunisationForecast: () => ({ data: undefined, isLoading: false, isError: false, refetch: () => {} }),
+}));
+
 vi.mock("@/hooks/queries/useImmunizations", () => ({
   useImmunizations: () => ({
     data: {

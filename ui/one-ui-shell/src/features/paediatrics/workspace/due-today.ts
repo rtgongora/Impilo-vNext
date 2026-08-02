@@ -41,6 +41,28 @@ export interface ImamSummary {
   unavailable: boolean;
 }
 
+/**
+ * What the EPI forecast says, already reduced to a line by `forecast-presentation`.
+ *
+ * The workspace does not decide which doses are due. That is the schedule engine's job and it is
+ * governed content, because the EPI programme changes antigens and timings and a UI that held its
+ * own copy would go stale silently. Three states, and the difference between the last two is the
+ * whole reason this is not a boolean:
+ *
+ * - `summary` present — the forecast ran and has something to say.
+ * - `summary` null with `evaluated` true — the forecast ran and there is nothing outstanding.
+ * - `unavailable` true — the forecast did not run. Never the same as nothing outstanding.
+ */
+export interface ImmunisationSummary {
+  summary: { urgency: "overdue" | "due" | "watch"; detail: string } | null;
+  /** The forecast completed. Without this, an absent summary is meaningless. */
+  evaluated: boolean;
+  /** The forecast, or the dose history it needs, could not be read. */
+  unavailable: boolean;
+  /** Why it could not run, when the reason is actionable — a missing date of birth, say. */
+  unavailableReason?: string | null;
+}
+
 export interface DueTodayInput {
   patientId: string;
   age: AgeFacts;
@@ -48,6 +70,7 @@ export interface DueTodayInput {
   hasAnyGrowthMeasurement: boolean;
   latestWeightForAgeZ?: number | null;
   immunisationCount: number;
+  immunisation?: ImmunisationSummary;
   imam?: ImamSummary;
   now?: Date;
 }
@@ -156,28 +179,46 @@ export function computeDueToday(input: DueTodayInput): DueItem[] {
     });
   }
 
-  // Immunisation. The forecast is governed content that is not built yet, so this states
-  // what it can see and is explicit about what it cannot determine — an honest "unknown"
-  // rather than a silent all-clear.
+  // Immunisation, from the national EPI schedule forecast.
+  //
+  // Nothing here decides which doses are due — the engine does, over governed content. What this
+  // block owns is refusing to conflate the forecast's silence with its absence.
   if (age.paediatric) {
-    items.push(
-      input.immunisationCount === 0
-        ? {
-            id: "immunisation-none",
-            label: "Immunisation",
-            detail:
-              "No immunisation doses are recorded for this child. Check the child health card; a dose given elsewhere still needs recording.",
-            urgency: "overdue",
-            href: `/ehr/${patientId}/immunizations`,
-          }
-        : {
-            id: "immunisation-review",
-            label: "Immunisation",
-            detail: `${input.immunisationCount} dose${input.immunisationCount === 1 ? "" : "s"} recorded. Due and overdue vaccines cannot be determined yet — the national schedule forecast is not available in this deployment.`,
-            urgency: "unknown",
-            href: `/ehr/${patientId}/immunizations`,
-          },
-    );
+    const immunisation = input.immunisation;
+
+    if (!immunisation || immunisation.unavailable) {
+      items.push({
+        id: "immunisation-unknown",
+        label: "Immunisation",
+        detail:
+          immunisation?.unavailableReason ??
+          "The immunisation schedule could not be run for this child, so what is due has not been established. Do not read this as up to date — check the child health card.",
+        urgency: "unknown",
+        href: `/ehr/${patientId}/immunizations`,
+      });
+    } else if (immunisation.summary) {
+      items.push({
+        id: `immunisation-${immunisation.summary.urgency}`,
+        label: "Immunisation",
+        detail: immunisation.summary.detail,
+        urgency: immunisation.summary.urgency === "watch" ? "watch" : immunisation.summary.urgency,
+        href: `/ehr/${patientId}/immunizations`,
+      });
+    } else if (immunisation.evaluated && input.immunisationCount === 0) {
+      // The schedule found nothing due, but nothing has ever been recorded either. For a child old
+      // enough to have had doses that is a records gap rather than a clean schedule, and the two
+      // look identical from the forecast alone.
+      items.push({
+        id: "immunisation-none-recorded",
+        label: "Immunisation",
+        detail:
+          "The schedule reports nothing due today, but no dose has ever been recorded for this child. Check the child health card; a dose given elsewhere still needs recording.",
+        urgency: "due",
+        href: `/ehr/${patientId}/immunizations`,
+      });
+    }
+    // Forecast ran, nothing outstanding, doses on record — nothing to raise. An empty panel means
+    // nothing outstanding, and that is now a claim the schedule actually made.
   }
 
   // Age-specific prompts that need no stored data to be worth raising.
