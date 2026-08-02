@@ -129,3 +129,68 @@ causally by deleting the policy and watching the probe recover.
 
 Any future cohort policy must re-run `scripts/guard/probe-network-policy-enforcement.sh` **after**
 being applied. A policy that looks correct can take the whole cluster's isolation down with it.
+
+---
+
+# Audience loop closed 2026-08-02 — cross-service replay is now refused
+
+`experience-bff` was given its **own** Keycloak client with an audience mapper, replacing its use
+of the shared `impilo-backend`. Both callers now mint `aud`, and the callee requires it.
+
+## The decisive test
+
+A **valid, correctly-signed, correct-issuer** token minted for a *different* client:
+
+| Token | Result |
+|---|---|
+| BFF's own client (`azp=experience-bff`, carries `aud`) | past the gate |
+| `vashandi-workforce-service` (carries `aud`) | past the gate |
+| **`impilo-backend` — valid realm token, no `aud`** | **401** |
+| Anonymous | **401** |
+| `/actuator/health` probe path | **200** |
+
+That third row is the control that matters. Before this, any token the realm issued was accepted
+by any service trusting the issuer. A stolen or borrowed token from any other client now fails.
+
+## Ordering, which was enforced by construction
+
+1. Provision the client + audience mapper.
+2. Verify a real minted token carries `aud` — `azp: experience-bff`,
+   `aud: urn:impilo:tshepo:workforce-governance-service`.
+3. Switch the caller to it and confirm the estate is still healthy.
+4. **Only then** set `IMPILO_S2S_REQUIRED_AUDIENCE` on the callee.
+
+Reversing 3 and 4 rejects every call. `WorkloadAudienceJwtConfig` is
+`@ConditionalOnProperty` and requires an explicit `@Import`, so a service cannot enforce an
+audience it has not been told about.
+
+## Post-change verification
+
+- `vashandi` **0** auth errors; BFF **0** mint failures
+- BFF's 4 logged 4xx are all explained and unrelated: two are the browser proof's own
+  *"post-logout fails closed"* assertion, one is the pre-existing `TENANT_HEADER_DIVERGENCE`
+  shadow warning (`enforced=false`), one is a `502` to `community-service` — a known member of the
+  80 misconfigured downstreams recorded in `CP7_COHORT_GATE.md`
+- Containment still holding: non-caller blocked at the network (exit 7)
+- Estate 117 pods Running, authenticated browser proof **12/12**
+
+## A YAML mistake worth recording
+
+Adding `impilo.s2s.required-audience` by appending a second top-level `impilo:` key produced
+`DuplicateKeyException` at environment-prepare time — before any bean existed — and the service
+crash-looped. It was caught by the rollout timing out, **not by a test**, because nothing parses
+the packaged `application.yml`. The fix was verified by parsing the YAML out of the built jar
+rather than the source file.
+
+## Cohort facet truth
+
+| Facet | State |
+|---|---|
+| Authentication (anonymous/forged refused) | **ENFORCED** |
+| Audience (cross-service replay refused) | **ENFORCED** |
+| Network containment (non-callers blocked) | **ENFORCED** |
+| Workload identity (caller-specific credential) | **ENFORCED** for both callers |
+| Resource-level authorization | **NOT** — this cohort authenticates the caller; it does not yet decide what that caller may do |
+
+The last row is the honest boundary. Authentication and containment are not authorization, and the
+PDP is not yet on this path.
