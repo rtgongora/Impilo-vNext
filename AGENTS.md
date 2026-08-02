@@ -43,6 +43,7 @@ tests/          Integration tests
 
 ### Architecture guardrails (mandatory)
 
+- **Tshepo is the complete trust plane**, not a single microservice — see [`docs/doctrine/tshepo-trust-plane-doctrine.md`](docs/doctrine/tshepo-trust-plane-doctrine.md).
 - Do not invent new plane names.
 - Do not create duplicate system-of-record functionality.
 - Do not move service folders by plane unless explicitly approved.

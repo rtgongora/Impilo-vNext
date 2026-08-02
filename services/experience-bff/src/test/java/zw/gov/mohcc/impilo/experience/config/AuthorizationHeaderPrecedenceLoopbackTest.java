@@ -118,6 +118,8 @@ class AuthorizationHeaderPrecedenceLoopbackTest {
         KeycloakAdminClient client = new KeycloakAdminClient(new ServiceClientConfig().idpRestTemplate());
         ReflectionTestUtils.setField(client, "keycloakUrl", baseUrl);
         ReflectionTestUtils.setField(client, "realm", "impilo");
+        // Field names follow the least-privilege admin client (impilo-user-admin), which
+        // replaced the broad backend client during the MFA migration.
         ReflectionTestUtils.setField(client, "userAdminClientId", "impilo-user-admin");
         ReflectionTestUtils.setField(client, "userAdminSecret", "s3cret");
 

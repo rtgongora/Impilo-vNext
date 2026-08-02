@@ -133,7 +133,14 @@ class WorkModeBoundaryPinTest extends MigrationPolicyTestBase {
                 .isEqualTo(Verdict.ALLOW);
     }
 
-    /** Rule name to the {@code replace(conditions, from, to)} pair V059 applies to it. */
+    /**
+     * Rule name to the {@code replace(conditions, from, to)} pair V059 applies to it.
+     *
+     * <p>The column is {@code JSONB} and Postgres has no {@code replace(jsonb, …)}, so the
+     * migration casts through text: {@code replace(conditions::text, …)::jsonb} (fixed in
+     * 07b8674a8 after the original form failed Flyway on the live database). The casts are
+     * transport, not semantics — the replacement pairs are what this parser extracts.</p>
+     */
     private static Map<String, Map.Entry<String, String>> v059Replacements() throws IOException {
         Pattern stmt = Pattern.compile(
                 "replace\\(conditions(?:::[a-z]+)?,\\s*'([^']+)',\\s*'([^']+)'\\)"

@@ -1,0 +1,177 @@
+{
+  "user_count": 42,
+  "realm": {
+    "id": "impilo",
+    "realm": "impilo",
+    "loginTheme": "keycloak",
+    "browserFlow": "browser",
+    "sslRequired": "none",
+    "bruteForceProtected": false,
+    "permanentLockout": false,
+    "failureFactor": 30,
+    "waitIncrementSeconds": 60,
+    "quickLoginCheckMilliSeconds": 1000,
+    "minimumQuickLoginWaitSeconds": 60,
+    "maxFailureWaitSeconds": 900,
+    "maxDeltaTimeSeconds": 43200,
+    "otpPolicyType": "totp",
+    "otpPolicyAlgorithm": "HmacSHA1",
+    "otpPolicyDigits": 6,
+    "otpPolicyPeriod": 30,
+    "otpPolicyLookAheadWindow": 1,
+    "webAuthnPolicyRpEntityName": "keycloak",
+    "webAuthnPolicyRpId": "",
+    "webAuthnPolicySignatureAlgorithms": ["ES256"],
+    "webAuthnPolicyAttestationConveyancePreference": "not specified",
+    "webAuthnPolicyAuthenticatorAttachment": "not specified",
+    "webAuthnPolicyRequireResidentKey": "not specified",
+    "webAuthnPolicyUserVerificationRequirement": "not specified",
+    "webAuthnPolicyAcceptableAaguids": [],
+    "webAuthnPolicyPasswordlessRpEntityName": "keycloak",
+    "webAuthnPolicyPasswordlessRpId": "",
+    "webAuthnPolicyPasswordlessSignatureAlgorithms": ["ES256"],
+    "webAuthnPolicyPasswordlessAttestationConveyancePreference": "not specified",
+    "webAuthnPolicyPasswordlessAuthenticatorAttachment": "not specified",
+    "webAuthnPolicyPasswordlessRequireResidentKey": "not specified",
+    "webAuthnPolicyPasswordlessUserVerificationRequirement": "not specified",
+    "eventsEnabled": false,
+    "eventsExpiration": 0,
+    "adminEventsEnabled": false,
+    "adminEventsDetailsEnabled": false,
+    "rememberMe": true,
+    "verifyEmail": false,
+    "resetPasswordAllowed": true,
+    "attributes": {}
+  },
+  "clients": [
+    {
+      "id": "uuid-experience-ui",
+      "clientId": "experience-ui",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": ["https://impilo.mohcc.gov.zw/*", "*"],
+      "webOrigins": ["*"],
+      "attributes": {}
+    },
+    {
+      "id": "uuid-mobile-citizen",
+      "clientId": "impilo-mobile-citizen",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": ["impilo-citizen://*"],
+      "webOrigins": [],
+      "attributes": {}
+    },
+    {
+      "id": "uuid-mobile-provider",
+      "clientId": "impilo-mobile-provider",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["impilo-provider://auth/callback"],
+      "webOrigins": [],
+      "attributes": {}
+    },
+    {
+      "id": "uuid-realm-management",
+      "clientId": "realm-management",
+      "publicClient": false,
+      "redirectUris": [],
+      "attributes": {}
+    },
+    {
+      "id": "uuid-user-admin",
+      "clientId": "impilo-user-admin",
+      "publicClient": false,
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [],
+      "attributes": {}
+    },
+    {
+      "id": "uuid-event-reader",
+      "clientId": "impilo-event-reader",
+      "publicClient": false,
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [],
+      "attributes": {}
+    }
+  ],
+  "management_roles": [
+    {"id": "role-view-users", "name": "view-users"},
+    {"id": "role-query-users", "name": "query-users"},
+    {"id": "role-manage-users", "name": "manage-users"},
+    {"id": "role-view-events", "name": "view-events"},
+    {"id": "role-manage-realm", "name": "manage-realm"},
+    {"id": "role-manage-clients", "name": "manage-clients"}
+  ],
+  "client_role_mappings": {
+    "sa-uuid-user-admin": {
+      "uuid-realm-management": [
+        {"id": "role-view-users", "name": "view-users"},
+        {"id": "role-query-users", "name": "query-users"},
+        {"id": "role-manage-users", "name": "manage-users"}
+      ]
+    },
+    "sa-uuid-event-reader": {
+      "uuid-realm-management": []
+    }
+  },
+  "required_actions": [
+    {"alias": "CONFIGURE_TOTP", "name": "Configure OTP", "enabled": true, "defaultAction": false},
+    {"alias": "webauthn-register", "name": "Webauthn Register", "enabled": true, "defaultAction": false},
+    {"alias": "webauthn-register-passwordless", "name": "Webauthn Register Passwordless", "enabled": true, "defaultAction": false},
+    {"alias": "CONFIGURE_RECOVERY_AUTHN_CODES", "name": "Recovery Authentication Codes", "enabled": false, "defaultAction": false}
+  ],
+  "unregistered_required_actions": [],
+  "flows": {
+    "impilo-browser-step-up-v1": [
+      {"id": "exec-cookie", "providerId": "auth-cookie", "requirement": "ALTERNATIVE"},
+      {"id": "exec-impilo-auth", "authenticationFlow": true, "displayName": "impilo-auth", "requirement": "ALTERNATIVE"}
+    ],
+    "impilo-auth": [
+      {"id": "exec-loa1", "authenticationFlow": true, "displayName": "impilo-loa1", "requirement": "CONDITIONAL"},
+      {"id": "exec-loa2", "authenticationFlow": true, "displayName": "impilo-loa2", "requirement": "CONDITIONAL"},
+      {"id": "exec-loa3", "authenticationFlow": true, "displayName": "impilo-loa3", "requirement": "CONDITIONAL"}
+    ],
+    "impilo-loa1": [
+      {"id": "exec-loa1-cond", "providerId": "conditional-level-of-authentication", "requirement": "REQUIRED"},
+      {"id": "exec-loa1-pwd", "providerId": "auth-username-password-form", "requirement": "REQUIRED"}
+    ],
+    "impilo-loa2": [
+      {"id": "exec-loa2-cond", "providerId": "conditional-level-of-authentication", "requirement": "REQUIRED"},
+      {"id": "exec-aal2-methods", "authenticationFlow": true, "displayName": "impilo-aal2-methods", "requirement": "REQUIRED"}
+    ],
+    "impilo-aal2-methods": [
+      {"id": "exec-otp", "providerId": "auth-otp-form", "requirement": "ALTERNATIVE"},
+      {"id": "exec-recovery", "providerId": "auth-recovery-authn-code-form", "requirement": "ALTERNATIVE"},
+      {"id": "exec-passkey", "providerId": "webauthn-authenticator-passwordless", "requirement": "ALTERNATIVE"}
+    ],
+    "impilo-loa3": [
+      {"id": "exec-loa3-cond", "providerId": "conditional-level-of-authentication", "requirement": "REQUIRED"},
+      {"id": "exec-aal3-key", "providerId": "webauthn-authenticator", "requirement": "REQUIRED"}
+    ]
+  },
+  "users": [
+    {"id": "user-workforce-1", "username": "dr.fixture", "enabled": true, "requiredActions": []},
+    {"id": "user-citizen-1", "username": "citizen.fixture", "enabled": true, "requiredActions": []}
+  ],
+  "user_realm_roles": {
+    "user-workforce-1": [{"name": "CLINICIAN"}, {"name": "default-roles-impilo"}],
+    "user-citizen-1": [{"name": "CITIZEN"}, {"name": "default-roles-impilo"}]
+  },
+  "user_credentials": {
+    "user-workforce-1": [{"id": "cred-pwd-1", "type": "password"}],
+    "user-citizen-1": [{"id": "cred-pwd-2", "type": "password"}]
+  }
+}

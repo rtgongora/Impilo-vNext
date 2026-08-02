@@ -65,6 +65,21 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "BAD_REQUEST", message, request);
     }
 
+    /**
+     * OIDC protocol violations (expired/replayed transaction, nonce/issuer/audience
+     * mismatch, failed code exchange) are governed client errors, not server crashes.
+     * Without this mapping a replayed callback surfaced as 500 INTERNAL_ERROR — the
+     * replay was still refused (fail-closed) but misreported. The exception's code is
+     * a fixed safe constant; no token or credential material ever reaches the body.
+     */
+    @ExceptionHandler(zw.gov.mohcc.impilo.experience.auth.session.OidcSessionService.OidcProtocolException.class)
+    public ResponseEntity<Map<String, Object>> handleOidcProtocol(
+            zw.gov.mohcc.impilo.experience.auth.session.OidcSessionService.OidcProtocolException ex,
+            HttpServletRequest request) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.code(),
+                "Authentication request could not be completed. Start a new sign-in.", request);
+    }
+
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<Map<String, Object>> handleResponseStatus(
             ResponseStatusException ex,

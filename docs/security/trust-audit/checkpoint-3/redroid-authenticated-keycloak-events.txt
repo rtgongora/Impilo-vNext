@@ -1,0 +1,6 @@
+{
+  "mobile_login_event": true,
+  "mobile_code_to_token_event": true,
+  "web_login_event": true,
+  "redirect_uri": "impilo-citizen://auth/callback"
+}

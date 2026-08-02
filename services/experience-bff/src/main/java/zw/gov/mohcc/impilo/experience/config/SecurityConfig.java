@@ -18,6 +18,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import zw.gov.mohcc.impilo.experience.auth.session.SessionBearerTokenResolver;
+import zw.gov.mohcc.impilo.experience.auth.session.RecoverySessionFilter;
 import zw.gov.mohcc.impilo.experience.auth.session.SessionCsrfFilter;
 
 import java.util.ArrayList;
@@ -152,6 +153,9 @@ public class SecurityConfig {
 
     @Autowired
     private SessionCsrfFilter sessionCsrfFilter;
+
+    @Autowired
+    private RecoverySessionFilter recoverySessionFilter;
 
     @Value("${impilo.security.allow-anonymous:false}")
     private boolean allowAnonymous;
@@ -597,6 +601,10 @@ public class SecurityConfig {
                     .jwt(jwt -> jwt.jwtAuthenticationConverter(keycloakJwtConverter()))
                 );
             http.addFilterBefore(sessionCsrfFilter,
+                    org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class);
+            // Constrained recovery: refuse cookie-backed requests outside the recovery allowlist
+            // before bearer authentication can mint ordinary authority for a recovery session.
+            http.addFilterBefore(recoverySessionFilter,
                     org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class);
             // PII Wave 0.3: once the bearer token is validated, force X-Actor-ID to the JWT's
             // health_id claim so the actor is server-authoritative (un-spoofable) and the browser

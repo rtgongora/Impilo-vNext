@@ -1,0 +1,682 @@
+openapi: 3.0.3
+info:
+  title: Tshepo Trust Decision Contracts
+  version: tshepo.trust.v1
+  description: |
+    Canonical Checkpoint-2 trust contract components (schema fragment, no live paths yet).
+    Java source of truth: libs/tshepo-contracts/src/main/java/zw/gov/mohcc/impilo/tshepo/contracts/v1.
+    TypeScript mirror: contracts/trust-decision/v1.ts.
+    JSON Schema mirror: contracts/schemas/trust-decision-v1.schema.json.
+    Semantic parity across the four representations is enforced by
+    scripts/completeness/check-trust-contract-parity.mjs (contract CI gate).
+    No enforcement or endpoint activation is implied by this document.
+paths: {}
+components:
+  schemas:
+    TrustChallengeDecision:
+      type: string
+      enum:
+        - ALLOW
+        - DENY
+        - AUTHENTICATION_REQUIRED
+        - STEP_UP_REQUIRED
+        - CONTEXT_REQUIRED
+        - AUTHORITY_REQUIRED
+        - CONSENT_REQUIRED
+        - APPROVAL_REQUIRED
+        - BREAK_GLASS_AVAILABLE
+        - REAUTHENTICATION_REQUIRED
+        - RECOVERY_REQUIRED
+        - TEMPORARILY_UNAVAILABLE
+    RecoveryAuthenticationState:
+      type: string
+      enum:
+        - NONE
+        - CONSTRAINED_RECOVERY
+    LawfulBasisType:
+      type: string
+      enum:
+        - EXPLICIT_CONSENT
+        - DIRECT_CARE_RELATIONSHIP
+        - STATUTORY_AUTHORITY
+        - PUBLIC_HEALTH_AUTHORITY
+        - EMERGENCY_BREAK_GLASS
+        - OTHER_GOVERNED
+    OperatingMode:
+      type: string
+      enum:
+        - NORMAL
+        - DEGRADED
+        - OFFLINE
+        - RECOVERY
+        - BREAK_GLASS
+        - READ_ONLY_EMERGENCY
+    TrustChallengeOutcome:
+      type: object
+      additionalProperties: false
+      required:
+        - contract_version
+        - decision
+      properties:
+        contract_version:
+          type: string
+          enum: ["tshepo.trust.v1"]
+        decision:
+          $ref: '#/components/schemas/TrustChallengeDecision'
+        reason_code:
+          type: string
+        user_message_key:
+          type: string
+        required_action:
+          type: string
+        required_assurance:
+          type: integer
+          minimum: 0
+          maximum: 3
+        allowed_authentication_methods:
+          type: array
+          items:
+            type: string
+        context_options:
+          type: array
+          items:
+            type: string
+        consent_request_reference:
+          type: string
+        approval_reference:
+          type: string
+        continuation_reference:
+          type: string
+        decision_id:
+          type: string
+        policy_version:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+        support_reference:
+          type: string
+    IdentityAssurance:
+      type: object
+      additionalProperties: false
+      required:
+        - contractVersion
+        - ial
+      properties:
+        contractVersion:
+          type: string
+          enum: ["tshepo.trust.v1"]
+        ial:
+          type: integer
+          minimum: 0
+          maximum: 4
+        proofingMethod:
+          type: string
+          nullable: true
+        evidenceReference:
+          type: string
+          nullable: true
+    AuthenticationAssurance:
+      type: object
+      additionalProperties: false
+      required:
+        - contractVersion
+        - aal
+        - amr
+        - phishingResistant
+        - recoveryState
+      properties:
+        contractVersion:
+          type: string
+          enum: ["tshepo.trust.v1"]
+        aal:
+          type: integer
+          minimum: 0
+          maximum: 3
+        amr:
+          type: array
+          items:
+            type: string
+        authenticationTime:
+          type: string
+          format: date-time
+          nullable: true
+        stepUpTime:
+          type: string
+          format: date-time
+          nullable: true
+        phishingResistant:
+          type: boolean
+        sessionId:
+          type: string
+          nullable: true
+        flowId:
+          type: string
+          nullable: true
+        recoveryState:
+          $ref: '#/components/schemas/RecoveryAuthenticationState'
+    WorkloadSubject:
+      type: object
+      additionalProperties: false
+      required:
+        - contractVersion
+        - workloadId
+      properties:
+        contractVersion:
+          type: string
+          enum: ["tshepo.trust.v1"]
+        workloadId:
+          type: string
+          minLength: 1
+        serviceName:
+          type: string
+          nullable: true
+        kubernetesServiceAccount:
+          type: string
+          nullable: true
+        keycloakClientId:
+          type: string
+          nullable: true
+        audience:
+          type: string
+          nullable: true
+    WorkloadAssurance:
+      type: object
+      additionalProperties: false
+      required:
+        - contractVersion
+        - credentialType
+        - mTlsBound
+      properties:
+        contractVersion:
+          type: string
+          enum: ["tshepo.trust.v1"]
+        credentialType:
+          type: string
+          minLength: 1
+        issuedAt:
+          type: string
+          format: date-time
+          nullable: true
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        mTlsBound:
+          type: boolean
+        issuer:
+          type: string
+          nullable: true
+    HumanSubjectRef:
+      type: object
+      additionalProperties: false
+      required:
+        - contractVersion
+        - healthId
+      properties:
+        contractVersion:
+          type: string
+          enum: ["tshepo.trust.v1"]
+        healthId:
+          type: string
+          minLength: 1
+        actorType:
+          type: string
+          nullable: true
+        providerId:
+          type: string
+          nullable: true
+    ActiveContext:
+      type: object
+      additionalProperties: false
+      required:
+        - contractVersion
+      properties:
+        contractVersion:
+          type: string
+          enum: ["tshepo.trust.v1"]
+        tenantId:
+          type: string
+          nullable: true
+        facilityId:
+          type: string
+          nullable: true
+        councilId:
+          type: string
+          nullable: true
+        departmentId:
+          type: string
+          nullable: true
+        wardId:
+          type: string
+          nullable: true
+        workspaceId:
+          type: string
+          nullable: true
+        programmeId:
+          type: string
+          nullable: true
+        shiftId:
+          type: string
+          nullable: true
+        workContextTokenId:
+          type: string
+          nullable: true
+    AuthorityBinding:
+      type: object
+      additionalProperties: false
+      required:
+        - contractVersion
+        - roles
+        - suspended
+      properties:
+        contractVersion:
+          type: string
+          enum: ["tshepo.trust.v1"]
+        authorityType:
+          type: string
+          nullable: true
+        authorityId:
+          type: string
+          nullable: true
+        roles:
+          type: array
+          items:
+            type: string
+        licenceId:
+          type: string
+          nullable: true
+        appointmentId:
+          type: string
+          nullable: true
+        mandateId:
+          type: string
+          nullable: true
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        suspended:
+          type: boolean
+    DelegatedHumanContext:
+      type: object
+      additionalProperties: false
+      required:
+        - contractVersion
+        - humanSubject
+        - allowedActions
+        - allowedScopes
+        - delegationDepth
+      properties:
+        contractVersion:
+          type: string
+          enum: ["tshepo.trust.v1"]
+        humanSubject:
+          $ref: '#/components/schemas/HumanSubjectRef'
+        activeContext:
+          $ref: '#/components/schemas/ActiveContext'
+        authority:
+          $ref: '#/components/schemas/AuthorityBinding'
+        purposeOfUse:
+          type: string
+          nullable: true
+        audience:
+          type: string
+          nullable: true
+        allowedActions:
+          type: array
+          items:
+            type: string
+        allowedScopes:
+          type: array
+          items:
+            type: string
+        authenticationAssurance:
+          $ref: '#/components/schemas/AuthenticationAssurance'
+        delegationDepth:
+          type: integer
+          minimum: 0
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        correlationId:
+          type: string
+          nullable: true
+        requestId:
+          type: string
+          nullable: true
+    DelegationChain:
+      type: object
+      additionalProperties: false
+      required:
+        - contractVersion
+        - hops
+        - maxDepth
+      properties:
+        contractVersion:
+          type: string
+          enum: ["tshepo.trust.v1"]
+        hops:
+          type: array
+          items:
+            $ref: '#/components/schemas/DelegatedHumanContext'
+        maxDepth:
+          type: integer
+          minimum: 0
+    ServiceRequestContext:
+      type: object
+      additionalProperties: false
+      required:
+        - contractVersion
+        - destinationServiceId
+      properties:
+        contractVersion:
+          type: string
+          enum: ["tshepo.trust.v1"]
+        destinationServiceId:
+          type: string
+          minLength: 1
+        method:
+          type: string
+          nullable: true
+        path:
+          type: string
+          nullable: true
+        action:
+          type: string
+          nullable: true
+        resourceType:
+          type: string
+          nullable: true
+        resourceId:
+          type: string
+          nullable: true
+        sensitivityClass:
+          type: string
+          nullable: true
+    ConsentDecision:
+      type: object
+      additionalProperties: false
+      required:
+        - contractVersion
+        - permitted
+        - allowedScopes
+        - deniedScopes
+      properties:
+        contractVersion:
+          type: string
+          enum: ["tshepo.trust.v1"]
+        permitted:
+          type: boolean
+        consentId:
+          type: string
+          nullable: true
+        provision:
+          type: string
+          nullable: true
+        allowedScopes:
+          type: array
+          items:
+            type: string
+        deniedScopes:
+          type: array
+          items:
+            type: string
+        reasonCode:
+          type: string
+          nullable: true
+        subjectRef:
+          type: string
+          nullable: true
+        purpose:
+          type: string
+          nullable: true
+    LawfulBasisDecision:
+      type: object
+      additionalProperties: false
+      required:
+        - contractVersion
+        - permitted
+        - basisType
+      properties:
+        contractVersion:
+          type: string
+          enum: ["tshepo.trust.v1"]
+        permitted:
+          type: boolean
+        basisType:
+          type: string
+          description: EXPLICIT_CONSENT is modelled as ConsentDecision, never LawfulBasisDecision
+          enum:
+            - DIRECT_CARE_RELATIONSHIP
+            - STATUTORY_AUTHORITY
+            - PUBLIC_HEALTH_AUTHORITY
+            - EMERGENCY_BREAK_GLASS
+            - OTHER_GOVERNED
+        basisReference:
+          type: string
+          nullable: true
+        reasonCode:
+          type: string
+          nullable: true
+        subjectRef:
+          type: string
+          nullable: true
+        purpose:
+          type: string
+          nullable: true
+    AsyncExecutionReference:
+      type: object
+      additionalProperties: false
+      required:
+        - contractVersion
+        - referenceId
+        - allowedActions
+        - allowedScopes
+        - delegationDepth
+        - revoked
+      properties:
+        contractVersion:
+          type: string
+          enum: ["tshepo.trust.v1"]
+        referenceId:
+          type: string
+          minLength: 1
+          description: Opaque, revocable delegation reference. Must never carry token material.
+          not:
+            pattern: "(eyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}|[Bb]earer\\s+|access_token|refresh_token)"
+        workerWorkload:
+          $ref: '#/components/schemas/WorkloadSubject'
+        originalHumanSubject:
+          $ref: '#/components/schemas/HumanSubjectRef'
+        allowedActions:
+          type: array
+          items:
+            type: string
+        allowedScopes:
+          type: array
+          items:
+            type: string
+        audience:
+          type: string
+          nullable: true
+        purposeOfUse:
+          type: string
+          nullable: true
+        delegationDepth:
+          type: integer
+          minimum: 0
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        revoked:
+          type: boolean
+        correlationId:
+          type: string
+          nullable: true
+    TrustAuditEvent:
+      type: object
+      additionalProperties: false
+      required:
+        - contractVersion
+        - eventId
+        - timestamp
+      properties:
+        contractVersion:
+          type: string
+          enum: ["tshepo.trust.v1"]
+        eventId:
+          type: string
+          minLength: 1
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+          nullable: true
+        traceId:
+          type: string
+          nullable: true
+        decisionId:
+          type: string
+          nullable: true
+        callingWorkloadId:
+          type: string
+          nullable: true
+        destinationWorkloadId:
+          type: string
+          nullable: true
+        humanActorId:
+          type: string
+          nullable: true
+        activeContextId:
+          type: string
+          nullable: true
+        delegationReference:
+          type: string
+          nullable: true
+        purposeOfUse:
+          type: string
+          nullable: true
+        action:
+          type: string
+          nullable: true
+        resourceReference:
+          type: string
+          nullable: true
+        credentialType:
+          type: string
+          nullable: true
+        identityAssuranceLevel:
+          type: integer
+          nullable: true
+        authenticationAal:
+          type: integer
+          nullable: true
+        recoveryState:
+          $ref: '#/components/schemas/RecoveryAuthenticationState'
+        policyVersion:
+          type: string
+          nullable: true
+        enforcementPoint:
+          type: string
+          nullable: true
+        result:
+          type: string
+          nullable: true
+        attributes:
+          type: object
+          description: Non-clinical, non-secret metadata only. Key policy (no clinical payload keys) is structurally enforced in the JSON Schema mirror via propertyNames; OpenAPI 3.0 cannot express propertyNames, so that layer is enforced by Java/TS validation.
+          additionalProperties:
+            type: string
+            not:
+              pattern: "(eyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}|[Bb]earer\\s+|-----BEGIN)"
+    TrustDecisionInput:
+      type: object
+      additionalProperties: false
+      required:
+        - contractVersion
+        - callingWorkload
+        - destination
+        - operatingMode
+        - emergencyBreakGlass
+      properties:
+        contractVersion:
+          type: string
+          enum: ["tshepo.trust.v1"]
+        humanSubject:
+          $ref: '#/components/schemas/HumanSubjectRef'
+        callingWorkload:
+          $ref: '#/components/schemas/WorkloadSubject'
+        originalClientId:
+          type: string
+          nullable: true
+        destination:
+          $ref: '#/components/schemas/ServiceRequestContext'
+        sessionId:
+          type: string
+          nullable: true
+        flowId:
+          type: string
+          nullable: true
+        identityAssurance:
+          $ref: '#/components/schemas/IdentityAssurance'
+        authenticationAssurance:
+          $ref: '#/components/schemas/AuthenticationAssurance'
+        workloadAssurance:
+          $ref: '#/components/schemas/WorkloadAssurance'
+        activeContext:
+          $ref: '#/components/schemas/ActiveContext'
+        authority:
+          $ref: '#/components/schemas/AuthorityBinding'
+        tenantId:
+          type: string
+          nullable: true
+        facilityId:
+          type: string
+          nullable: true
+        councilId:
+          type: string
+          nullable: true
+        action:
+          type: string
+          nullable: true
+        resourceType:
+          type: string
+          nullable: true
+        resourceId:
+          type: string
+          nullable: true
+        sensitivityClass:
+          type: string
+          nullable: true
+        purposeOfUse:
+          type: string
+          nullable: true
+        consentDecision:
+          $ref: '#/components/schemas/ConsentDecision'
+        lawfulBasisDecision:
+          $ref: '#/components/schemas/LawfulBasisDecision'
+        delegationChain:
+          $ref: '#/components/schemas/DelegationChain'
+        emergencyBreakGlass:
+          type: boolean
+        operatingMode:
+          $ref: '#/components/schemas/OperatingMode'
+        policyVersion:
+          type: string
+          nullable: true
+        requestId:
+          type: string
+          nullable: true
+        traceId:
+          type: string
+          nullable: true
+        decisionId:
+          type: string
+          nullable: true
+        correlationId:
+          type: string
+          nullable: true

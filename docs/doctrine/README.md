@@ -16,6 +16,13 @@
   clinical record carries a resolvable PCT anchor; ghost-service rulings; registry
   `continuum`/`continuum_role`/`continuum_parent` fields)
 
+## Trust Plane Pack
+
+- `tshepo-trust-plane-doctrine.md` — one trust plane, many components; Keycloak
+  authenticates within Tshepo, tshepo-authz decides, OPA evaluates after parity, Envoy and
+  applications enforce; the MFA merge is authentication assurance foundation, not Tshepo
+  complete
+
 ## Service Relationship & Reputation Pack
 
 - `service-relationship-doctrine.md` — the operational backbone (Tuso = *where*, Varapi = *who-authorised*, Vashandi = *who-working-here-now*, TSHEPO = *what-may-happen*); consumer contracts for Khuluma/Rito/Ndila/Nhume/Ruvimbo (+ PCT/OROS/Dura/Madi/Fundo/Msika/Indawo/Nompilo); canonical identifiers, the historical-context snapshot rule, the three integration patterns, and the responsibility matrix

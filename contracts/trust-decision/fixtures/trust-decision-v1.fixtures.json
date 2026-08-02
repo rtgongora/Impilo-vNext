@@ -1,0 +1,977 @@
+{
+  "contractVersion": "tshepo.trust.v1",
+  "description": "Shared conformance fixtures for the tshepo.trust.v1 contracts. Every fixture is validated against (a) Java records via Jackson + compact constructors, (b) TypeScript runtime validators in contracts/trust-decision/validate.ts, (c) JSON Schema contracts/schemas/trust-decision-v1.schema.json via a real validator, and (d) the OpenAPI component schemas in contracts/openapi/tshepo-trust-decision-v1.openapi.yaml. Invalid fixtures list the layers that must reject them: 'schema' is omitted only where the violation is semantic and not structurally expressible.",
+  "valid": [
+    {
+      "name": "outcome-allow",
+      "type": "TrustChallengeOutcome",
+      "data": {
+        "contract_version": "tshepo.trust.v1",
+        "decision": "ALLOW",
+        "decision_id": "dec-0001",
+        "policy_version": "policy-2026.07"
+      }
+    },
+    {
+      "name": "outcome-deny",
+      "type": "TrustChallengeOutcome",
+      "data": {
+        "contract_version": "tshepo.trust.v1",
+        "decision": "DENY",
+        "reason_code": "SUBJECT_RELATIONSHIP_ABSENT",
+        "user_message_key": "trust.deny.generic",
+        "decision_id": "dec-0002",
+        "policy_version": "policy-2026.07",
+        "support_reference": "case-77120"
+      }
+    },
+    {
+      "name": "outcome-authentication-required",
+      "type": "TrustChallengeOutcome",
+      "data": {
+        "contract_version": "tshepo.trust.v1",
+        "decision": "AUTHENTICATION_REQUIRED",
+        "reason_code": "ANONYMOUS_SESSION",
+        "user_message_key": "trust.authn.required",
+        "required_action": "LOGIN",
+        "allowed_authentication_methods": ["pwd", "otp", "webauthn"],
+        "continuation_reference": "cont-3f81",
+        "decision_id": "dec-0003"
+      }
+    },
+    {
+      "name": "outcome-step-up-required",
+      "type": "TrustChallengeOutcome",
+      "data": {
+        "contract_version": "tshepo.trust.v1",
+        "decision": "STEP_UP_REQUIRED",
+        "reason_code": "AAL_INSUFFICIENT",
+        "user_message_key": "trust.stepup.required",
+        "required_action": "STEP_UP",
+        "required_assurance": 2,
+        "allowed_authentication_methods": ["totp", "webauthn"],
+        "continuation_reference": "cont-9a2c",
+        "decision_id": "dec-0004"
+      }
+    },
+    {
+      "name": "outcome-context-required",
+      "type": "TrustChallengeOutcome",
+      "data": {
+        "contract_version": "tshepo.trust.v1",
+        "decision": "CONTEXT_REQUIRED",
+        "reason_code": "NO_ACTIVE_FACILITY_CONTEXT",
+        "user_message_key": "trust.context.required",
+        "required_action": "SELECT_CONTEXT",
+        "context_options": ["facility:parirenyatwa", "facility:mpilo"],
+        "decision_id": "dec-0005"
+      }
+    },
+    {
+      "name": "outcome-authority-required",
+      "type": "TrustChallengeOutcome",
+      "data": {
+        "contract_version": "tshepo.trust.v1",
+        "decision": "AUTHORITY_REQUIRED",
+        "reason_code": "LICENCE_EXPIRED",
+        "user_message_key": "trust.authority.required",
+        "required_action": "RENEW_AUTHORITY",
+        "decision_id": "dec-0006"
+      }
+    },
+    {
+      "name": "outcome-consent-required",
+      "type": "TrustChallengeOutcome",
+      "data": {
+        "contract_version": "tshepo.trust.v1",
+        "decision": "CONSENT_REQUIRED",
+        "reason_code": "NO_ACTIVE_CONSENT",
+        "user_message_key": "trust.consent.required",
+        "required_action": "REQUEST_CONSENT",
+        "consent_request_reference": "consent-req-5510",
+        "decision_id": "dec-0007"
+      }
+    },
+    {
+      "name": "outcome-approval-required",
+      "type": "TrustChallengeOutcome",
+      "data": {
+        "contract_version": "tshepo.trust.v1",
+        "decision": "APPROVAL_REQUIRED",
+        "reason_code": "TWO_PERSON_RULE",
+        "user_message_key": "trust.approval.required",
+        "required_action": "AWAIT_APPROVAL",
+        "approval_reference": "appr-8842",
+        "decision_id": "dec-0008"
+      }
+    },
+    {
+      "name": "outcome-break-glass-available",
+      "type": "TrustChallengeOutcome",
+      "data": {
+        "contract_version": "tshepo.trust.v1",
+        "decision": "BREAK_GLASS_AVAILABLE",
+        "reason_code": "EMERGENCY_PATH_AVAILABLE",
+        "user_message_key": "trust.breakglass.available",
+        "required_action": "CONFIRM_BREAK_GLASS",
+        "decision_id": "dec-0009"
+      }
+    },
+    {
+      "name": "outcome-reauthentication-required",
+      "type": "TrustChallengeOutcome",
+      "data": {
+        "contract_version": "tshepo.trust.v1",
+        "decision": "REAUTHENTICATION_REQUIRED",
+        "reason_code": "SESSION_TOO_OLD_FOR_ACTION",
+        "user_message_key": "trust.reauthn.required",
+        "required_action": "REAUTHENTICATE",
+        "allowed_authentication_methods": ["pwd", "webauthn"],
+        "continuation_reference": "cont-77aa",
+        "decision_id": "dec-0010"
+      }
+    },
+    {
+      "name": "outcome-recovery-required",
+      "type": "TrustChallengeOutcome",
+      "data": {
+        "contract_version": "tshepo.trust.v1",
+        "decision": "RECOVERY_REQUIRED",
+        "reason_code": "CONSTRAINED_RECOVERY_SESSION",
+        "user_message_key": "trust.recovery.enroll",
+        "required_action": "ENROLL_NEW_FACTOR",
+        "decision_id": "dec-0011"
+      }
+    },
+    {
+      "name": "outcome-temporarily-unavailable",
+      "type": "TrustChallengeOutcome",
+      "data": {
+        "contract_version": "tshepo.trust.v1",
+        "decision": "TEMPORARILY_UNAVAILABLE",
+        "reason_code": "PDP_DEGRADED",
+        "user_message_key": "trust.unavailable.retry",
+        "expires_at": "2026-08-01T12:30:00Z",
+        "decision_id": "dec-0012"
+      }
+    },
+    {
+      "name": "input-anonymous-actor",
+      "type": "TrustDecisionInput",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "callingWorkload": {
+          "contractVersion": "tshepo.trust.v1",
+          "workloadId": "experience-bff",
+          "serviceName": "experience-bff",
+          "kubernetesServiceAccount": "experience-bff",
+          "keycloakClientId": "impilo-experience-bff"
+        },
+        "destination": {
+          "contractVersion": "tshepo.trust.v1",
+          "destinationServiceId": "search-service",
+          "method": "GET",
+          "path": "/internal/v1/search",
+          "action": "PUBLIC_SEARCH",
+          "sensitivityClass": "PUBLIC"
+        },
+        "authenticationAssurance": {
+          "contractVersion": "tshepo.trust.v1",
+          "aal": 0,
+          "amr": [],
+          "phishingResistant": false,
+          "recoveryState": "NONE"
+        },
+        "identityAssurance": {
+          "contractVersion": "tshepo.trust.v1",
+          "ial": 0
+        },
+        "purposeOfUse": "PUBLIC_ACCESS",
+        "emergencyBreakGlass": false,
+        "operatingMode": "NORMAL",
+        "requestId": "req-a001",
+        "traceId": "trace-a001"
+      }
+    },
+    {
+      "name": "input-authenticated-citizen",
+      "type": "TrustDecisionInput",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "humanSubject": {
+          "contractVersion": "tshepo.trust.v1",
+          "healthId": "HID-CIT-000123",
+          "actorType": "CITIZEN"
+        },
+        "callingWorkload": {
+          "contractVersion": "tshepo.trust.v1",
+          "workloadId": "experience-bff"
+        },
+        "destination": {
+          "contractVersion": "tshepo.trust.v1",
+          "destinationServiceId": "wellness-service",
+          "method": "GET",
+          "path": "/internal/v1/wellness/plan",
+          "action": "READ_OWN_WELLNESS",
+          "sensitivityClass": "PERSONAL"
+        },
+        "sessionId": "sess-c1001",
+        "identityAssurance": {
+          "contractVersion": "tshepo.trust.v1",
+          "ial": 1,
+          "proofingMethod": "self-asserted"
+        },
+        "authenticationAssurance": {
+          "contractVersion": "tshepo.trust.v1",
+          "aal": 1,
+          "amr": ["pwd"],
+          "authenticationTime": "2026-08-01T08:00:00Z",
+          "phishingResistant": false,
+          "sessionId": "sess-c1001",
+          "recoveryState": "NONE"
+        },
+        "purposeOfUse": "SELF_SERVICE",
+        "emergencyBreakGlass": false,
+        "operatingMode": "NORMAL",
+        "requestId": "req-c001"
+      }
+    },
+    {
+      "name": "input-workforce-with-context-and-authority",
+      "type": "TrustDecisionInput",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "humanSubject": {
+          "contractVersion": "tshepo.trust.v1",
+          "healthId": "HID-PRV-004410",
+          "actorType": "PROVIDER",
+          "providerId": "PRV-004410"
+        },
+        "callingWorkload": {
+          "contractVersion": "tshepo.trust.v1",
+          "workloadId": "experience-bff"
+        },
+        "destination": {
+          "contractVersion": "tshepo.trust.v1",
+          "destinationServiceId": "pct-service",
+          "method": "POST",
+          "path": "/internal/v1/encounters",
+          "action": "OPEN_ENCOUNTER",
+          "resourceType": "Encounter",
+          "sensitivityClass": "CLINICAL"
+        },
+        "identityAssurance": {
+          "contractVersion": "tshepo.trust.v1",
+          "ial": 2,
+          "proofingMethod": "in-person-workforce-onboarding"
+        },
+        "authenticationAssurance": {
+          "contractVersion": "tshepo.trust.v1",
+          "aal": 2,
+          "amr": ["pwd", "totp"],
+          "authenticationTime": "2026-08-01T07:45:00Z",
+          "phishingResistant": false,
+          "sessionId": "sess-w2200",
+          "recoveryState": "NONE"
+        },
+        "activeContext": {
+          "contractVersion": "tshepo.trust.v1",
+          "tenantId": "zw-moh",
+          "facilityId": "facility:parirenyatwa",
+          "departmentId": "dept:opd",
+          "workContextTokenId": "wct-5521"
+        },
+        "authority": {
+          "contractVersion": "tshepo.trust.v1",
+          "authorityType": "APPOINTMENT",
+          "authorityId": "appt-99120",
+          "roles": ["clinician"],
+          "licenceId": "mdpcz-a-11223",
+          "appointmentId": "appt-99120",
+          "expiresAt": "2026-12-31T23:59:59Z",
+          "suspended": false
+        },
+        "tenantId": "zw-moh",
+        "facilityId": "facility:parirenyatwa",
+        "purposeOfUse": "TREATMENT",
+        "emergencyBreakGlass": false,
+        "operatingMode": "NORMAL",
+        "requestId": "req-w001",
+        "decisionId": "dec-w001"
+      }
+    },
+    {
+      "name": "input-workload-acting-for-itself",
+      "type": "TrustDecisionInput",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "callingWorkload": {
+          "contractVersion": "tshepo.trust.v1",
+          "workloadId": "jobs-service",
+          "serviceName": "jobs-service",
+          "kubernetesServiceAccount": "jobs-service",
+          "keycloakClientId": "impilo-jobs-service",
+          "audience": "notification-service"
+        },
+        "destination": {
+          "contractVersion": "tshepo.trust.v1",
+          "destinationServiceId": "notification-service",
+          "method": "POST",
+          "path": "/internal/v1/notifications/digest",
+          "action": "SYSTEM_DIGEST",
+          "sensitivityClass": "OPERATIONAL"
+        },
+        "workloadAssurance": {
+          "contractVersion": "tshepo.trust.v1",
+          "credentialType": "client_credentials",
+          "issuedAt": "2026-08-01T09:00:00Z",
+          "expiresAt": "2026-08-01T09:05:00Z",
+          "mTlsBound": false,
+          "issuer": "https://impilo.mohcc.gov.zw/realms/impilo"
+        },
+        "purposeOfUse": "SYSTEM_OPERATION",
+        "emergencyBreakGlass": false,
+        "operatingMode": "NORMAL",
+        "requestId": "req-s001"
+      }
+    },
+    {
+      "name": "input-workload-acting-for-human",
+      "type": "TrustDecisionInput",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "humanSubject": {
+          "contractVersion": "tshepo.trust.v1",
+          "healthId": "HID-PRV-004410",
+          "actorType": "PROVIDER",
+          "providerId": "PRV-004410"
+        },
+        "callingWorkload": {
+          "contractVersion": "tshepo.trust.v1",
+          "workloadId": "experience-bff",
+          "audience": "pct-service"
+        },
+        "originalClientId": "impilo-web",
+        "destination": {
+          "contractVersion": "tshepo.trust.v1",
+          "destinationServiceId": "pct-service",
+          "method": "GET",
+          "path": "/internal/v1/journeys/j-100",
+          "action": "READ_JOURNEY",
+          "resourceType": "Journey",
+          "resourceId": "j-100",
+          "sensitivityClass": "CLINICAL"
+        },
+        "authenticationAssurance": {
+          "contractVersion": "tshepo.trust.v1",
+          "aal": 2,
+          "amr": ["pwd", "totp"],
+          "phishingResistant": false,
+          "recoveryState": "NONE"
+        },
+        "purposeOfUse": "TREATMENT",
+        "delegationChain": {
+          "contractVersion": "tshepo.trust.v1",
+          "maxDepth": 2,
+          "hops": [
+            {
+              "contractVersion": "tshepo.trust.v1",
+              "humanSubject": {
+                "contractVersion": "tshepo.trust.v1",
+                "healthId": "HID-PRV-004410",
+                "actorType": "PROVIDER",
+                "providerId": "PRV-004410"
+              },
+              "purposeOfUse": "TREATMENT",
+              "audience": "pct-service",
+              "allowedActions": ["READ_JOURNEY"],
+              "allowedScopes": ["journey:read"],
+              "authenticationAssurance": {
+                "contractVersion": "tshepo.trust.v1",
+                "aal": 2,
+                "amr": ["pwd", "totp"],
+                "phishingResistant": false,
+                "recoveryState": "NONE"
+              },
+              "delegationDepth": 0,
+              "expiresAt": "2026-08-01T10:00:00Z",
+              "correlationId": "corr-d001",
+              "requestId": "req-d001"
+            }
+          ]
+        },
+        "emergencyBreakGlass": false,
+        "operatingMode": "NORMAL",
+        "requestId": "req-d001",
+        "correlationId": "corr-d001"
+      }
+    },
+    {
+      "name": "input-with-consent",
+      "type": "TrustDecisionInput",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "humanSubject": {
+          "contractVersion": "tshepo.trust.v1",
+          "healthId": "HID-PRV-004410",
+          "actorType": "PROVIDER",
+          "providerId": "PRV-004410"
+        },
+        "callingWorkload": {
+          "contractVersion": "tshepo.trust.v1",
+          "workloadId": "fhir-gateway"
+        },
+        "destination": {
+          "contractVersion": "tshepo.trust.v1",
+          "destinationServiceId": "butano-service",
+          "method": "GET",
+          "path": "/fhir/Observation",
+          "action": "READ_OBSERVATIONS",
+          "resourceType": "Observation",
+          "sensitivityClass": "CLINICAL"
+        },
+        "purposeOfUse": "TREATMENT",
+        "consentDecision": {
+          "contractVersion": "tshepo.trust.v1",
+          "permitted": true,
+          "consentId": "consent-33001",
+          "provision": "permit",
+          "allowedScopes": ["observation:read"],
+          "deniedScopes": [],
+          "subjectRef": "cpid-88431",
+          "purpose": "TREATMENT"
+        },
+        "emergencyBreakGlass": false,
+        "operatingMode": "NORMAL",
+        "requestId": "req-cons01"
+      }
+    },
+    {
+      "name": "input-non-consent-lawful-basis",
+      "type": "TrustDecisionInput",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "humanSubject": {
+          "contractVersion": "tshepo.trust.v1",
+          "healthId": "HID-PRV-771002",
+          "actorType": "PROVIDER",
+          "providerId": "PRV-771002"
+        },
+        "callingWorkload": {
+          "contractVersion": "tshepo.trust.v1",
+          "workloadId": "surveillance-service"
+        },
+        "destination": {
+          "contractVersion": "tshepo.trust.v1",
+          "destinationServiceId": "national-data-repository-service",
+          "method": "POST",
+          "path": "/internal/v1/notifiable-disease-reports",
+          "action": "SUBMIT_NOTIFIABLE_REPORT",
+          "sensitivityClass": "PUBLIC_HEALTH"
+        },
+        "purposeOfUse": "PUBLIC_HEALTH",
+        "lawfulBasisDecision": {
+          "contractVersion": "tshepo.trust.v1",
+          "permitted": true,
+          "basisType": "PUBLIC_HEALTH_AUTHORITY",
+          "basisReference": "pha-act-s21",
+          "subjectRef": "cpid-90112",
+          "purpose": "PUBLIC_HEALTH"
+        },
+        "emergencyBreakGlass": false,
+        "operatingMode": "NORMAL",
+        "requestId": "req-lb01"
+      }
+    },
+    {
+      "name": "input-constrained-recovery",
+      "type": "TrustDecisionInput",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "humanSubject": {
+          "contractVersion": "tshepo.trust.v1",
+          "healthId": "HID-PRV-004410",
+          "actorType": "PROVIDER",
+          "providerId": "PRV-004410"
+        },
+        "callingWorkload": {
+          "contractVersion": "tshepo.trust.v1",
+          "workloadId": "experience-bff"
+        },
+        "destination": {
+          "contractVersion": "tshepo.trust.v1",
+          "destinationServiceId": "tshepo-service",
+          "method": "POST",
+          "path": "/internal/v1/account/factors",
+          "action": "ENROLL_FACTOR",
+          "sensitivityClass": "ACCOUNT_SECURITY"
+        },
+        "authenticationAssurance": {
+          "contractVersion": "tshepo.trust.v1",
+          "aal": 2,
+          "amr": ["recovery-code"],
+          "authenticationTime": "2026-08-01T08:30:00Z",
+          "phishingResistant": false,
+          "sessionId": "sess-r7001",
+          "recoveryState": "CONSTRAINED_RECOVERY"
+        },
+        "purposeOfUse": "ACCOUNT_RECOVERY",
+        "emergencyBreakGlass": false,
+        "operatingMode": "RECOVERY",
+        "requestId": "req-r001"
+      }
+    },
+    {
+      "name": "input-break-glass",
+      "type": "TrustDecisionInput",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "humanSubject": {
+          "contractVersion": "tshepo.trust.v1",
+          "healthId": "HID-PRV-115599",
+          "actorType": "PROVIDER",
+          "providerId": "PRV-115599"
+        },
+        "callingWorkload": {
+          "contractVersion": "tshepo.trust.v1",
+          "workloadId": "experience-bff"
+        },
+        "destination": {
+          "contractVersion": "tshepo.trust.v1",
+          "destinationServiceId": "butano-service",
+          "method": "GET",
+          "path": "/fhir/Patient/cpid-70001/everything",
+          "action": "EMERGENCY_READ",
+          "resourceType": "Patient",
+          "resourceId": "cpid-70001",
+          "sensitivityClass": "CLINICAL"
+        },
+        "purposeOfUse": "EMERGENCY_TREATMENT",
+        "lawfulBasisDecision": {
+          "contractVersion": "tshepo.trust.v1",
+          "permitted": true,
+          "basisType": "EMERGENCY_BREAK_GLASS",
+          "basisReference": "bg-session-4471",
+          "subjectRef": "cpid-70001",
+          "purpose": "EMERGENCY_TREATMENT"
+        },
+        "emergencyBreakGlass": true,
+        "operatingMode": "BREAK_GLASS",
+        "requestId": "req-bg01",
+        "decisionId": "dec-bg01"
+      }
+    },
+    {
+      "name": "async-delegation-executable",
+      "type": "AsyncExecutionReference",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "referenceId": "aer-2026-08-01-000042",
+        "workerWorkload": {
+          "contractVersion": "tshepo.trust.v1",
+          "workloadId": "jobs-service"
+        },
+        "originalHumanSubject": {
+          "contractVersion": "tshepo.trust.v1",
+          "healthId": "HID-PRV-004410",
+          "actorType": "PROVIDER",
+          "providerId": "PRV-004410"
+        },
+        "allowedActions": ["GENERATE_REPORT"],
+        "allowedScopes": ["report:generate"],
+        "audience": "reporting-service",
+        "purposeOfUse": "TREATMENT",
+        "delegationDepth": 1,
+        "expiresAt": "2027-01-01T00:00:00Z",
+        "revoked": false,
+        "correlationId": "corr-async01"
+      }
+    },
+    {
+      "name": "async-delegation-expired",
+      "type": "AsyncExecutionReference",
+      "logicExpectation": "structurally valid but must NOT be executable (expired)",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "referenceId": "aer-2026-06-30-000007",
+        "workerWorkload": {
+          "contractVersion": "tshepo.trust.v1",
+          "workloadId": "jobs-service"
+        },
+        "allowedActions": ["GENERATE_REPORT"],
+        "allowedScopes": ["report:generate"],
+        "delegationDepth": 1,
+        "expiresAt": "2026-06-30T23:59:59Z",
+        "revoked": false,
+        "correlationId": "corr-async02"
+      }
+    },
+    {
+      "name": "delegation-chain-two-hops-non-increasing",
+      "type": "DelegationChain",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "maxDepth": 3,
+        "hops": [
+          {
+            "contractVersion": "tshepo.trust.v1",
+            "humanSubject": {
+              "contractVersion": "tshepo.trust.v1",
+              "healthId": "HID-PRV-004410",
+              "actorType": "PROVIDER"
+            },
+            "allowedActions": ["READ_JOURNEY", "GENERATE_REPORT"],
+            "allowedScopes": ["journey:read", "report:generate"],
+            "authenticationAssurance": {
+              "contractVersion": "tshepo.trust.v1",
+              "aal": 2,
+              "amr": ["pwd", "totp"],
+              "phishingResistant": false,
+              "recoveryState": "NONE"
+            },
+            "delegationDepth": 0,
+            "expiresAt": "2026-08-01T10:00:00Z"
+          },
+          {
+            "contractVersion": "tshepo.trust.v1",
+            "humanSubject": {
+              "contractVersion": "tshepo.trust.v1",
+              "healthId": "HID-PRV-004410",
+              "actorType": "PROVIDER"
+            },
+            "allowedActions": ["GENERATE_REPORT"],
+            "allowedScopes": ["report:generate"],
+            "authenticationAssurance": {
+              "contractVersion": "tshepo.trust.v1",
+              "aal": 2,
+              "amr": ["pwd", "totp"],
+              "phishingResistant": false,
+              "recoveryState": "NONE"
+            },
+            "delegationDepth": 1,
+            "expiresAt": "2026-08-01T09:30:00Z"
+          }
+        ]
+      }
+    },
+    {
+      "name": "expired-delegation-hop",
+      "type": "DelegatedHumanContext",
+      "logicExpectation": "structurally valid but isExpired(now) must be true for now > 2026-07-01",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "humanSubject": {
+          "contractVersion": "tshepo.trust.v1",
+          "healthId": "HID-PRV-004410",
+          "actorType": "PROVIDER"
+        },
+        "allowedActions": ["READ_JOURNEY"],
+        "allowedScopes": ["journey:read"],
+        "delegationDepth": 0,
+        "expiresAt": "2026-07-01T00:00:00Z"
+      }
+    },
+    {
+      "name": "audit-event-safe",
+      "type": "TrustAuditEvent",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "eventId": "evt-000881",
+        "timestamp": "2026-08-01T09:15:00Z",
+        "requestId": "req-w001",
+        "traceId": "trace-w001",
+        "decisionId": "dec-w001",
+        "callingWorkloadId": "experience-bff",
+        "destinationWorkloadId": "pct-service",
+        "humanActorId": "HID-PRV-004410",
+        "activeContextId": "wct-5521",
+        "purposeOfUse": "TREATMENT",
+        "action": "OPEN_ENCOUNTER",
+        "resourceReference": "Encounter/enc-100",
+        "credentialType": "bff_session",
+        "identityAssuranceLevel": 2,
+        "authenticationAal": 2,
+        "recoveryState": "NONE",
+        "policyVersion": "policy-2026.07",
+        "enforcementPoint": "tshepo-authz-service",
+        "result": "ALLOW",
+        "attributes": {
+          "cohort": "preview",
+          "channel": "web"
+        }
+      }
+    },
+    {
+      "name": "assurance-constrained-recovery",
+      "type": "AuthenticationAssurance",
+      "logicExpectation": "grantsOrdinaryWorkforceAal2() must be false despite aal=2",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "aal": 2,
+        "amr": ["recovery-code"],
+        "authenticationTime": "2026-08-01T08:30:00Z",
+        "phishingResistant": false,
+        "sessionId": "sess-r7001",
+        "recoveryState": "CONSTRAINED_RECOVERY"
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "outcome-unknown-decision",
+      "type": "TrustChallengeOutcome",
+      "rejects": ["java", "ts", "schema"],
+      "reason": "decision MAYBE is not a canonical TrustChallengeDecision",
+      "data": {
+        "contract_version": "tshepo.trust.v1",
+        "decision": "MAYBE"
+      }
+    },
+    {
+      "name": "outcome-wrong-contract-version",
+      "type": "TrustChallengeOutcome",
+      "rejects": ["java", "ts", "schema"],
+      "reason": "contract version must be tshepo.trust.v1",
+      "data": {
+        "contract_version": "tshepo.trust.v0",
+        "decision": "ALLOW"
+      }
+    },
+    {
+      "name": "outcome-token-in-reason-code",
+      "type": "TrustChallengeOutcome",
+      "rejects": ["java", "ts"],
+      "reason": "reason_code carries bearer token material (semantic guard, not structurally expressible)",
+      "data": {
+        "contract_version": "tshepo.trust.v1",
+        "decision": "DENY",
+        "reason_code": "Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhdHRhY2sifQ"
+      }
+    },
+    {
+      "name": "outcome-additional-property-policy-expression",
+      "type": "TrustChallengeOutcome",
+      "rejects": ["java", "ts", "schema"],
+      "reason": "policy_expression is not a safe field; additional properties are forbidden",
+      "data": {
+        "contract_version": "tshepo.trust.v1",
+        "decision": "DENY",
+        "policy_expression": "input.subject.role == \"admin\""
+      }
+    },
+    {
+      "name": "outcome-malformed-expires-at",
+      "type": "TrustChallengeOutcome",
+      "rejects": ["java", "ts", "schema"],
+      "reason": "expires_at must be RFC3339 date-time",
+      "data": {
+        "contract_version": "tshepo.trust.v1",
+        "decision": "TEMPORARILY_UNAVAILABLE",
+        "expires_at": "yesterday"
+      }
+    },
+    {
+      "name": "input-missing-calling-workload",
+      "type": "TrustDecisionInput",
+      "rejects": ["java", "ts", "schema"],
+      "reason": "callingWorkload is mandatory server-derived evidence",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "destination": {
+          "contractVersion": "tshepo.trust.v1",
+          "destinationServiceId": "pct-service"
+        },
+        "emergencyBreakGlass": false,
+        "operatingMode": "NORMAL"
+      }
+    },
+    {
+      "name": "input-unknown-operating-mode",
+      "type": "TrustDecisionInput",
+      "rejects": ["java", "ts", "schema"],
+      "reason": "PANIC is not a governed operating mode",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "callingWorkload": {
+          "contractVersion": "tshepo.trust.v1",
+          "workloadId": "experience-bff"
+        },
+        "destination": {
+          "contractVersion": "tshepo.trust.v1",
+          "destinationServiceId": "pct-service"
+        },
+        "emergencyBreakGlass": false,
+        "operatingMode": "PANIC"
+      }
+    },
+    {
+      "name": "assurance-aal-out-of-range",
+      "type": "AuthenticationAssurance",
+      "rejects": ["java", "ts", "schema"],
+      "reason": "aal must be 0..3",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "aal": 9,
+        "amr": ["pwd"],
+        "phishingResistant": false,
+        "recoveryState": "NONE"
+      }
+    },
+    {
+      "name": "assurance-unknown-recovery-state",
+      "type": "AuthenticationAssurance",
+      "rejects": ["java", "ts", "schema"],
+      "reason": "recoveryState must be a canonical RecoveryAuthenticationState",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "aal": 2,
+        "amr": ["recovery-code"],
+        "phishingResistant": false,
+        "recoveryState": "FULL_ACCESS_RECOVERY"
+      }
+    },
+    {
+      "name": "input-ial-out-of-range",
+      "type": "TrustDecisionInput",
+      "rejects": ["java", "ts", "schema"],
+      "reason": "ial must be 0..4 — identity assurance is separate from authentication assurance",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "callingWorkload": {
+          "contractVersion": "tshepo.trust.v1",
+          "workloadId": "experience-bff"
+        },
+        "destination": {
+          "contractVersion": "tshepo.trust.v1",
+          "destinationServiceId": "pct-service"
+        },
+        "identityAssurance": {
+          "contractVersion": "tshepo.trust.v1",
+          "ial": 9
+        },
+        "emergencyBreakGlass": false,
+        "operatingMode": "NORMAL"
+      }
+    },
+    {
+      "name": "lawful-basis-explicit-consent",
+      "type": "LawfulBasisDecision",
+      "rejects": ["java", "ts", "schema"],
+      "reason": "explicit consent must be a ConsentDecision, never a LawfulBasisDecision",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "permitted": true,
+        "basisType": "EXPLICIT_CONSENT",
+        "basisReference": "consent-33001"
+      }
+    },
+    {
+      "name": "chain-exceeds-max-depth",
+      "type": "DelegationChain",
+      "rejects": ["java", "ts"],
+      "reason": "hops.length > maxDepth (data-dependent constraint, not structurally expressible)",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "maxDepth": 1,
+        "hops": [
+          {
+            "contractVersion": "tshepo.trust.v1",
+            "humanSubject": { "contractVersion": "tshepo.trust.v1", "healthId": "HID-PRV-004410" },
+            "allowedActions": ["A"],
+            "allowedScopes": ["a"],
+            "delegationDepth": 0
+          },
+          {
+            "contractVersion": "tshepo.trust.v1",
+            "humanSubject": { "contractVersion": "tshepo.trust.v1", "healthId": "HID-PRV-004410" },
+            "allowedActions": ["A"],
+            "allowedScopes": ["a"],
+            "delegationDepth": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "chain-privilege-increase",
+      "type": "DelegationChain",
+      "rejects": ["java", "ts"],
+      "reason": "second hop widens allowedActions beyond its predecessor (semantic constraint)",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "maxDepth": 3,
+        "hops": [
+          {
+            "contractVersion": "tshepo.trust.v1",
+            "humanSubject": { "contractVersion": "tshepo.trust.v1", "healthId": "HID-PRV-004410" },
+            "allowedActions": ["READ_JOURNEY"],
+            "allowedScopes": ["journey:read"],
+            "delegationDepth": 0
+          },
+          {
+            "contractVersion": "tshepo.trust.v1",
+            "humanSubject": { "contractVersion": "tshepo.trust.v1", "healthId": "HID-PRV-004410" },
+            "allowedActions": ["READ_JOURNEY", "DELETE_JOURNEY"],
+            "allowedScopes": ["journey:read", "journey:write"],
+            "delegationDepth": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "async-reference-contains-jwt",
+      "type": "AsyncExecutionReference",
+      "rejects": ["java", "ts", "schema"],
+      "reason": "referenceId must be opaque — never a reusable human access token",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "referenceId": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjEifQ.eyJzdWIiOiJISUQtUFJWLTAwNDQxMCJ9",
+        "allowedActions": ["GENERATE_REPORT"],
+        "allowedScopes": ["report:generate"],
+        "delegationDepth": 1,
+        "revoked": false
+      }
+    },
+    {
+      "name": "audit-event-access-token-attribute",
+      "type": "TrustAuditEvent",
+      "rejects": ["java", "ts", "schema"],
+      "reason": "attributes must never carry raw access tokens",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "eventId": "evt-bad-001",
+        "timestamp": "2026-08-01T09:15:00Z",
+        "attributes": {
+          "access_token": "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJsZWFrIn0"
+        }
+      }
+    },
+    {
+      "name": "audit-event-private-key-attribute",
+      "type": "TrustAuditEvent",
+      "rejects": ["java", "ts", "schema"],
+      "reason": "attributes must never carry private key material",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "eventId": "evt-bad-002",
+        "timestamp": "2026-08-01T09:15:00Z",
+        "attributes": {
+          "debugDump": "-----BEGIN PRIVATE KEY----- MIIEvQ"
+        }
+      }
+    },
+    {
+      "name": "audit-event-clinical-payload-key",
+      "type": "TrustAuditEvent",
+      "rejects": ["java", "ts", "schema"],
+      "reason": "clinical payloads do not belong in trust audit events",
+      "data": {
+        "contractVersion": "tshepo.trust.v1",
+        "eventId": "evt-bad-003",
+        "timestamp": "2026-08-01T09:15:00Z",
+        "attributes": {
+          "clinicalNote": "patient presented with..."
+        }
+      }
+    }
+  ]
+}

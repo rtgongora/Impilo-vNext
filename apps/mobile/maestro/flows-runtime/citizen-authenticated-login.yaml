@@ -1,0 +1,49 @@
+# Authenticated citizen login against the redroid .dev build.
+# Credentials from the governed preview Secret (never committed):
+#   MAESTRO_CITIZEN_USERNAME / MAESTRO_CITIZEN_PASSWORD
+#
+# The synthetic preview identity has CITIZEN only and no clinical person record
+# by design. This flow therefore proves the auth path through Keycloak PKCE
+# (authorize → credential → Continue securely → leave the IdP form). Journey
+# home tabs may be absent when the person-record bootstrap has nothing to load;
+# Keycloak LOGIN + CODE_TO_TOKEN events are the authoritative session proof.
+appId: zw.gov.impilo.citizen.dev
+tags:
+  - auth
+  - authenticated
+  - redroid
+---
+- launchApp:
+    clearState: true
+
+- extendedWaitUntil:
+    visible:
+      id: "login-screen"
+    timeout: 240000
+
+- tapOn:
+    id: "login-button"
+
+# Keycloak hosted login (Custom Tab / WebView Browser Tester on redroid)
+- extendedWaitUntil:
+    visible:
+      text: "Username or email"
+    timeout: 90000
+- tapOn:
+    text: "Username or email"
+- inputText: ${MAESTRO_CITIZEN_USERNAME}
+- tapOn:
+    text: "Password"
+- inputText: ${MAESTRO_CITIZEN_PASSWORD}
+- hideKeyboard
+# Impilo-themed Keycloak login uses "Continue securely" (not stock "Sign In").
+- tapOn:
+    text: "Continue securely"
+
+# Left the IdP form — authorization code issued (paired with Keycloak LOGIN +
+# CODE_TO_TOKEN events for preview.test.citizen / impilo-mobile-citizen).
+- extendedWaitUntil:
+    notVisible:
+      text: "Username or email"
+    timeout: 120000
+- takeScreenshot: citizen-authenticated-after-idp

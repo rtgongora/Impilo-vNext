@@ -29,6 +29,15 @@ class WorkHomeControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    // The BFF session filters (SessionCsrfFilter, RecoverySessionFilter) are Filter
+
+    // components, which @WebMvcTest instantiates; they need the session service bean.
+
+    @MockBean
+
+    private zw.gov.mohcc.impilo.experience.auth.session.OidcSessionService oidcSessionService;
+
+
     @MockBean
     private WorkHomeCompositionService compositionService;
 

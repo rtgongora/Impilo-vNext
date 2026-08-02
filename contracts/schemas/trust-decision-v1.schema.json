@@ -1,0 +1,370 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://impilo.mohcc.gov.zw/schemas/trust-decision-v1.schema.json",
+  "title": "Tshepo trust-decision contracts v1",
+  "description": "Canonical Checkpoint-2 trust types. Version: tshepo.trust.v1. Java source of truth: libs/tshepo-contracts/.../v1. TS mirror: contracts/trust-decision/v1.ts.",
+  "type": "object",
+  "$defs": {
+    "contractVersion": {
+      "const": "tshepo.trust.v1"
+    },
+    "dateTime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "TrustChallengeDecision": {
+      "type": "string",
+      "enum": [
+        "ALLOW",
+        "DENY",
+        "AUTHENTICATION_REQUIRED",
+        "STEP_UP_REQUIRED",
+        "CONTEXT_REQUIRED",
+        "AUTHORITY_REQUIRED",
+        "CONSENT_REQUIRED",
+        "APPROVAL_REQUIRED",
+        "BREAK_GLASS_AVAILABLE",
+        "REAUTHENTICATION_REQUIRED",
+        "RECOVERY_REQUIRED",
+        "TEMPORARILY_UNAVAILABLE"
+      ]
+    },
+    "RecoveryAuthenticationState": {
+      "type": "string",
+      "enum": ["NONE", "CONSTRAINED_RECOVERY"]
+    },
+    "LawfulBasisType": {
+      "type": "string",
+      "enum": [
+        "EXPLICIT_CONSENT",
+        "DIRECT_CARE_RELATIONSHIP",
+        "STATUTORY_AUTHORITY",
+        "PUBLIC_HEALTH_AUTHORITY",
+        "EMERGENCY_BREAK_GLASS",
+        "OTHER_GOVERNED"
+      ]
+    },
+    "OperatingMode": {
+      "type": "string",
+      "enum": ["NORMAL", "DEGRADED", "OFFLINE", "RECOVERY", "BREAK_GLASS", "READ_ONLY_EMERGENCY"]
+    },
+    "TrustChallengeOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_version", "decision"],
+      "properties": {
+        "contract_version": { "$ref": "#/$defs/contractVersion" },
+        "decision": { "$ref": "#/$defs/TrustChallengeDecision" },
+        "reason_code": { "type": "string" },
+        "user_message_key": { "type": "string" },
+        "required_action": { "type": "string" },
+        "required_assurance": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "allowed_authentication_methods": { "type": "array", "items": { "type": "string" } },
+        "context_options": { "type": "array", "items": { "type": "string" } },
+        "consent_request_reference": { "type": "string" },
+        "approval_reference": { "type": "string" },
+        "continuation_reference": { "type": "string" },
+        "decision_id": { "type": "string" },
+        "policy_version": { "type": "string" },
+        "expires_at": { "$ref": "#/$defs/dateTime" },
+        "support_reference": { "type": "string" }
+      }
+    },
+    "IdentityAssurance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "ial"],
+      "properties": {
+        "contractVersion": { "$ref": "#/$defs/contractVersion" },
+        "ial": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "proofingMethod": { "type": ["string", "null"] },
+        "evidenceReference": { "type": ["string", "null"] }
+      }
+    },
+    "AuthenticationAssurance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "aal", "amr", "phishingResistant", "recoveryState"],
+      "properties": {
+        "contractVersion": { "$ref": "#/$defs/contractVersion" },
+        "aal": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "amr": { "type": "array", "items": { "type": "string" } },
+        "authenticationTime": { "$ref": "#/$defs/dateTime" },
+        "stepUpTime": { "$ref": "#/$defs/dateTime" },
+        "phishingResistant": { "type": "boolean" },
+        "sessionId": { "type": ["string", "null"] },
+        "flowId": { "type": ["string", "null"] },
+        "recoveryState": { "$ref": "#/$defs/RecoveryAuthenticationState" }
+      }
+    },
+    "WorkloadSubject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "workloadId"],
+      "properties": {
+        "contractVersion": { "$ref": "#/$defs/contractVersion" },
+        "workloadId": { "type": "string", "minLength": 1 },
+        "serviceName": { "type": ["string", "null"] },
+        "kubernetesServiceAccount": { "type": ["string", "null"] },
+        "keycloakClientId": { "type": ["string", "null"] },
+        "audience": { "type": ["string", "null"] }
+      }
+    },
+    "WorkloadAssurance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "credentialType", "mTlsBound"],
+      "properties": {
+        "contractVersion": { "$ref": "#/$defs/contractVersion" },
+        "credentialType": { "type": "string", "minLength": 1 },
+        "issuedAt": { "$ref": "#/$defs/dateTime" },
+        "expiresAt": { "$ref": "#/$defs/dateTime" },
+        "mTlsBound": { "type": "boolean" },
+        "issuer": { "type": ["string", "null"] }
+      }
+    },
+    "HumanSubjectRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "healthId"],
+      "properties": {
+        "contractVersion": { "$ref": "#/$defs/contractVersion" },
+        "healthId": { "type": "string", "minLength": 1 },
+        "actorType": { "type": ["string", "null"] },
+        "providerId": { "type": ["string", "null"] }
+      }
+    },
+    "ActiveContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion"],
+      "properties": {
+        "contractVersion": { "$ref": "#/$defs/contractVersion" },
+        "tenantId": { "type": ["string", "null"] },
+        "facilityId": { "type": ["string", "null"] },
+        "councilId": { "type": ["string", "null"] },
+        "departmentId": { "type": ["string", "null"] },
+        "wardId": { "type": ["string", "null"] },
+        "workspaceId": { "type": ["string", "null"] },
+        "programmeId": { "type": ["string", "null"] },
+        "shiftId": { "type": ["string", "null"] },
+        "workContextTokenId": { "type": ["string", "null"] }
+      }
+    },
+    "AuthorityBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "roles", "suspended"],
+      "properties": {
+        "contractVersion": { "$ref": "#/$defs/contractVersion" },
+        "authorityType": { "type": ["string", "null"] },
+        "authorityId": { "type": ["string", "null"] },
+        "roles": { "type": "array", "items": { "type": "string" } },
+        "licenceId": { "type": ["string", "null"] },
+        "appointmentId": { "type": ["string", "null"] },
+        "mandateId": { "type": ["string", "null"] },
+        "expiresAt": { "$ref": "#/$defs/dateTime" },
+        "suspended": { "type": "boolean" }
+      }
+    },
+    "DelegatedHumanContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "humanSubject", "allowedActions", "allowedScopes", "delegationDepth"],
+      "properties": {
+        "contractVersion": { "$ref": "#/$defs/contractVersion" },
+        "humanSubject": { "$ref": "#/$defs/HumanSubjectRef" },
+        "activeContext": { "$ref": "#/$defs/ActiveContext" },
+        "authority": { "$ref": "#/$defs/AuthorityBinding" },
+        "purposeOfUse": { "type": ["string", "null"] },
+        "audience": { "type": ["string", "null"] },
+        "allowedActions": { "type": "array", "items": { "type": "string" } },
+        "allowedScopes": { "type": "array", "items": { "type": "string" } },
+        "authenticationAssurance": { "$ref": "#/$defs/AuthenticationAssurance" },
+        "delegationDepth": { "type": "integer", "minimum": 0 },
+        "expiresAt": { "$ref": "#/$defs/dateTime" },
+        "correlationId": { "type": ["string", "null"] },
+        "requestId": { "type": ["string", "null"] }
+      }
+    },
+    "DelegationChain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "hops", "maxDepth"],
+      "properties": {
+        "contractVersion": { "$ref": "#/$defs/contractVersion" },
+        "hops": { "type": "array", "items": { "$ref": "#/$defs/DelegatedHumanContext" } },
+        "maxDepth": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "ServiceRequestContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "destinationServiceId"],
+      "properties": {
+        "contractVersion": { "$ref": "#/$defs/contractVersion" },
+        "destinationServiceId": { "type": "string", "minLength": 1 },
+        "method": { "type": ["string", "null"] },
+        "path": { "type": ["string", "null"] },
+        "action": { "type": ["string", "null"] },
+        "resourceType": { "type": ["string", "null"] },
+        "resourceId": { "type": ["string", "null"] },
+        "sensitivityClass": { "type": ["string", "null"] }
+      }
+    },
+    "ConsentDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "permitted", "allowedScopes", "deniedScopes"],
+      "properties": {
+        "contractVersion": { "$ref": "#/$defs/contractVersion" },
+        "permitted": { "type": "boolean" },
+        "consentId": { "type": ["string", "null"] },
+        "provision": { "type": ["string", "null"] },
+        "allowedScopes": { "type": "array", "items": { "type": "string" } },
+        "deniedScopes": { "type": "array", "items": { "type": "string" } },
+        "reasonCode": { "type": ["string", "null"] },
+        "subjectRef": { "type": ["string", "null"] },
+        "purpose": { "type": ["string", "null"] }
+      }
+    },
+    "LawfulBasisDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "permitted", "basisType"],
+      "properties": {
+        "contractVersion": { "$ref": "#/$defs/contractVersion" },
+        "permitted": { "type": "boolean" },
+        "basisType": {
+          "type": "string",
+          "enum": [
+            "DIRECT_CARE_RELATIONSHIP",
+            "STATUTORY_AUTHORITY",
+            "PUBLIC_HEALTH_AUTHORITY",
+            "EMERGENCY_BREAK_GLASS",
+            "OTHER_GOVERNED"
+          ],
+          "description": "EXPLICIT_CONSENT is modelled as ConsentDecision, never LawfulBasisDecision"
+        },
+        "basisReference": { "type": ["string", "null"] },
+        "reasonCode": { "type": ["string", "null"] },
+        "subjectRef": { "type": ["string", "null"] },
+        "purpose": { "type": ["string", "null"] }
+      }
+    },
+    "AsyncExecutionReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "referenceId", "allowedActions", "allowedScopes", "delegationDepth", "revoked"],
+      "properties": {
+        "contractVersion": { "$ref": "#/$defs/contractVersion" },
+        "referenceId": {
+          "type": "string",
+          "minLength": 1,
+          "not": { "pattern": "(eyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}|[Bb]earer\\s+|access_token|refresh_token)" }
+        },
+        "workerWorkload": { "$ref": "#/$defs/WorkloadSubject" },
+        "originalHumanSubject": { "$ref": "#/$defs/HumanSubjectRef" },
+        "allowedActions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "not": { "pattern": "(eyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}|[Bb]earer\\s+|access_token|refresh_token)" }
+          }
+        },
+        "allowedScopes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "not": { "pattern": "(eyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}|[Bb]earer\\s+|access_token|refresh_token)" }
+          }
+        },
+        "audience": { "type": ["string", "null"] },
+        "purposeOfUse": { "type": ["string", "null"] },
+        "delegationDepth": { "type": "integer", "minimum": 0 },
+        "expiresAt": { "$ref": "#/$defs/dateTime" },
+        "revoked": { "type": "boolean" },
+        "correlationId": { "type": ["string", "null"] }
+      }
+    },
+    "TrustAuditEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "eventId", "timestamp"],
+      "properties": {
+        "contractVersion": { "$ref": "#/$defs/contractVersion" },
+        "eventId": { "type": "string", "minLength": 1 },
+        "timestamp": { "$ref": "#/$defs/dateTime" },
+        "requestId": { "type": ["string", "null"] },
+        "traceId": { "type": ["string", "null"] },
+        "decisionId": { "type": ["string", "null"] },
+        "callingWorkloadId": { "type": ["string", "null"] },
+        "destinationWorkloadId": { "type": ["string", "null"] },
+        "humanActorId": { "type": ["string", "null"] },
+        "activeContextId": { "type": ["string", "null"] },
+        "delegationReference": { "type": ["string", "null"] },
+        "purposeOfUse": { "type": ["string", "null"] },
+        "action": { "type": ["string", "null"] },
+        "resourceReference": { "type": ["string", "null"] },
+        "credentialType": { "type": ["string", "null"] },
+        "identityAssuranceLevel": { "type": ["integer", "null"] },
+        "authenticationAal": { "type": ["integer", "null"] },
+        "recoveryState": { "$ref": "#/$defs/RecoveryAuthenticationState" },
+        "policyVersion": { "type": ["string", "null"] },
+        "enforcementPoint": { "type": ["string", "null"] },
+        "result": { "type": ["string", "null"] },
+        "attributes": {
+          "type": "object",
+          "propertyNames": {
+            "not": {
+              "pattern": "(?i)(clinical|observation|fhir|diagnosis|medication|password|client_secret|otp|recovery[_-]?code|access_token|refresh_token|private[_-]?key)"
+            }
+          },
+          "additionalProperties": {
+            "type": "string",
+            "not": {
+              "pattern": "(eyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}|[Bb]earer\\s+|-----BEGIN)"
+            }
+          }
+        }
+      }
+    },
+    "TrustDecisionInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "callingWorkload", "destination", "operatingMode", "emergencyBreakGlass"],
+      "properties": {
+        "contractVersion": { "$ref": "#/$defs/contractVersion" },
+        "humanSubject": { "$ref": "#/$defs/HumanSubjectRef" },
+        "callingWorkload": { "$ref": "#/$defs/WorkloadSubject" },
+        "originalClientId": { "type": ["string", "null"] },
+        "destination": { "$ref": "#/$defs/ServiceRequestContext" },
+        "sessionId": { "type": ["string", "null"] },
+        "flowId": { "type": ["string", "null"] },
+        "identityAssurance": { "$ref": "#/$defs/IdentityAssurance" },
+        "authenticationAssurance": { "$ref": "#/$defs/AuthenticationAssurance" },
+        "workloadAssurance": { "$ref": "#/$defs/WorkloadAssurance" },
+        "activeContext": { "$ref": "#/$defs/ActiveContext" },
+        "authority": { "$ref": "#/$defs/AuthorityBinding" },
+        "tenantId": { "type": ["string", "null"] },
+        "facilityId": { "type": ["string", "null"] },
+        "councilId": { "type": ["string", "null"] },
+        "action": { "type": ["string", "null"] },
+        "resourceType": { "type": ["string", "null"] },
+        "resourceId": { "type": ["string", "null"] },
+        "sensitivityClass": { "type": ["string", "null"] },
+        "purposeOfUse": { "type": ["string", "null"] },
+        "consentDecision": { "$ref": "#/$defs/ConsentDecision" },
+        "lawfulBasisDecision": { "$ref": "#/$defs/LawfulBasisDecision" },
+        "delegationChain": { "$ref": "#/$defs/DelegationChain" },
+        "emergencyBreakGlass": { "type": "boolean" },
+        "operatingMode": { "$ref": "#/$defs/OperatingMode" },
+        "policyVersion": { "type": ["string", "null"] },
+        "requestId": { "type": ["string", "null"] },
+        "traceId": { "type": ["string", "null"] },
+        "decisionId": { "type": ["string", "null"] },
+        "correlationId": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

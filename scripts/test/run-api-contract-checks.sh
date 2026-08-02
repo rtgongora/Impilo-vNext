@@ -23,6 +23,8 @@ gate_run "openapi-social-contract" bash -c 'test -f contracts/openapi/social.ope
 
 gate_run "openapi-yaml-validity" bash scripts/guard/check-openapi-yaml-validity.sh || FAIL=1
 
+gate_run "trust-decision-contracts" bash scripts/guard/check-trust-decision-contracts.sh || FAIL=1
+
 gate_run "contract-implementation-matrix" bash -c '
   cd scripts/completeness
   npm install --silent 2>/dev/null || npm install --silent

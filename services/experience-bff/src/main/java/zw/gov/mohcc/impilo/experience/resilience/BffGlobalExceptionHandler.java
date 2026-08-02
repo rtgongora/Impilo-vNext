@@ -55,6 +55,25 @@ public class BffGlobalExceptionHandler {
                 .body(Map.of("error", error));
     }
 
+    /**
+     * OIDC protocol violations are governed 400s, never 500s. Duplicated in both
+     * advice classes because each declares an Exception.class catch-all and their
+     * relative order is unspecified (same pattern as the malformed-param mapping).
+     */
+    @ExceptionHandler(zw.gov.mohcc.impilo.experience.auth.session.OidcSessionService.OidcProtocolException.class)
+    public ResponseEntity<Map<String, Object>> handleOidcProtocol(
+            zw.gov.mohcc.impilo.experience.auth.session.OidcSessionService.OidcProtocolException e,
+            HttpServletRequest request) {
+
+        Map<String, Object> error = new LinkedHashMap<>();
+        error.put("code", e.code());
+        error.put("message", "Authentication request could not be completed. Start a new sign-in.");
+        error.put("request_id", request.getHeader("X-Request-ID"));
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", error));
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleBadRequest(
             IllegalArgumentException e, HttpServletRequest request) {

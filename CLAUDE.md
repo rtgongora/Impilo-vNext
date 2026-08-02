@@ -26,6 +26,10 @@ Citizen gateway doctrine: [`docs/doctrine/health-services-gateway-doctrine.md`](
 
 Care continuum doctrine: [`docs/doctrine/care-continuum-doctrine.md`](docs/doctrine/care-continuum-doctrine.md)
 
+> **Trust-plane doctrine line**: One trust plane, many components; Keycloak authenticates within Tshepo, tshepo-authz decides, OPA evaluates after parity, Envoy and applications enforce; the MFA merge is authentication assurance foundation, not Tshepo complete.
+
+Trust-plane doctrine: [`docs/doctrine/tshepo-trust-plane-doctrine.md`](docs/doctrine/tshepo-trust-plane-doctrine.md)
+
 ## Workflow Rules
 
 ### Small-Commit Workflow
