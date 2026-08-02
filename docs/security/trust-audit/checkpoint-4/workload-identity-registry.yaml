@@ -1,15 +1,16 @@
 registry_version: 1
 generated_by: scripts/security/generate-workload-identity-registry.py
 source_of_truth: Live cluster inventory. Repository registries supply owner/plane/declared destinations only, and are labelled
-  declared. UNKNOWN is retained, never guessed.
+  declared. Derived fields (owner, human_delegation_required, credential.audience_current) each carry a sibling evidence field
+  naming how they were derived. UNKNOWN means could-not-determine and is retained, never guessed; NONE_CONFIGURED means inspected-and-absent.
 namespace: impilo-full-preview
 environment: preview
 cluster: k3s-impilo
 node_counts:
   CronJob: 2
-  Deployment: 113
+  Deployment: 114
   Job: 14
-total_nodes: 129
+total_nodes: 130
 workloads:
 - workload_id: urn:impilo:workload:preview:k3s-impilo:impilo-full-preview:estate-health-watch:estate-health-watch
   workload: estate-health-watch
@@ -22,16 +23,23 @@ workloads:
     target: estate-health-watch
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
-  plane: UNKNOWN
-  domain: UNKNOWN
+  owner:
+    plane: integration
+    domain: platform-ops
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: INFRA_OWNER_MAP
+    source_evidence: manifest:deploy/helm/impilo-vnext/templates/estate-health-watch.yaml
+  plane: integration
+  domain: platform-ops
   credential:
     current_type: NONE_OBSERVED
     target_type: PROJECTED_K8S_TOKEN
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:estate-health-watch
     secret_refs: []
   destinations:
@@ -40,7 +48,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: BATCH
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: KIND_BATCH
   current_bypasses:
   - serviceaccount-token-automounted
   transport:
@@ -59,16 +68,23 @@ workloads:
     target: postgres-backup
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
-  plane: UNKNOWN
-  domain: UNKNOWN
+  owner:
+    plane: integration
+    domain: infrastructure
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: DERIVED_FROM_PARENT_WORKLOAD:postgres
+    source_evidence: FULL_BOOT_SERVICE_CLASSIFICATION
+  plane: integration
+  domain: infrastructure
   credential:
     current_type: NONE_OBSERVED
     target_type: PROJECTED_K8S_TOKEN
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:postgres-backup
     secret_refs:
     - postgres-credentials
@@ -78,7 +94,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: BATCH
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: KIND_BATCH
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -98,7 +115,13 @@ workloads:
     target: abis-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: trust
+    domain: biometric-identity
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: trust
   domain: biometric-identity
   credential:
@@ -107,7 +130,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:abis-service
     secret_refs:
     - postgres-credentials
@@ -122,7 +146,8 @@ workloads:
     - vito-service
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -143,7 +168,13 @@ workloads:
     target: ai-model-registry-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: data
+    domain: intelligence
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: data
   domain: intelligence
   credential:
@@ -152,7 +183,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:ai-model-registry-service
     secret_refs:
     - postgres-credentials
@@ -166,7 +198,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -187,7 +220,13 @@ workloads:
     target: analytics-pipeline-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: integration
+    domain: platform-ops
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: integration
   domain: platform-ops
   credential:
@@ -196,7 +235,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:analytics-pipeline-service
     secret_refs:
     - postgres-credentials
@@ -210,7 +250,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -231,7 +272,13 @@ workloads:
     target: asset-registry-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: integration
+    domain: platform-ops
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: integration
   domain: platform-ops
   credential:
@@ -240,7 +287,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:asset-registry-service
     secret_refs:
     - postgres-credentials
@@ -254,7 +302,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -275,7 +324,13 @@ workloads:
     target: audit-ledger-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: integration
+    domain: platform-ops
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: integration
   domain: platform-ops
   credential:
@@ -284,7 +339,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:audit-ledger-service
     secret_refs:
     - postgres-credentials
@@ -298,7 +354,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -319,7 +376,13 @@ workloads:
     target: booking-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: experience
+    domain: workflow-orchestration
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: experience
   domain: workflow-orchestration
   credential:
@@ -328,7 +391,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:booking-service
     secret_refs:
     - postgres-credentials
@@ -342,7 +406,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -363,7 +428,13 @@ workloads:
     target: butano-fhir
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: clinical
+    domain: care-delivery
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: clinical
   domain: care-delivery
   credential:
@@ -372,7 +443,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:butano-fhir
     secret_refs:
     - postgres-credentials
@@ -386,7 +458,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -407,7 +480,13 @@ workloads:
     target: butano-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: clinical
+    domain: care-delivery
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: clinical
   domain: care-delivery
   credential:
@@ -416,7 +495,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:butano-service
     secret_refs:
     - postgres-credentials
@@ -431,7 +511,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -452,7 +533,13 @@ workloads:
     target: campaigns-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: data
+    domain: public-health-campaigns
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: data
   domain: public-health-campaigns
   credential:
@@ -461,7 +548,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:campaigns-service
     secret_refs:
     - postgres-credentials
@@ -475,7 +563,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -496,7 +585,13 @@ workloads:
     target: card-print-agent
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: integration
+    domain: interoperability
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: integration
   domain: interoperability
   credential:
@@ -505,7 +600,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:card-print-agent
     secret_refs:
     - postgres-credentials
@@ -519,7 +615,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -540,7 +637,13 @@ workloads:
     target: channels-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: integration
+    domain: interoperability
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: integration
   domain: interoperability
   credential:
@@ -549,7 +652,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:channels-service
     secret_refs:
     - postgres-credentials
@@ -563,7 +667,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -584,7 +689,13 @@ workloads:
     target: clinical-knowledge-platform-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: clinical
+    domain: clinical-knowledge
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: clinical
   domain: clinical-knowledge
   credential:
@@ -593,7 +704,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:clinical-knowledge-platform-service
     secret_refs:
     - postgres-credentials
@@ -607,7 +719,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -628,7 +741,13 @@ workloads:
     target: community-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: experience
+    domain: workflow-orchestration
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: experience
   domain: workflow-orchestration
   credential:
@@ -637,7 +756,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:community-service
     secret_refs:
     - postgres-credentials
@@ -651,7 +771,8 @@ workloads:
     - web-mobile-experience
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -672,7 +793,13 @@ workloads:
     target: connector-fhir-adapter
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: integration
+    domain: interoperability
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: integration
   domain: interoperability
   credential:
@@ -681,7 +808,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:connector-fhir-adapter
     secret_refs:
     - postgres-credentials
@@ -695,7 +823,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -716,7 +845,13 @@ workloads:
     target: costing-engine-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: enterprise
+    domain: finance
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: enterprise
   domain: finance
   credential:
@@ -725,7 +860,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:costing-engine-service
     secret_refs:
     - postgres-credentials
@@ -741,7 +877,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -762,7 +899,13 @@ workloads:
     target: coverage-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: enterprise
+    domain: finance
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: enterprise
   domain: finance
   credential:
@@ -771,7 +914,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:coverage-service
     secret_refs:
     - postgres-credentials
@@ -785,7 +929,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -806,7 +951,13 @@ workloads:
     target: credential-verification-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: enterprise
+    domain: finance
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: enterprise
   domain: finance
   credential:
@@ -815,7 +966,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:credential-verification-service
     secret_refs:
     - postgres-credentials
@@ -829,7 +981,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -850,7 +1003,13 @@ workloads:
     target: daidzai-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: experience
+    domain: workflow-orchestration
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: experience
   domain: workflow-orchestration
   credential:
@@ -859,7 +1018,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:daidzai-service
     secret_refs:
     - postgres-credentials
@@ -879,7 +1039,8 @@ workloads:
     - experience-bff
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -900,7 +1061,13 @@ workloads:
     target: data-access-governance-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: data
+    domain: intelligence
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: data
   domain: intelligence
   credential:
@@ -909,7 +1076,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:data-access-governance-service
     secret_refs:
     - impilo-app-secrets
@@ -924,7 +1092,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -945,7 +1114,13 @@ workloads:
     target: data-governance-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: data
+    domain: intelligence
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: data
   domain: intelligence
   credential:
@@ -954,7 +1129,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:data-governance-service
     secret_refs:
     - postgres-credentials
@@ -968,7 +1144,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -989,7 +1166,13 @@ workloads:
     target: data-ingestion-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: data
+    domain: intelligence
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: data
   domain: intelligence
   credential:
@@ -998,7 +1181,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:data-ingestion-service
     secret_refs:
     - postgres-credentials
@@ -1012,7 +1196,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -1033,7 +1218,13 @@ workloads:
     target: data-pipeline-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: data
+    domain: intelligence
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: data
   domain: intelligence
   credential:
@@ -1042,7 +1233,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:data-pipeline-service
     secret_refs:
     - postgres-credentials
@@ -1056,7 +1248,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -1077,7 +1270,13 @@ workloads:
     target: data-warehouse-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: data
+    domain: intelligence
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: data
   domain: intelligence
   credential:
@@ -1086,7 +1285,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:data-warehouse-service
     secret_refs:
     - postgres-credentials
@@ -1100,7 +1300,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -1121,7 +1322,13 @@ workloads:
     target: developer-portal-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: integration
+    domain: platform-ops
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: integration
   domain: platform-ops
   credential:
@@ -1130,7 +1337,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:developer-portal-service
     secret_refs:
     - postgres-credentials
@@ -1144,7 +1352,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -1165,7 +1374,13 @@ workloads:
     target: dispatch-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: integration
+    domain: platform-ops
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: integration
   domain: platform-ops
   credential:
@@ -1174,7 +1389,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:dispatch-service
     secret_refs:
     - postgres-credentials
@@ -1188,7 +1404,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -1209,7 +1426,13 @@ workloads:
     target: document-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: clinical
+    domain: care-delivery
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: clinical
   domain: care-delivery
   credential:
@@ -1218,7 +1441,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:document-service
     secret_refs:
     - impilo-app-secrets
@@ -1234,7 +1458,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -1255,7 +1480,13 @@ workloads:
     target: envoy
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
+  owner:
+    plane: trust
+    domain: infrastructure
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: FULL_BOOT_SERVICE_CLASSIFICATION
+    source_evidence: ''
   plane: trust
   domain: infrastructure
   credential:
@@ -1264,7 +1495,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:envoy
     secret_refs: []
   destinations:
@@ -1273,7 +1505,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: INFRASTRUCTURE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: INFRASTRUCTURE
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -1293,7 +1526,13 @@ workloads:
     target: experience-bff
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: experience
+    domain: workflow-orchestration
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: experience
   domain: workflow-orchestration
   credential:
@@ -1302,7 +1541,8 @@ workloads:
     keycloak_client_id_current: impilo-backend
     issuer_current: https://impilo.mohcc.gov.zw/realms/impilo
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_REALM_AUDIENCE_MAPPER:impilo-backend
     audience_target: urn:impilo:tshepo:experience-bff
     secret_refs:
     - impilo-app-secrets
@@ -1331,7 +1571,8 @@ workloads:
     - web-mobile-experience
     evidence: MEASURED_CONFIG_ONLY
   flow_category: EDGE_COMPOSITION
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -1352,7 +1593,13 @@ workloads:
     target: fhir-gateway-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: clinical
+    domain: care-delivery
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: clinical
   domain: care-delivery
   credential:
@@ -1361,7 +1608,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:fhir-gateway-service
     secret_refs:
     - postgres-credentials
@@ -1377,7 +1625,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -1398,7 +1647,13 @@ workloads:
     target: forms-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: clinical
+    domain: clinical-knowledge
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: clinical
   domain: clinical-knowledge
   credential:
@@ -1407,7 +1662,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:forms-service
     secret_refs:
     - postgres-credentials
@@ -1421,7 +1677,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -1442,7 +1699,13 @@ workloads:
     target: general-ledger-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: enterprise
+    domain: enterprise-resource
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: enterprise
   domain: enterprise-resource
   credential:
@@ -1451,7 +1714,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:general-ledger-service
     secret_refs:
     - postgres-credentials
@@ -1465,7 +1729,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -1486,7 +1751,13 @@ workloads:
     target: guidance-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: clinical
+    domain: clinical-knowledge
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: clinical
   domain: clinical-knowledge
   credential:
@@ -1495,7 +1766,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:guidance-service
     secret_refs:
     - postgres-credentials
@@ -1509,7 +1781,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -1530,7 +1803,13 @@ workloads:
     target: hapi-fhir
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
+  owner:
+    plane: clinical
+    domain: infrastructure
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: FULL_BOOT_SERVICE_CLASSIFICATION
+    source_evidence: ''
   plane: clinical
   domain: infrastructure
   credential:
@@ -1539,7 +1818,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:hapi-fhir
     secret_refs:
     - postgres-credentials
@@ -1549,7 +1829,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: INFRASTRUCTURE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: INFRASTRUCTURE
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -1569,7 +1850,13 @@ workloads:
     target: hr-payroll-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: enterprise
+    domain: enterprise-resource
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: enterprise
   domain: enterprise-resource
   credential:
@@ -1578,7 +1865,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:hr-payroll-service
     secret_refs:
     - postgres-credentials
@@ -1593,7 +1881,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -1614,7 +1903,13 @@ workloads:
     target: identity-assurance-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: trust
+    domain: identity-governance
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: trust
   domain: identity-governance
   credential:
@@ -1623,7 +1918,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:identity-assurance-service
     secret_refs:
     - postgres-credentials
@@ -1636,7 +1932,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -1657,7 +1954,13 @@ workloads:
     target: indawo-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: registry
+    domain: registry-spine
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: registry
   domain: registry-spine
   credential:
@@ -1666,7 +1969,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:indawo-service
     secret_refs:
     - postgres-credentials
@@ -1680,7 +1984,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -1701,7 +2006,13 @@ workloads:
     target: inpatient-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: clinical
+    domain: care-delivery
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: clinical
   domain: care-delivery
   credential:
@@ -1710,7 +2021,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:inpatient-service
     secret_refs:
     - postgres-credentials
@@ -1724,7 +2036,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -1745,7 +2058,13 @@ workloads:
     target: integration-hub
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: integration
+    domain: interoperability
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: integration
   domain: interoperability
   credential:
@@ -1754,7 +2073,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:integration-hub
     secret_refs:
     - postgres-credentials
@@ -1768,7 +2088,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -1789,7 +2110,13 @@ workloads:
     target: inventory-elmis-adapter
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: clinical
+    domain: care-delivery
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: clinical
   domain: care-delivery
   credential:
@@ -1798,7 +2125,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:inventory-elmis-adapter
     secret_refs:
     - postgres-credentials
@@ -1812,7 +2140,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -1833,7 +2162,13 @@ workloads:
     target: inventory-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: clinical
+    domain: care-delivery
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: clinical
   domain: care-delivery
   credential:
@@ -1842,7 +2177,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:inventory-service
     secret_refs:
     - postgres-credentials
@@ -1862,7 +2198,8 @@ workloads:
     - referral-service
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -1883,7 +2220,13 @@ workloads:
     target: iot-ingestion-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: integration
+    domain: platform-ops
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: integration
   domain: platform-ops
   credential:
@@ -1892,7 +2235,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:iot-ingestion-service
     secret_refs:
     - postgres-credentials
@@ -1906,7 +2250,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -1927,7 +2272,13 @@ workloads:
     target: jobs-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: integration
+    domain: interoperability
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: integration
   domain: interoperability
   credential:
@@ -1936,7 +2287,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:jobs-service
     secret_refs:
     - postgres-credentials
@@ -1950,7 +2302,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -1971,7 +2324,13 @@ workloads:
     target: kafka
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
+  owner:
+    plane: integration
+    domain: infrastructure
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: FULL_BOOT_SERVICE_CLASSIFICATION
+    source_evidence: ''
   plane: integration
   domain: infrastructure
   credential:
@@ -1980,7 +2339,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:kafka
     secret_refs: []
   destinations:
@@ -1989,7 +2349,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: INFRASTRUCTURE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: INFRASTRUCTURE
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -2009,7 +2370,13 @@ workloads:
     target: keycloak
     automount_current: false
     automount_target: false
-  owner: UNKNOWN
+  owner:
+    plane: trust
+    domain: infrastructure
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: FULL_BOOT_SERVICE_CLASSIFICATION
+    source_evidence: ''
   plane: trust
   domain: infrastructure
   credential:
@@ -2018,7 +2385,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:keycloak
     secret_refs:
     - impilo-app-secrets
@@ -2028,7 +2396,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: INFRASTRUCTURE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: INFRASTRUCTURE
   current_bypasses:
   - shared-default-serviceaccount
   transport:
@@ -2047,7 +2416,13 @@ workloads:
     target: khuluma-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: experience
+    domain: communication-coordination
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: experience
   domain: communication-coordination
   credential:
@@ -2056,7 +2431,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:khuluma-service
     secret_refs:
     - postgres-credentials
@@ -2076,7 +2452,8 @@ workloads:
     - experience-bff
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -2097,7 +2474,13 @@ workloads:
     target: landela-adapter-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: integration
+    domain: interoperability
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: integration
   domain: interoperability
   credential:
@@ -2106,7 +2489,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:landela-adapter-service
     secret_refs:
     - postgres-credentials
@@ -2120,7 +2504,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -2141,7 +2526,13 @@ workloads:
     target: learning-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: experience
+    domain: workflow-orchestration
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: experience
   domain: workflow-orchestration
   credential:
@@ -2150,7 +2541,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:learning-service
     secret_refs:
     - postgres-credentials
@@ -2166,7 +2558,8 @@ workloads:
     - web-mobile-experience
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -2187,7 +2580,13 @@ workloads:
     target: live-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: experience
+    domain: live-events-broadcast
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: experience
   domain: live-events-broadcast
   credential:
@@ -2196,7 +2595,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:live-service
     secret_refs:
     - postgres-credentials
@@ -2220,7 +2620,8 @@ workloads:
     - web-mobile-experience
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -2241,16 +2642,23 @@ workloads:
     target: livekit
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
-  plane: UNKNOWN
-  domain: UNKNOWN
+  owner:
+    plane: experience
+    domain: live-events-broadcast
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: INFRA_OWNER_MAP
+    source_evidence: peer-classification:live-service
+  plane: experience
+  domain: live-events-broadcast
   credential:
     current_type: NONE_OBSERVED
     target_type: PROJECTED_K8S_TOKEN
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:livekit
     secret_refs:
     - impilo-app-secrets
@@ -2260,7 +2668,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: INFRASTRUCTURE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: INFRASTRUCTURE
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -2280,16 +2689,23 @@ workloads:
     target: livekit-egress
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
-  plane: UNKNOWN
-  domain: UNKNOWN
+  owner:
+    plane: experience
+    domain: live-events-broadcast
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: INFRA_OWNER_MAP
+    source_evidence: peer-classification:live-service
+  plane: experience
+  domain: live-events-broadcast
   credential:
     current_type: NONE_OBSERVED
     target_type: PROJECTED_K8S_TOKEN
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:livekit-egress
     secret_refs:
     - impilo-app-secrets
@@ -2299,7 +2715,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: INFRASTRUCTURE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: INFRASTRUCTURE
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -2319,7 +2736,13 @@ workloads:
     target: llm-orchestration-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: integration
+    domain: platform-ops
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: integration
   domain: platform-ops
   credential:
@@ -2328,7 +2751,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:llm-orchestration-service
     secret_refs:
     - postgres-credentials
@@ -2342,7 +2766,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -2363,7 +2788,13 @@ workloads:
     target: madi-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: clinical
+    domain: platform-ops
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: clinical
   domain: platform-ops
   credential:
@@ -2372,7 +2803,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:madi-service
     secret_refs:
     - postgres-credentials
@@ -2386,7 +2818,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -2407,7 +2840,13 @@ workloads:
     target: matcher-engine
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: trust
+    domain: biometric-identity
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: trust
   domain: biometric-identity
   credential:
@@ -2416,7 +2855,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:matcher-engine
     secret_refs: []
   destinations:
@@ -2426,7 +2866,8 @@ workloads:
     - abis-service
     evidence: MEASURED_CONFIG_ONLY
   flow_category: INFRASTRUCTURE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: INFRASTRUCTURE
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -2446,7 +2887,13 @@ workloads:
     target: minio
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
+  owner:
+    plane: integration
+    domain: infrastructure
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: FULL_BOOT_SERVICE_CLASSIFICATION
+    source_evidence: ''
   plane: integration
   domain: infrastructure
   credential:
@@ -2455,7 +2902,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:minio
     secret_refs:
     - impilo-app-secrets
@@ -2465,7 +2913,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: INFRASTRUCTURE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: INFRASTRUCTURE
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -2485,7 +2934,13 @@ workloads:
     target: msika-apps-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: enterprise
+    domain: marketplace
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: enterprise
   domain: marketplace
   credential:
@@ -2494,7 +2949,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:msika-apps-service
     secret_refs:
     - postgres-credentials
@@ -2508,7 +2964,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -2529,7 +2986,13 @@ workloads:
     target: msika-flow-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: enterprise
+    domain: marketplace
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: enterprise
   domain: marketplace
   credential:
@@ -2538,7 +3001,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:msika-flow-service
     secret_refs:
     - postgres-credentials
@@ -2557,7 +3021,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -2578,7 +3043,13 @@ workloads:
     target: msika-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: enterprise
+    domain: marketplace
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: enterprise
   domain: marketplace
   credential:
@@ -2587,7 +3058,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:msika-service
     secret_refs:
     - postgres-credentials
@@ -2601,7 +3073,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -2622,7 +3095,13 @@ workloads:
     target: mushe-wallet-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: enterprise
+    domain: finance
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: enterprise
   domain: finance
   credential:
@@ -2631,7 +3110,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:mushe-wallet-service
     secret_refs:
     - postgres-credentials
@@ -2645,7 +3125,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -2666,7 +3147,13 @@ workloads:
     target: mushex-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: enterprise
+    domain: finance
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: enterprise
   domain: finance
   credential:
@@ -2675,7 +3162,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:mushex-service
     secret_refs:
     - impilo-app-secrets
@@ -2691,7 +3179,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -2712,7 +3201,13 @@ workloads:
     target: mvumo-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: trust
+    domain: identity-governance
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: trust
   domain: identity-governance
   credential:
@@ -2721,7 +3216,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:mvumo-service
     secret_refs:
     - postgres-credentials
@@ -2734,7 +3230,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -2755,7 +3252,13 @@ workloads:
     target: national-data-repository-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: data
+    domain: intelligence
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: data
   domain: intelligence
   credential:
@@ -2764,7 +3267,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:national-data-repository-service
     secret_refs:
     - postgres-credentials
@@ -2778,7 +3282,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -2799,16 +3304,23 @@ workloads:
     target: ndila-martin
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
-  plane: UNKNOWN
-  domain: UNKNOWN
+  owner:
+    plane: integration
+    domain: interoperability
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: DERIVED_FROM_PARENT_WORKLOAD:ndila-service
+    source_evidence: SERVICES_REGISTRY
+  plane: integration
+  domain: interoperability
   credential:
     current_type: NONE_OBSERVED
     target_type: PROJECTED_K8S_TOKEN
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:ndila-martin
     secret_refs: []
   destinations:
@@ -2817,7 +3329,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: INFRASTRUCTURE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: INFRASTRUCTURE
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -2837,7 +3350,13 @@ workloads:
     target: ndila-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: integration
+    domain: interoperability
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: integration
   domain: interoperability
   credential:
@@ -2846,7 +3365,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:ndila-service
     secret_refs:
     - postgres-credentials
@@ -2867,7 +3387,8 @@ workloads:
     - dispatch-service
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -2888,7 +3409,13 @@ workloads:
     target: ndr-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: data
+    domain: intelligence
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: data
   domain: intelligence
   credential:
@@ -2897,7 +3424,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:ndr-service
     secret_refs:
     - postgres-credentials
@@ -2911,7 +3439,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -2932,7 +3461,13 @@ workloads:
     target: nhume-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: integration
+    domain: interoperability
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: integration
   domain: interoperability
   credential:
@@ -2941,7 +3476,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:nhume-service
     secret_refs:
     - impilo-app-secrets
@@ -2963,7 +3499,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -2984,7 +3521,13 @@ workloads:
     target: notification-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: integration
+    domain: interoperability
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: integration
   domain: interoperability
   credential:
@@ -2993,7 +3536,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:notification-service
     secret_refs:
     - impilo-app-secrets
@@ -3008,7 +3552,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -3029,7 +3574,13 @@ workloads:
     target: observability-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: integration
+    domain: platform-ops
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: integration
   domain: platform-ops
   credential:
@@ -3038,7 +3589,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:observability-service
     secret_refs:
     - postgres-credentials
@@ -3052,7 +3604,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -3073,7 +3626,13 @@ workloads:
     target: offline-edge-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: integration
+    domain: platform-ops
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: integration
   domain: platform-ops
   credential:
@@ -3082,7 +3641,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:offline-edge-service
     secret_refs:
     - postgres-credentials
@@ -3096,7 +3656,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -3117,7 +3678,13 @@ workloads:
     target: offline-sync-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: integration
+    domain: interoperability
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: integration
   domain: interoperability
   credential:
@@ -3126,7 +3693,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:offline-sync-service
     secret_refs:
     - postgres-credentials
@@ -3140,7 +3708,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -3161,7 +3730,13 @@ workloads:
     target: one-ui-shell
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
+  owner:
+    plane: experience
+    domain: ui-workspace
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: FULL_BOOT_SERVICE_CLASSIFICATION
+    source_evidence: ''
   plane: experience
   domain: ui-workspace
   credential:
@@ -3170,7 +3745,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:one-ui-shell
     secret_refs: []
   destinations:
@@ -3180,10 +3756,55 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: EDGE_COMPOSITION
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
+  transport:
+    state: PLAINTEXT_HTTP
+    mtls: ABSENT
+    network_policy: NOT_ENFORCED_BY_CLUSTER
+  migration_cohort: UNASSIGNED
+- workload_id: urn:impilo:workload:preview:k3s-impilo:impilo-full-preview:opa:opa
+  workload: opa
+  kind: Deployment
+  environment: preview
+  cluster: k3s-impilo
+  namespace: impilo-full-preview
+  service_account:
+    current: opa
+    target: opa
+    automount_current: false
+    automount_target: false
+  owner:
+    plane: trust
+    domain: infrastructure
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: FULL_BOOT_SERVICE_CLASSIFICATION
+    source_evidence: ''
+  plane: trust
+  domain: infrastructure
+  credential:
+    current_type: NONE_OBSERVED
+    target_type: PROJECTED_K8S_TOKEN
+    keycloak_client_id_current: UNKNOWN
+    issuer_current: UNKNOWN
+    issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
+    audience_target: urn:impilo:tshepo:opa
+    secret_refs: []
+  destinations:
+    measured_from_env: []
+    declared_consumes_from: []
+    declared_exposes_to: []
+    evidence: MEASURED_CONFIG_ONLY
+  flow_category: INFRASTRUCTURE
+  human_delegation_required: false
+  human_delegation_evidence: INFRASTRUCTURE
+  current_bypasses: []
   transport:
     state: PLAINTEXT_HTTP
     mtls: ABSENT
@@ -3200,7 +3821,13 @@ workloads:
     target: organization-registry-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: registry
+    domain: organization-registry
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: registry
   domain: organization-registry
   credential:
@@ -3209,7 +3836,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:organization-registry-service
     secret_refs:
     - postgres-credentials
@@ -3224,7 +3852,8 @@ workloads:
     - workforce-governance-service
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -3245,7 +3874,13 @@ workloads:
     target: oros-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: clinical
+    domain: care-delivery
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: clinical
   domain: care-delivery
   credential:
@@ -3254,7 +3889,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:oros-service
     secret_refs:
     - postgres-credentials
@@ -3268,7 +3904,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -3289,16 +3926,23 @@ workloads:
     target: orthanc
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
-  plane: UNKNOWN
-  domain: UNKNOWN
+  owner:
+    plane: clinical
+    domain: infrastructure
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: INFRA_OWNER_MAP
+    source_evidence: peer-classification:hapi-fhir
+  plane: clinical
+  domain: infrastructure
   credential:
     current_type: NONE_OBSERVED
     target_type: PROJECTED_K8S_TOKEN
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:orthanc
     secret_refs: []
   destinations:
@@ -3307,7 +3951,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: INFRASTRUCTURE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: INFRASTRUCTURE
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -3327,7 +3972,13 @@ workloads:
     target: pacs-adapter-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: clinical
+    domain: care-delivery
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: clinical
   domain: care-delivery
   credential:
@@ -3336,7 +3987,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:pacs-adapter-service
     secret_refs:
     - postgres-credentials
@@ -3351,7 +4003,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -3372,7 +4025,13 @@ workloads:
     target: participation-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: experience
+    domain: workflow-orchestration
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: experience
   domain: workflow-orchestration
   credential:
@@ -3381,7 +4040,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:participation-service
     secret_refs:
     - postgres-credentials
@@ -3395,7 +4055,8 @@ workloads:
     - experience-bff
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -3416,7 +4077,13 @@ workloads:
     target: patient-safety-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: clinical
+    domain: pharmacovigilance
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: clinical
   domain: pharmacovigilance
   credential:
@@ -3425,7 +4092,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:patient-safety-service
     secret_refs:
     - postgres-credentials
@@ -3439,7 +4107,8 @@ workloads:
     - surveillance-service
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -3460,7 +4129,13 @@ workloads:
     target: pct-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: clinical
+    domain: care-delivery
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: clinical
   domain: care-delivery
   credential:
@@ -3469,7 +4144,8 @@ workloads:
     keycloak_client_id_current: impilo-backend
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_REALM_AUDIENCE_MAPPER:impilo-backend
     audience_target: urn:impilo:tshepo:pct-service
     secret_refs:
     - impilo-app-secrets
@@ -3486,7 +4162,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -3508,7 +4185,13 @@ workloads:
     target: pharmacy-elmis-adapter
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: clinical
+    domain: care-delivery
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: clinical
   domain: care-delivery
   credential:
@@ -3517,7 +4200,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:pharmacy-elmis-adapter
     secret_refs:
     - postgres-credentials
@@ -3531,7 +4215,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -3552,7 +4237,13 @@ workloads:
     target: pharmacy-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: clinical
+    domain: care-delivery
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: clinical
   domain: care-delivery
   credential:
@@ -3561,7 +4252,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:pharmacy-service
     secret_refs:
     - postgres-credentials
@@ -3576,7 +4268,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -3597,7 +4290,13 @@ workloads:
     target: postgres
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
+  owner:
+    plane: integration
+    domain: infrastructure
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: FULL_BOOT_SERVICE_CLASSIFICATION
+    source_evidence: ''
   plane: integration
   domain: infrastructure
   credential:
@@ -3606,7 +4305,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:postgres
     secret_refs: []
   destinations:
@@ -3615,7 +4315,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: INFRASTRUCTURE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: INFRASTRUCTURE
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -3635,7 +4336,13 @@ workloads:
     target: procurement-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: enterprise
+    domain: enterprise-resource
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: enterprise
   domain: enterprise-resource
   credential:
@@ -3644,7 +4351,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:procurement-service
     secret_refs:
     - postgres-credentials
@@ -3658,7 +4366,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -3679,7 +4388,13 @@ workloads:
     target: product-registry-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: registry
+    domain: registry-spine
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: registry
   domain: registry-spine
   credential:
@@ -3688,7 +4403,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:product-registry-service
     secret_refs:
     - postgres-credentials
@@ -3702,7 +4418,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -3723,16 +4440,23 @@ workloads:
     target: public-website
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
-  plane: UNKNOWN
-  domain: UNKNOWN
+  owner:
+    plane: experience
+    domain: ui-workspace
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: INFRA_OWNER_MAP
+    source_evidence: manifest:deploy/tls/mohcc-gov/public-website.yaml
+  plane: experience
+  domain: ui-workspace
   credential:
     current_type: NONE_OBSERVED
     target_type: PROJECTED_K8S_TOKEN
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:public-website
     secret_refs: []
   destinations:
@@ -3742,6 +4466,7 @@ workloads:
     evidence: MEASURED_CONFIG_ONLY
   flow_category: EDGE_COMPOSITION
   human_delegation_required: UNKNOWN
+  human_delegation_evidence: NO_SOURCE_TREE_IN_REPO
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -3761,7 +4486,13 @@ workloads:
     target: redis
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
+  owner:
+    plane: integration
+    domain: infrastructure
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: FULL_BOOT_SERVICE_CLASSIFICATION
+    source_evidence: ''
   plane: integration
   domain: infrastructure
   credential:
@@ -3770,7 +4501,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:redis
     secret_refs: []
   destinations:
@@ -3779,7 +4511,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: INFRASTRUCTURE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: INFRASTRUCTURE
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -3799,7 +4532,13 @@ workloads:
     target: referral-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: integration
+    domain: platform-ops
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: integration
   domain: platform-ops
   credential:
@@ -3808,7 +4547,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:referral-service
     secret_refs:
     - postgres-credentials
@@ -3822,7 +4562,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -3843,7 +4584,13 @@ workloads:
     target: reporting-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: data
+    domain: intelligence
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: data
   domain: intelligence
   credential:
@@ -3852,7 +4599,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:reporting-service
     secret_refs:
     - postgres-credentials
@@ -3866,7 +4614,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -3887,7 +4636,13 @@ workloads:
     target: rito-quality-safety-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: experience
+    domain: workflow-orchestration
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: experience
   domain: workflow-orchestration
   credential:
@@ -3896,7 +4651,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:rito-quality-safety-service
     secret_refs:
     - postgres-credentials
@@ -3910,7 +4666,8 @@ workloads:
     - web-mobile-experience
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -3931,7 +4688,13 @@ workloads:
     target: rtc-gateway-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: integration
+    domain: platform-ops
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: integration
   domain: platform-ops
   credential:
@@ -3940,7 +4703,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:rtc-gateway-service
     secret_refs:
     - impilo-app-secrets
@@ -3957,7 +4721,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -3978,7 +4743,13 @@ workloads:
     target: rules-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: clinical
+    domain: clinical-knowledge
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: clinical
   domain: clinical-knowledge
   credential:
@@ -3987,7 +4758,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:rules-service
     secret_refs:
     - postgres-credentials
@@ -4001,7 +4773,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -4022,7 +4795,13 @@ workloads:
     target: scheduling-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: clinical
+    domain: care-delivery
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: clinical
   domain: care-delivery
   credential:
@@ -4031,7 +4810,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:scheduling-service
     secret_refs:
     - postgres-credentials
@@ -4045,7 +4825,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -4066,7 +4847,13 @@ workloads:
     target: schema-registry-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: integration
+    domain: platform-ops
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: integration
   domain: platform-ops
   credential:
@@ -4075,7 +4862,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:schema-registry-service
     secret_refs:
     - postgres-credentials
@@ -4089,7 +4877,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -4110,7 +4899,13 @@ workloads:
     target: search-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: data
+    domain: intelligence
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: data
   domain: intelligence
   credential:
@@ -4119,7 +4914,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:search-service
     secret_refs:
     - postgres-credentials
@@ -4133,7 +4929,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -4154,7 +4951,13 @@ workloads:
     target: security-hardening-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: integration
+    domain: platform-ops
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: integration
   domain: platform-ops
   credential:
@@ -4163,7 +4966,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:security-hardening-service
     secret_refs:
     - postgres-credentials
@@ -4177,7 +4981,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -4198,7 +5003,13 @@ workloads:
     target: share-slip-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: enterprise
+    domain: finance
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: enterprise
   domain: finance
   credential:
@@ -4207,7 +5018,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:share-slip-service
     secret_refs:
     - postgres-credentials
@@ -4221,7 +5033,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -4242,7 +5055,13 @@ workloads:
     target: simba-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: enterprise
+    domain: wellness-personal-health-data
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: enterprise
   domain: wellness-personal-health-data
   credential:
@@ -4251,7 +5070,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:simba-service
     secret_refs:
     - postgres-credentials
@@ -4265,7 +5085,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -4286,7 +5107,13 @@ workloads:
     target: support-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: integration
+    domain: platform-ops
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: integration
   domain: platform-ops
   credential:
@@ -4295,7 +5122,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:support-service
     secret_refs:
     - postgres-credentials
@@ -4309,7 +5137,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -4330,7 +5159,13 @@ workloads:
     target: surveillance-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: data
+    domain: public-health-surveillance
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: data
   domain: public-health-surveillance
   credential:
@@ -4339,7 +5174,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:surveillance-service
     secret_refs:
     - postgres-credentials
@@ -4353,7 +5189,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -4374,7 +5211,13 @@ workloads:
     target: telemonitoring-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: clinical
+    domain: care-delivery
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: clinical
   domain: care-delivery
   credential:
@@ -4383,7 +5226,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:telemonitoring-service
     secret_refs:
     - postgres-credentials
@@ -4399,7 +5243,8 @@ workloads:
     - pct-service
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -4420,7 +5265,13 @@ workloads:
     target: tshepo-audit-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: trust
+    domain: identity-governance
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: trust
   domain: identity-governance
   credential:
@@ -4429,7 +5280,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: https://impilo.mohcc.gov.zw/realms/impilo
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:tshepo-audit-service
     secret_refs:
     - impilo-app-secrets
@@ -4443,7 +5295,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -4463,7 +5316,13 @@ workloads:
     target: tshepo-authz-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: trust
+    domain: identity-governance
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: trust
   domain: identity-governance
   credential:
@@ -4472,13 +5331,15 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: https://impilo.mohcc.gov.zw/realms/impilo
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:tshepo-authz-service
     secret_refs:
     - postgres-credentials
   destinations:
     measured_from_env:
     - keycloak
+    - opa
     - tshepo-consent-service
     - tshepo-identity-service
     - tshepo-keys-service
@@ -4488,7 +5349,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -4508,7 +5370,13 @@ workloads:
     target: tshepo-consent-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: trust
+    domain: identity-governance
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: trust
   domain: identity-governance
   credential:
@@ -4517,7 +5385,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:tshepo-consent-service
     secret_refs:
     - postgres-credentials
@@ -4530,7 +5399,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -4551,7 +5421,13 @@ workloads:
     target: tshepo-identity-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: trust
+    domain: identity-governance
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: trust
   domain: identity-governance
   credential:
@@ -4560,7 +5436,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:tshepo-identity-service
     secret_refs:
     - postgres-credentials
@@ -4574,7 +5451,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -4595,7 +5473,13 @@ workloads:
     target: tshepo-keys-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: trust
+    domain: identity-governance
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: trust
   domain: identity-governance
   credential:
@@ -4604,7 +5488,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:tshepo-keys-service
     secret_refs:
     - postgres-credentials
@@ -4617,7 +5502,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -4638,7 +5524,13 @@ workloads:
     target: tshepo-offline-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: trust
+    domain: identity-governance
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: trust
   domain: identity-governance
   credential:
@@ -4647,7 +5539,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:tshepo-offline-service
     secret_refs:
     - postgres-credentials
@@ -4660,7 +5553,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -4681,7 +5575,13 @@ workloads:
     target: tuso-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: registry
+    domain: registry-spine
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: registry
   domain: registry-spine
   credential:
@@ -4690,7 +5590,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:tuso-service
     secret_refs:
     - postgres-credentials
@@ -4705,7 +5606,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -4726,7 +5628,13 @@ workloads:
     target: ubomi-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: registry
+    domain: registry-spine
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: registry
   domain: registry-spine
   credential:
@@ -4735,7 +5643,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:ubomi-service
     secret_refs:
     - postgres-credentials
@@ -4749,7 +5658,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -4770,7 +5680,13 @@ workloads:
     target: varapi-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: registry
+    domain: registry-spine
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: registry
   domain: registry-spine
   credential:
@@ -4779,7 +5695,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:varapi-service
     secret_refs:
     - postgres-credentials
@@ -4793,7 +5710,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -4814,7 +5732,13 @@ workloads:
     target: vashandi-workforce-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: enterprise
+    domain: workforce-operations
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: enterprise
   domain: workforce-operations
   credential:
@@ -4823,7 +5747,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:vashandi-workforce-service
     secret_refs:
     - postgres-credentials
@@ -4844,7 +5769,8 @@ workloads:
     - experience-bff
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -4865,7 +5791,13 @@ workloads:
     target: vito-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: registry
+    domain: registry-spine
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: registry
   domain: registry-spine
   credential:
@@ -4874,7 +5806,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:vito-service
     secret_refs:
     - impilo-app-secrets
@@ -4889,7 +5822,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -4910,7 +5844,13 @@ workloads:
     target: wellness-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: enterprise
+    domain: wellness-compatibility-alias
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: enterprise
   domain: wellness-compatibility-alias
   credential:
@@ -4919,7 +5859,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:wellness-service
     secret_refs:
     - postgres-credentials
@@ -4933,7 +5874,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -4954,7 +5896,13 @@ workloads:
     target: workflow-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: integration
+    domain: interoperability
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: integration
   domain: interoperability
   credential:
@@ -4963,7 +5911,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:workflow-service
     secret_refs:
     - postgres-credentials
@@ -4977,7 +5926,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: NO_ACTOR_CONTEXT_FOUND
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -4998,7 +5948,13 @@ workloads:
     target: workforce-governance-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: enterprise
+    domain: workforce-operations
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: enterprise
   domain: workforce-operations
   credential:
@@ -5007,7 +5963,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:workforce-governance-service
     secret_refs:
     - postgres-credentials
@@ -5021,7 +5978,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -5042,7 +6000,13 @@ workloads:
     target: zibo-service
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: TBD
+  owner:
+    plane: registry
+    domain: terminology
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: SERVICES_REGISTRY
+    source_evidence: ''
   plane: registry
   domain: terminology
   credential:
@@ -5051,7 +6015,8 @@ workloads:
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:zibo-service
     secret_refs:
     - postgres-credentials
@@ -5065,7 +6030,8 @@ workloads:
     - integration-hub
     evidence: MEASURED_CONFIG_ONLY
   flow_category: SYNCHRONOUS_SERVICE
-  human_delegation_required: UNKNOWN
+  human_delegation_required: true
+  human_delegation_evidence: READS_ACTOR_CONTEXT
   current_bypasses:
   - IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true
   - shared-default-serviceaccount
@@ -5086,16 +6052,23 @@ workloads:
     target: estate-health-watch-29756370
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
-  plane: UNKNOWN
-  domain: UNKNOWN
+  owner:
+    plane: integration
+    domain: platform-ops
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: DERIVED_FROM_PARENT_WORKLOAD:estate-health-watch
+    source_evidence: manifest:deploy/helm/impilo-vnext/templates/estate-health-watch.yaml
+  plane: integration
+  domain: platform-ops
   credential:
     current_type: NONE_OBSERVED
     target_type: PROJECTED_K8S_TOKEN
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:estate-health-watch-29756370
     secret_refs: []
   destinations:
@@ -5104,7 +6077,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: BATCH
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: KIND_BATCH
   current_bypasses:
   - serviceaccount-token-automounted
   transport:
@@ -5123,16 +6097,23 @@ workloads:
     target: estate-health-watch-29756850
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
-  plane: UNKNOWN
-  domain: UNKNOWN
+  owner:
+    plane: integration
+    domain: platform-ops
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: DERIVED_FROM_PARENT_WORKLOAD:estate-health-watch
+    source_evidence: manifest:deploy/helm/impilo-vnext/templates/estate-health-watch.yaml
+  plane: integration
+  domain: platform-ops
   credential:
     current_type: NONE_OBSERVED
     target_type: PROJECTED_K8S_TOKEN
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:estate-health-watch-29756850
     secret_refs: []
   destinations:
@@ -5141,7 +6122,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: BATCH
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: KIND_BATCH
   current_bypasses:
   - serviceaccount-token-automounted
   transport:
@@ -5149,28 +6131,35 @@ workloads:
     mtls: ABSENT
     network_policy: NOT_ENFORCED_BY_CLUSTER
   migration_cohort: UNASSIGNED
-- workload_id: urn:impilo:workload:preview:k3s-impilo:impilo-full-preview:estate-health-watch-29761000:estate-health-watch-29761000
-  workload: estate-health-watch-29761000
+- workload_id: urn:impilo:workload:preview:k3s-impilo:impilo-full-preview:estate-health-watch-29761090:estate-health-watch-29761090
+  workload: estate-health-watch-29761090
   kind: Job
   environment: preview
   cluster: k3s-impilo
   namespace: impilo-full-preview
   service_account:
     current: estate-health-watch
-    target: estate-health-watch-29761000
+    target: estate-health-watch-29761090
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
-  plane: UNKNOWN
-  domain: UNKNOWN
+  owner:
+    plane: integration
+    domain: platform-ops
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: DERIVED_FROM_PARENT_WORKLOAD:estate-health-watch
+    source_evidence: manifest:deploy/helm/impilo-vnext/templates/estate-health-watch.yaml
+  plane: integration
+  domain: platform-ops
   credential:
     current_type: NONE_OBSERVED
     target_type: PROJECTED_K8S_TOKEN
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
-    audience_target: urn:impilo:tshepo:estate-health-watch-29761000
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
+    audience_target: urn:impilo:tshepo:estate-health-watch-29761090
     secret_refs: []
   destinations:
     measured_from_env: []
@@ -5178,7 +6167,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: BATCH
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: KIND_BATCH
   current_bypasses:
   - serviceaccount-token-automounted
   transport:
@@ -5197,16 +6187,23 @@ workloads:
     target: keycloak-bootstrap-admin-mfa
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
-  plane: UNKNOWN
-  domain: UNKNOWN
+  owner:
+    plane: trust
+    domain: infrastructure
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: DERIVED_FROM_PARENT_WORKLOAD:keycloak
+    source_evidence: FULL_BOOT_SERVICE_CLASSIFICATION
+  plane: trust
+  domain: infrastructure
   credential:
     current_type: NONE_OBSERVED
     target_type: PROJECTED_K8S_TOKEN
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:keycloak-bootstrap-admin-mfa
     secret_refs:
     - impilo-app-secrets
@@ -5216,7 +6213,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: BATCH
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: KIND_BATCH
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -5236,16 +6234,23 @@ workloads:
     target: keycloak-create-reconciler-mfa
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
-  plane: UNKNOWN
-  domain: UNKNOWN
+  owner:
+    plane: trust
+    domain: infrastructure
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: DERIVED_FROM_PARENT_WORKLOAD:keycloak
+    source_evidence: FULL_BOOT_SERVICE_CLASSIFICATION
+  plane: trust
+  domain: infrastructure
   credential:
     current_type: NONE_OBSERVED
     target_type: PROJECTED_K8S_TOKEN
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:keycloak-create-reconciler-mfa
     secret_refs:
     - impilo-app-secrets
@@ -5255,7 +6260,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: BATCH
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: KIND_BATCH
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -5275,16 +6281,23 @@ workloads:
     target: keycloak-grant-event-reader-mfa
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
-  plane: UNKNOWN
-  domain: UNKNOWN
+  owner:
+    plane: trust
+    domain: infrastructure
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: DERIVED_FROM_PARENT_WORKLOAD:keycloak
+    source_evidence: FULL_BOOT_SERVICE_CLASSIFICATION
+  plane: trust
+  domain: infrastructure
   credential:
     current_type: NONE_OBSERVED
     target_type: PROJECTED_K8S_TOKEN
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:keycloak-grant-event-reader-mfa
     secret_refs:
     - impilo-app-secrets
@@ -5294,7 +6307,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: BATCH
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: KIND_BATCH
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -5314,16 +6328,23 @@ workloads:
     target: keycloak-h2-export-mfa-20260801-0313
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
-  plane: UNKNOWN
-  domain: UNKNOWN
+  owner:
+    plane: trust
+    domain: infrastructure
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: DERIVED_FROM_PARENT_WORKLOAD:keycloak
+    source_evidence: FULL_BOOT_SERVICE_CLASSIFICATION
+  plane: trust
+  domain: infrastructure
   credential:
     current_type: NONE_OBSERVED
     target_type: PROJECTED_K8S_TOKEN
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:keycloak-h2-export-mfa-20260801-0313
     secret_refs: []
   destinations:
@@ -5332,7 +6353,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: BATCH
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: KIND_BATCH
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -5352,16 +6374,23 @@ workloads:
     target: keycloak-h2-snapshot-mfa-20260801-0313
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
-  plane: UNKNOWN
-  domain: UNKNOWN
+  owner:
+    plane: trust
+    domain: infrastructure
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: DERIVED_FROM_PARENT_WORKLOAD:keycloak
+    source_evidence: FULL_BOOT_SERVICE_CLASSIFICATION
+  plane: trust
+  domain: infrastructure
   credential:
     current_type: NONE_OBSERVED
     target_type: PROJECTED_K8S_TOKEN
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:keycloak-h2-snapshot-mfa-20260801-0313
     secret_refs: []
   destinations:
@@ -5370,7 +6399,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: BATCH
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: KIND_BATCH
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -5390,16 +6420,23 @@ workloads:
     target: keycloak-pg25-import-mfa-20260801-0313
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
-  plane: UNKNOWN
-  domain: UNKNOWN
+  owner:
+    plane: trust
+    domain: infrastructure
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: DERIVED_FROM_PARENT_WORKLOAD:keycloak
+    source_evidence: FULL_BOOT_SERVICE_CLASSIFICATION
+  plane: trust
+  domain: infrastructure
   credential:
     current_type: NONE_OBSERVED
     target_type: PROJECTED_K8S_TOKEN
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:keycloak-pg25-import-mfa-20260801-0313
     secret_refs:
     - impilo-app-secrets
@@ -5409,7 +6446,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: BATCH
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: KIND_BATCH
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -5429,16 +6467,23 @@ workloads:
     target: keycloak-remove-bootstrap-admin-mfa
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
-  plane: UNKNOWN
-  domain: UNKNOWN
+  owner:
+    plane: trust
+    domain: infrastructure
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: DERIVED_FROM_PARENT_WORKLOAD:keycloak
+    source_evidence: FULL_BOOT_SERVICE_CLASSIFICATION
+  plane: trust
+  domain: infrastructure
   credential:
     current_type: NONE_OBSERVED
     target_type: PROJECTED_K8S_TOKEN
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:keycloak-remove-bootstrap-admin-mfa
     secret_refs:
     - impilo-app-secrets
@@ -5448,7 +6493,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: BATCH
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: KIND_BATCH
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -5468,16 +6514,23 @@ workloads:
     target: livekit-egress-bucket-init
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
-  plane: UNKNOWN
-  domain: UNKNOWN
+  owner:
+    plane: experience
+    domain: live-events-broadcast
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: DERIVED_FROM_PARENT_WORKLOAD:livekit-egress
+    source_evidence: peer-classification:live-service
+  plane: experience
+  domain: live-events-broadcast
   credential:
     current_type: NONE_OBSERVED
     target_type: PROJECTED_K8S_TOKEN
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:livekit-egress-bucket-init
     secret_refs:
     - impilo-app-secrets
@@ -5487,7 +6540,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: BATCH
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: KIND_BATCH
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -5507,16 +6561,23 @@ workloads:
     target: postgres-backup-29757570
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
-  plane: UNKNOWN
-  domain: UNKNOWN
+  owner:
+    plane: integration
+    domain: infrastructure
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: DERIVED_FROM_PARENT_WORKLOAD:postgres
+    source_evidence: FULL_BOOT_SERVICE_CLASSIFICATION
+  plane: integration
+  domain: infrastructure
   credential:
     current_type: NONE_OBSERVED
     target_type: PROJECTED_K8S_TOKEN
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:postgres-backup-29757570
     secret_refs:
     - postgres-credentials
@@ -5526,7 +6587,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: BATCH
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: KIND_BATCH
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -5546,16 +6608,23 @@ workloads:
     target: postgres-backup-29759010
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
-  plane: UNKNOWN
-  domain: UNKNOWN
+  owner:
+    plane: integration
+    domain: infrastructure
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: DERIVED_FROM_PARENT_WORKLOAD:postgres
+    source_evidence: FULL_BOOT_SERVICE_CLASSIFICATION
+  plane: integration
+  domain: infrastructure
   credential:
     current_type: NONE_OBSERVED
     target_type: PROJECTED_K8S_TOKEN
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:postgres-backup-29759010
     secret_refs:
     - postgres-credentials
@@ -5565,7 +6634,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: BATCH
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: KIND_BATCH
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
@@ -5585,16 +6655,23 @@ workloads:
     target: postgres-backup-29760450
     automount_current: DEFAULT_TRUE
     automount_target: false
-  owner: UNKNOWN
-  plane: UNKNOWN
-  domain: UNKNOWN
+  owner:
+    plane: integration
+    domain: infrastructure
+    team: UNKNOWN
+    team_source: NO_TEAM_SOURCE_IN_REPO
+    source: DERIVED_FROM_PARENT_WORKLOAD:postgres
+    source_evidence: FULL_BOOT_SERVICE_CLASSIFICATION
+  plane: integration
+  domain: infrastructure
   credential:
     current_type: NONE_OBSERVED
     target_type: PROJECTED_K8S_TOKEN
     keycloak_client_id_current: UNKNOWN
     issuer_current: UNKNOWN
     issuer_target: https://impilo.mohcc.gov.zw/realms/impilo
-    audience_current: UNKNOWN
+    audience_current: NONE_CONFIGURED
+    audience_evidence: NO_AUDIENCE_ENV_AND_NO_AUDIENCE_MAPPER_IN_REALM
     audience_target: urn:impilo:tshepo:postgres-backup-29760450
     secret_refs:
     - postgres-credentials
@@ -5604,7 +6681,8 @@ workloads:
     declared_exposes_to: []
     evidence: MEASURED_CONFIG_ONLY
   flow_category: BATCH
-  human_delegation_required: UNKNOWN
+  human_delegation_required: false
+  human_delegation_evidence: KIND_BATCH
   current_bypasses:
   - shared-default-serviceaccount
   - serviceaccount-token-automounted
