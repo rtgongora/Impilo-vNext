@@ -17,9 +17,13 @@ import {
   generateId,
   type ApiEnvelope,
   type SessionContext,
-  type AuthzVerdict,
 } from "@impilo/mobile-trust";
 import { authStore } from "@impilo/mobile-auth";
+import {
+  isTrustChallengeStatus,
+  parseTrustChallenge,
+  type TrustChallenge,
+} from "@impilo/mobile-trust";
 import { getApiClientConfig } from "./config";
 import {
   ApiError,
@@ -170,24 +174,52 @@ async function executeRequest<T>(
       responseHeaders[key] = value;
     });
 
-    // Handle step-up required
-    if (response.status === 401) {
-      let authzBody: AuthzVerdict | null = null;
+    // Handle trust challenges (401 assurance, 403 authorization, 503 could-not-answer).
+    //
+    // This used to read `body.decision === "STEP_UP_REQUIRED"` on a 401 only. Neither wire
+    // emits `decision` -- ext_authz emits `verdict`, and the BFF nests the canonical outcome
+    // at error.details.trust_challenge -- so the branch was UNREACHABLE and mobile has never
+    // been able to prompt for verification. parseTrustChallenge reads all three shapes.
+    if (isTrustChallengeStatus(response.status)) {
+      let challengeBody: unknown = null;
       try {
-        authzBody = await response.json();
+        challengeBody = await response.json();
       } catch {
-        // Non-JSON 401 response
+        // Non-JSON response; parseTrustChallenge returns null and the normal error path runs.
       }
 
-      if (authzBody?.decision === "STEP_UP_REQUIRED") {
-        const methods = authzBody.stepUpMethods ?? [];
+      const challenge = parseTrustChallenge(challengeBody);
+
+      if (challenge?.decision === "STEP_UP_REQUIRED") {
+        const methods = challenge.allowedAuthenticationMethods;
         stepUpListeners.forEach((l) =>
           l({ methods, correlationId, originalRequest: { method, url: path, body } })
         );
         throw new StepUpRequiredError(methods, correlationId);
       }
 
-      throw ApiError.fromResponse(401, correlationId, authzBody);
+      if (challenge) {
+        // Every other challenge -- consent, context, authority, recovery, a flat refusal, or
+        // an outage -- reaches the caller with the decision intact, so the UI can tell a
+        // refusal from a next step from "we could not ask". Attached to ApiError rather than
+        // thrown as a new type so existing catch blocks keep working unchanged.
+        throw ApiError.withTrustChallenge(
+          response.status,
+          correlationId,
+          challengeBody,
+          challenge
+        );
+      }
+
+      if (response.status === 401) {
+        throw ApiError.fromResponse(401, correlationId, challengeBody);
+      }
+
+      const challengeEnvelope = challengeBody as ApiEnvelope<unknown> | null;
+      if (challengeEnvelope && challengeEnvelope.success === false && challengeEnvelope.error) {
+        throw ApiError.fromEnvelope(challengeEnvelope.error, correlationId);
+      }
+      throw ApiError.fromResponse(response.status, correlationId, challengeBody);
     }
 
     // Handle error responses
