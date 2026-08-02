@@ -122,7 +122,7 @@ export function PaediatricWorkspaceShell({ patientId }: PaediatricWorkspaceShell
             >
               Immunisations
               <span className="block text-xs text-muted-foreground">
-                Doses given; the schedule forecast is not available yet
+                Doses given, and what the national schedule says is due
               </span>
             </Link>
           </li>

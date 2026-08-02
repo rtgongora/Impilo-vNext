@@ -5,6 +5,8 @@ import { useParams } from "next/navigation";
 import { Activity, FileText, Loader2, Plus, Stethoscope, Syringe } from "lucide-react";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
+import { usePatient } from "@/hooks/queries/usePatients";
+import { ImmunisationForecastPanel } from "@/features/paediatrics/immunisation/ImmunisationForecastPanel";
 import { PageShell } from "@/components/PageShell";
 import {
   useImmunizations,
@@ -40,7 +42,8 @@ export default function ImmunizationsPage() {
   const { user } = useAuthStore();
   const facility = useFacilityStore((state) => state.facility);
   const { data: encountersData } = useEncounters(patientId);
-  const { data: immunizationsData, isLoading } = useImmunizations(patientId);
+  const { data: immunizationsData, isLoading, isError: immunizationsError } = useImmunizations(patientId);
+  const patient = usePatient(patientId);
   const recordImmunization = useRecordImmunization();
 
   const immunizations: ImmunizationResource[] = immunizationsData?.data ?? [];
@@ -109,6 +112,33 @@ export default function ImmunizationsPage() {
           </div>
         ) : (
           <div className="space-y-6">
+            {/*
+              What is due, from the national EPI schedule.
+              Placed above the record because "what should this child get today" is the question
+              the contact exists to answer, and the dose list below is the evidence for it. The
+              engine decides; this surface only refuses to make a withheld dose look giveable.
+            */}
+            <ImmunisationForecastPanel
+              patientId={patientId}
+              dateOfBirth={
+                typeof patient.data?.data?.attributes?.dateOfBirth === "string"
+                  ? patient.data.data.attributes.dateOfBirth
+                  : null
+              }
+              sex={
+                typeof patient.data?.data?.attributes?.sex === "string"
+                  ? patient.data.data.attributes.sex
+                  : null
+              }
+              doses={immunizations.map((entry) => ({
+                vaccineCode: entry.attributes.vaccineCode ?? entry.attributes.vaccineName ?? null,
+                doseNumber: entry.attributes.doseNumber ?? null,
+                administeredAt: entry.attributes.administeredAt ?? null,
+                status: entry.attributes.status ?? null,
+              }))}
+              historyUnavailable={immunizationsError}
+            />
+
             <ClinicalReviewHeader
               badge="Immunization review"
               badgeIcon={Syringe}
