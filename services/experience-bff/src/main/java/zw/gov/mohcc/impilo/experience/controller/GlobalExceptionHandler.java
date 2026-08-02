@@ -20,6 +20,9 @@ import java.util.UUID;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final org.slf4j.Logger log =
+            org.slf4j.LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleNotFound(
             ResourceNotFoundException ex,
@@ -92,10 +95,25 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(status, "HTTP_ERROR", message, request);
     }
 
+    /**
+     * Last-resort handler. It previously returned 500 and discarded the exception entirely -- no
+     * log line, no stack, nothing. Every unexpected failure in the BFF became an opaque
+     * "An unexpected error occurred" that could not be diagnosed from anywhere, so a real defect
+     * could sit in the estate indefinitely looking like a transient blip. The broken browser OIDC
+     * callback was exactly that: a 500 whose cause was unreadable in any log.
+     *
+     * <p>The RESPONSE stays deliberately generic -- an unexpected exception's message can carry
+     * internal detail and must not reach a caller. The LOG carries the diagnosis, correlated by
+     * request and correlation id.</p>
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneral(
             Exception ex,
             HttpServletRequest request) {
+        log.error("Unhandled exception: {} {} -> 500 [{}] requestId={} correlationId={}",
+                request.getMethod(), request.getRequestURI(), ex.getClass().getName(),
+                request.getHeader(CompanionHeaders.REQUEST_ID),
+                request.getHeader(CompanionHeaders.CORRELATION_ID), ex);
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR",
                 "An unexpected error occurred", request);
     }
