@@ -16,6 +16,7 @@ import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import { GrowthStandardsChart } from "@/features/paediatrics/growth/GrowthStandardsChart";
+import { GrowthSignalsPanel } from "@/features/paediatrics/growth/GrowthSignalsPanel";
 import type { PlottedMeasurement, ReferenceCurve, ReferenceZ } from "@/features/paediatrics/growth/growth-curves";
 import { useGrowth, useRecordGrowth } from "@/hooks/queries/useGrowth";
 import { useGrowthReferenceCurves } from "@/hooks/queries/useGrowthReferenceCurves";
@@ -291,6 +292,19 @@ export default function GrowthChartPage() {
                     : "BMI-for-age is unavailable until a structured growth row exists.",
                 },
               ]}
+            />
+
+            {/*
+              What the series means, from the governed growth-intelligence content.
+              Placed above the plot: a chart shows the shape of the data, and this says whether
+              that shape is a clinical finding and what to do about it. When the engine reports
+              interpretation_blocked the signals are withheld here exactly as the engine withheld
+              them, because a measurement that may be a typo must not raise a faltering alert.
+            */}
+            <GrowthSignalsPanel
+              patientId={patientId}
+              measurements={growthRows}
+              historyUnavailable={growthUnavailable}
             />
 
             {hasStructuredGrowth && (
