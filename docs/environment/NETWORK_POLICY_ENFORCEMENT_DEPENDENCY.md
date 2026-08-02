@@ -137,24 +137,51 @@ So the estate still has no pod isolation, and the reason is **not** the one reco
 | `nft_compat` module | loaded, 3719 references |
 | kernel | 6.17.0-29-generic |
 
-### Leading hypothesis, explicitly untested
+### CONFIRMED root cause (root diagnostics, 2026-08-02)
 
-The host resolves `iptables` to the **nftables** backend via `nft_compat`. kube-router programs
-its policy chains through the iptables interface, and a backend mismatch would let rule
-programming appear to succeed while the packets are evaluated by a different path. This is a
-hypothesis, not a diagnosis — it has **not** been confirmed.
+The nftables-backend hypothesis above was **wrong**. The real cause is in the k3s log:
 
-### The one command that would confirm it
-
-Needs root, which this session does not hold:
-
-```bash
-sudo journalctl -u k3s --since "-30min" | grep -iE "netpol|kube-router|ipset|network polic"
-sudo iptables -S | grep -cE "KUBE-ROUTER|KUBE-NWPLCY"
-sudo nft list ruleset | grep -c KUBE
+```
+E0802 15:18:35 network_policy_controller.go:302] Aborting sync.
+  Failed to sync network policy chains: failed to perform ipset restore:
+  ipset v7.16: Error in line 1: Kernel error received: set type not supported
 ```
 
-Until that is run, the correct status is **BLOCKED, cause unconfirmed** — not "blocked on ipset".
-Recording a specific wrong cause is worse than recording an open one, because it stops anyone
-looking further. No NetworkPolicy manifests have been written: a control that is accepted and
-silently inert is one nobody re-tests.
+Two facts make this exact:
+
+1. **k3s uses its own bundled `ipset`, not the host's.** The error reports **v7.16**, while the
+   host binary installed at `/usr/sbin/ipset` is **v7.19**. k3s ships
+   `/var/lib/rancher/k3s/data/current/bin/ipset` (v7.16, protocol 7) and prepends its data
+   directory to `PATH`. **Installing the host package therefore could not have fixed this**, which
+   is exactly what the re-run measured.
+
+2. **The `ip_set_hash_*` kernel modules are not loaded.** `lsmod | grep -c '^ip_set_hash'` → **0**.
+   Only the `ip_set` core and `xt_set` match module are present. kube-router creates `hash:ip` /
+   `hash:net` sets, and with no hash-type module the kernel answers *"set type not supported"*.
+   The modules exist on disk (`/lib/modules/6.17.0-29-generic/kernel/net/netfilter/ipset/`), they
+   are simply not loaded and are not being autoloaded in the k3s process context.
+
+### Why the estate looked isolated but was not
+
+kube-router **does** program its chains — `iptables -S | grep -cE 'KUBE-ROUTER|KUBE-NWPLCY'` →
+**1270**, and `nft list ruleset | grep -c KUBE` → **2236**. What fails is populating the ipsets
+those chains match against. Rules exist, reference sets that were never created, match nothing,
+and every packet passes. That is the most deceptive possible failure mode: a full rule table that
+enforces nothing.
+
+### The fix
+
+```bash
+sudo modprobe ip_set_hash_ip ip_set_hash_net
+printf 'ip_set_hash_ip
+ip_set_hash_net
+' | sudo tee /etc/modules-load.d/ipset-kube-router.conf
+sudo systemctl restart k3s
+```
+
+kube-router retries its sync roughly every 30 s, so the error should stop without a restart; the
+restart is for certainty, and the `modules-load.d` entry is what survives a reboot.
+
+Then re-run `scripts/guard/probe-network-policy-enforcement.sh` — it must exit **0**. Until it
+does, no NetworkPolicy manifests should be written: a control that is accepted and silently inert
+is one nobody re-tests.
