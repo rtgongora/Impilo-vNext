@@ -1450,18 +1450,32 @@ public class PolicyEngine {
                 return;
             }
 
-            // A divergence whose reasons are all rules this input cannot exercise is a mapping
-            // fault, not a policy disagreement. Separating them stops an unmappable field from
-            // being read as evidence that the policy corpus disagrees with the engine.
-            boolean comparable = OpaShadowInputMapper.isComparable(opa.denyReasons());
-            String outcome = comparable ? "divergence" : "divergence_unmappable";
+            // Not every disagreement is a policy disagreement. Attribute it, because a cut-over
+            // decision rests on the REAL count alone: NO_RULE_COVERAGE is OPA not implementing the
+            // rule class at all (its own header says the DB-rule RBAC/ABAC is out of scope), and
+            // UNMAPPABLE is a field this service cannot supply. Folding either into "divergence"
+            // produces a permanent near-100% rate that buries the disagreements that matter.
+            OpaShadowInputMapper.DivergenceKind kind =
+                    OpaShadowInputMapper.classify(opa.allow(), response.errorCode(), opa.denyReasons());
+            String outcome = switch (kind) {
+                case REAL -> "divergence";
+                case NO_RULE_COVERAGE -> "divergence_no_rule_coverage";
+                case UNMAPPABLE -> "divergence_unmappable";
+            };
             recordShadowOutcome(outcome, OpaShadowInputMapper.metricReason(opa.denyReasons()), micros);
 
-            log.warn("OPA-SHADOW {}: java.verdict={} opa.allow={} reasons={} comparable={} "
-                            + "actor={} purpose={} resource={} correlation={}",
-                    outcome, verdict, opa.allow(), opa.denyReasons(), comparable,
+            // Only a REAL divergence is a warning; the other two are expected states of a
+            // deliberately partial strangler and must not train anyone to ignore this log line.
+            String message = "OPA-SHADOW {}: java.verdict={} java.reason={} opa.allow={} opa.reasons={} "
+                    + "actor={} purpose={} resource={} correlation={}";
+            Object[] args = {outcome, verdict, response.errorCode(), opa.allow(), opa.denyReasons(),
                     request.actorId(), capture.purpose != null ? capture.purpose.name() : null,
-                    request.resourceType(), request.correlationId());
+                    request.resourceType(), request.correlationId()};
+            if (kind == OpaShadowInputMapper.DivergenceKind.REAL) {
+                log.warn(message, args);
+            } else {
+                log.info(message, args);
+            }
         } catch (Exception e) {
             recordShadowOutcome("error", "none", (System.nanoTime() - started) / 1_000L);
             log.debug("OPA-SHADOW comparison skipped: {}", e.getMessage());

@@ -141,14 +141,43 @@ public final class OpaShadowInputMapper {
     }
 
     /**
-     * Whether a divergence is attributable to a rule this mapping can exercise. A divergence whose
-     * reasons are entirely inert rules indicates a mapping fault, not a policy disagreement.
+     * Java deny codes produced by the database policy_rule evaluation (step 4).
+     *
+     * <p>The policy corpus states its own scope: it decides the self-contained gate sub-decision
+     * (purpose validity, min_loa, account assurance) and "the DB-rule RBAC/ABAC … is intentionally
+     * NOT decided here". So when Java denies for one of these and OPA allows with no reasons, the
+     * two engines did not disagree — OPA was never asked the question. Scoring that as divergence
+     * would report a permanent, expected, ~100% divergence rate on all rule-governed traffic and
+     * bury any real disagreement underneath it.</p>
      */
-    public static boolean isComparable(java.util.List<String> denyReasons) {
-        if (denyReasons == null || denyReasons.isEmpty()) {
-            return true; // an allow, or a deny with no reasons, is comparable
+    public static final Set<String> JAVA_ONLY_RULE_DENY_CODES = Set.of(
+            "NO_MATCHING_RULES",
+            "POLICY_DENY",
+            "NO_ALLOW_RULE");
+
+    /** How a Java/OPA disagreement should be attributed. */
+    public enum DivergenceKind {
+        /** Both engines decided the same question and disagreed. This is the one that gates a cut-over. */
+        REAL,
+        /** OPA allowed because it does not implement the rule class Java denied on. */
+        NO_RULE_COVERAGE,
+        /** OPA's reasons are all rules this input cannot exercise — a mapping fault. */
+        UNMAPPABLE
+    }
+
+    /**
+     * Attribute a divergence. {@code javaDenyCode} is the Java {@code errorCode} (null on allow).
+     */
+    public static DivergenceKind classify(boolean opaAllow, String javaDenyCode,
+                                          java.util.List<String> opaDenyReasons) {
+        if (opaAllow && javaDenyCode != null && JAVA_ONLY_RULE_DENY_CODES.contains(javaDenyCode)) {
+            return DivergenceKind.NO_RULE_COVERAGE;
         }
-        return denyReasons.stream().anyMatch(COMPARABLE_DENY_REASONS::contains);
+        if (opaDenyReasons != null && !opaDenyReasons.isEmpty()
+                && opaDenyReasons.stream().noneMatch(COMPARABLE_DENY_REASONS::contains)) {
+            return DivergenceKind.UNMAPPABLE;
+        }
+        return DivergenceKind.REAL;
     }
 
     private static String effectiveProviderId(AuthzInternalRequest request) {

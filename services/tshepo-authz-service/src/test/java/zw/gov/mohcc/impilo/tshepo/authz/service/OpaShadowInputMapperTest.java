@@ -167,17 +167,47 @@ class OpaShadowInputMapperTest {
     class DivergenceAttribution {
 
         @Test
-        @DisplayName("a divergence caused only by unmappable rules is not counted as policy disagreement")
-        void unmappableOnlyDivergenceIsNotComparable() {
-            assertThat(OpaShadowInputMapper.isComparable(List.of("WORK_REQUIRES_ASSIGNMENT"))).isFalse();
-            assertThat(OpaShadowInputMapper.isComparable(List.of("LOGIN_PERSON_FIRST"))).isFalse();
+        @DisplayName("OPA allowing where Java denied on a DB rule is a coverage gap, not a disagreement")
+        void javaRuleDenyAgainstOpaAllowIsCoverageGap() {
+            // Observed live the first time SHADOW was enabled: five requests produced
+            // java.verdict=DENY, opa.allow=true, opa.reasons=[]. The policy corpus states in its
+            // own header that the DB-rule RBAC/ABAC "is intentionally NOT decided here", so OPA was
+            // never asked the question Java answered. Counting this as divergence would report a
+            // permanent ~100% rate on all rule-governed traffic.
+            for (String javaCode : OpaShadowInputMapper.JAVA_ONLY_RULE_DENY_CODES) {
+                assertThat(OpaShadowInputMapper.classify(true, javaCode, List.of()))
+                        .as("java %s vs opa allow is a coverage gap", javaCode)
+                        .isEqualTo(OpaShadowInputMapper.DivergenceKind.NO_RULE_COVERAGE);
+            }
+        }
+
+        @Test
+        @DisplayName("a divergence caused only by unmappable rules is attributed to the mapping")
+        void unmappableOnlyDivergenceIsAttributedToMapping() {
+            assertThat(OpaShadowInputMapper.classify(false, null, List.of("WORK_REQUIRES_ASSIGNMENT")))
+                    .isEqualTo(OpaShadowInputMapper.DivergenceKind.UNMAPPABLE);
+            assertThat(OpaShadowInputMapper.classify(false, null, List.of("LOGIN_PERSON_FIRST")))
+                    .isEqualTo(OpaShadowInputMapper.DivergenceKind.UNMAPPABLE);
         }
 
         @Test
         @DisplayName("a divergence citing an exercisable rule is a real disagreement")
-        void comparableDivergenceIsCounted() {
-            assertThat(OpaShadowInputMapper.isComparable(List.of("MIN_LOA"))).isTrue();
-            assertThat(OpaShadowInputMapper.isComparable(List.of("WORK_REQUIRES_ASSIGNMENT", "MIN_LOA"))).isTrue();
+        void comparableDivergenceIsReal() {
+            assertThat(OpaShadowInputMapper.classify(false, null, List.of("MIN_LOA")))
+                    .isEqualTo(OpaShadowInputMapper.DivergenceKind.REAL);
+            assertThat(OpaShadowInputMapper.classify(false, null, List.of("WORK_REQUIRES_ASSIGNMENT", "MIN_LOA")))
+                    .isEqualTo(OpaShadowInputMapper.DivergenceKind.REAL);
+        }
+
+        @Test
+        @DisplayName("OPA allowing where Java denied for a NON-rule reason stays a real divergence")
+        void nonRuleJavaDenyAgainstOpaAllowIsReal() {
+            // CONSENT_DENIED is not a DB-rule outcome, so OPA allowing here is a genuine
+            // disagreement and must not be excused by the coverage-gap carve-out.
+            assertThat(OpaShadowInputMapper.classify(true, "CONSENT_DENIED", List.of()))
+                    .isEqualTo(OpaShadowInputMapper.DivergenceKind.REAL);
+            assertThat(OpaShadowInputMapper.classify(true, "DEVICE_BLOCKED", List.of()))
+                    .isEqualTo(OpaShadowInputMapper.DivergenceKind.REAL);
         }
 
         @Test
