@@ -466,9 +466,23 @@ public class MvumoService {
         m.put("grantorRef", e.getGrantedByRef() != null && !e.getGrantedByRef().isBlank()
                 ? e.getGrantedByRef()
                 : e.getSubjectPatientRef());
-        m.put("granteeRef", "");
+        // granteeRef is deliberately NULL, not "". A directive with no named grantee is a general
+        // grant, and the source of record expresses that as NULL:
+        //   ConsentDirectiveRepository.findActiveForEvaluation matches
+        //   "(c.granteeRef = :granteeRef OR c.granteeRef IS NULL)".
+        // An empty string satisfies neither arm -- '' does not equal the actor and '' IS NULL is
+        // false -- so every consent captured through Mvumo materialised into the source of record
+        // and was then UNMATCHABLE by evaluation. Proven live: a granted request produced an
+        // ACTIVE directive that evaluated to NO_MATCHING_CONSENT for the very clinician it was
+        // granted to. Consent capture appeared to work end to end and enforced nothing.
+        m.put("granteeRef", null);
         m.put("scope", "clinical-data");
-        m.put("purpose", "TREATMENT");
+        // The purpose recorded must be the one the person was actually asked about. Hardcoding
+        // TREATMENT meant a request raised for any other consent type was materialised as a
+        // treatment consent -- recording a permission that was never given.
+        m.put("purpose", e.getConsentType() != null && !e.getConsentType().isBlank()
+                ? e.getConsentType().trim()
+                : "TREATMENT");
         m.put("provision", "permit");
         m.put("fhirConsentJson", fhirJson);
         return m;
