@@ -73,7 +73,16 @@ public class ConsentEvaluationService {
      * @param scope      the requested scope (e.g., read, write, clinical-data)
      * @return the consent decision (permitted=true/false with allowed/denied scopes)
      */
-    @Transactional(readOnly = true)
+    // NOT readOnly. This method writes an evaluation audit row, so declaring the transaction
+    // read-only made every write fail with "cannot execute INSERT in a read-only transaction".
+    //
+    // The failure was invisible in the worst possible way: persistEvaluationAudit only writes when
+    // the decision carries a consentId, and ONLY A PERMIT HAS ONE. Every denial therefore skipped
+    // the write and returned cleanly, while every PERMIT threw and surfaced as a 500. Consent
+    // evaluation could refuse access perfectly and had never once succeeded -- and because a 500
+    // from the consent service makes the PDP fail closed, the estate would have looked like
+    // strict consent enforcement rather than a broken audit write.
+    @Transactional
     public ConsentDecision evaluate(UUID tenantId, String actorId, String patientRef,
                                      String purpose, String scope) {
         log.debug("Evaluating consent: tenant={} actor={} patient={} purpose={} scope={}",
