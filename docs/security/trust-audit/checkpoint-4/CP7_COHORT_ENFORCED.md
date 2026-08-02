@@ -3,7 +3,7 @@
 **Cohort:** `workforce-governance-service` · **Captured:** 2026-08-02
 **Namespace:** `impilo-full-preview` · **Branch:** `claude/tshepo-trust-completion-Yypyl`
 
-## Status: application-layer enforcement LIVE. Network containment BLOCKED on one kernel module.
+## Status: ENFORCED — application authentication AND network containment, both proven by controls.
 
 ## Measured enforcement
 
@@ -85,3 +85,47 @@ containment is written, proven wrong twice by its own controls, and withheld pen
 module. Audience *validation* is deliberately not switched on yet: the BFF still presents an
 `impilo-backend` token that carries no audience, so enabling it would reject a legitimate caller.
 That is the next increment, not a silent gap.
+
+
+---
+
+# Containment closed 2026-08-02
+
+`sudo modprobe ip_set_hash_net` loaded the missing set type. The cohort policy was re-applied and
+**all four controls pass**:
+
+| Control | Result |
+|---|---|
+| 1. Enforcement survives the `ipBlock` policy | probe **exit 0** — `NetworkPolicy IS ENFORCED` |
+| 2. Negative — non-callers blocked | `oros-service`, `pct-service`, `tuso-service` → **exit 7 (connection blocked)** |
+| 3. Positive — enumerated callers reach it | `experience-bff` **200**, `vashandi-workforce-service` **200** |
+| 4. Kubelet probes survive | pod `ready=true`, `restarts=0` |
+
+Application layer re-verified from an allowed caller: anonymous **401**, valid token past the gate.
+Estate: 117 pods Running, authenticated browser proof **12/12**.
+
+## The cohort now has, simultaneously
+
+- **Authentication** — anonymous and forged tokens refused at the application (`401`)
+- **Containment** — only the two enumerated callers can reach the port at all
+- **Workload identity** — `vashandi` holds its own Keycloak client and mints its own token
+- **A minted audience** — `aud` exists for the first time in this realm
+
+Containment and authentication are independent layers, and this is the first service in the estate
+to have both. Reachability alone was the entire east-west control until now.
+
+## Deliberately still open
+
+**Audience validation is not switched on.** The BFF presents an `impilo-backend` token that carries
+no audience, so enabling it would reject a legitimate caller. Closing it means giving
+`experience-bff` its own client with a mapper — the next increment, named rather than hidden.
+
+## The hazard this cohort discovered
+
+**One NetworkPolicy using an unsupported ipset type silently disables enforcement for every other
+policy in the cluster.** kube-router aborts the *entire* sync on a single bad set type. It was only
+visible because the enforcement probe was re-run after adding the policy, and it was proven
+causally by deleting the policy and watching the probe recover.
+
+Any future cohort policy must re-run `scripts/guard/probe-network-policy-enforcement.sh` **after**
+being applied. A policy that looks correct can take the whole cluster's isolation down with it.
