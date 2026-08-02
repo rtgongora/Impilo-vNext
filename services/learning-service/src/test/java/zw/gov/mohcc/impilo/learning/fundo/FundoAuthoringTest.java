@@ -1,6 +1,7 @@
 package zw.gov.mohcc.impilo.learning.fundo;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import java.util.Map;
@@ -45,7 +46,7 @@ class FundoAuthoringTest {
     private FundoAuthoringService.CourseUpsert sampleDraftCourse(String code, String title) {
         return new FundoAuthoringService.CourseUpsert(
                 code, title, "Test description", "ORIENTATION", "INTRODUCTORY",
-                "DRAFT", "en", 30, false, false, null);
+                "DRAFT", "en", 30, false, false, null, null, null, null, null, null);
     }
 
     private List<LearningOutboxEntity> eventsOfType(String type) {
@@ -73,7 +74,7 @@ class FundoAuthoringTest {
                     authoring.updateCourse(TENANT, courseId,
                             new FundoAuthoringService.CourseUpsert(
                                     null, null, null, null, null,
-                                    "PUBLISHED", null, null, null, null, null));
+                                    "PUBLISHED", null, null, null, null, null, null, null, null, null, null));
             assertThat(published.isOk()).isTrue();
             assertThat(published.value().get("status")).isEqualTo("PUBLISHED");
             assertThat(eventsOfType(FundoNativeEventTypes.COURSE_PUBLISHED)).hasSize(1);
@@ -86,7 +87,7 @@ class FundoAuthoringTest {
                     authoring.createCourse(TENANT,
                             new FundoAuthoringService.CourseUpsert(
                                     "FUNDO-AUTH-2", "Author Test 2", null, null, null,
-                                    "PUBLISHED", null, null, null, null, null));
+                                    "PUBLISHED", null, null, null, null, null, null, null, null, null, null));
             assertThat(created.isOk()).isTrue();
             assertThat(eventsOfType(FundoNativeEventTypes.COURSE_PUBLISHED)).hasSize(1);
 
@@ -95,7 +96,7 @@ class FundoAuthoringTest {
             authoring.updateCourse(TENANT, courseId,
                     new FundoAuthoringService.CourseUpsert(
                             null, "Renamed", null, null, null,
-                            "PUBLISHED", null, null, null, null, null));
+                            "PUBLISHED", null, null, null, null, null, null, null, null, null, null));
             assertThat(eventsOfType(FundoNativeEventTypes.COURSE_PUBLISHED)).hasSize(1);
         }
 
@@ -116,7 +117,7 @@ class FundoAuthoringTest {
                     authoring.createCourse(TENANT,
                             new FundoAuthoringService.CourseUpsert(
                                     null, null, null, null, null,
-                                    null, null, null, null, null, null));
+                                    null, null, null, null, null, null, null, null, null, null, null));
             assertThat(r.kind()).isEqualTo(FundoAuthoringService.AuthoringResult.Kind.BAD_REQUEST);
         }
     }
@@ -149,7 +150,7 @@ class FundoAuthoringTest {
             authoring.updateCourse(TENANT, courseId,
                     new FundoAuthoringService.CourseUpsert(
                             null, null, null, null, null,
-                            "PUBLISHED", null, null, null, null, null));
+                            "PUBLISHED", null, null, null, null, null, null, null, null, null, null));
 
             Map<String, Object> structure = structureService.getStructure(TENANT, courseId).orElseThrow();
             @SuppressWarnings("unchecked")
@@ -255,12 +256,107 @@ class FundoAuthoringTest {
         void publishedAppearInCatalogue() {
             authoring.createCourse(TENANT, new FundoAuthoringService.CourseUpsert(
                     "FUNDO-AUTH-9", "Publish Me", null, null, null,
-                    "PUBLISHED", null, null, null, null, null));
+                    "PUBLISHED", null, null, null, null, null, null, null, null, null, null));
             List<Map<String, Object>> items = catalogService.listCatalogue(
                     TENANT,
                     new FundoCatalogService.CatalogueFilter(null, null, null, null, null, null),
                     50);
             assertThat(items).anyMatch(m -> "FUNDO-AUTH-9".equals(m.get("code")));
+        }
+    }
+
+    /**
+     * V031/V032, ported from impilo-learning-staging. The DB checks are the authority;
+     * these prove the service refuses the bad shapes first, so a caller gets a stated
+     * reason instead of a constraint violation, and that switching mode does not leave
+     * the previous mode's value behind.
+     */
+    @Nested
+    @DisplayName("Course due dates and audience targeting")
+    class DueDateAndAudience {
+
+        private FundoAuthoringService.CourseUpsert course(
+                String code, String dueType, java.time.OffsetDateTime due, Integer days,
+                String audienceType, String audienceRoles) {
+            return new FundoAuthoringService.CourseUpsert(
+                    code, code, null, null, null, "DRAFT", null, null, null, null, null,
+                    dueType, due, days, audienceType, audienceRoles);
+        }
+
+        @Test
+        @DisplayName("A new course defaults to no deadline and ALL_LEARNERS")
+        void defaults() {
+            var r = authoring.createCourse(TENANT, course("FUNDO-DD-0", null, null, null, null, null));
+            assertThat(r.isOk()).isTrue();
+            assertThat(r.value().get("dueDateType")).isNull();
+            assertThat(r.value().get("audienceType")).isEqualTo("ALL_LEARNERS");
+        }
+
+        @Test
+        @DisplayName("FIXED keeps the absolute date; RELATIVE keeps the offset")
+        void bothModesPersist() {
+            var when = java.time.OffsetDateTime.parse("2026-12-01T00:00:00Z");
+            var fixed = authoring.createCourse(TENANT, course("FUNDO-DD-1", "FIXED", when, null, null, null));
+            assertThat(fixed.isOk()).isTrue();
+            assertThat(fixed.value().get("dueDateType")).isEqualTo("FIXED");
+            assertThat(fixed.value().get("dueDate")).isNotNull();
+
+            var rel = authoring.createCourse(TENANT, course("FUNDO-DD-2", "RELATIVE", null, 30, null, null));
+            assertThat(rel.isOk()).isTrue();
+            assertThat(rel.value().get("dueDateDaysFromEnrollment")).isEqualTo(30);
+        }
+
+        @Test
+        @DisplayName("Switching FIXED to RELATIVE clears the stale absolute date")
+        void switchingModeClearsTheOther() {
+            var when = java.time.OffsetDateTime.parse("2026-12-01T00:00:00Z");
+            var created = authoring.createCourse(TENANT, course("FUNDO-DD-3", "FIXED", when, null, null, null));
+            UUID id = UUID.fromString((String) created.value().get("id"));
+
+            var updated = authoring.updateCourse(TENANT, id,
+                    course("FUNDO-DD-3", "RELATIVE", null, 14, null, null));
+            assertThat(updated.isOk()).isTrue();
+            assertThat(updated.value().get("dueDateDaysFromEnrollment")).isEqualTo(14);
+            assertThat(updated.value().get("dueDate")).isNull();
+        }
+
+        @Test
+        @DisplayName("Each incomplete or unknown combination is refused with a reason")
+        void invalidCombinationsRefused() {
+            assertThatThrownBy(() -> authoring.createCourse(TENANT,
+                    course("FUNDO-DD-4", "FIXED", null, null, null, null)))
+                    .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("dueDate is required");
+
+            assertThatThrownBy(() -> authoring.createCourse(TENANT,
+                    course("FUNDO-DD-5", "RELATIVE", null, null, null, null)))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("dueDateDaysFromEnrollment");
+
+            assertThatThrownBy(() -> authoring.createCourse(TENANT,
+                    course("FUNDO-DD-6", "WHENEVER", null, null, null, null)))
+                    .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("FIXED, RELATIVE, NONE");
+
+            assertThatThrownBy(() -> authoring.createCourse(TENANT,
+                    course("FUNDO-DD-7", null, null, null, "SPECIFIC_ROLES", "  ")))
+                    .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("audienceRoles is required");
+
+            assertThatThrownBy(() -> authoring.createCourse(TENANT,
+                    course("FUNDO-DD-8", null, null, null, "EVERYBODY", null)))
+                    .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("audienceType must be one of");
+        }
+
+        @Test
+        @DisplayName("Leaving SPECIFIC_ROLES drops the roles rather than orphaning them")
+        void narrowingAndWideningAudience() {
+            var created = authoring.createCourse(TENANT,
+                    course("FUNDO-DD-9", null, null, null, "SPECIFIC_ROLES", "NURSE,DOCTOR"));
+            assertThat(created.value().get("audienceRoles")).isEqualTo("NURSE,DOCTOR");
+            UUID id = UUID.fromString((String) created.value().get("id"));
+
+            var widened = authoring.updateCourse(TENANT, id,
+                    course("FUNDO-DD-9", null, null, null, "ALL_LEARNERS", null));
+            assertThat(widened.value().get("audienceType")).isEqualTo("ALL_LEARNERS");
+            assertThat(widened.value().get("audienceRoles")).isNull();
         }
     }
 }

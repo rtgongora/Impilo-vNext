@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.learning.fundo;
 
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -124,7 +125,77 @@ public class FundoAuthoringService {
         if (req.mandatory() != null) c.setMandatory(req.mandatory());
         if (req.cpdEligible() != null) c.setCpdEligible(req.cpdEligible());
         if (req.cpdPoints() != null) c.setCpdPoints(req.cpdPoints());
+        applyDueDate(c, req);
+        applyAudience(c, req);
     }
+
+    /**
+     * V031. The two modes are mutually exclusive and each requires its own companion value.
+     * Validated here so a bad request is a 400 with a reason rather than a constraint
+     * violation surfacing as a 500 — the DB check remains the authority, this is the
+     * readable failure in front of it. Switching mode clears the other mode's value, so a
+     * FIXED→RELATIVE edit cannot leave a stale absolute date behind.
+     */
+    private void applyDueDate(CourseEntity c, CourseUpsert req) {
+        if (req.dueDateType() == null) return;
+        String type = req.dueDateType().trim().toUpperCase();
+        switch (type) {
+            case "NONE", "" -> {
+                c.setDueDateType(null);
+                c.setDueDate(null);
+                c.setDueDateDaysFromEnrollment(null);
+            }
+            case "FIXED" -> {
+                if (req.dueDate() == null) {
+                    throw new IllegalArgumentException("dueDate is required when dueDateType is FIXED");
+                }
+                c.setDueDateType("FIXED");
+                c.setDueDate(req.dueDate());
+                c.setDueDateDaysFromEnrollment(null);
+            }
+            case "RELATIVE" -> {
+                Integer days = req.dueDateDaysFromEnrollment();
+                if (days == null || days < 0) {
+                    throw new IllegalArgumentException(
+                            "dueDateDaysFromEnrollment must be a non-negative number when dueDateType is RELATIVE");
+                }
+                c.setDueDateType("RELATIVE");
+                c.setDueDateDaysFromEnrollment(days);
+                c.setDueDate(null);
+            }
+            default -> throw new IllegalArgumentException(
+                    "dueDateType must be one of FIXED, RELATIVE, NONE (got: " + req.dueDateType() + ")");
+        }
+    }
+
+    /**
+     * V032. Roles are only meaningful for SPECIFIC_ROLES; every other mode must store NULL,
+     * otherwise chk_lrn_course_audience_roles rejects the row. Narrowing to SPECIFIC_ROLES
+     * without naming a role is refused rather than silently targeting nobody.
+     */
+    private void applyAudience(CourseEntity c, CourseUpsert req) {
+        if (req.audienceType() == null) return;
+        String type = req.audienceType().trim().toUpperCase();
+        if (!AUDIENCE_TYPES.contains(type)) {
+            throw new IllegalArgumentException(
+                    "audienceType must be one of " + AUDIENCE_TYPES + " (got: " + req.audienceType() + ")");
+        }
+        if ("SPECIFIC_ROLES".equals(type)) {
+            String roles = req.audienceRoles() == null ? "" : req.audienceRoles().trim();
+            if (roles.isEmpty()) {
+                throw new IllegalArgumentException(
+                        "audienceRoles is required when audienceType is SPECIFIC_ROLES");
+            }
+            c.setAudienceType(type);
+            c.setAudienceRoles(roles);
+        } else {
+            c.setAudienceType(type);
+            c.setAudienceRoles(null);
+        }
+    }
+
+    private static final java.util.Set<String> AUDIENCE_TYPES =
+            java.util.Set.of("ALL_LEARNERS", "SYSTEM_USERS", "CITIZENS", "SPECIFIC_ROLES");
 
     private void maybeEmitCoursePublished(CourseEntity c, String oldStatus) {
         if ("PUBLISHED".equals(c.getStatus()) && !"PUBLISHED".equals(oldStatus)) {
@@ -521,7 +592,26 @@ public class FundoAuthoringService {
             Integer estimatedDurationMinutes,
             Boolean mandatory,
             Boolean cpdEligible,
-            Integer cpdPoints) {}
+            Integer cpdPoints,
+            // V031/V032. Appended, never reordered — this record is deserialised from the
+            // authoring request body, so existing callers that omit them keep working and
+            // simply leave the course with no deadline and ALL_LEARNERS targeting.
+            String dueDateType,
+            OffsetDateTime dueDate,
+            Integer dueDateDaysFromEnrollment,
+            String audienceType,
+            String audienceRoles) {
+
+        /**
+         * An all-null upsert — every field absent, so applyCourseFields changes nothing.
+         * Callers used a positional constructor of nulls, which silently breaks each time a
+         * field is appended; this keeps that failure impossible.
+         */
+        public static CourseUpsert empty() {
+            return new CourseUpsert(null, null, null, null, null, null, null, null,
+                    null, null, null, null, null, null, null, null);
+        }
+    }
 
     public record ModuleUpsert(
             String title,

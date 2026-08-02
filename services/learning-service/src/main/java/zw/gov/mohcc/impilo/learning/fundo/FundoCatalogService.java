@@ -75,6 +75,13 @@ public class FundoCatalogService {
         m.put("mandatory", c.isMandatory());
         m.put("cpdEligible", c.isCpdEligible());
         m.put("cpdPoints", c.getCpdPoints());
+        // V031/V032. Always projected, including when null — a learner-facing surface that
+        // silently omits a deadline is indistinguishable from one that genuinely has none.
+        m.put("dueDateType", c.getDueDateType());
+        m.put("dueDate", c.getDueDate());
+        m.put("dueDateDaysFromEnrollment", c.getDueDateDaysFromEnrollment());
+        m.put("audienceType", c.getAudienceType());
+        m.put("audienceRoles", c.getAudienceRoles());
         m.put("version", c.getVersion());
         return m;
     }

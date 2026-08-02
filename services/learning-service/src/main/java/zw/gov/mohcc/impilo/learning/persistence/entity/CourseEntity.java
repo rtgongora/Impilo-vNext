@@ -68,6 +68,32 @@ public class CourseEntity {
     @Column(name = "learning_space_id")
     private java.util.UUID learningSpaceId;
 
+    /**
+     * Course due date (V031). NULL = no deadline. FIXED carries an absolute {@link #dueDate};
+     * RELATIVE carries {@link #dueDateDaysFromEnrollment} and resolves per learner from their
+     * own enrolment date, so one course can hold a different deadline for each person.
+     * The pairing is DB-enforced (chk_lrn_course_due_date_*) — do not rely on callers for it.
+     */
+    @Column(name = "due_date_type", length = 32)
+    private String dueDateType;
+
+    @Column(name = "due_date")
+    private OffsetDateTime dueDate;
+
+    @Column(name = "due_date_days_from_enrollment")
+    private Integer dueDateDaysFromEnrollment;
+
+    /**
+     * Recommendation targeting (V032). Defaults to ALL_LEARNERS — the behaviour every course
+     * had before targeting existed. {@link #audienceRoles} is a comma-separated role list and
+     * is only legal when the type is SPECIFIC_ROLES (chk_lrn_course_audience_roles).
+     */
+    @Column(name = "audience_type", nullable = false, length = 32)
+    private String audienceType = "ALL_LEARNERS";
+
+    @Column(name = "audience_roles")
+    private String audienceRoles;
+
     @Column(name = "version", nullable = false)
     private int version = 1;
 
@@ -116,6 +142,16 @@ public class CourseEntity {
     public void setCpdPoints(Integer cpdPoints) { this.cpdPoints = cpdPoints; }
     public java.util.UUID getLearningSpaceId() { return learningSpaceId; }
     public void setLearningSpaceId(java.util.UUID learningSpaceId) { this.learningSpaceId = learningSpaceId; }
+    public String getDueDateType() { return dueDateType; }
+    public void setDueDateType(String dueDateType) { this.dueDateType = dueDateType; }
+    public OffsetDateTime getDueDate() { return dueDate; }
+    public void setDueDate(OffsetDateTime dueDate) { this.dueDate = dueDate; }
+    public Integer getDueDateDaysFromEnrollment() { return dueDateDaysFromEnrollment; }
+    public void setDueDateDaysFromEnrollment(Integer d) { this.dueDateDaysFromEnrollment = d; }
+    public String getAudienceType() { return audienceType; }
+    public void setAudienceType(String audienceType) { this.audienceType = audienceType; }
+    public String getAudienceRoles() { return audienceRoles; }
+    public void setAudienceRoles(String audienceRoles) { this.audienceRoles = audienceRoles; }
     public int getVersion() { return version; }
     public void setVersion(int version) { this.version = version; }
     public OffsetDateTime getCreatedAt() { return createdAt; }

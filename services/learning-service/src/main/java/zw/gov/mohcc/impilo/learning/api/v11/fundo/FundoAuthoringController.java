@@ -59,8 +59,7 @@ public class FundoAuthoringController {
             return FundoV11Support.notFound("COURSE_NOT_FOUND", "Course not found");
         }
         return respond("course", authoring.updateCourse(tenantId, cid,
-                body == null ? new FundoAuthoringService.CourseUpsert(
-                        null, null, null, null, null, null, null, null, null, null, null) : body));
+                body == null ? FundoAuthoringService.CourseUpsert.empty() : body));
     }
 
     // ── Module ────────────────────────────────────────────────
