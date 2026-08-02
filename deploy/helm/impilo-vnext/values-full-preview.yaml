@@ -482,6 +482,14 @@ oneUiShell:
 # FULL_BOOT_MAX_WAVE=0 — session contract work-tab resolution depends on it.
 # Vashandi operational workforce BFF routes require vashandi-workforce-service.
 fullBootServices:
+  # Mvumo must be able to reach the consent source of record. Without this it falls back to its
+  # own default of http://localhost:8182 -- which inside the Mvumo pod is Mvumo itself -- so every
+  # consent grant captured through the product path fails to materialise. The same localhost
+  # fallback class as the BFF's misconfigured downstreams; see checkpoint-5/CONSENT_CAPTURE_WORKS.md.
+  mvumo-service:
+    enabled: true
+    env:
+      TSHEPO_CONSENT_BASE_URL: http://tshepo-consent-service:8182
   workforce-governance-service:
     enabled: true
   vashandi-workforce-service:
