@@ -126,12 +126,12 @@ export function validateTrustChallengeOutcome(o: TrustChallengeOutcome): void {
     "expires_at",
     "support_reference",
   ]);
-  for (const key of Object.keys(o as Record<string, unknown>)) {
+  const record = o as unknown as Record<string, unknown>;
+  for (const key of Object.keys(record)) {
     if (!allowedKeys.has(key)) {
       fail(`TrustChallengeOutcome: unsafe additional property '${key}'`);
     }
   }
-  const record = o as unknown as Record<string, unknown>;
   for (const key of allowedKeys) {
     const value = record[key];
     if (typeof value === "string" && CHALLENGE_FORBIDDEN.test(value)) {
