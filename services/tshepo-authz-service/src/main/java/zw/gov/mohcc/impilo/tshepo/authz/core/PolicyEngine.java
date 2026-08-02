@@ -219,6 +219,7 @@ public class PolicyEngine {
         // comparison — the divergence rate measured only false-deny risk and said nothing about
         // false-allow risk, which is the direction that matters for a policy cut-over.
         shadowCompareOpa(request, capture, response);
+        measureContextDivergence(request, capture);
         return response;
     }
 
@@ -1487,41 +1488,37 @@ public class PolicyEngine {
         }
     }
 
-    /**
-     * Emit (AUTHORITATIVE) or measure (SHADOW) the validated operating context.
-     *
-     * <p>In SHADOW nothing is emitted and nothing changes downstream; the divergence between what
-     * the client claimed and what the duty token validates is counted instead. That count is the
-     * evidence for whether AUTHORITATIVE is safe — flipping it without knowing the rate would take
-     * facility scope away from every request whose duty token happens not to carry one.</p>
-     */
-    private void emitValidatedContext(Map<String, String> headers, AuthzInternalRequest request,
-                                      PurposeOfUse purpose) {
-        ContextHeaderAuthority.Mode mode;
+    /** Resolved context-header mode; a runtime-invalid value degrades to PASSTHROUGH loudly. */
+    private ContextHeaderAuthority.Mode contextHeaderMode() {
         try {
-            mode = ContextHeaderAuthority.Mode.parse(properties.getContextHeaderMode());
+            return ContextHeaderAuthority.Mode.parse(properties.getContextHeaderMode());
         } catch (IllegalArgumentException e) {
             // Startup validation rejects a bad value, so reaching here means it changed at runtime.
             log.error("Invalid context-header-mode, treating as PASSTHROUGH: {}", e.getMessage());
-            return;
+            return ContextHeaderAuthority.Mode.PASSTHROUGH;
         }
-        if (mode == ContextHeaderAuthority.Mode.PASSTHROUGH) {
-            return;
-        }
+    }
 
-        if (mode == ContextHeaderAuthority.Mode.AUTHORITATIVE) {
-            headers.putAll(ContextHeaderAuthority.validatedContext(request, purpose));
-        }
-
-        if (meterRegistry == null) {
+    /**
+     * Measure how often the caller's claimed operating context differs from what the work-context
+     * token validates. Runs on every terminal decision, allowed or denied.
+     *
+     * <p>This count is the evidence for whether AUTHORITATIVE is safe to enable: flipping it
+     * without knowing the rate would silently take facility scope away from every request whose
+     * duty token happens not to carry one.</p>
+     */
+    private void measureContextDivergence(AuthzInternalRequest request, ShadowCapture capture) {
+        ContextHeaderAuthority.Mode mode = contextHeaderMode();
+        if (mode == ContextHeaderAuthority.Mode.PASSTHROUGH || meterRegistry == null) {
             return;
         }
-        for (ContextHeaderAuthority.ContextDivergence d : ContextHeaderAuthority.compare(request, purpose)) {
+        for (ContextHeaderAuthority.ContextDivergence d
+                : ContextHeaderAuthority.compare(request, capture.purpose)) {
             String outcome;
             if (d.differs()) {
                 outcome = "differs";
             } else if (d.clientSupplied() && !d.validatedPresent()) {
-                // The client claimed a context the trust plane cannot validate. Under
+                // The caller claimed a context the trust plane cannot validate. Under
                 // AUTHORITATIVE this claim is dropped -- the case that matters most.
                 outcome = "client_only";
             } else if (!d.clientSupplied() && d.validatedPresent()) {
@@ -1530,7 +1527,7 @@ public class PolicyEngine {
                 outcome = "match";
             }
             // Header NAME only. The values are facility and programme identifiers -- real
-            // operational data that must not become a metric tag.
+            // operational data that must never become a metric tag.
             meterRegistry.counter("tshepo.authz.context.header",
                     "header", d.header(), "outcome", outcome, "mode", mode.name()).increment();
         }
@@ -1710,8 +1707,15 @@ public class PolicyEngine {
         // existed the PDP regenerated identity but not context, so x-facility-id and its siblings
         // reached every service exactly as the browser set them — and they could not simply be
         // stripped at Envoy, because stripping without a regenerator deletes the context the
-        // estate runs on. Staged: emits only in AUTHORITATIVE, measures in SHADOW.
-        emitValidatedContext(headers, request, purpose);
+        // estate runs on.
+        //
+        // EMISSION belongs here: headers exist only on an ALLOW. The SHADOW MEASUREMENT does not,
+        // and lives in evaluate() instead — a measurement that only fires on ALLOW records nothing
+        // in an estate where most traffic denies, which is exactly how the OPA shadow was blind to
+        // every Java DENY before this checkpoint. Same mistake, same fix.
+        if (contextHeaderMode() == ContextHeaderAuthority.Mode.AUTHORITATIVE) {
+            headers.putAll(ContextHeaderAuthority.validatedContext(request, purpose));
+        }
 
         if (obligations != null) {
             if (obligations.maxScope() != null) {
