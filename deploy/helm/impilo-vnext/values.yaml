@@ -57,6 +57,31 @@ keycloak:
     passwordKey: keycloak-smtp-password
     fromKey: keycloak-smtp-from
 
+# OPA policy evaluator for the Tshepo strangler (Checkpoint 4). Deployed in SHADOW only:
+# tshepo-authz compares OPA's verdict to the Java PolicyEngine and logs divergence. OPA cannot
+# become authoritative by deploying it — tshepo-authz refuses to start in ENFORCE without cited
+# parity evidence (OpaEnforceGate).
+opa:
+  enabled: false
+  image:
+    # mirror.gcr.io, not docker.io: this cluster cannot reach registry-1.docker.io (the first
+    # deploy attempt died in ImagePullBackOff on an i/o timeout). Every other third-party image
+    # in the estate — curl, livekit, orthanc — already comes through the same mirror.
+    # Digest-pinned so the deployed evaluator is immutable and traceable.
+    repository: mirror.gcr.io/openpolicyagent/opa
+    tag: "0.68.0"
+    digest: "sha256:dd4cb51598c79825fc7e006a0317777f3a0f8eda3fdcaad997d75337fa7e739d"
+    pullPolicy: IfNotPresent
+  # Built from infra/opa/authz/*.rego by scripts/deploy/apply-opa-shadow.sh, never hand-edited.
+  policyConfigMap: opa-authz-policy
+  # Set by the deploy script to the corpus checksum, so a policy change rolls the pod.
+  policyChecksum: ""
+  decisionLogs: false
+  logLevel: error
+  resources:
+    requests: { cpu: 50m, memory: 64Mi }
+    limits: { cpu: 500m, memory: 256Mi }
+
 # Tshepo trust plane, Checkpoint 4 — per-workload identity.
 #
 # Two independent switches, deliberately separated:
@@ -82,6 +107,7 @@ workloadIdentity:
     - one-ui-shell
     - envoy
     - matcher-engine
+    - opa
 
 experienceBff:
   enabled: true

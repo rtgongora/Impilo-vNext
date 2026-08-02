@@ -43,6 +43,13 @@ public class AuthzProperties {
     // Java authoritative) | ENFORCE (not yet wired). Default OFF — zero behaviour change.
     private String opaUrl = "http://localhost:8181";
     private String opaMode = "OFF";
+    /**
+     * Path to the parity evidence that justifies ENFORCE. Empty, or naming a file that does not
+     * exist, means ENFORCE is refused at startup — see {@code OpaEnforceGate}. Promoting OPA to
+     * authoritative is a claim about proven parity, so the configuration must cite the proof
+     * rather than assert the conclusion.
+     */
+    private String opaParityEvidencePath = "";
     private String identityServiceUrl = "http://localhost:8181";
     // WORK_CONTEXT duty-token binding. Mode: OFF (never read the token) | SHADOW (introspect +
     // compare token↔headers + audit divergence, decision UNCHANGED) | ENFORCE (mismatch/revoked
@@ -220,6 +227,10 @@ public class AuthzProperties {
     public void setOpaUrl(String opaUrl) { this.opaUrl = opaUrl; }
     public String getOpaMode() { return opaMode; }
     public void setOpaMode(String opaMode) { this.opaMode = opaMode; }
+    public String getOpaParityEvidencePath() { return opaParityEvidencePath; }
+    public void setOpaParityEvidencePath(String opaParityEvidencePath) {
+        this.opaParityEvidencePath = opaParityEvidencePath;
+    }
     public String getConsentEvaluatePath() { return consentEvaluatePath; }
     public void setConsentEvaluatePath(String consentEvaluatePath) { this.consentEvaluatePath = consentEvaluatePath; }
     public String getIdentityServiceUrl() { return identityServiceUrl; }

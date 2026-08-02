@@ -79,6 +79,18 @@ tshepo:
   authz:
     legacy-policy:
       base-url: ${TSHEPO_LEGACY_SERVICE_URL:http://localhost:8079}
+    # OPA strangler. OFF (no call) | SHADOW (call, compare, log; Java stays authoritative) | ENFORCE.
+    #
+    # These had no env binding at all, so the mode could not be changed without rebuilding the
+    # image — the shadow comparison was unreachable in every deployed environment regardless of
+    # what the sidecar was doing.
+    #
+    # ENFORCE is refused at startup unless opa-parity-evidence-path names a file that exists
+    # (see OpaEnforceGate). A mode string on its own must never be able to promote OPA to
+    # authoritative: the promotion is a claim about proven parity, so it has to cite the proof.
+    opa-url: ${TSHEPO_AUTHZ_OPA_URL:http://localhost:8181}
+    opa-mode: ${TSHEPO_AUTHZ_OPA_MODE:OFF}
+    opa-parity-evidence-path: ${TSHEPO_AUTHZ_OPA_PARITY_EVIDENCE:}
     # Rate limiting
     rate-limit:
       max-requests-per-minute: 600

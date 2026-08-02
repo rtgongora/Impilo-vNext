@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.tshepo.authz.core;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -158,6 +159,13 @@ public class PolicyEngine {
     private final RoleTemplateCatalog roleTemplateCatalog;
     private final ConfidentialityPolicyPack confidentialityPack;
     private final DecisionEnvelopeSigner decisionEnvelopeSigner;
+    private final MeterRegistry meterRegistry;
+
+    /**
+     * Identifies the rego corpus the shadow comparison is scored against. Divergence counts from
+     * two different policy versions are not the same measurement, so the version is a metric tag.
+     */
+    static final String OPA_SHADOW_POLICY_VERSION = "impilo.authz/v1";
 
     public PolicyEngine(DeviceRiskScoreEvaluator riskScoring,
                         PolicyCacheService policyCacheService,
@@ -174,7 +182,8 @@ public class PolicyEngine {
                         OpaDecisionClient opaDecisionClient,
                         RoleTemplateCatalog roleTemplateCatalog,
                         ConfidentialityPolicyPack confidentialityPack,
-                        DecisionEnvelopeSigner decisionEnvelopeSigner) {
+                        DecisionEnvelopeSigner decisionEnvelopeSigner,
+                        MeterRegistry meterRegistry) {
         this.riskScoring = riskScoring;
         this.policyCacheService = policyCacheService;
         this.privilegeRevocationStore = privilegeRevocationStore;
@@ -191,6 +200,7 @@ public class PolicyEngine {
         this.roleTemplateCatalog = roleTemplateCatalog;
         this.confidentialityPack = confidentialityPack;
         this.decisionEnvelopeSigner = decisionEnvelopeSigner;
+        this.meterRegistry = meterRegistry;
     }
 
     /**
@@ -202,6 +212,26 @@ public class PolicyEngine {
      */
     @Transactional
     public AuthzResponse evaluate(AuthzInternalRequest request) {
+        ShadowCapture capture = new ShadowCapture();
+        AuthzResponse response = evaluateInternal(request, capture);
+        // Compare against the FINAL verdict, on every terminal path. The previous call site sat on
+        // the ALLOW path with javaAllow hard-coded true, so every Java DENY was invisible to the
+        // comparison — the divergence rate measured only false-deny risk and said nothing about
+        // false-allow risk, which is the direction that matters for a policy cut-over.
+        shadowCompareOpa(request, capture, response);
+        return response;
+    }
+
+    /**
+     * Carries what the OPA shadow needs out of the evaluation, as the evaluation discovers it.
+     * Purpose and the matched rule are resolved mid-flight and are not reachable from the response.
+     */
+    private static final class ShadowCapture {
+        private PurposeOfUse purpose;
+        private PolicyRuleEntity matchedRule;
+    }
+
+    private AuthzResponse evaluateInternal(AuthzInternalRequest request, ShadowCapture shadowCapture) {
         long startTime = System.nanoTime();
 
         UUID tenantId = request.tenantId();
@@ -269,6 +299,7 @@ public class PolicyEngine {
         // Step 2: Purpose-of-use validation
         // ────────────────────────────────────────────────────────────────
         PurposeOfUse purpose = parsePurpose(request.purposeOfUse());
+        shadowCapture.purpose = purpose;
         if (purpose == null) {
             return denyAndLog(request, "INVALID_PURPOSE",
                     "Missing or unrecognized purpose-of-use: " + request.purposeOfUse(),
@@ -290,6 +321,7 @@ public class PolicyEngine {
             return step4.deny();
         }
         PolicyRuleEntity matchedAllowRule = step4.matchedAllowRule();
+        shadowCapture.matchedRule = matchedAllowRule;
 
         // ────────────────────────────────────────────────────────────────
         // Step 4.5: Delegated / act-on-behalf authorization (L5, G-CZO-03)
@@ -363,9 +395,6 @@ public class PolicyEngine {
                 request, purpose, riskScore, matchedAllowRule, activeEscalation, objectMapper,
                 protectedAccess.grantedCategories());
         Map<String, String> headerMutations = buildHeaderMutations(obligations, request);
-
-        // Phase 3 strangler: SHADOW-compare the OPA gate decision (Java stays authoritative).
-        shadowCompareOpa(request, purpose, matchedAllowRule, true);
 
         auditConfidentialGrant(request, obligations, protectedAccess.grantBasis());
 
@@ -1372,47 +1401,88 @@ public class PolicyEngine {
     // ════════════════════════════════════════════════════════════════════
 
     /**
-     * In SHADOW mode, evaluate the OPA gate decision (purpose/min_loa/account-assurance) on a
-     * prepared input and log when it diverges from the Java verdict. OPA is never authoritative
-     * here; any error is swallowed. OFF by default → no-op, zero behaviour change. (The full
-     * DB-rule RBAC/ABAC requires policy_rules delivered as OPA bundle data — a later increment.)
+     * In SHADOW mode, evaluate the OPA gate decision on a prepared input and record how it compares
+     * to the Java verdict. OPA is never authoritative here and every error is swallowed, so a policy
+     * or sidecar fault can never change an authorization outcome. OFF ⇒ no-op.
+     *
+     * <p>Runs on every terminal path, from {@link #evaluate}, against the final response. Comparing
+     * only ALLOW (as this did previously, with {@code javaAllow} hard-coded {@code true}) measures
+     * false-deny risk alone and is silent about false-allow risk — the direction that decides
+     * whether a cut-over is safe.</p>
+     *
+     * <p>{@code STEP_UP_REQUIRED} is not folded into "deny": the policy has no risk/step-up
+     * dimension, so it is counted in its own bucket rather than being scored as agreement or
+     * divergence against a question the policy was never asked.</p>
      */
-    private void shadowCompareOpa(AuthzInternalRequest request, PurposeOfUse purpose,
-                                  PolicyRuleEntity matchedRule, boolean javaAllow) {
+    private void shadowCompareOpa(AuthzInternalRequest request, ShadowCapture capture,
+                                  AuthzResponse response) {
         String mode = properties.getOpaMode();
         if (mode == null || "OFF".equalsIgnoreCase(mode)) {
             return;
         }
+        long started = System.nanoTime();
         try {
-            Map<String, Object> input = new LinkedHashMap<>();
-            input.put("actor_id", request.actorId() != null ? request.actorId() : "");
-            input.put("purpose", purpose != null ? purpose.name() : "");
-            input.put("identity_loa", identityLoa(request));
-            input.put("authentication_aal", request.authenticationAssurance().aal());
-            Map<String, Object> conditions = parseConditions(matchedRule);
-            if (conditions.get("min_loa") instanceof Number n) {
-                input.put("min_loa", n.intValue());
-            }
-            if (conditions.get("min_aal") instanceof Number n) {
-                input.put("min_aal", n.intValue());
-            }
-            if (Boolean.TRUE.equals(conditions.get("account_assurance_required"))) {
-                input.put("account_assurance_required", true);
-            }
+            Map<String, Object> conditions = parseConditions(capture.matchedRule);
+            Integer minLoa = conditions.get("min_loa") instanceof Number n ? n.intValue() : null;
+            Integer minAal = conditions.get("min_aal") instanceof Number n ? n.intValue() : null;
+            boolean accountAssurance = Boolean.TRUE.equals(conditions.get("account_assurance_required"));
+
+            Map<String, Object> input = OpaShadowInputMapper.build(
+                    request, capture.purpose, minLoa, minAal, accountAssurance, identityLoa(request));
+
             OpaDecision opa = opaDecisionClient.decide(input);
+            long micros = (System.nanoTime() - started) / 1_000L;
             if (opa == null) {
-                return; // OPA undefined / unreachable — no signal
+                recordShadowOutcome("no_signal", "none", micros);
+                return;
             }
-            if (opa.allow() != javaAllow) {
-                log.warn("OPA-SHADOW divergence: java.allow={} opa.allow={} reasons={} actor={} purpose={} correlation={}",
-                        javaAllow, opa.allow(), opa.denyReasons(), request.actorId(),
-                        purpose != null ? purpose.name() : null, request.correlationId());
-            } else {
-                log.debug("OPA-SHADOW agree: allow={} actor={}", javaAllow, request.actorId());
+
+            Verdict verdict = response.verdict();
+            if (verdict == Verdict.STEP_UP_REQUIRED) {
+                recordShadowOutcome("step_up_not_comparable",
+                        OpaShadowInputMapper.metricReason(opa.denyReasons()), micros);
+                return;
             }
+
+            boolean javaAllow = verdict == Verdict.ALLOW;
+            if (opa.allow() == javaAllow) {
+                recordShadowOutcome("agree", OpaShadowInputMapper.metricReason(opa.denyReasons()), micros);
+                return;
+            }
+
+            // A divergence whose reasons are all rules this input cannot exercise is a mapping
+            // fault, not a policy disagreement. Separating them stops an unmappable field from
+            // being read as evidence that the policy corpus disagrees with the engine.
+            boolean comparable = OpaShadowInputMapper.isComparable(opa.denyReasons());
+            String outcome = comparable ? "divergence" : "divergence_unmappable";
+            recordShadowOutcome(outcome, OpaShadowInputMapper.metricReason(opa.denyReasons()), micros);
+
+            log.warn("OPA-SHADOW {}: java.verdict={} opa.allow={} reasons={} comparable={} "
+                            + "actor={} purpose={} resource={} correlation={}",
+                    outcome, verdict, opa.allow(), opa.denyReasons(), comparable,
+                    request.actorId(), capture.purpose != null ? capture.purpose.name() : null,
+                    request.resourceType(), request.correlationId());
         } catch (Exception e) {
+            recordShadowOutcome("error", "none", (System.nanoTime() - started) / 1_000L);
             log.debug("OPA-SHADOW comparison skipped: {}", e.getMessage());
         }
+    }
+
+    /**
+     * Bounded-cardinality shadow metrics. Both tag values come from closed vocabularies — the
+     * outcome set below and the policy's own deny-reason names — so no request-derived string can
+     * grow the series.
+     */
+    private void recordShadowOutcome(String outcome, String reason, long micros) {
+        if (meterRegistry == null) {
+            return;
+        }
+        meterRegistry.counter("tshepo.authz.opa.shadow",
+                "outcome", outcome,
+                "reason", reason,
+                "policy_version", OPA_SHADOW_POLICY_VERSION).increment();
+        meterRegistry.timer("tshepo.authz.opa.shadow.latency", "outcome", outcome)
+                .record(micros, java.util.concurrent.TimeUnit.MICROSECONDS);
     }
 
     /** Query/matrix/fragment delimiters — literal and percent-encoded — that end the route path. */
