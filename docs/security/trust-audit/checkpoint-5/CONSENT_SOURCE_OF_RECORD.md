@@ -341,3 +341,47 @@ licence identifiers are real operational data and stay out of metrics.
 The BFF's `consent_preferences` orphan could not be counted: the BFF's database is not among the
 namespace's databases under any of the names searched, so the table's contents are still
 **UNKNOWN** — a smaller and better-specified unknown than before, but not resolved.
+
+---
+
+# Consent PROVEN working end to end, 2026-08-02
+
+The chain was **empty, not broken**. Exercised against the live preview services:
+
+| Step | Result |
+|---|---|
+| `POST /v1/consent` with a complete FHIR R4 Consent | **201** — directive `70309319-…` created |
+| Stored | `consent_directive` **1**, `consent_audit` **1**, `event_outbox` **1** |
+| `GET /v1/consent/evaluate` — the granted actor | **`permitted: true`**, `consentId` matches, `allowedScopes: ["read"]` |
+| `GET /v1/consent/evaluate` — an actor with no directive | **`permitted: false`, `reason: NO_ACTIVE_CONSENT`** |
+| `DELETE /v1/consent/{id}` (revoke the proof) | **200** — `status: REVOKED`, audit rows **2** |
+
+The audit chain retained both events after revocation, which is the correct behaviour: the record
+of a consent decision must outlive the consent.
+
+Validation is genuinely enforced on the way in — the first two attempts were rejected with
+`fhirConsentJson is required` and then `FHIR Consent must have at least one category`. The store
+does not accept a malformed directive.
+
+**So the precondition for enabling consent enforcement is not a code fix. It is that consent has
+to be captured.** Directives exist only where someone has been asked.
+
+## Honest feedback when consent is missing
+
+A person who has never been asked and a person who has withdrawn are not in the same situation,
+and telling both *"access denied"* turns a next step into a dead end.
+
+`PolicyEngine` now distinguishes them:
+
+| Consent-service reason | Code returned | What the caller is told |
+|---|---|---|
+| `NO_ACTIVE_CONSENT`, `CONSENT_EXPIRED`, `NO_CONSENT_FOUND` | **`CONSENT_REQUIRED`** | *"…no consent covering this access has been granted yet. Ask the person to grant consent, or record an alternative lawful basis."* |
+| anything else (withdrawal, explicit refusal) | `CONSENT_DENIED` | *"The person's consent does not permit this access."* |
+
+Three properties of that split:
+
+- **Both still refuse.** This changes what the caller is *told*, never whether access is granted.
+- **It is an allowlist.** A refusal reason added to the consent service later defaults to the
+  non-actionable message, so a new reason can never silently become "just ask again".
+- **Withdrawal is deliberately excluded.** Someone who has withdrawn has given an answer.
+  Inviting the caller to ask again would be misleading, and a nudge to pressure the person.

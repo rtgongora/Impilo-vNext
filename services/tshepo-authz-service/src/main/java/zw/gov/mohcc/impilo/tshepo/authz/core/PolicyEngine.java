@@ -168,6 +168,18 @@ public class PolicyEngine {
      */
     static final String OPA_SHADOW_POLICY_VERSION = "impilo.authz/v1";
 
+    /**
+     * Consent-service reasons that mean "no consent covers this yet", as opposed to "consent
+     * exists and refuses this". Only the first kind is worth telling a user how to resolve.
+     *
+     * <p>Deliberately an allowlist. An unrecognised reason falls through to the non-actionable
+     * message, so a new refusal reason can never be silently presented as "just ask again".</p>
+     */
+    static final Set<String> CONSENT_OBTAINABLE_REASONS = Set.of(
+            "NO_ACTIVE_CONSENT",
+            "CONSENT_EXPIRED",
+            "NO_CONSENT_FOUND");
+
     public PolicyEngine(DeviceRiskScoreEvaluator riskScoring,
                         PolicyCacheService policyCacheService,
                         ProviderPrivilegeRevocationStore privilegeRevocationStore,
@@ -417,9 +429,23 @@ public class PolicyEngine {
                     request.actorId(), purpose.name());
 
             if (!consent.permitted()) {
-                return denyAndLog(request, "CONSENT_DENIED",
-                        "Consent not granted: " + consent.reason(),
-                        riskScore, startTime);
+                // A refusal for want of consent and a refusal because consent was WITHDRAWN are
+                // different outcomes and must not be collapsed. The first is actionable -- the
+                // person can be asked -- and the second is not; telling a user "access denied"
+                // when the honest answer is "nobody has asked you yet" is the difference between
+                // a dead end and a next step.
+                //
+                // Both still refuse the request. This changes what the caller is TOLD, not
+                // whether access is granted.
+                boolean consentCanBeObtained = CONSENT_OBTAINABLE_REASONS.contains(
+                        consent.reason() == null ? "NO_ACTIVE_CONSENT" : consent.reason());
+                String code = consentCanBeObtained ? "CONSENT_REQUIRED" : "CONSENT_DENIED";
+                String message = consentCanBeObtained
+                        ? "This record is protected by the person's consent, and no consent "
+                          + "covering this access has been granted yet. Ask the person to grant "
+                          + "consent, or record an alternative lawful basis."
+                        : "The person's consent does not permit this access.";
+                return denyAndLog(request, code, message, riskScore, startTime);
             }
         }
 
