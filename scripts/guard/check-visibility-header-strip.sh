@@ -78,10 +78,12 @@ fi
 # block in the blocking change-safety phase, so it also catches counts that match while a single
 # block is unpaired.
 #
-# Asserted PER STRIP BLOCK, not per file: a whole-file count comparison is wrong, because
-# x-actor-id also appears outside request_headers_to_remove (regenerate/allowlist contexts),
-# so equality would fail on a correct chart. The invariant is narrower and exact — any block
-# that strips x-actor-id must strip both aliases too.
+# Asserted PER STRIP BLOCK. A whole-file count IS viable — AuthorizeWireTest does exactly that
+# and passes — but only with an EXACT line match (l.strip().equals("- \"x-actor-id\"")). A
+# substring grep for x-actor-id also catches regenerate/allowlist contexts and yields 5 where the
+# strip lists hold 3, which is what made an earlier draft of this check fail on a correct chart.
+# Per-block is kept because it is the strictly stronger statement: it also catches counts that
+# balance across the file while one individual block is unpaired.
 # Every Envoy config that carries ext_authz, not only the deployed chart. The infra/ copies are
 # mounted by docker-compose.runtime.yml and never reach Kubernetes, so they are not a production
 # exposure -- but a developer running that stack would exercise a WEAKER trust boundary than
