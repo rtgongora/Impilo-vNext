@@ -97,7 +97,7 @@ branch that read as implemented.
 | Outage distinguished from refusal (503 vs 403) | ✅ | ✅ | ✅ | n/a |
 | Actionable deny-code promotion (allowlist) | ✅ | ✅ | ✅ | n/a |
 | Canonical challenge envelope over real HTTP | ✅ | ✅ 13 | ✅ | n/a |
-| Alias headers stripped at the edge | ✅ | ✅ | ⚠️ chart only | ❌ |
+| Alias headers stripped at the edge | ✅ | ✅ | ✅ config-verified | ⚠️ not runtime-proven |
 | Continuations generalised beyond recovery | ✅ | ✅ 8 | ✅ | n/a |
 | Continuation carried through step-up round trip | ✅ | ✅ 3 | ✅ | n/a |
 | Shell challenge parsing + presentation | ✅ | ✅ 57 | ❌ | ❌ |
@@ -180,9 +180,18 @@ It is **PARTIAL, not READY**, on three specific counts:
 1. **No browser proof.** `one-ui-shell` is not rebuilt or deployed, so no user has yet seen a
    trust challenge. Per constraint C3 the API proof above does not substitute.
 2. **No Redroid proof** of the mobile path.
-3. **The alias-header strip is chart-only.** `x-original-method` / `x-original-path` are in the
-   Helm template but the running Envoy ConfigMap has not been updated, and Envoy is on-path for
-   ingress. Until it is, a client could in principle set them. **This is the one item here that is
-   a live exposure rather than an unproven claim, and it should be closed before anything else.**
+3. **The alias-header strip is deployed but not runtime-proven.** `x-original-method` /
+   `x-original-path` are now in the running Envoy ConfigMap (verified by reading
+   `/etc/envoy/envoy.yaml` inside the live pod: 2 entries, at the same two routes as
+   `x-actor-id`). The in-flight negative control — send a spoofed header through the edge and
+   confirm the upstream never sees it — was **not run**, because the Envoy image has no HTTP
+   client. Config parity is good evidence; it is not the same as observing the strip happen.
+
+   Worth recording how this nearly went wrong: the first `kubectl apply` reported
+   `configmap/envoy-config created` and I nearly accepted it. The rendered manifest carried
+   `namespace: default`, so it had created a stray ConfigMap in the wrong namespace while the real
+   one was untouched. **"created" rather than "configured" for an object 16 days old was the
+   tell.** The stray object was removed (it had not existed before, so removal restored the prior
+   state exactly) and the apply repeated with an explicit namespace.
 
 Claiming READY on a service-level probe would be the exact overclaim this audit exists to prevent.
