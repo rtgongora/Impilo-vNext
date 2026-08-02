@@ -106,6 +106,42 @@ branch that read as implemented.
 | Browser (Playwright) proof of a challenge | ❌ | ❌ | ❌ | ❌ |
 | Redroid proof of a mobile challenge | ❌ | ❌ | ❌ | ❌ |
 
+### Which guards actually cover the alias headers
+
+`x-original-method` / `x-original-path` decide **which resource a request is authorized against**,
+so a client able to set them redirects the question rather than the answer. Test the right thing:
+
+| Guard | Covers it? | Nature |
+|---|---|---|
+| `scripts/guard/check-visibility-header-strip.sh` | ✅ **blocking** | per-strip-block; loops all three ext_authz configs. Wired via `run-change-safety-gates.sh:52` → quality-gates step 14 |
+| `AuthorizeWireTest.aliasesAreStrippedAtTheEdge` | ✅ | whole-file exact-line counts, in the BFF suite that owns the header |
+| `scripts/guard/check-trust-header-strip-pairing.sh` | ❌ **blind** | passes vacuously on this regression — do not cite it |
+
+**Prefer the per-block guard as the control.** The `AuthorizeWireTest` count is a co-located canary,
+and it is the weaker statement: it balances totals across the file, so *moving* a strip (delete from
+one block, duplicate in another) passes while one route silently leaks. The per-block assertion
+catches that; the count does not.
+
+Two cautionary notes from getting this wrong twice:
+
+- `check-visibility-header-strip.sh` was **permanently red** before `f9c96b497` — its block scan
+  treated a comment, a Helm directive or a blank line as end-of-list, so it failed on every input
+  including a correct chart. A blocking gate that cannot pass is indistinguishable from one nobody
+  runs, and "it went red when I broke it" proves nothing about such a check.
+- The three copies are the chart plus `infra/envoy/envoy.yaml` and `infra/envoy/envoy-runtime.yaml`.
+  The infra pair is mounted only by `docker-compose.runtime.yml` and never reaches Kubernetes, so
+  they are not a production exposure — but a developer running that stack would exercise a weaker
+  trust boundary *and see it pass*, and chart/infra divergence is what gets copied back into the
+  chart. Paired in `b67f266bf`.
+
+On why accepting a caller-supplied alias is safe at all — in the staging lane's words:
+
+> `:method` is evaluated before `ORIGINAL_METHOD`, so Envoy's pseudo-header beats the
+> caller-supplied alias. That ordering is the reason accepting the alias is safe at all — without
+> it the alias would not be a fallback, it would be an override.
+
+`AuthorizeWireTest.producerHonoursTheAlias` pins that precedence in `AuthorizeController`.
+
 ### Live evidence
 
 Probed inside a running `experience-bff` pod after deploying both services:
