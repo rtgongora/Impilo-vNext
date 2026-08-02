@@ -273,3 +273,71 @@ The guard is source-only: it needs no cluster and can never "skip to green".
 
 Designating a source of record is a governance act. It makes the *next* defect legible; it does
 not by itself enforce anything.
+
+---
+
+# Resolved 2026-08-02 — the UNKNOWNs measured, and the findings closed
+
+## Measured, not assumed
+
+Queried directly against the live preview databases:
+
+| Store | Rows |
+|---|---|
+| `tshepo_consent.consent_directive` (**the source of record**) | **0** |
+| `tshepo_consent.consent_audit` | **0** |
+| `mvumo.consent_request` | **0** |
+| `mvumo.consent_request` linked to the SoR | **0** |
+| `tshepo` database (the legacy store) | **does not exist** |
+| `tshepo-service` deployment (the legacy monolith) | **not deployed** |
+
+### The finding that matters most
+
+**The consent chain is empty end to end.** Not mis-wired — empty. No consent directive has ever
+been captured in this estate.
+
+So switching consent enforcement on today would deny **every** clinical access, and it would not
+be because of the wire defect (fixed in 5.1) or a policy disagreement. It would be because there
+is nothing to find. Fail-closed against an empty store is indistinguishable, from the outside,
+from fail-closed against a revoked directive — and the estate would look like consent enforcement
+working perfectly while actually blocking everyone.
+
+**This is a hard precondition for turning on ext_authz Stage 2**: consent capture has to produce
+directives before consent evaluation can mean anything.
+
+## Legacy store: two of five retirement conditions already met
+
+The `tshepo` database does not exist and `tshepo-service` is not deployed. Conditions 1 (zero
+production traffic) and 2 (zero rows of value) are therefore satisfied **by measurement**, not by
+argument. The code remains in the repository and is not deleted; what changed is that its risk is
+now quantified as zero in this environment rather than assumed.
+
+Conditions 3–5 (reseed against the SoR, negative control, enforcement on the live path) stand.
+
+## Mvumo's silent de-designation: closed
+
+`TshepoConsentClient.createDirective` logged a warning and returned `null` when
+`mvumo.tshepo-consent.enabled=false`. The grant was captured in Mvumo, never reached the source of
+record, and **nothing downstream failed** — one configuration flag could silently de-designate the
+SoR while consent capture appeared to keep working.
+
+It now **throws**. Mvumo owns the consent *experience*; it does not own grant state. A consent
+record that does not reach the source of record is not a consent record, so failing to materialise
+is a failure of the capture rather than a skipped optional step.
+
+## Authority is on the decision path
+
+`AuthorityResolver` is no longer shelf-ware. `PolicyEngine` resolves an `AuthorityBinding` at
+step 1.5 — from the introspected duty token plus the VARAPI revocation store — and records the
+resulting state on **every** terminal decision, allowed or denied. An access refused for want of
+authority is exactly the case an audit trail must be able to explain.
+
+Metric tags are bounded: an authority state from a closed vocabulary
+(`actionable` / `no_appointment` / `suspended` / `expired`) and the verdict. Appointment and
+licence identifiers are real operational data and stay out of metrics.
+
+## Remaining honest gap
+
+The BFF's `consent_preferences` orphan could not be counted: the BFF's database is not among the
+namespace's databases under any of the names searched, so the table's contents are still
+**UNKNOWN** — a smaller and better-specified unknown than before, but not resolved.

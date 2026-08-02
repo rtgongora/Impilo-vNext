@@ -23,6 +23,7 @@ import zw.gov.mohcc.impilo.tshepo.contracts.dto.Obligations;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.StepUpRequirement;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.VisibilityProfile;
 import zw.gov.mohcc.impilo.tshepo.contracts.enums.PurposeOfUse;
+import zw.gov.mohcc.impilo.tshepo.contracts.v1.AuthorityBinding;
 import zw.gov.mohcc.impilo.tshepo.contracts.enums.Verdict;
 import zw.gov.mohcc.impilo.tshepo.contracts.headers.TrustHeaders;
 import zw.gov.mohcc.impilo.tshepo.contracts.v1.TrustChallengeDecision;
@@ -220,6 +221,7 @@ public class PolicyEngine {
         // false-allow risk, which is the direction that matters for a policy cut-over.
         shadowCompareOpa(request, capture, response);
         measureContextDivergence(request, capture);
+        recordAuthority(capture, response);
         return response;
     }
 
@@ -230,6 +232,7 @@ public class PolicyEngine {
     private static final class ShadowCapture {
         private PurposeOfUse purpose;
         private PolicyRuleEntity matchedRule;
+        private AuthorityBinding authority;
     }
 
     private AuthzResponse evaluateInternal(AuthzInternalRequest request, ShadowCapture shadowCapture) {
@@ -295,6 +298,21 @@ public class PolicyEngine {
                     "Device risk threshold exceeded (score=" + riskScore + ")",
                     riskScore, startTime);
         }
+
+        // ────────────────────────────────────────────────────────────────
+        // Step 1.5: Authority resolution (Checkpoint 5.4)
+        // Assemble the single answer to "what activated right is being relied on, and is it still
+        // valid?" from validated evidence only. AuthorityBinding had no production writer at all
+        // before this, so authority was implicit -- a role list plus whatever a rule happened to
+        // check -- and nothing could audit or deny on it.
+        //
+        // Recorded on every decision, not just allowed ones: an access refused for want of
+        // authority is exactly the case the audit trail needs to be able to explain.
+        // ────────────────────────────────────────────────────────────────
+        AuthorityBinding authority = AuthorityResolver.resolve(request,
+                request.providerId() != null && !request.providerId().isBlank()
+                        && privilegeRevocationStore.isRevoked(request.providerId()));
+        shadowCapture.authority = authority;
 
         // ────────────────────────────────────────────────────────────────
         // Step 2: Purpose-of-use validation
@@ -1516,6 +1534,21 @@ public class PolicyEngine {
             recordShadowOutcome("error", "none", (System.nanoTime() - started) / 1_000L);
             log.debug("OPA-SHADOW comparison skipped: {}", e.getMessage());
         }
+    }
+
+    /**
+     * Record the activated right this decision rested on, or the reason there was none.
+     *
+     * <p>Bounded tags only: an authority state from a closed vocabulary and the verdict. The
+     * appointment and licence identifiers are real operational data and stay out of metrics.</p>
+     */
+    private void recordAuthority(ShadowCapture capture, AuthzResponse response) {
+        if (meterRegistry == null) {
+            return;
+        }
+        meterRegistry.counter("tshepo.authz.authority",
+                "state", AuthorityResolver.metricLabel(capture.authority, Instant.now()),
+                "verdict", response.verdict().name()).increment();
     }
 
     /** Resolved lawful-basis mode; a runtime-invalid value degrades to SHADOW loudly. */
