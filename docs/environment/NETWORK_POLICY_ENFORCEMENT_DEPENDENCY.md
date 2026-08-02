@@ -99,3 +99,62 @@ network reachability. But it is a **defence in depth**, not a perimeter, until t
 dependency is closed. Any claim that the PDP gates all access to a service is false on this
 cluster today, and D7's cutover runbook must say so rather than implying the gate is the
 only path in.
+
+---
+
+## Correction 2026-08-02: `ipset` was necessary but NOT sufficient
+
+This document asserted that the missing `ipset` binary was the root cause. **That was tested and
+is disproven.**
+
+`ipset` was installed and k3s restarted:
+
+```
+/usr/sbin/ipset                      present (ipset v7.19)
+lsmod | grep ip_set   → ip_set 61440 1 xt_set,  xt_set 20480 0    (modules loaded)
+systemctl show k3s    → ActiveEnterTimestamp = 2026-08-02 15:17:37 CAT  (restarted)
+```
+
+The enforcement probe was then re-run **twice**, with its positive control passing both times:
+
+```
+PROBE OK    positive control: pod-to-pod reachable with no policy
+RESULT: NetworkPolicy is NOT ENFORCED on this cluster.
+```
+
+So the estate still has no pod isolation, and the reason is **not** the one recorded here.
+
+### What is now known
+
+| Fact | Value |
+|---|---|
+| `ipset` binary | present |
+| `ip_set` / `xt_set` kernel modules | loaded |
+| k3s launch flags | `server --write-kubeconfig-mode 644` — **no `--disable-network-policy`** |
+| k3s config | `kubelet-arg: max-pods=250` only |
+| `KUBE-ROUTER` / `KUBE-NWPLCY` iptables chains | **none observed** |
+| iptables backend | **`v1.8.10 (nf_tables)`** — not legacy |
+| `nft_compat` module | loaded, 3719 references |
+| kernel | 6.17.0-29-generic |
+
+### Leading hypothesis, explicitly untested
+
+The host resolves `iptables` to the **nftables** backend via `nft_compat`. kube-router programs
+its policy chains through the iptables interface, and a backend mismatch would let rule
+programming appear to succeed while the packets are evaluated by a different path. This is a
+hypothesis, not a diagnosis — it has **not** been confirmed.
+
+### The one command that would confirm it
+
+Needs root, which this session does not hold:
+
+```bash
+sudo journalctl -u k3s --since "-30min" | grep -iE "netpol|kube-router|ipset|network polic"
+sudo iptables -S | grep -cE "KUBE-ROUTER|KUBE-NWPLCY"
+sudo nft list ruleset | grep -c KUBE
+```
+
+Until that is run, the correct status is **BLOCKED, cause unconfirmed** — not "blocked on ipset".
+Recording a specific wrong cause is worse than recording an open one, because it stops anyone
+looking further. No NetworkPolicy manifests have been written: a control that is accepted and
+silently inert is one nobody re-tests.
