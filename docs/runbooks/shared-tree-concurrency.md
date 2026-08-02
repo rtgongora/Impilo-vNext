@@ -308,3 +308,69 @@ npm --prefix ui/one-ui-shell run build
 
 **And add it to the gate.** Until then, treat "the shell builds" as an untested claim: a green
 change-safety run says nothing about whether the estate can produce a shell image at all.
+
+## 10. A guard that fails on every input is indistinguishable from one nobody runs
+
+Found 2026-08-02. `check-visibility-header-strip.sh` — wired at `run-change-safety-gates.sh:52`
+into the **blocking** change-safety phase, itself step 14 of `run-local-quality-gates.sh` — had been
+failing on *every* input, including a correct chart. Its block scan treated a comment, a Helm
+directive or a blank line as the end of a `request_headers_to_remove` list, so each block closed on
+its own `# Decision inputs:` line two lines after opening and the scan never reached the headers
+below. Canonical could not pass its own gates, and nobody noticed.
+
+Two distinct harms, and the second is worse:
+
+1. The gate was red, so the signal was worthless and had presumably been routed around.
+2. **A check that cannot pass proves nothing when it fails.** This session used that guard as a
+   negative control for an unrelated header regression — deleted the header, watched it go RED, and
+   reported the header as protected. It went red because it always went red. The "proof" measured
+   nothing, and it was published to another lane as assurance.
+
+**When you assert a guard protects something, prove BOTH directions:**
+```bash
+bash scripts/guard/<g>.sh            # must PASS on the clean tree  <-- the half everyone skips
+# break the thing it guards
+bash scripts/guard/<g>.sh            # must FAIL
+# restore, confirm clean
+```
+A guard proven only in the RED direction is compatible with it being permanently red.
+See also §9 — same family: a suite that does not compile reports zero failures.
+
+### 10a. On a shared tree, a peer's negative control looks exactly like your defect
+
+`/home/robert/Impilo-vNext` is a **symlink to `/opt/impilo/repos/Impilo-vNext`** (verify:
+`stat -c '%d:%i'` through both paths returns the same device:inode). Sessions whose cwd *looks*
+different are in one working tree.
+
+Two lanes ran the same injection minutes apart against `AuthorizeWireTest`. The second lane's
+`mvn` read the file **during** the first lane's window and saw `expected: 3L but was: 2L`, while its
+own `git status` was clean before and after. That failure was the peer's deliberate breakage,
+observed from another process, and was nearly filed as a real defect.
+
+- Say so before you deliberately break something, if another lane may be testing.
+- Re-run any surprising failure once the tree is provably stable before reporting it.
+- A `git status` taken before and after a long command says nothing about the window between.
+
+### 10b. Correction to the record — `AuthorizeWireTest` does guard the alias strip
+
+The commit message on `f9c96b497` states "Nothing guarded x-original-method / x-original-path at
+all. AuthorizeWireTest does not read the chart." **Both clauses are false**, and the commit message
+cannot be rewritten, so the correction lives here.
+
+`AuthorizeWireTest.aliasesAreStrippedAtTheEdge` (line 112) reads
+`../../deploy/helm/impilo-vnext/templates/envoy.yaml` directly and asserts exact-strip-line count
+equality against `x-actor-id`; it asserts the file exists first, so a broken path fails loudly rather
+than passing vacuously. Reproduced RED twice by an independent lane, before and after `f9c96b497`.
+
+The false claim came from `sed -n '90,110p'` and `grep … | head -8` — two windows that both stopped
+short of line 112 — and a negative was asserted from them. **Never conclude absence from a truncated
+read.** Widen the window, or grep the whole file for the symbol.
+
+The two controls are complementary, and the per-file one is not redundant:
+- `AuthorizeWireTest` — whole-file exact-line counts, co-located with the header's owning suite.
+- `check-visibility-header-strip.sh` — **per strip block**, across all three ext_authz configs, in
+  the blocking phase. Strictly stronger: a *moved* strip (removed from block A, duplicated in
+  block B) keeps the totals balanced and leaks one route. Per-block catches it; counts do not.
+
+`check-trust-header-strip-pairing.sh` is blind to this regression entirely — it checks
+strip/regenerate pairing, a different invariant. Do not cite it as cover.
