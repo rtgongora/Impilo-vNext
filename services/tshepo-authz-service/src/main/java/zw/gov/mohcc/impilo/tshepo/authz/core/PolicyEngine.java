@@ -364,6 +364,21 @@ public class PolicyEngine {
         // Step 5: Consent evaluation (clinical resources)
         // ────────────────────────────────────────────────────────────────
         if (requiresConsent(request.resourceType(), purpose)) {
+            // subjectRef is the resourceId, and deliberately NOT request.subjectId().
+            //
+            // X-Subject-ID in this estate is the DELEGATION subject -- the person an actor
+            // declares they are acting for -- not the subject of the record being read. For a
+            // Patient resource the CPID *is* the resourceId, so this is correct. An earlier
+            // attempt to "improve" this by preferring subjectId was caught by
+            // PolicyEngineTest.evaluate_delegated_activeInScope_allows, where the two differ:
+            // it would have evaluated the guardian's consent instead of the patient's.
+            //
+            // KNOWN GAP: for a non-Patient clinical resource (Observation, MedicationRequest)
+            // the resourceId is the record's own id and AuthzInternalRequest carries no field
+            // naming the patient it concerns, so consent for those resources cannot be evaluated
+            // against the right subject. Recorded in checkpoint-4/CP5_CONSENT_CONVERGENCE.md
+            // rather than approximated -- a wrong subject fails closed and would read as an
+            // unexplained denial on exactly the resources consent exists to govern.
             ConsentDecision consent = consentClient.evaluateConsent(
                     tenantId, request.resourceType(), request.resourceId(),
                     request.actorId(), purpose.name());
