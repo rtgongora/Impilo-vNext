@@ -74,17 +74,16 @@ to the committed test value. Both are out of scope for this closure run
 
 ## Consequence for runtime truth
 
-- Authenticated browser runtime proof: **INSUFFICIENT_EVIDENCE** (blocked on the
-  prerequisite above, not on any observed defect).
-- The authenticated proof suite is committed and ready:
-  `ui/one-ui-shell/e2e/browser-preview-authenticated.spec.ts` (skips itself unless
-  `PREVIEW_TEST_USERNAME`/`PREVIEW_TEST_PASSWORD` are supplied; single login attempt by
-  design because of the brute-force budget). It captures Set-Cookie attributes,
-  opaque-cookie proof, authenticated session-status, storage cleanliness, CSRF
-  enforcement, logout, post-logout rejection and callback replay rejection.
-- Unauthenticated runtime facets re-verified live and passing (4/4):
-  PKCE S256 + state + nonce, anonymous session fail-closed, open-redirect rejection,
-  no token material in browser storage.
+- `citizen.moyo` remains unrepaired and unused (never reset; never modified).
+- Authenticated browser runtime proof: **PREVIEW_ENFORCED** as of 2026-08-02 via the
+  governed synthetic identity `preview.test.citizen` — see
+  [`AUTHENTICATED_RUNTIME_PROOF.md`](AUTHENTICATED_RUNTIME_PROOF.md) and
+  [`PREVIEW_TEST_IDENTITY.md`](PREVIEW_TEST_IDENTITY.md). Playwright 12/12 including
+  Set-Cookie attributes, opaque cookie, authenticated session-status, storage
+  cleanliness, CSRF enforcement, logout, post-logout rejection, callback replay
+  rejection and open-redirect rejection.
+- Unauthenticated runtime facets remain passing (PKCE S256 + state + nonce, anonymous
+  session fail-closed, open-redirect rejection, no token material).
 
 ## Defect found and fixed during diagnosis
 

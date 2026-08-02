@@ -27,6 +27,19 @@ const PASSWORD = process.env.PREVIEW_TEST_PASSWORD ?? "";
 
 const TOKEN_LIKE = /(access_token|refresh_token|id_token|eyJ[A-Za-z0-9_-]{10,}\.)/;
 
+/** Mandatory v1.1 trust headers the shell's api-client always injects on mutations. */
+function trustHeaders(extra: Record<string, string> = {}): Record<string, string> {
+  return {
+    "Content-Type": "application/json",
+    "X-Tenant-ID": "00000000-0000-4000-8000-000000000001",
+    "X-Pod-ID": "national-spine",
+    "X-Request-ID": crypto.randomUUID(),
+    "X-Correlation-ID": crypto.randomUUID(),
+    "Idempotency-Key": crypto.randomUUID(),
+    ...extra,
+  };
+}
+
 test.describe.serial("authenticated preview session proof", () => {
   test.skip(!USERNAME || !PASSWORD,
     "governed preview test credential not supplied via PREVIEW_TEST_USERNAME/PREVIEW_TEST_PASSWORD");
@@ -123,13 +136,32 @@ test.describe.serial("authenticated preview session proof", () => {
   });
 
   test("6. cookie-authenticated mutation without CSRF header is rejected", async () => {
-    const result = await page.evaluate(async () => {
-      const response = await fetch("/internal/v1/auth/oidc/logout", { method: "POST", credentials: "include" });
+    // Present the session cookie with the mandatory trust headers the shell always
+    // injects, but omit / forge X-CSRF-Token so SessionCsrfFilter is the decision point
+    // (not the MISSING_REQUIRED_HEADER gate that runs earlier on bare fetch).
+    const missing = await page.evaluate(async (headers) => {
+      const response = await fetch("/internal/v1/auth/oidc/logout", {
+        method: "POST",
+        credentials: "include",
+        headers,
+        body: "{}",
+      });
       return { status: response.status, body: await response.text() };
-    });
-    expect(result.status).toBe(403);
-    expect(result.body).toContain("CSRF_REJECTED");
-    // Session must still be alive after the rejected mutation.
+    }, trustHeaders());
+    const wrong = await page.evaluate(async (headers) => {
+      const response = await fetch("/internal/v1/auth/oidc/logout", {
+        method: "POST",
+        credentials: "include",
+        headers,
+        body: "{}",
+      });
+      return { status: response.status, body: await response.text() };
+    }, trustHeaders({ "X-CSRF-Token": "definitely-not-the-csrf-token" }));
+    expect(missing.status, `missing-header body=${missing.body}`).toBe(403);
+    expect(missing.body).toContain("CSRF_REJECTED");
+    expect(wrong.status, `wrong-token body=${wrong.body}`).toBe(403);
+    expect(wrong.body).toContain("CSRF_REJECTED");
+    // Session must still be alive after the rejected mutations.
     const still = await page.evaluate(async () =>
       (await fetch("/internal/v1/auth/oidc/session", { credentials: "include" })).status);
     expect(still).toBe(200);
@@ -140,14 +172,15 @@ test.describe.serial("authenticated preview session proof", () => {
     const csrf = cookies.find((c) => /csrf/i.test(c.name));
     expect(csrf, "CSRF cookie must exist for the logout").toBeTruthy();
 
-    const logout = await page.evaluate(async (token) => {
+    const logout = await page.evaluate(async ({ token, headers }) => {
       const response = await fetch("/internal/v1/auth/oidc/logout", {
         method: "POST",
         credentials: "include",
-        headers: { "X-CSRF-Token": token },
+        headers: { ...headers, "X-CSRF-Token": token },
+        body: "{}",
       });
       return response.status;
-    }, csrf!.value);
+    }, { token: csrf!.value, headers: trustHeaders() });
     expect(logout).toBe(200);
 
     const after = await page.evaluate(async () => {
