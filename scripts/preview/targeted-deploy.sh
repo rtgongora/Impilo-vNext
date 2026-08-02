@@ -228,7 +228,15 @@ fi
 
 # Regenerate helm values if needed
 node scripts/full-boot/generate-full-preview-runtime-values.mjs >/dev/null
-node scripts/full-boot/generate-full-preview-bff-downstream-env.mjs >/dev/null
+# BFF downstream mapping gaps are estate debt; only block when experience-bff is in scope.
+if ! node scripts/full-boot/generate-full-preview-bff-downstream-env.mjs >/dev/null; then
+  if [[ "$IMAGES_CSV" == *"experience-bff"* ]]; then
+    preview_write_deploy_report "$REPORT_PATH" "FAIL" "targeted" "$BLAST_JSON" \
+      "BFF downstream env generation failed while deploying experience-bff."
+    exit 1
+  fi
+  echo "WARN: BFF downstream env generation failed — continuing with existing values (shell-only / non-BFF targeted deploy)"
+fi
 
 resolve_preview_deploy_metadata
 preview_resolve_targeted_provenance "$PREVIEW_DEPLOY_COMMIT" "$IMAGES_CSV"
