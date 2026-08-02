@@ -29,7 +29,12 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}
+          # Keycloak advertises the PUBLIC issuer even on the internal URL, so a token's `iss` is
+          # the public one and validating against the in-cluster address rejects every token.
+          # The JWK set must still be fetched internally: this host cannot reach its own public
+          # address (hairpin NAT), so discovery against the public issuer would hang.
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}}
+          jwk-set-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}/protocol/openid-connect/certs
 
 impilo:
   companion:
