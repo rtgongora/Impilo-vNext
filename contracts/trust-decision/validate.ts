@@ -126,12 +126,16 @@ export function validateTrustChallengeOutcome(o: TrustChallengeOutcome): void {
     "expires_at",
     "support_reference",
   ]);
-  for (const key of Object.keys(o as Record<string, unknown>)) {
+  // Declared before the additional-property scan so both loops share one widening. The scan
+  // previously used a direct `o as Record<string, unknown>`, which TS rejects because
+  // TrustChallengeOutcome has no index signature — the same widening two lines below was already
+  // written correctly as a double cast.
+  const record = o as unknown as Record<string, unknown>;
+  for (const key of Object.keys(record)) {
     if (!allowedKeys.has(key)) {
       fail(`TrustChallengeOutcome: unsafe additional property '${key}'`);
     }
   }
-  const record = o as unknown as Record<string, unknown>;
   for (const key of allowedKeys) {
     const value = record[key];
     if (typeof value === "string" && CHALLENGE_FORBIDDEN.test(value)) {
