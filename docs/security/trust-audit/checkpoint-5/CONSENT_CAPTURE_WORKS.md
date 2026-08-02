@@ -75,3 +75,48 @@ Two synthetic directives exist: `cpid-consent-proof` (revoked as part of the pro
 `cpid-capture-v2` (active, captured through Mvumo). Neither corresponds to a real person. They
 are left in place as the evidence for this document; the audit chain retains both, which is
 correct — the record of a consent decision must outlive the consent.
+
+---
+
+## Verification that each fix is SOURCE, CHART and RUNNING
+
+A fix in a commit is not a fix in the estate. Re-checked all four against
+`audit-deployed-provenance.py`:
+
+| Defect | Source | Chart | Running |
+|---|---|---|---|
+| 1. Mvumo could not reach the SoR | ✅ | ✅ **was live-only** | ✅ |
+| 2. `granteeRef` `""` → `null`, purpose from consentType | ✅ | n/a | ✅ |
+| 3. read-only transaction on an audit write | ✅ | n/a | ✅ |
+| 4. PDP asked `scope=read` | ✅ | n/a | ✅ **was unshipped** |
+
+Two were incomplete when first reported:
+
+- **(1) existed only as a live `kubectl set env`.** The chart's sole
+  `TSHEPO_CONSENT_BASE_URL` was under `experienceBff/env` — the *BFF's*, not Mvumo's. The next
+  render would have dropped it and Mvumo would have fallen back to `localhost:8182` (itself),
+  breaking capture again. Now in `values-full-preview.yaml` and verified by rendering the chart.
+- **(4) was committed but never deployed.** `tshepo-authz-service` was running `ccf515736`,
+  **five CP5 commits behind** — missing the scope fix, the lawful-basis evaluator, the authority
+  resolver, the consent-feedback split and the CP5 findings work. The entire checkpoint's authz
+  code was in git and not in the estate.
+
+All four consent-path services are now `IN_BRANCH`: `mvumo-service`, `tshepo-consent-service`,
+`tshepo-authz-service`, `experience-bff`.
+
+### Proof the new code executes, not merely deploys
+
+Driving real decisions through the live PDP:
+
+```
+tshepo_authz_authority_total{state="no_appointment",verdict="DENY"} 4
+```
+
+`AuthorityResolver` runs on every terminal decision and correctly reports *no appointment* for a
+probe carrying no duty token — the invariant "a context is not authority" observable in
+production telemetry.
+
+`tshepo_authz_lawful_basis_total` is absent, and that is placement rather than a blind spot: the
+evaluator sits at step 5, and these probes deny at step 4 (`NO_MATCHING_RULES`) before any
+lawful-basis question arises. A request denied on RBAC never asked which ground made it lawful.
+It will register once traffic matches a policy rule.
