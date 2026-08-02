@@ -379,6 +379,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/ehr/[patientId]/preferences/communications", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Communication Preferences", navLabel: "Communications", navZone: "work" },
   { path: "/ehr/[patientId]/goals", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Goals", navLabel: "Goals", navZone: "work" },
   { path: "/ehr/[patientId]/assessments", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Assessments", navLabel: "Assessments", navZone: "work" },
+  { path: "/ehr/[patientId]/imnci", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "IMNCI Assess & Classify", navLabel: "IMNCI", navZone: "work" },
   { path: "/ehr/[patientId]/charts", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Ward Charts", navLabel: "Charts", navZone: "work" },
   { path: "/ehr/[patientId]/imaging", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Imaging", navLabel: "Imaging", navZone: "work" },
   { path: "/ehr/[patientId]/investigations", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Investigations", navLabel: "Investigations", navZone: "work" },
@@ -1147,7 +1148,7 @@ export const ROUTES: RouteDefinition[] = [
 // Merge reconcile (31 Jul 2026): actual registry at the staging merge point was 855
 // (753 literals + 102 administration-governance), two above the stated 853 — the comment
 // chain had drifted again. Trust the extract: 855 + 1 = 856.
-export const EXPECTED_ROUTE_COUNT = 856;
+export const EXPECTED_ROUTE_COUNT = 857;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
