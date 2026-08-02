@@ -10,7 +10,10 @@ import {
   type PatientShare,
 } from "@/hooks/queries/useVitoPatientShares";
 import { StepUpPrompt } from "@/components/citizen/StepUpPrompt";
+import { TrustChallengeNotice } from "@/components/trust/TrustChallengeNotice";
 import { readStepUp } from "@/lib/stepUp";
+import { readTrustChallenge } from "@/lib/trust/challenge";
+import type { TrustChallenge } from "@/lib/trust/challenge";
 
 const STATUS_COLOURS: Record<string, string> = {
   ACTIVE: "bg-green-100 text-green-800",
@@ -133,6 +136,7 @@ export default function CitizenRecordSharingPage() {
   const [createSuccess, setCreateSuccess] = useState<Record<string, unknown> | null>(null);
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [stepUpMethods, setStepUpMethods] = useState<string[] | null>(null);
+  const [challenge, setChallenge] = useState<TrustChallenge | null>(null);
 
   const { data, isLoading, isError, refetch } = usePatientShares(healthId);
   const shares = data?.data ?? [];
@@ -159,6 +163,7 @@ export default function CitizenRecordSharingPage() {
         body: { purpose, recipientId, expiresAt: expiresAt || undefined },
       });
       setStepUpMethods(null);
+      setChallenge(null);
       setCreateSuccess((res.data as unknown as Record<string, unknown>) ?? {});
       setRecipientId("");
       setExpiresAt("");
@@ -166,6 +171,14 @@ export default function CitizenRecordSharingPage() {
       const stepUp = readStepUp(err);
       if (stepUp.required) {
         setStepUpMethods(stepUp.methods);
+        return;
+      }
+      // A trust decision is not an opaque failure: show WHY, and only the next steps the
+      // decision itself permits. Without this, a 403 lands in the generic branch below and
+      // reads as "Create failed".
+      const trustChallenge = readTrustChallenge(err);
+      if (trustChallenge) {
+        setChallenge(trustChallenge);
         return;
       }
       setFormError(err instanceof Error ? err.message : "Create failed");
@@ -197,6 +210,21 @@ export default function CitizenRecordSharingPage() {
           revocable and policy-controlled.
         </p>
       </div>
+
+      {challenge !== null && (
+        <TrustChallengeNotice
+          challenge={challenge}
+          onDismiss={() => setChallenge(null)}
+          onResolved={() => {
+            setChallenge(null);
+            void doCreate();
+          }}
+          onRetry={() => {
+            setChallenge(null);
+            void doCreate();
+          }}
+        />
+      )}
 
       {stepUpMethods !== null && (
         <StepUpPrompt

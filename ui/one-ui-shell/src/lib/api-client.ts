@@ -24,6 +24,11 @@
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { randomUUID } from "@/lib/uuid";
 import { isStepUpRequired } from "@/lib/stepUp";
+import {
+  TRUST_CHALLENGE_STATUSES,
+  parseTrustChallenge,
+  type TrustChallenge,
+} from "@/lib/trust/challenge";
 import { recordNompiloFailure } from "@/lib/nompilo-failure";
 import { authUserFromWebSession, type WebSessionResponse } from "@/lib/auth/web-session";
 import {
@@ -385,6 +390,48 @@ function recordApiFailure(
   });
 }
 
+/**
+ * A trust decision is not an opaque failure.
+ *
+ * The trust plane answers 401 (authentication assurance), 403 (authorization) and 503 (it
+ * could not answer at all) with a challenge describing WHY and, where one exists, WHAT NEXT.
+ * 503 is included because collapsing an outage into a refusal is the same defect one layer
+ * down: the BFF maps TEMPORARILY_UNAVAILABLE to 503 precisely so it is not read as "you may
+ * not". An ordinary 503 carries no challenge body and is unaffected.
+ */
+function challengeFor(status: number, body: unknown): TrustChallenge | null {
+  return TRUST_CHALLENGE_STATUSES.includes(status) ? parseTrustChallenge(body) : null;
+}
+
+/**
+ * Build the rejection. Purely additive: every field of the original body is still spread onto
+ * the thrown object, so existing consumers (`readStepUp`, `error.code` checks, callers matching
+ * on `status`) behave exactly as before; a recognised challenge only adds two fields.
+ */
+function apiRejection(
+  status: number,
+  body: unknown,
+  challenge: TrustChallenge | null,
+): Record<string, unknown> {
+  return {
+    status,
+    ...((body as Record<string, unknown>) || {}),
+    ...(challenge ? { isTrustChallenge: true as const, trustChallenge: challenge } : {}),
+  };
+}
+
+/**
+ * True when a 401 challenge must be surfaced to the caller rather than run through the
+ * session-refresh path.
+ *
+ * AUTHENTICATION_REQUIRED is excluded deliberately: it means precisely "this session is not
+ * authenticated", which the existing refresh → redirect flow already handles correctly.
+ * Short-circuiting it would break silent session refresh.
+ */
+function surfacesInsteadOfRefresh(challenge: TrustChallenge | null): boolean {
+  return !!challenge && challenge.decision !== "AUTHENTICATION_REQUIRED";
+}
+
 export type ApiRequestOptions = {
   extraHeaders?: Record<string, string>;
   /** Internal: outbox flush must not re-enqueue on transient failure. */
@@ -476,8 +523,9 @@ async function request<T>(
     // A STEP_UP_REQUIRED challenge is also a 401, but it is NOT a session expiry — it must
     // surface to the caller (which shows a verification prompt), not trigger refresh/redirect.
     const unauthorizedBody = await response.json().catch(() => null);
-    if (isStepUpRequired(unauthorizedBody)) {
-      throw { status: 401, ...(unauthorizedBody || {}) };
+    const unauthorizedChallenge = challengeFor(401, unauthorizedBody);
+    if (isStepUpRequired(unauthorizedBody) || surfacesInsteadOfRefresh(unauthorizedChallenge)) {
+      throw apiRejection(401, unauthorizedBody, unauthorizedChallenge);
     }
 
     // Attempt token refresh
@@ -504,12 +552,17 @@ async function request<T>(
       }
 
       const retryBody = await retryResponse.json().catch(() => null);
-      if (retryResponse.status === 401 && !isStepUpRequired(retryBody)) {
+      const retryChallenge = challengeFor(retryResponse.status, retryBody);
+      if (
+        retryResponse.status === 401 &&
+        !isStepUpRequired(retryBody) &&
+        !surfacesInsteadOfRefresh(retryChallenge)
+      ) {
         handleAuthFailure();
       }
 
       recordApiFailure(retryResponse.status, retryBody, retryResponse);
-      throw { status: retryResponse.status, ...(retryBody || {}) };
+      throw apiRejection(retryResponse.status, retryBody, retryChallenge);
     }
 
     // Refresh failed — clear auth and redirect
@@ -520,10 +573,7 @@ async function request<T>(
   if (!response.ok) {
     const errorBody = await response.json().catch(() => null);
     recordApiFailure(response.status, errorBody, response);
-    throw {
-      status: response.status,
-      ...(errorBody || {}),
-    };
+    throw apiRejection(response.status, errorBody, challengeFor(response.status, errorBody));
   }
 
   if (responseType === "text") {
@@ -587,10 +637,7 @@ async function requestForm<T>(
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => null);
-    throw {
-      status: response.status,
-      ...(errorBody || {}),
-    };
+    throw apiRejection(response.status, errorBody, challengeFor(response.status, errorBody));
   }
 
   return response.json();
