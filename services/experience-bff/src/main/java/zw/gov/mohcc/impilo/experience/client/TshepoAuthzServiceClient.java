@@ -1,6 +1,7 @@
 package zw.gov.mohcc.impilo.experience.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
@@ -13,6 +14,11 @@ import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
 import java.util.Map;
+import zw.gov.mohcc.impilo.tshepo.contracts.dto.AuthzResponse;
+import zw.gov.mohcc.impilo.tshepo.contracts.v1.TrustChallengeOutcome;
+import zw.gov.mohcc.impilo.tshepo.contracts.v1.adapter.AuthzResponseChallengeAdapter;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * HTTP client for the TSHEPO Authorization sovereign service.
@@ -26,12 +32,14 @@ import java.util.Map;
  * {@link ServiceClientConfig} interceptor.</p>
  */
 @Component
+
 public class TshepoAuthzServiceClient {
 
     private static final Logger log = LoggerFactory.getLogger(TshepoAuthzServiceClient.class);
 
     private final RestTemplate restTemplate;
     private final String baseUrl;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public TshepoAuthzServiceClient(RestTemplate serviceRestTemplate,
                                      ServiceClientConfig.ServiceEndpoints endpoints) {
@@ -213,7 +221,31 @@ public class TshepoAuthzServiceClient {
         return syntheticAuthorizeVerdict(httpMethod, "/internal/v1/shell/workspace-state");
     }
 
+    /**
+     * @deprecated the boolean discards the decision. Prefer {@link #authorize(String, String)},
+     *     which preserves the reason code and — critically — distinguishes a refusal from a PDP
+     *     outage. Retained so the fourteen existing call sites keep compiling unchanged.
+     */
+    @Deprecated
     private boolean syntheticAuthorizeVerdict(String method, String path) {
+        return authorize(method, path).allowed();
+    }
+
+    /**
+     * Ask the PDP, and keep the answer.
+     *
+     * <p>Every caller in this class used to reduce this to {@code boolean}, so a controller could
+     * never emit a trust challenge: {@code reasonCode}, {@code stepUpMethods} and
+     * {@code requiredAssurance} were discarded before any of them ran. The legacy wire has only
+     * three verdicts, so an actionable outcome such as {@code CONSENT_REQUIRED} arrives as a DENY
+     * carrying that error code; {@link AuthzResponseChallengeAdapter} promotes it back to its real
+     * decision.</p>
+     *
+     * <p>The transport catch-all no longer shares a return value with a refusal. It fails closed —
+     * {@code allowed()} is false either way — but reports {@code TEMPORARILY_UNAVAILABLE}, so a
+     * user is never told they lack permissions because the policy service was unreachable.</p>
+     */
+    public TrustDecisionResult authorize(String method, String path) {
         String url = baseUrl + "/v1/authorize";
         HttpHeaders headers = new HttpHeaders();
         headers.set(":method", method);
@@ -222,24 +254,62 @@ public class TshepoAuthzServiceClient {
             ResponseEntity<JsonNode> response =
                     restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(headers),
                             JsonNode.class);
-            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
-                return false;
-            }
             JsonNode body = response.getBody();
-            if (!body.has("verdict")) {
-                return false;
+            if (!response.getStatusCode().is2xxSuccessful() || body == null || !body.has("verdict")) {
+                // A 2xx with no verdict is a producer fault, not an answer. Calling it a denial
+                // would report a broken contract as a permissions decision.
+                log.warn("TSHEPO-AUTHZ: unusable authorize response path={} status={}",
+                        path, response.getStatusCode());
+                return TrustDecisionResult.unavailable("AUTHZ_RESPONSE_UNUSABLE");
             }
-            return "ALLOW".equalsIgnoreCase(body.get("verdict").asText());
+            return TrustDecisionResult.of(toOutcome(body));
         } catch (HttpClientErrorException e) {
-            if (e.getStatusCode().value() == 403 || e.getStatusCode().value() == 401) {
-                log.debug("TSHEPO-AUTHZ: synthetic authorize denied path={} status={}", path, e.getStatusCode());
-                return false;
+            int status = e.getStatusCode().value();
+            if (status == 401 || status == 403) {
+                // The PDP answered; the transport carried it as an error status.
+                log.debug("TSHEPO-AUTHZ: synthetic authorize denied path={} status={}", path, status);
+                return TrustDecisionResult.of(toOutcome(readBody(e)));
             }
-            return false;
+            log.warn("TSHEPO-AUTHZ: authorize failed path={} status={}", path, status);
+            return TrustDecisionResult.unavailable("AUTHZ_UPSTREAM_ERROR");
         } catch (Exception e) {
             log.warn("TSHEPO-AUTHZ: synthetic authorize failed path={}: {}", path, e.getMessage());
-            return false;
+            return TrustDecisionResult.unavailable("AUTHZ_UNREACHABLE");
         }
+    }
+
+    private JsonNode readBody(HttpClientErrorException e) {
+        try {
+            return objectMapper.readTree(e.getResponseBodyAsString());
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    /** Maps the legacy authorize body onto the canonical outcome, preserving the reason code. */
+    private TrustChallengeOutcome toOutcome(JsonNode body) {
+        if (body == null || !body.has("verdict")) {
+            // Reached only when a 401/403 carried no parseable body. AUTHENTICATION_REQUIRED would
+            // be a guess; DENY with an explicit code is the honest reading.
+            return TrustChallengeOutcome.deny("AUTHZ_DENIED_NO_DETAIL", "trust.deny.generic", null);
+        }
+        String verdict = body.path("verdict").asText("");
+        String errorCode = body.path("errorCode").isMissingNode() || body.path("errorCode").isNull()
+                ? null : body.path("errorCode").asText();
+        List<String> methods = new ArrayList<>();
+        body.path("stepUpMethods").forEach(n -> methods.add(n.asText()));
+
+        AuthzResponse legacy;
+        if ("ALLOW".equalsIgnoreCase(verdict)) {
+            legacy = AuthzResponse.allow(null, 0, null);
+        } else if ("STEP_UP_REQUIRED".equalsIgnoreCase(verdict)) {
+            legacy = AuthzResponse.stepUp(methods, 0);
+        } else {
+            legacy = AuthzResponse.deny(errorCode == null ? "DENIED" : errorCode,
+                    body.path("errorMessage").asText("Denied"), 0);
+        }
+        return AuthzResponseChallengeAdapter.toCanonical(
+                legacy, body.path("decisionId").asText(null), body.path("policyVersion").asText(null));
     }
 
     /**

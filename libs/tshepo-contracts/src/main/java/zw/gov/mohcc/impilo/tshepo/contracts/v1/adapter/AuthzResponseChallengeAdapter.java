@@ -6,6 +6,7 @@ import zw.gov.mohcc.impilo.tshepo.contracts.v1.TrustChallengeDecision;
 import zw.gov.mohcc.impilo.tshepo.contracts.v1.TrustChallengeOutcome;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Compatibility between legacy {@link AuthzResponse}/{@link Verdict} and canonical
@@ -37,10 +38,7 @@ public final class AuthzResponseChallengeAdapter {
         }
         return switch (legacy.verdict()) {
             case ALLOW -> TrustChallengeOutcome.allow(decisionId, policyVersion);
-            case DENY -> TrustChallengeOutcome.deny(
-                    legacy.errorCode() == null ? "DENIED" : legacy.errorCode(),
-                    "trust.deny.generic",
-                    decisionId);
+            case DENY -> denyOrChallenge(legacy, decisionId, policyVersion);
             case STEP_UP_REQUIRED -> TrustChallengeOutcome.of(
                     TrustChallengeDecision.STEP_UP_REQUIRED,
                     "STEP_UP_REQUIRED",
@@ -57,6 +55,39 @@ public final class AuthzResponseChallengeAdapter {
                     null,
                     null);
         };
+    }
+
+    /**
+     * Legacy deny codes that name an ACTIONABLE outcome rather than a refusal.
+     *
+     * <p>The legacy wire has three verdicts (ALLOW / DENY / STEP_UP_REQUIRED), so a decision like
+     * "no consent has been granted yet" can only travel as a DENY carrying a specific error code.
+     * Flattening every DENY into {@code TrustChallengeDecision.DENY} throws that distinction away
+     * at the boundary — and the distinction is the whole point: "you may not" and "nobody has
+     * asked you yet" are different answers, and only one of them has a next step.</p>
+     *
+     * <p>Deliberately an allowlist. An unrecognised code stays a DENY, so a new refusal reason can
+     * never be silently promoted into something the UI invites the user to act on.</p>
+     */
+    private static final Map<String, ChallengeMapping> ACTIONABLE_DENY_CODES = Map.of(
+            "CONSENT_REQUIRED", new ChallengeMapping(
+                    TrustChallengeDecision.CONSENT_REQUIRED, "trust.consent.required", "OBTAIN_CONSENT"),
+            "RECOVERY_REQUIRED", new ChallengeMapping(
+                    TrustChallengeDecision.RECOVERY_REQUIRED, "trust.recovery.required", "COMPLETE_RECOVERY"));
+
+    private record ChallengeMapping(TrustChallengeDecision decision, String messageKey, String action) {}
+
+    private static TrustChallengeOutcome denyOrChallenge(
+            AuthzResponse legacy, String decisionId, String policyVersion) {
+        String code = legacy.errorCode() == null ? "DENIED" : legacy.errorCode();
+        ChallengeMapping mapping = ACTIONABLE_DENY_CODES.get(code);
+        if (mapping == null) {
+            return TrustChallengeOutcome.deny(code, "trust.deny.generic", decisionId);
+        }
+        return TrustChallengeOutcome.of(
+                mapping.decision(), code, mapping.messageKey(), mapping.action(),
+                null, List.of(), List.of(), null, null, null,
+                decisionId, policyVersion, null, null);
     }
 
     public static AuthzResponse toLegacy(TrustChallengeOutcome canonical) {
