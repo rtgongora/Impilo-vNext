@@ -52,15 +52,18 @@ manager audit was run instead.
 Issuer/audience/nonce/expiry enforcement is structural in `keycloakClient.ts`
 (`jwtVerify` options), not test-only.
 
-## Authenticated Redroid smoke — BLOCKED (exact blocker)
+## Authenticated Redroid smoke — PROVEN (2026-08-02)
 
-The authenticated Redroid smoke on the Maestro sandbox (41.57.127.218) requires a
-governed preview test identity. Per
-[`LOGIN_REJECTION_DIAGNOSIS.md`](LOGIN_REJECTION_DIAGNOSIS.md), the live password for
-`citizen.moyo` diverged from the committed realm seeds during the July 26 H2-era
-credential set, no governed secret stores a usable preview password, and Checkpoint 3
-constraints forbid resetting live credentials. **Blocker: absence of a governed
-preview test credential in approved secret storage.** The unauthenticated mobile
-validation (transaction persistence, replay, issuer/audience/state/nonce) is covered
-by the unit suite above; authenticated end-to-end mobile proof remains
-INSUFFICIENT_EVIDENCE until a credential is provisioned by the product owner.
+Product Owner authorized a dedicated synthetic preview CITIZEN identity. Credential
+stored in `impilo-full-preview/impilo-preview-test-identity` (see
+[`PREVIEW_TEST_IDENTITY.md`](PREVIEW_TEST_IDENTITY.md)). Authenticated proof:
+
+```bash
+bash scripts/mobile/redroid-authenticated-proof.sh
+```
+
+**OVERALL PASS** — mobile-auth unit suite 31/31; Maestro IdP login on redroid
+(`Continue securely`); Keycloak `LOGIN` + `CODE_TO_TOKEN` for
+`impilo-mobile-citizen` / `preview.test.citizen` with redirect
+`impilo-citizen://auth/callback`. Full record:
+[`AUTHENTICATED_RUNTIME_PROOF.md`](AUTHENTICATED_RUNTIME_PROOF.md).

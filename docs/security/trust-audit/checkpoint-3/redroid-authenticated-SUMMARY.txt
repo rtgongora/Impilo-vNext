@@ -1,0 +1,12 @@
+mobile_auth_unit: PASS (see mobile-auth-unit.txt)
+maestro_authenticated_login_rc: 0
+keycloak_mobile_login_and_code_to_token: 1
+covers_unit:
+  - process-death restoration + exactly-once consume
+  - callback replay rejection
+  - forged state rejection
+  - issuer/audience/nonce verification (validateIdToken)
+  - secure token storage (TokenManager + SecureStorage)
+  - logout clears tokens (TokenManager.clearTokens)
+covers_runtime: redroid IdP login + preview callback + CODE_TO_TOKEN PASS
+OVERALL: PASS

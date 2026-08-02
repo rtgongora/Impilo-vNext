@@ -130,3 +130,6 @@ artifacts/
 # docs/runbooks/deploy-optimization-program.md).
 **/id_file
 services/oros-service/id_file
+
+# Checkpoint runtime dumps (may contain UI trees with password fields)
+reports/security/trust-audit/
