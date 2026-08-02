@@ -47,6 +47,10 @@ data:
                               route: { cluster: experience_bff }
                               request_headers_to_remove:
                                 - "x-actor-id"
+                                # Decision inputs: a client that could set these would choose which
+                                # resource its own request is authorized against.
+                                - "x-original-method"
+                                - "x-original-path"
                                 - "x-actor-type"
                                 - "x-assurance-level"
                                 - "x-authentication-aal"
@@ -70,6 +74,10 @@ data:
                               route: { cluster: experience_bff }
                               request_headers_to_remove:
                                 - "x-actor-id"
+                                # Decision inputs: a client that could set these would choose which
+                                # resource its own request is authorized against.
+                                - "x-original-method"
+                                - "x-original-path"
                                 - "x-actor-type"
                                 - "x-assurance-level"
                                 - "x-ial"
@@ -135,6 +143,10 @@ data:
                                 # in checkpoint-4/HEADER_CONTAINMENT.md, to be closed by teaching
                                 # the PDP to emit them, not by stripping them blind.
                                 - "x-actor-id"
+                                # Decision inputs: a client that could set these would choose which
+                                # resource its own request is authorized against.
+                                - "x-original-method"
+                                - "x-original-path"
                                 - "x-actor-type"
                                 - "x-tenant-id"
                                 - "x-subject-id"

@@ -15,6 +15,7 @@ import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
 import java.util.Map;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.AuthzResponse;
+import zw.gov.mohcc.impilo.tshepo.contracts.headers.TrustHeaders;
 import zw.gov.mohcc.impilo.tshepo.contracts.v1.TrustChallengeOutcome;
 import zw.gov.mohcc.impilo.tshepo.contracts.v1.adapter.AuthzResponseChallengeAdapter;
 import java.util.ArrayList;
@@ -265,8 +266,13 @@ public class TshepoAuthzServiceClient {
     public TrustDecisionResult authorize(String method, String path) {
         String url = baseUrl + "/v1/authorize";
         HttpHeaders headers = new HttpHeaders();
-        headers.set(":method", method);
-        headers.set(":path", path);
+        // NOT `:method` / `:path`. Those are HTTP/2 pseudo-headers; Java rejects a colon-prefixed
+        // header name with `invalid header name: ":method"`, so every call here threw and the old
+        // catch-all returned false. Fourteen governance checks across the BFF have therefore
+        // always failed closed -- observed on a live pod, invisible because a thrown check and a
+        // denied one produced the same boolean.
+        headers.set(TrustHeaders.ORIGINAL_METHOD, method);
+        headers.set(TrustHeaders.ORIGINAL_PATH, path);
         try {
             ResponseEntity<JsonNode> response =
                     restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(headers),

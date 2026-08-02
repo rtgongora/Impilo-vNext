@@ -66,13 +66,21 @@ public class AuthorizeController {
                               RequestMethod.OPTIONS})
     public ResponseEntity<AuthzResponse> authorize(HttpServletRequest request) {
 
-        // Extract original method/path from Envoy forwarded request
-        String originalMethod = request.getHeader(":method") != null
-                ? request.getHeader(":method")
-                : request.getMethod();
-        String originalPath = request.getHeader(":path") != null
-                ? request.getHeader(":path")
-                : request.getRequestURI();
+        // Extract the original method/path being asked about.
+        //
+        // Precedence: Envoy's pseudo-headers, then the HTTP/1.1-safe aliases, then the servlet's
+        // own values. The aliases exist because a service calling this endpoint directly cannot
+        // send `:method`/`:path` -- Java rejects a colon-prefixed header name outright -- and the
+        // servlet fallback would evaluate the literal `POST /v1/authorize`, which matches no rule
+        // and denies. Every in-process caller in experience-bff hit exactly that.
+        String originalMethod = firstPresent(
+                request.getHeader(":method"),
+                request.getHeader(TrustHeaders.ORIGINAL_METHOD),
+                request.getMethod());
+        String originalPath = firstPresent(
+                request.getHeader(":path"),
+                request.getHeader(TrustHeaders.ORIGINAL_PATH),
+                request.getRequestURI());
 
         // Extract trust headers
         String tenantIdStr = request.getHeader(TrustHeaders.TENANT_ID);
@@ -212,6 +220,22 @@ public class AuthorizeController {
                 yield ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(authzResponse);
             }
         };
+    }
+
+    /**
+     * First non-blank value.
+     *
+     * <p>Blank is treated as absent deliberately: a header present but empty must fall through to
+     * the next source rather than authorize an empty path, which would match no rule and produce a
+     * denial whose cause is invisible.</p>
+     */
+    private static String firstPresent(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
+        }
+        return null;
     }
 
     private UUID parseUuid(String value) {
