@@ -453,6 +453,72 @@ if [[ "${FULL_BOOT_HELM_NO_WAIT:-}" == "1" ]]; then
   HELM_WAIT_ARGS=(--timeout "${FULL_BOOT_HELM_WAIT_TIMEOUT:-60m}" --atomic=false)
 fi
 
+# --- Tiered readiness instead of one monolithic helm --wait ---------------------------
+# `helm --wait` waits for the WHOLE estate as a single condition, and when it gives up it
+# says only "context deadline exceeded" — no name, no tier, nothing to act on. Revisions
+# 4, 5 and 6 all died exactly that way (2026-07-18/21/24), and the 60m timeout was already
+# in place when they did, so a longer timeout would only have failed slower.
+#
+# Grepping the recorded boot logs for what helm was actually waiting on is unambiguous —
+# it is the foundation, not a random spread:
+#   tshepo-identity 11 · tshepo-authz 11 · tshepo-consent 10 · butano 10
+#   ubomi 9 · tshepo-audit 9 · zibo 8 · pct 8 · tshepo-keys 7
+# Those are the services everything else depends on. Waiting for them in dependency order
+# turns a 60-minute silent hang into a named failure in minutes, and stops ~100 dependents
+# retrying against a trust plane that is not up yet.
+#
+# This does NOT reorder the apply — helm still renders and applies the whole release at once
+# (the chart has no notion of partial application, and Recreate replaces pods on apply).
+# What is tiered is the WAITING, which is where the time and the ambiguity both live.
+FULL_BOOT_TIERED_ROLL="${FULL_BOOT_TIERED_ROLL:-1}"
+if [[ "$FULL_BOOT_TIERED_ROLL" == "1" ]]; then
+  HELM_WAIT_ARGS=(--timeout "${FULL_BOOT_HELM_WAIT_TIMEOUT:-60m}" --atomic=false)
+fi
+
+# Tier membership. Anything not named here is picked up by the final estate-wide gate,
+# so a new service is never silently exempt — it is simply waited on last.
+TIER_DATA=(postgres redis kafka keycloak minio)
+TIER_TRUST=(tshepo-authz-service tshepo-identity-service tshepo-consent-service
+            tshepo-audit-service tshepo-keys-service tshepo-offline-service envoy)
+# pct leads the domain tier deliberately: 24 unshipped commits — the most of any service —
+# and under Recreate a crashloop takes the Care Continuum down with no old pod to fall back
+# on. Its 17 pending migrations are NOT the reason: measured 2026-08-02, all 17 apply in 3s
+# against the live 15MB pct DB and V438 updates zero rows.
+TIER_DOMAIN=(pct-service tuso-service varapi-service butano-service ubomi-service
+             zibo-service vito-service organization-registry-service)
+# The UI flips last so it lands on backends that are already current.
+TIER_UI=(experience-bff one-ui-shell)
+
+wait_for_tier() {
+  local label="$1"; shift
+  local -a members=("$@")
+  local budget="${FULL_BOOT_TIER_TIMEOUT_SECS:-900}"
+  local deadline=$(( $(date +%s) + budget ))
+  local pending
+
+  echo "--- Tier: ${label} (budget ${budget}s) ---"
+  while :; do
+    pending=""
+    for d in "${members[@]}"; do
+      kubectl get deploy -n "$NAMESPACE" "$d" >/dev/null 2>&1 || continue   # absent = not in this release
+      local want have
+      want="$(kubectl get deploy -n "$NAMESPACE" "$d" -o jsonpath='{.spec.replicas}' 2>/dev/null)"
+      have="$(kubectl get deploy -n "$NAMESPACE" "$d" -o jsonpath='{.status.readyReplicas}' 2>/dev/null)"
+      [[ "${have:-0}" -lt "${want:-0}" ]] && pending+="${d}:${have:-0}/${want:-0} "
+    done
+    [[ -z "$pending" ]] && { echo "PASS  tier ${label} ready"; return 0; }
+    if [[ "$(date +%s)" -ge "$deadline" ]]; then
+      echo "FAIL  tier ${label} did not become ready within ${budget}s: ${pending}"
+      for entry in $pending; do
+        kubectl get pods -n "$NAMESPACE" -l "app=${entry%%:*}" \
+          -o jsonpath='{range .items[*]}      {.metadata.name}  {.status.phase}  {range .status.containerStatuses[*]}{.state.waiting.reason}{.state.terminated.reason}{end}{"\n"}{end}' 2>/dev/null | head -2
+      done
+      return 1
+    fi
+    sleep 10
+  done
+}
+
 helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" \
   -n "$NAMESPACE" \
   "${HELM_VALUE_FILES[@]}" \
@@ -474,11 +540,23 @@ helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" \
 # Digest-pinned estates: helm upgrade with Recreate strategy rolls each changed
 # Deployment natively (old pod terminates before new pod starts). No mass
 # rollout restart — that caused RollingUpdate surge pods and exceeded the node cap.
-echo "--- Waiting for estate rollouts (timeout ${FULL_BOOT_ROLLOUT_TIMEOUT:-45m}) ---"
-# The wait itself stays non-fatal: `kubectl rollout status` gives up on the FIRST
-# unready Deployment, so letting it exit here would hide every other one. The
-# assertion below is what decides, and it reports all of them.
-kubectl rollout status deployment -n "$NAMESPACE" --timeout="${FULL_BOOT_ROLLOUT_TIMEOUT:-45m}" || true
+if [[ "$FULL_BOOT_TIERED_ROLL" == "1" ]]; then
+  # Fail at the first tier that does not come up. Continuing past a dead trust plane
+  # only produces ~100 dependent failures whose real cause is three services up the
+  # stack, which is precisely what "context deadline exceeded" used to hide.
+  wait_for_tier "data plane"  "${TIER_DATA[@]}"   || { echo "ABORT: data plane not ready — nothing downstream can succeed."; exit 1; }
+  wait_for_tier "trust plane" "${TIER_TRUST[@]}"  || { echo "ABORT: trust plane not ready — every protected route would fail."; exit 1; }
+  wait_for_tier "domain"      "${TIER_DOMAIN[@]}" || { echo "ABORT: domain services not ready (pct leads this tier)."; exit 1; }
+  echo "--- Remaining estate (tail wait, timeout ${FULL_BOOT_ROLLOUT_TIMEOUT:-45m}) ---"
+  kubectl rollout status deployment -n "$NAMESPACE" --timeout="${FULL_BOOT_ROLLOUT_TIMEOUT:-45m}" || true
+  wait_for_tier "ui"          "${TIER_UI[@]}"     || { echo "ABORT: UI not ready — CP6 browser proofs cannot be captured."; exit 1; }
+else
+  echo "--- Waiting for estate rollouts (timeout ${FULL_BOOT_ROLLOUT_TIMEOUT:-45m}) ---"
+  # The wait itself stays non-fatal: `kubectl rollout status` gives up on the FIRST
+  # unready Deployment, so letting it exit here would hide every other one. The
+  # assertion below is what decides, and it reports all of them.
+  kubectl rollout status deployment -n "$NAMESPACE" --timeout="${FULL_BOOT_ROLLOUT_TIMEOUT:-45m}" || true
+fi
 
 # --- MANDATORY: every Deployment is actually ready. -----------------------------------
 # This line ended in `|| true` until 2026-08-02, so no service failing to come up could
