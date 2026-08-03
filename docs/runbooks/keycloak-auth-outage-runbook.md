@@ -151,20 +151,29 @@ Then prove an actual login — a 200 on discovery is not proof that anyone can s
   > thing — precisely when time matters most.
 - **Mobile / public PKCE client:** full authorization-code + S256 flow against `impilo-mobile-citizen`, redirect `impilo-citizen://auth/callback` → expect access + refresh + id_token with `iss: https://…`.
 
-### Working preview credentials (verified 2026-07-26)
+### Working preview credentials
 
-| Account | Password | Note |
-|---|---|---|
-| `citizen.moyo` | `Vashandi@2026!` | **Not the seed value** — see below |
-| `vashandi.worker` | `Vashandi@2024!` | seed value, never rotated |
-| `vashandi.facility` / `.national` / `.hsc` / `.reviewer` | `Vashandi@2024!` | seed value |
-| `superadmin` | `Impilo@2024!` | seed value |
+**This runbook no longer lists passwords.** The table that used to sit here was verified 2026-07-26
+and had drifted by 2026-08-03 — `citizen.moyo`'s documented value was wrong, and a responder
+following it during an incident would have concluded the account was broken. A credential table in
+a runbook drifts silently by construction: nothing fails when it goes stale, so nothing tells you.
 
-> **`citizen.moyo` cannot be restored to its documented seed password — ever.** It carries a `password-history` credential (Keycloak creates that only on change), and the realm enforces `passwordHistory(5)`. Attempting the documented `Vashandi@2024!` returns:
-> ```
-> invalidPasswordHistoryMessage: Invalid password: must not be equal to any of last 5 passwords
-> ```
-> which is also the proof that the seed value *was* once set and then rotated away. It was therefore reset to `Vashandi@2026!` (satisfies `length(12) upperCase lowerCase digits specialChars notUsername`). **`MAESTRO_CITIZEN_USERNAME` / `MAESTRO_CITIZEN_PASSWORD` must use the value above, not the realm file's.** Any account whose password has been rotated has the same permanent constraint — the realm file's documented password can never be reinstated on it.
+**Source of truth:** `deploy/helm/impilo-vnext/files/realm-impilo-preview.json`. Read the seed value
+for the account you need from there, and confirm against the live realm rather than against this
+page.
+
+> **A rotated password can never be restored to its seed value.** Keycloak writes a
+> `password-history` credential on any change and the realm enforces `passwordHistory(5)`, so
+> re-applying the documented seed returns
+> `invalidPasswordHistoryMessage: Invalid password: must not be equal to any of last 5 passwords`.
+> That error is *also* the proof the seed was once set and then rotated away — it is a diagnosis,
+> not a failure. Such an account needs a new value that satisfies
+> `length(12) upperCase lowerCase digits specialChars notUsername`, and whatever consumes it
+> (`MAESTRO_CITIZEN_PASSWORD`, demo scripts) must be updated to match.
+
+> **`reconcile-keycloak-realm-users.sh` reports ~30 "password history" rejections on a healthy
+> realm.** That is the expected result when the seed password is *already current*, not a fault.
+> Reading those as breakage sent one investigation down the wrong path entirely.
 
 ---
 
