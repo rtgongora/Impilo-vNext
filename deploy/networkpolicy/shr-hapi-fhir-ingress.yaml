@@ -26,8 +26,9 @@
 #   butano-service         HAPI_FHIR_URL                    = http://hapi-fhir:8090/fhir
 #   fhir-gateway-service   FHIR_BASE_URL                    = http://hapi-fhir:8090/fhir
 #                          FHIR_GATEWAY_DEFAULT_TARGET_BASE = http://hapi-fhir:8090/fhir
-#   experience-bff         FHIR_BASE_URL                    = http://hapi-fhir:8090/fhir
-#                          FHIR_GATEWAY_DEFAULT_TARGET_BASE = http://hapi-fhir:8090/fhir
+#
+# experience-bff ALSO carries FHIR_BASE_URL and FHIR_GATEWAY_DEFAULT_TARGET_BASE pointing straight
+# at HAPI, and is deliberately NOT in the allow-list -- see below.
 #
 # `butano-fhir` is NOT a caller and is NOT a front door to this server. It is a SEPARATE FHIR
 # service with its own database (`butano_fhir`) and no reference to hapi-fhir anywhere in its
@@ -50,13 +51,27 @@
 # workforce-governance-service maps 8165 -> 8165. Copying a working policy does not carry its
 # port assumption.
 #
-# ── A FINDING THIS POLICY DELIBERATELY DOES NOT CLOSE ────────────────────────────────────────
+# ── experience-bff IS EXCLUDED, AND IT COSTS NOTHING ────────────────────────────────────────
 #
-# experience-bff holds FHIR_BASE_URL pointing straight at HAPI, so it has a route that bypasses
-# fhir-gateway-service -- and the consent PEP lives in the gateway's forward path. That is a real
-# gap, but it is a configuration and code decision, not a containment one. Removing experience-bff
-# from this allow-list would enforce it by breaking it, silently, wherever that variable is used.
-# Recorded for the trust lane instead of closed by side effect.
+# The BFF's env points FHIR_BASE_URL straight at HAPI, bypassing fhir-gateway-service -- and the
+# consent PEP lives in the gateway's forward path, so that route reaches the SHR with no consent
+# evaluation. An earlier version of this policy allowed the BFF rather than enforce a gap by
+# breaking it silently.
+#
+# Measured before excluding it, and the route is DEAD:
+#   - `FhirPublisher` is the only consumer of that URL. It is @Component, so Spring builds it, but
+#     nothing injects it -- a grep for the type outside its own file returns nothing.
+#   - It is WRITE-ONLY: six publish* methods, all HTTP PUT. No read path exists.
+#   - `ServiceClientConfig.ServiceEndpoints.fhirBaseUrl()` is never read.
+#   - No other BFF source references hapi-fhir.
+#
+# So excluding the BFF removes an unauthenticated write path to the SHR at zero functional cost.
+# The class is left in place deliberately: if someone later wires it up, it now fails closed and
+# loudly, rather than silently PUTting clinical resources into the SHR with no consent check and
+# no audit. Deleting it is a separate decision and does not belong in a containment change.
+#
+# The env vars remain and are now inert. They live in generated values files, so removing them
+# there would be undone by the next regeneration; the network is the enforcement point.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -82,9 +97,6 @@ spec:
         - podSelector:
             matchLabels:
               app: fhir-gateway-service
-        - podSelector:
-            matchLabels:
-              app: experience-bff
       ports:
         - protocol: TCP
           port: 8080
