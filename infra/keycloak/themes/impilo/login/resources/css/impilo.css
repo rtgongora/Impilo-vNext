@@ -1,53 +1,145 @@
+/*
+ * Impilo Keycloak login theme.
+ *
+ * Emulates the shell's auth surface so the credential step does not read as a different
+ * product. Values taken from ui/one-ui-shell/src/components/AuthLayout.tsx, not eyeballed:
+ *
+ *   canvas   bg-slate-900                       #0f172a   dark navy, light text
+ *   card     bg-white rounded-[2rem] shadow-2xl           border-slate-200/90
+ *   accent   emerald                            #059669 / #34d399
+ *   footer   text-xs text-slate-400             #94a3b8
+ *
+ * The previous theme had these INVERTED — a pale gradient canvas carrying the stock dark
+ * card — which is why matching the TEMPLATES still left the handoff reading as a separate
+ * site. Same layout, opposite palette.
+ *
+ * DELIBERATE LIMIT: this does not clone the shell's header nav, journey panel or Nompilo
+ * guidance. An identity page that reproduces an entire application's chrome is also a
+ * better phishing template, which is why mainstream IdPs keep a recognisable but simpler
+ * surface. The target is "unmistakably Impilo, visibly the secure step" — same canvas,
+ * same card, same accent, same trust line, without impersonating the whole application.
+ */
+
 :root {
-  --pf-v5-global--primary-color--100: #007f5f;
-  --pf-v5-global--primary-color--200: #006b50;
-  --pf-v5-global--BackgroundColor--100: #f4faf7;
+  --impilo-canvas: #0f172a;          /* slate-900  — shell page background */
+  --impilo-surface: #ffffff;         /* white      — shell card */
+  --impilo-ink: #0f172a;             /* slate-900  — text on the card */
+  --impilo-ink-muted: #475569;       /* slate-600 */
+  --impilo-line: #e2e8f0;            /* slate-200  — card border */
+  --impilo-accent: #059669;          /* emerald-600 */
+  --impilo-accent-hover: #047857;    /* emerald-700 */
+  --impilo-accent-bright: #34d399;   /* emerald-400 — legible on the dark canvas */
+  --impilo-on-canvas: #f1f5f9;       /* slate-100 */
+  --impilo-on-canvas-muted: #94a3b8; /* slate-400 */
+
+  --pf-v5-global--primary-color--100: var(--impilo-accent);
+  --pf-v5-global--primary-color--200: var(--impilo-accent-hover);
+  --pf-v5-global--BackgroundColor--100: var(--impilo-canvas);
 }
 
+/* ── Canvas ─────────────────────────────────────────────────────────── */
+html,
 body.login-pf,
-.login-pf body {
-  background: linear-gradient(145deg, #edf8f2 0%, #f8fbfa 55%, #fff9e8 100%);
-  color: #17231f;
+.login-pf body,
+.login-pf-page,
+.pf-v5-c-login,
+.pf-v5-c-background-image {
+  background: var(--impilo-canvas) !important;
+  background-image: none !important;
+  color: var(--impilo-on-canvas);
+}
+
+::selection { background: var(--impilo-accent-bright); color: #ffffff; }
+
+/* ── Card: white, deeply rounded, floated on the dark canvas ─────────── */
+.pf-v5-c-login__main,
+.card-pf,
+#kc-form-wrapper,
+.pf-v5-c-login__main-body,
+.pf-v5-c-login__main-header,
+.pf-v5-c-login__main-footer {
+  background: var(--impilo-surface) !important;
+  color: var(--impilo-ink) !important;
 }
 
 .pf-v5-c-login__main,
 .card-pf {
-  border: 1px solid #c7ddd3;
-  border-radius: 18px;
-  box-shadow: 0 18px 48px rgba(17, 63, 48, 0.12);
+  border: 1px solid var(--impilo-line);
+  border-radius: 2rem;                                  /* shell: rounded-[2rem] */
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);    /* shell: shadow-2xl */
+  overflow: hidden;
 }
 
-.pf-v5-c-button.pf-m-primary,
-#kc-login {
-  background: #007f5f;
+/* Card text inherits the card's ink, never the canvas's. */
+.pf-v5-c-login__main h1,
+.pf-v5-c-login__main h2,
+.pf-v5-c-login__main label,
+.pf-v5-c-login__main p,
+.pf-v5-c-login__main span,
+.pf-v5-c-form__label,
+.pf-v5-c-form__label-text,
+#kc-page-title { color: var(--impilo-ink) !important; }
+
+/* ── Inputs ─────────────────────────────────────────────────────────── */
+.pf-v5-c-form-control,
+.pf-v5-c-form-control > input,
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"] {
+  background: #ffffff !important;
+  color: var(--impilo-ink) !important;
+  border: 1px solid var(--impilo-line) !important;
   border-radius: 10px;
 }
-
-.pf-v5-c-button.pf-m-primary:hover,
-#kc-login:hover { background: #006b50; }
-
-#kc-header-wrapper::before {
-  content: "Impilo";
-  display: block;
-  color: #007f5f;
-  font-size: 2rem;
-  font-weight: 750;
-  letter-spacing: -0.03em;
-}
-
-#kc-header-wrapper { font-size: 0; }
 
 input:focus,
 button:focus,
 a:focus {
-  outline: 3px solid #ffbf47 !important;
+  outline: 3px solid #ffbf47 !important;   /* high-contrast focus ring — accessibility */
   outline-offset: 2px;
 }
 
-/* "Continuing as <identifier>" — the identity carried over from the Impilo shell.
-   Reads as confirmed context for a journey already under way, never as a fresh
-   credential prompt. Shows the identifier the person typed, never a resolved
-   display name: nobody is authenticated yet at this point. */
+/* ── Primary action ─────────────────────────────────────────────────── */
+.pf-v5-c-button.pf-m-primary,
+#kc-login,
+input[type="submit"] {
+  background: var(--impilo-accent) !important;
+  border-color: var(--impilo-accent) !important;
+  color: #ffffff !important;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.pf-v5-c-button.pf-m-primary:hover,
+#kc-login:hover,
+input[type="submit"]:hover {
+  background: var(--impilo-accent-hover) !important;
+  border-color: var(--impilo-accent-hover) !important;
+}
+
+/* "Try Another Way" reads as a quiet alternative, not a rival to the primary action. */
+.pf-v5-c-button.pf-m-secondary,
+.pf-v5-c-button.pf-m-link,
+.pf-v5-c-login__main a {
+  color: var(--impilo-accent) !important;
+  background: transparent !important;
+}
+
+/* ── Impilo wordmark, on the canvas above the card ──────────────────── */
+#kc-header-wrapper { font-size: 0; }
+
+#kc-header-wrapper::before {
+  content: "Impilo";
+  display: block;
+  color: var(--impilo-on-canvas);
+  font-size: 2rem;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.75rem;
+}
+
+/* ── "Continuing as <identifier>" — identity carried from the shell ──── */
 .impilo-continue-as {
   display: flex;
   flex-wrap: wrap;
@@ -55,20 +147,17 @@ a:focus {
   gap: 0.35rem 0.5rem;
   margin: 0 0 1.25rem;
   padding: 0.75rem 0.9rem;
-  border: 1px solid #d7dde3;
-  border-left: 3px solid #1f7a5a;
-  border-radius: 6px;
-  background: #f6f9f8;
+  border: 1px solid var(--impilo-line);
+  border-left: 3px solid var(--impilo-accent);
+  border-radius: 12px;
+  background: #f8fafc;                     /* slate-50 */
 }
 
-.impilo-continue-as__label {
-  color: #4a5560;
-  font-size: 0.8125rem;
-}
+.impilo-continue-as__label { color: var(--impilo-ink-muted) !important; font-size: 0.8125rem; }
 
 .impilo-continue-as__identity {
   font-weight: 650;
-  color: #14202b;
+  color: var(--impilo-ink) !important;
   overflow-wrap: anywhere;
 }
 
@@ -76,35 +165,52 @@ a:focus {
   margin-left: auto;
   font-size: 0.8125rem;
   white-space: nowrap;
+  color: var(--impilo-accent) !important;
 }
-
-@media (prefers-color-scheme: dark) {
-  .impilo-continue-as {
-    border-color: #33414d;
-    background: #18222b;
-  }
-  .impilo-continue-as__label { color: #9fb0be; }
-  .impilo-continue-as__identity { color: #eef4f8; }
-}
-
-/* Later steps (one-time code, credential chooser) carry the identity forward. Keycloak's
-   template.ftl renders it as a readonly TEXT INPUT plus a "Restart login" icon button —
-   a different shape from the password step's "Continuing as" block, which made two
-   consecutive steps of one journey look unrelated. Suppress the stock block and let the
-   step template render the same block the password step uses.
-
-   :has() rather than forking template.ftl (200+ lines, moves every Keycloak release).
-   A browser without :has() shows the old block too: redundant, never broken. */
-.pf-v5-c-form__group:has(#kc-attempted-username) { display: none; }
 
 /* One line of plain guidance under the identity block, so a step states what it wants. */
 .impilo-step-hint {
   margin: 0 0 1rem;
-  color: #4a5560;
+  color: var(--impilo-ink-muted) !important;
   font-size: 0.875rem;
   line-height: 1.45;
 }
 
+/* Later steps carry identity forward; template.ftl renders it as a readonly INPUT beside a
+   "Restart login" icon — a different shape from the block above, which made two consecutive
+   steps of one journey look unrelated. Suppress the stock block and let the step template
+   render the shared one. :has() rather than forking template.ftl (200+ lines, moves every
+   Keycloak release); a browser without :has() shows the old block too — redundant, never
+   broken. */
+.pf-v5-c-form__group:has(#kc-attempted-username) { display: none; }
+
+/* ── Trust line beneath the card, echoing the shell's footer ────────── */
+#kc-info,
+.pf-v5-c-login__footer,
+#kc-registration-container,
+#kc-registration {
+  color: var(--impilo-on-canvas-muted) !important;
+  background: transparent !important;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+#kc-info a,
+#kc-registration a,
+.pf-v5-c-login__footer a { color: var(--impilo-accent-bright) !important; }
+
+/* The shell's card is white in every colour scheme — do not let the browser invert it. */
 @media (prefers-color-scheme: dark) {
-  .impilo-step-hint { color: #9fb0be; }
+  .pf-v5-c-login__main,
+  .card-pf,
+  #kc-form-wrapper,
+  .pf-v5-c-login__main-body,
+  .pf-v5-c-login__main-header {
+    background: var(--impilo-surface) !important;
+    color: var(--impilo-ink) !important;
+  }
+  .impilo-continue-as { background: #f8fafc; border-color: var(--impilo-line); }
+  .impilo-continue-as__label,
+  .impilo-step-hint { color: var(--impilo-ink-muted) !important; }
+  .impilo-continue-as__identity { color: var(--impilo-ink) !important; }
 }
