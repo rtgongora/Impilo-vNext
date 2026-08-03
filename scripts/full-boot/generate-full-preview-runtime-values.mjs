@@ -219,6 +219,12 @@ function specialEnv(serviceId) {
       ORG_REGISTRY_KAFKA_EVENTS_ENABLED: "true",
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true",
       WORKFLOW_SERVICE_URL: "http://workflow-service:8250",
+      // application.yml resolves issuer-uri to ${KEYCLOAK_ISSUER:${KEYCLOAK_URL}/realms/impilo}.
+      // With only KEYCLOAK_URL set it expected the INTERNAL issuer while every token Keycloak
+      // mints carries the PUBLIC one, so service-originated calls failed "The iss claim is not
+      // valid" — a 401 the BFF reported as a degraded upstream and the UI as "No work
+      // assignment found". jwk-set-uri stays internal: the VM cannot reach its own public address.
+      KEYCLOAK_ISSUER: "https://impilo.mohcc.gov.zw/realms/impilo",
     };
   }
   if (serviceId === "workforce-governance-service") {
@@ -366,8 +372,26 @@ function main() {
       port,
       database: db,
     };
-    const env = specialEnv(entry.id);
-    if (env) block.env = env;
+    // Every service's application.yml resolves issuer-uri to
+    // ${KEYCLOAK_ISSUER:${KEYCLOAK_URL}/realms/impilo}. With only KEYCLOAK_URL set that
+    // expects the INTERNAL issuer, while every token Keycloak mints carries the PUBLIC
+    // one — so the service rejects it with "The iss claim is not valid". Measured
+    // 2026-08-03: 28 deployed services were exposed. vashandi-workforce-service and
+    // organization-registry-service were the two that happened to surface, as a 401 the
+    // BFF reported as a degraded upstream and the UI as "No work assignment found";
+    // the other 26 carried the identical latent fault.
+    //
+    // Defaulted here rather than per service so a NEW service inherits it. Only applied
+    // when the service has not deliberately set its own value — product-registry-service
+    // sets KEYCLOAK_ISSUER:"" on purpose to run anonymous, and must keep it.
+    //
+    // jwk-set-uri deliberately stays internal via KEYCLOAK_URL: this VM cannot reach its
+    // own public address (hairpin NAT), so verification must not go out and back.
+    const env = specialEnv(entry.id) ?? {};
+    if (!("KEYCLOAK_ISSUER" in env)) {
+      env.KEYCLOAK_ISSUER = "https://impilo.mohcc.gov.zw/realms/impilo";
+    }
+    if (Object.keys(env).length > 0) block.env = env;
     const secretEnv = specialSecretEnv(entry.id);
     if (secretEnv) block.secretEnv = secretEnv;
     const probes = specialProbes(entry.id);

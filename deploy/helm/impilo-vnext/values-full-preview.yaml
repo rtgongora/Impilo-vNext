@@ -406,6 +406,15 @@ experienceBff:
     IMPILO_AUTH_SESSION_ENCRYPTION_KEY:
       name: impilo-app-secrets
       key: web-session-encryption-key
+    # Service-originated calls (work-context resolution, composition) carry no inbound
+    # user token, so ServiceClientConfig mints the BFF's OWN client_credentials token.
+    # ServiceTokenProperties.hasSecret() is the precondition for even ATTEMPTING a mint —
+    # with no secret it never tries, emits no SERVICE_TOKEN_MINT_FAILED warning, and every
+    # such call goes out unauthenticated. Downstreams then 401 and the UI reports
+    # "No work assignment found". This was never wired in helm for any service.
+    IMPILO_AUTH_SERVICE_TOKEN_CLIENT_SECRET:
+      name: impilo-app-secrets
+      key: keycloak-backend-secret
   env:
     REDIS_HOST: redis
     REDIS_PORT: "6379"
@@ -416,6 +425,10 @@ experienceBff:
     KEYCLOAK_CLIENT_ID: experience-ui
     KEYCLOAK_USER_ADMIN_CLIENT_ID: impilo-user-admin
     KEYCLOAK_BACKEND_CLIENT_ID: impilo-backend
+    # Must be the INTERNAL issuer: the default is localhost:8080, which inside the BFF
+    # pod is the BFF itself, not Keycloak.
+    IMPILO_AUTH_SERVICE_TOKEN_TOKEN_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/token
+    IMPILO_AUTH_SERVICE_TOKEN_CLIENT_ID: impilo-backend
     AUTH_FALLBACK_ENABLED: "false"
     IMPILO_SECURITY_ALLOW_ANONYMOUS: "false"
     # Activation remains gated by the migration/restore rehearsal and targeted
@@ -507,6 +520,12 @@ fullBootServices:
       WORKFORCE_GOVERNANCE_BASE_URL: http://workforce-governance-service:8165
       TUSO_BASE_URL: http://tuso-service:8084
       FUNDO_BASE_URL: http://learning-service:8235
+      # application.yml resolves issuer-uri to ${KEYCLOAK_ISSUER:${KEYCLOAK_URL}/realms/impilo},
+      # so with only KEYCLOAK_URL set it expected http://keycloak:8080/realms/impilo while every
+      # token Keycloak mints carries the PUBLIC issuer. Result: "The iss claim is not valid" on
+      # every service-originated call, surfaced to the user as "No work assignment found".
+      # jwk-set-uri stays internal via KEYCLOAK_URL — the VM cannot reach its own public address.
+      KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
   # Subject-context ratchet (Identity Contract B5): burn-in LOG mode on the
   # subject-write services — mismatched/missing X-Subject-Context-Token on
   # subject-scoped writes is logged (SUBJECT_CONTEXT_VIOLATION), never blocked.
