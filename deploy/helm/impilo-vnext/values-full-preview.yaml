@@ -414,7 +414,7 @@ experienceBff:
     # "No work assignment found". This was never wired in helm for any service.
     IMPILO_AUTH_SERVICE_TOKEN_CLIENT_SECRET:
       name: impilo-app-secrets
-      key: keycloak-backend-secret
+      key: keycloak-workload-secret-bff
   env:
     REDIS_HOST: redis
     REDIS_PORT: "6379"
@@ -428,7 +428,14 @@ experienceBff:
     # Must be the INTERNAL issuer: the default is localhost:8080, which inside the BFF
     # pod is the BFF itself, not Keycloak.
     IMPILO_AUTH_SERVICE_TOKEN_TOKEN_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/token
-    IMPILO_AUTH_SERVICE_TOKEN_CLIENT_ID: impilo-backend
+    # MUST be the experience-bff client, not impilo-backend. CP7
+    # (docs/security/trust-audit/checkpoint-4/CP7_COHORT_ENFORCED.md) hardened
+    # workforce-governance-service with IMPILO_S2S_REQUIRED_AUDIENCE, and names
+    # "impilo-backend — valid realm token, no aud -> 401" as the control that matters:
+    # a borrowed token from any other client must fail. Only the experience-bff client
+    # carries the oidc-audience-mapper for urn:impilo:tshepo:workforce-governance-service.
+    # Pointing this at impilo-backend would be defeated by that control BY DESIGN.
+    IMPILO_AUTH_SERVICE_TOKEN_CLIENT_ID: experience-bff
     AUTH_FALLBACK_ENABLED: "false"
     IMPILO_SECURITY_ALLOW_ANONYMOUS: "false"
     # Activation remains gated by the migration/restore rehearsal and targeted
