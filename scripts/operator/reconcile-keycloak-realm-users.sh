@@ -145,79 +145,112 @@ except urllib.error.HTTPError as e:
 # Mirrors verbatim what Keycloak itself creates for a current realm — read off this
 # estate's own `master` realm, which has `basic` because Keycloak created it there.
 # `sub` is the Keycloak user UUID: opaque, never a national identifier.
-BASIC_SCOPE = {
-    "name": "basic", "protocol": "openid-connect",
-    "description": "OpenID Connect scope for the sub and auth_time claims",
-    "attributes": {"include.in.token.scope": "false", "display.on.consent.screen": "false"},
-    "protocolMappers": [
-        {"name": "sub", "protocol": "openid-connect", "protocolMapper": "oidc-sub-mapper",
-         "config": {"access.token.claim": "true", "introspection.token.claim": "true"}},
-        {"name": "auth_time", "protocol": "openid-connect",
-         "protocolMapper": "oidc-usersessionmodel-note-mapper",
-         "config": {"user.session.note": "AUTH_TIME", "claim.name": "auth_time",
-                    "jsonType.label": "long", "access.token.claim": "true",
-                    "id.token.claim": "true", "introspection.token.claim": "true"}},
-    ],
-}
+# Two client scopes Keycloak creates for a current realm but which this realm — imported
+# from an older export — never had. Both were measured absent, and each breaks a distinct
+# thing. Definitions mirror this estate's own `master` realm verbatim.
+#
+#   basic -> `sub`. Without it jwt.getSubject() is null and every session carries
+#            user.id=null: the person anchor is anonymous on every successful login.
+#   acr   -> `acr`. Without it the token has NO acr claim, so the BFF's
+#            OidcSessionService.aalRank() scores it 0 and every AAL2 (work/clinical)
+#            login is refused with OIDC_AAL_NOT_SATISFIED — even though Keycloak DID
+#            perform the OTP step-up. The realm's `AuthnContextClassRef` scope is a
+#            SAML mapper and does not emit it.
+REQUIRED_SCOPES = [
+    {
+        "name": "basic", "protocol": "openid-connect",
+        "description": "OpenID Connect scope for the sub and auth_time claims",
+        "attributes": {"include.in.token.scope": "false", "display.on.consent.screen": "false"},
+        "protocolMappers": [
+            {"name": "sub", "protocol": "openid-connect", "protocolMapper": "oidc-sub-mapper",
+             "config": {"access.token.claim": "true", "introspection.token.claim": "true"}},
+            {"name": "auth_time", "protocol": "openid-connect",
+             "protocolMapper": "oidc-usersessionmodel-note-mapper",
+             "config": {"user.session.note": "AUTH_TIME", "claim.name": "auth_time",
+                        "jsonType.label": "long", "access.token.claim": "true",
+                        "id.token.claim": "true", "introspection.token.claim": "true"}},
+        ],
+    },
+    {
+        "name": "acr", "protocol": "openid-connect",
+        "description": "OpenID Connect scope for the acr claim (authentication assurance level)",
+        "attributes": {"include.in.token.scope": "false", "display.on.consent.screen": "false"},
+        "protocolMappers": [
+            {"name": "acr loa level", "protocol": "openid-connect",
+             "protocolMapper": "oidc-acr-mapper",
+             "config": {"access.token.claim": "true", "id.token.claim": "true",
+                        "introspection.token.claim": "true"}},
+        ],
+    },
+]
 
-basic_id = next((s["id"] for s in (basic_scopes or []) if s.get("name") == "basic"), None)
-if skip_reason is None and basic_id is None:
-    # Keycloak 25 moved `sub` into the `basic` client scope. A realm imported from an
-    # older export has no such scope at all, so there is nothing to attach — which is
-    # why this previously fell through a bare `if basic_id:` in total silence, running
-    # and repairing nothing. Create it here, idempotently: creating it by hand would fix
-    # today and vanish at the next realm reset, which is the 2026-07-18 incident recurring.
-    if DRY:
-        skip_reason = "realm has no 'basic' client scope; would CREATE it and attach (dry-run)"
-    else:
+def ensure_scope(spec, existing):
+    """Create the scope if missing, attach it to every OIDC client, and add it to the
+    realm defaults. Returns a skip reason string, or None on success."""
+    name = spec["name"]
+    sid = next((x["id"] for x in (existing or []) if x.get("name") == name), None)
+    if sid is None:
+        if DRY:
+            return f"realm has no '{name}' client scope; would CREATE it and attach (dry-run)"
         try:
-            req("POST", f"/admin/realms/{REALM}/client-scopes", token, body=BASIC_SCOPE)
-            _, basic_scopes = req("GET", f"/admin/realms/{REALM}/client-scopes", token)
-            basic_id = next((s["id"] for s in (basic_scopes or []) if s.get("name") == "basic"), None)
-            if basic_id:
-                print("client-scope 'basic': CREATED (sub + auth_time mappers)")
-            else:
-                skip_reason = "created 'basic' client scope but could not resolve its id afterwards"
+            req("POST", f"/admin/realms/{REALM}/client-scopes", token, body=spec)
+            _, refreshed = req("GET", f"/admin/realms/{REALM}/client-scopes", token)
+            sid = next((x["id"] for x in (refreshed or []) if x.get("name") == name), None)
+            if sid is None:
+                return f"created '{name}' client scope but could not resolve its id afterwards"
+            print(f"client-scope '{name}': CREATED")
         except urllib.error.HTTPError as e:
             if e.code != 403:
                 raise
-            skip_reason = "credential lacks client rights (403 creating the 'basic' scope)"
+            return f"credential lacks client rights (403 creating the '{name}' scope)"
 
-if skip_reason:
-    print(f"WARN {SUB_MARKER}: basic-scope repair skipped — {skip_reason}")
-    print(f"WARN {SUB_MARKER}: access tokens remain sub-less; jwt.getSubject() is null, "
-          f"so every session carries user.id=null and the person anchor is anonymous")
-else:
-    # EVERY openid-connect client, not a named subset. The three previously named here
-    # were a guess at the affected set; measurement says every client in the realm mints
-    # sub-less tokens. `sub` in a token is never harmful, and a hand-maintained list is
-    # one more thing to drift. On a service-account client `sub` resolves to that account's
-    # own UUID — useful for audit correlation, harmless otherwise.
     _, all_clients = req("GET", f"/admin/realms/{REALM}/clients", token)
     for client in (all_clients or []):
         if client.get("protocol") not in (None, "openid-connect"):
             continue
+        if client.get("bearerOnly"):
+            # Validates tokens, never mints them; Keycloak also refuses writes to its own
+            # realm-management client, and that 403 previously killed the whole loop.
+            continue
         cname = client.get("clientId")
-        if "basic" in (client.get("defaultClientScopes") or []):
+        if name in (client.get("defaultClientScopes") or []):
             continue
         if DRY:
-            print(f"client {cname}: would add default scope 'basic' (dry-run)")
-        else:
-            req("PUT", f"/admin/realms/{REALM}/clients/{client['id']}/default-client-scopes/{basic_id}", token)
-            print(f"client {cname}: default scope 'basic' added (sub claim restored)")
+            print(f"client {cname}: would add default scope '{name}' (dry-run)")
+            continue
+        try:
+            req("PUT", f"/admin/realms/{REALM}/clients/{client['id']}/default-client-scopes/{sid}", token)
+            print(f"client {cname}: default scope '{name}' added")
+        except urllib.error.HTTPError as e:
+            if e.code != 403:
+                raise
+            print(f"WARN {SUB_MARKER}: client {cname}: 403 attaching '{name}' — continuing")
 
-    # Realm-level default. Without this, attaching above fixes today's clients and every
-    # client created AFTERWARDS still mints sub-less tokens — including the per-workload
-    # clients provisioned for each service. `master` carries `basic` in its realm default
-    # list, which is why clients created there inherit it; `impilo` does not. Fixing the
-    # instance without this would leave the class.
+    # Realm-level default, so clients created LATER inherit it. Without this the repair
+    # fixes today's clients and leaves the class.
     _, realm_defaults = req("GET", f"/admin/realms/{REALM}/default-default-client-scopes", token)
-    if not any(sc.get("name") == "basic" for sc in (realm_defaults or [])):
+    if not any(sc.get("name") == name for sc in (realm_defaults or [])):
         if DRY:
-            print("realm: would add 'basic' to default-client-scopes (dry-run)")
+            print(f"realm: would add '{name}' to default-client-scopes (dry-run)")
         else:
-            req("PUT", f"/admin/realms/{REALM}/default-default-client-scopes/{basic_id}", token)
-            print("realm: 'basic' added to default-client-scopes — new clients inherit sub")
+            req("PUT", f"/admin/realms/{REALM}/default-default-client-scopes/{sid}", token)
+            print(f"realm: '{name}' added to default-client-scopes")
+    return None
+
+
+if skip_reason is None:
+    for _spec in REQUIRED_SCOPES:
+        _why = ensure_scope(_spec, basic_scopes)
+        if _why:
+            print(f"WARN {SUB_MARKER}: {_spec['name']}-scope repair skipped — {_why}")
+            print(f"WARN {SUB_MARKER}: tokens remain incomplete — a missing 'basic' means "
+                  f"user.id=null; a missing 'acr' means every AAL2 login is refused")
+        # refresh the scope list so a scope created above is visible to the next iteration
+        _, basic_scopes = req("GET", f"/admin/realms/{REALM}/client-scopes", token)
+else:
+    print(f"WARN {SUB_MARKER}: client-scope repair skipped — {skip_reason}")
+    print(f"WARN {SUB_MARKER}: access tokens remain sub-less and acr-less; user.id=null "
+          f"and AAL2 logins are refused")
 
 created = updated = skipped = 0
 for u in realm.get("users", []):
