@@ -30,17 +30,41 @@
 #
 # ── THE DICOM PORT (4242) IS DELIBERATELY NOT ALLOWED ───────────────────────────────────────
 #
-# The Service exposes 8042 (REST) and 4242 (DICOM). Selecting this pod denies everything not
-# explicitly allowed, so omitting 4242 closes it to in-cluster traffic.
+# The Service exposes 8042 (REST) and 4242 (DIMSE, the DICOM network protocol). Selecting this pod
+# denies everything not explicitly allowed, so omitting 4242 closes it to in-cluster traffic.
 #
-# That is intended. No in-cluster DICOM client exists -- a search for 4242 across `services/*/src/main`
-# returns only false positives (facility codes such as `ZW014242` in seed SQL). The Service is
-# ClusterIP, so nothing outside the cluster can reach 4242 today either; an imaging modality would
-# need an explicit route that does not exist. An unused DICOM listener reachable by every pod is
-# exactly the exposure this closes.
+# On 4242 Orthanc is a DICOM Service Class Provider: C-STORE (a modality or peer PACS pushes images
+# in), C-FIND (query), C-MOVE / C-GET (retrieve), C-ECHO (the DICOM ping). In a hospital this is
+# normally THE ingest path from imaging equipment, so closing it is not a trivial call.
 #
-# If a modality integration is added later, add 4242 here with its caller enumerated. Do not widen
-# this to "all ports" to make one device work.
+# It is closed for three reasons, in order of weight:
+#
+#   1. THIS ESTATE DOES NOT INGEST OVER DIMSE. `PacsController` performs "C-STORE *style* ingest:
+#      POST raw application/dicom to Orthanc /instances" -- that is HTTP on 8042. Routing ingest
+#      through the BFF is the deliberate architecture; the DIMSE listener is not merely unused, it
+#      is bypassed by design.
+#   2. No in-cluster DICOM client exists. Every `4242` match under `services/*/src/main` is a
+#      facility code such as `ZW014242` in seed SQL.
+#   3. The Service is ClusterIP, so nothing outside the cluster can reach 4242 today regardless.
+#
+# AND THE CONTROL MATTERS MORE HERE THAN ON 8042. DICOM has effectively no authentication: peers
+# identify each other by AE Title, which is a self-asserted string, not a credential. DICOM TLS
+# exists in the standard and is rarely deployed. So for 4242 a NetworkPolicy is not a weaker stand-in
+# for authentication -- it is the primary control available.
+#
+# ── IF A MODALITY INTEGRATION IS ADDED LATER ────────────────────────────────────────────────
+#
+# Do NOT reach for a podSelector. A modality is hospital hardware on the facility network, not a pod
+# in this namespace, so no podSelector can ever match it and the rule will look broken.
+#
+# It needs BOTH:
+#   - an external path that does not exist today -- this Service is ClusterIP, so a NodePort or
+#     LoadBalancer would have to be introduced first; and
+#   - an `ipBlock` here for the device address or its subnet, scoped as tightly as the estate
+#     allows.
+#
+# Enumerate the device. Do not widen this policy to "all ports" or to a broad CIDR to make one
+# machine work -- that is how a containment policy becomes decoration.
 #
 # Ports are the POD's ports. Orthanc maps 8042->8042 and 4242->4242, so the numbers coincide here --
 # but see the SHR policy, where the Service maps 8090->8080 and using the Service port partitioned
