@@ -25,8 +25,6 @@
 -- ON CONFLICT DO NOTHING throughout: V003's two existing IPC-ASEPTIC rows (PROC-LUMBAR-PUNCTURE,
 -- PROC-CHEST-DRAIN) are left exactly as they are; this only fills the other 64.
 
-\set tenant '00000000-0000-4000-8000-000000000001'
-
 -- Hand hygiene — IPC.CORE.HAND_HYGIENE. The WHO Five Moments, self-attested by the performing
 -- clinician like every other point-of-care IPC step already in this catalogue (no peer service
 -- resolves "did you wash your hands" — resolver_service NULL, matching IPC-ASEPTIC's own pattern).
@@ -36,7 +34,7 @@ INSERT INTO procedures.procedure_requirement
 SELECT d.id, 'IPC', 'IPC-HAND_HYGIENE',
        'Hand hygiene performed at the WHO Five Moments before and during the procedure',
        'MANDATORY', 'PERFORMING_CLINICIAN', NULL, FALSE, 'BLOCK', 41
-FROM procedures.procedure_definition d WHERE d.tenant_id = :'tenant'
+FROM procedures.procedure_definition d WHERE d.tenant_id = '00000000-0000-4000-8000-000000000001'
 ON CONFLICT DO NOTHING;
 
 -- Aseptic technique — IPC.CORE.ASEPTIC_TECHNIQUE, broadened from V003's two-procedure seed to
@@ -47,7 +45,7 @@ INSERT INTO procedures.procedure_requirement
      owner_role, resolver_service, overridable_in_emergency, on_resolver_unavailable, display_order)
 SELECT d.id, 'IPC', 'IPC-ASEPTIC', 'Aseptic technique and sterile field',
        'MANDATORY', 'PERFORMING_CLINICIAN', NULL, FALSE, 'BLOCK', 42
-FROM procedures.procedure_definition d WHERE d.tenant_id = :'tenant'
+FROM procedures.procedure_definition d WHERE d.tenant_id = '00000000-0000-4000-8000-000000000001'
 ON CONFLICT DO NOTHING;
 
 -- PPE — folded under aseptic technique's own standard family rather than a separate WHO
@@ -59,7 +57,7 @@ INSERT INTO procedures.procedure_requirement
 SELECT d.id, 'IPC', 'IPC-PPE',
        'Personal protective equipment appropriate to this procedure''s exposure risk is worn',
        'MANDATORY', 'PERFORMING_CLINICIAN', NULL, FALSE, 'BLOCK', 43
-FROM procedures.procedure_definition d WHERE d.tenant_id = :'tenant'
+FROM procedures.procedure_definition d WHERE d.tenant_id = '00000000-0000-4000-8000-000000000001'
 ON CONFLICT DO NOTHING;
 
 -- Skin preparation — where the procedure breaks skin or accesses a normally sterile space.
@@ -72,7 +70,7 @@ INSERT INTO procedures.procedure_requirement
 SELECT d.id, 'IPC', 'IPC-SKIN_PREP',
        'Skin or access site prepared with an appropriate antiseptic before the intervention, where applicable',
        'MANDATORY', 'PERFORMING_CLINICIAN', NULL, FALSE, 'BLOCK', 44
-FROM procedures.procedure_definition d WHERE d.tenant_id = :'tenant'
+FROM procedures.procedure_definition d WHERE d.tenant_id = '00000000-0000-4000-8000-000000000001'
 ON CONFLICT DO NOTHING;
 
 -- Injection safety, single-use discipline, exposure incident and waste — IPC.CORE.INJECTION_SAFETY.
@@ -87,7 +85,7 @@ INSERT INTO procedures.procedure_requirement
 SELECT d.id, 'IPC', 'IPC-INJECTION_SAFETY',
        'Single-use devices used once only; any sharps exposure incident is reported immediately as a staff safety event; clinical waste segregated per protocol',
        'MANDATORY', 'PERFORMING_CLINICIAN', NULL, FALSE, 'BLOCK', 45
-FROM procedures.procedure_definition d WHERE d.tenant_id = :'tenant'
+FROM procedures.procedure_definition d WHERE d.tenant_id = '00000000-0000-4000-8000-000000000001'
 ON CONFLICT DO NOTHING;
 
 -- Sterile-instrument reprocessing limits — IPC.CORE.STERILE_PROCESSING's remaining gap after
@@ -101,6 +99,6 @@ SELECT d.id, 'STERILE_PROCESSING', 'CSSD-REPROCESSING_LIMITS',
        'Reprocessed instrument set or endoscope is within its declared reuse/cycle limit, not merely sterilised',
        'MANDATORY', 'CSSD_MANAGER', 'tuso-service', FALSE, 'BLOCK', 46
 FROM procedures.procedure_definition d
-WHERE d.tenant_id = :'tenant'
+WHERE d.tenant_id = '00000000-0000-4000-8000-000000000001'
   AND (d.permitted_settings ? 'THEATRE' OR d.permitted_settings ? 'ENDOSCOPY')
 ON CONFLICT DO NOTHING;

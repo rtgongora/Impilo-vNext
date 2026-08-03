@@ -550,6 +550,29 @@ fullBootServices:
       IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS: "false"
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
+  # G046 cohort fallout (2026-08-03). b12f5dcd3 removed the oauth2-enabled permitAll
+  # off-switch from 23 services, so a service whose issuer is unset can no longer skip its
+  # OAuth resource-server block — Spring cannot build a JwtDecoder and the pod FAILS TO
+  # START ("Parameter 0 of method setFilterChains required a bean of type JwtDecoder").
+  # These four had no issuer configured at all and died on the first boot after that change.
+  # Same pattern as the MFA cohort above: PUBLIC issuer (Keycloak advertises it even
+  # in-cluster) with the INTERNAL JWKS route (this VM cannot reach its own public address).
+  dispatch-service:
+    env:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
+  referral-service:
+    env:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
+  # NOTE: rtc-gateway-service is NOT configured here — it already has a block further down
+  # this file (recording/egress settings). A second key with the same name is silently
+  # discarded by YAML (last one wins), which is exactly how the first attempt at this fix
+  # failed to reach the pod. Its issuer settings live in that existing block instead.
+  scheduling-service:
+    env:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
   llm-orchestration-service:
     env:
       LLM_SECURITY_ALLOW_INSECURE_PERMIT_ALL: "true"
@@ -714,6 +737,12 @@ fullBootServices:
         key: minio-root-password
   rtc-gateway-service:
     env:
+      # G046 cohort fallout (2026-08-03): b12f5dcd3 removed the oauth2-enabled permitAll
+      # off-switch, so an unset issuer leaves Spring unable to build a JwtDecoder and the
+      # pod FAILS TO START. Public issuer (Keycloak advertises it even in-cluster) with the
+      # internal JWKS route (this VM cannot reach its own public address).
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
       # Recording lifecycle: template-driven policy gates in RtcRecordingService
       # (rtc.gateway.recording-enabled / egress-enabled stay false by default;
       # preview opts in). S3 secret comes from Secret impilo-app-secrets

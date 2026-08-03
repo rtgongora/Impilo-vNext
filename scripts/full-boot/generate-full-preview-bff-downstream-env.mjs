@@ -122,6 +122,15 @@ const SERVICE_ENV = [
   // Organization registry SoR — feeds BFF impilo.services.organization-registry-base-url
   // (OrganizationRegistryServiceClient + OrgRegistryFacilityAdminClient).
   ["ORGANIZATION_REGISTRY_BASE_URL", "organization-registry-service"],
+  // Clinical domain services that reach the estate for the first time in this boot. The BFF
+  // already has the consumers — ProceduresServiceClient, SurgeryServiceClient, and
+  // impilo.services.mental-health-base-url in application.yml — so these are genuine mappings,
+  // not exclusions: excluding them would deploy three services the BFF cannot address.
+  // Env names must match what those clients bind (PROCEDURES_BASE_URL / SURGERY_BASE_URL /
+  // MENTAL_HEALTH_BASE_URL); their localhost defaults are what a preview pod would otherwise use.
+  ["PROCEDURES_BASE_URL", "procedures-service"],
+  ["SURGERY_BASE_URL", "surgery-service"],
+  ["MENTAL_HEALTH_BASE_URL", "mental-health-service"],
 ];
 
 /**

@@ -99,29 +99,27 @@ CREATE TABLE procedures.aftercare_template_channel (
 -- demonstration/bellwether catalogue entries P7 linked for sedation — the "only 13 procedures
 -- carry full requirement sets" debt is unchanged by this migration, not silently claimed fixed.
 -- -------------------------------------------------------------------------------------
-\set tenant '00000000-0000-4000-8000-000000000001'
-
 INSERT INTO procedures.recovery_setting
     (tenant_id, setting_code, setting_label, minimum_observation_minutes,
      discharge_readiness_criteria, monitoring_required, source_citation)
 VALUES
-(:'tenant', 'NONE', 'No recovery period required', 0,
+('00000000-0000-4000-8000-000000000001', 'NONE', 'No recovery period required', 0,
  'None — the procedure has no recovery phase of its own.',
  'None beyond the procedure''s own observation requirement.',
  'RESULTS.CRITICAL_ACKNOWLEDGEMENT'),
-(:'tenant', 'BEDSIDE_OBSERVATION', 'Bedside observation', 15,
+('00000000-0000-4000-8000-000000000001', 'BEDSIDE_OBSERVATION', 'Bedside observation', 15,
  'Vital signs stable, no acute distress, able to communicate at baseline.',
  'Intermittent vital signs at the bedside.',
  'RESULTS.CRITICAL_ACKNOWLEDGEMENT'),
-(:'tenant', 'RECOVERY_BAY', 'Dedicated recovery bay (non-theatre)', 30,
+('00000000-0000-4000-8000-000000000001', 'RECOVERY_BAY', 'Dedicated recovery bay (non-theatre)', 30,
  'Vital signs stable, return to baseline responsiveness, pain controlled.',
  'Continuous pulse oximetry; intermittent vital signs.',
  'RESULTS.CRITICAL_ACKNOWLEDGEMENT'),
-(:'tenant', 'PACU', 'Post-anaesthesia care unit', 60,
+('00000000-0000-4000-8000-000000000001', 'PACU', 'Post-anaesthesia care unit', 60,
  'Aldrete or equivalent discharge-readiness score met; airway and cardiovascular stability confirmed.',
  'Continuous pulse oximetry, cardiac monitoring, capnography where available.',
  'ANAESTHESIA.WFSA_WHO.MONITORING'),
-(:'tenant', 'EXTENDED_OBSERVATION', 'Extended observation (beyond same-day)', 240,
+('00000000-0000-4000-8000-000000000001', 'EXTENDED_OBSERVATION', 'Extended observation (beyond same-day)', 240,
  'Sustained stability over the observation window; any deferred complication risk has passed its window.',
  'Continuous or frequent-interval monitoring per the specific risk being observed for.',
  'RESULTS.CRITICAL_ACKNOWLEDGEMENT')
@@ -131,22 +129,22 @@ INSERT INTO procedures.aftercare_template
     (tenant_id, template_code, template_name, applicable_setting, description,
      source_citation, status, approving_authority)
 VALUES
-(:'tenant', 'AFTERCARE-THEATRE', 'Post-surgical aftercare', 'THEATRE',
+('00000000-0000-4000-8000-000000000001', 'AFTERCARE-THEATRE', 'Post-surgical aftercare', 'THEATRE',
  'Aftercare for a theatre procedure with a surgical wound.',
  'RESULTS.CRITICAL_ACKNOWLEDGEMENT', 'PUBLISHED', 'PENDING_MOHCC_RATIFICATION'),
-(:'tenant', 'AFTERCARE-BEDSIDE', 'Bedside procedure aftercare', 'BEDSIDE',
+('00000000-0000-4000-8000-000000000001', 'AFTERCARE-BEDSIDE', 'Bedside procedure aftercare', 'BEDSIDE',
  'Aftercare for a bedside invasive procedure.',
  'RESULTS.CRITICAL_ACKNOWLEDGEMENT', 'PUBLISHED', 'PENDING_MOHCC_RATIFICATION'),
-(:'tenant', 'AFTERCARE-SEDATION', 'Sedation aftercare', 'BEDSIDE',
+('00000000-0000-4000-8000-000000000001', 'AFTERCARE-SEDATION', 'Sedation aftercare', 'BEDSIDE',
  'Aftercare after any depth of sedation — recovery criteria and activity restriction.',
  'SEDATION.CONTINUUM.DEPTH', 'PUBLISHED', 'PENDING_MOHCC_RATIFICATION'),
-(:'tenant', 'AFTERCARE-ENDOSCOPY', 'Endoscopy aftercare', 'ENDOSCOPY',
+('00000000-0000-4000-8000-000000000001', 'AFTERCARE-ENDOSCOPY', 'Endoscopy aftercare', 'ENDOSCOPY',
  'Aftercare after an endoscopic procedure, including biopsy result follow-up.',
  'RESULTS.CRITICAL_ACKNOWLEDGEMENT', 'PUBLISHED', 'PENDING_MOHCC_RATIFICATION'),
-(:'tenant', 'AFTERCARE-DIALYSIS', 'Dialysis session aftercare', 'DIALYSIS',
+('00000000-0000-4000-8000-000000000001', 'AFTERCARE-DIALYSIS', 'Dialysis session aftercare', 'DIALYSIS',
  'Aftercare after a dialysis session, including vascular access site care.',
  'RESULTS.CRITICAL_ACKNOWLEDGEMENT', 'PUBLISHED', 'PENDING_MOHCC_RATIFICATION'),
-(:'tenant', 'AFTERCARE-IMPLANT', 'Implant insertion aftercare', 'THEATRE',
+('00000000-0000-4000-8000-000000000001', 'AFTERCARE-IMPLANT', 'Implant insertion aftercare', 'THEATRE',
  'Aftercare after an implant insertion, including device-specific care and what the patient carries.',
  'MED.DEVICE.UDI_TRACEABILITY', 'PUBLISHED', 'PENDING_MOHCC_RATIFICATION')
 ON CONFLICT (tenant_id, template_code) DO NOTHING;
@@ -187,7 +185,7 @@ JOIN (VALUES
   ('AFTERCARE-IMPLANT', 'FOLLOW_UP_APPOINTMENT', 'Attend the scheduled device check.', 40),
   ('AFTERCARE-IMPLANT', 'WHO_TO_CONTACT', 'Carry your device information and know who to contact for device-related concerns.', 50)
 ) AS x(template_code, kind, text, ord) ON x.template_code = t.template_code
-WHERE t.tenant_id = :'tenant'
+WHERE t.tenant_id = '00000000-0000-4000-8000-000000000001'
 ON CONFLICT DO NOTHING;
 
 -- Every template reaches the clinical summary at minimum (results ch. §16 precedent: the
@@ -207,25 +205,25 @@ JOIN (VALUES
   ('AFTERCARE-IMPLANT', 'CLINICAL_SUMMARY'), ('AFTERCARE-IMPLANT', 'KHULUMA'),
   ('AFTERCARE-IMPLANT', 'PRINTED_OFFLINE_HANDOUT')
 ) AS x(template_code, channel) ON x.template_code = t.template_code
-WHERE t.tenant_id = :'tenant'
+WHERE t.tenant_id = '00000000-0000-4000-8000-000000000001'
 ON CONFLICT DO NOTHING;
 
 -- Link the same demonstration/bellwether procedures P7 linked for sedation, so the linkage is
 -- proven end to end for at least a real subset rather than left as schema nothing points at.
 UPDATE procedures.procedure_definition SET default_recovery_setting_code = 'PACU'
-    WHERE tenant_id = :'tenant' AND definition_code IN ('PROC-LAPAROTOMY', 'PROC-CAESAREAN-SECTION', 'PROC-TOTAL-HIP-REPLACEMENT');
+    WHERE tenant_id = '00000000-0000-4000-8000-000000000001' AND definition_code IN ('PROC-LAPAROTOMY', 'PROC-CAESAREAN-SECTION', 'PROC-TOTAL-HIP-REPLACEMENT');
 UPDATE procedures.procedure_definition SET default_recovery_setting_code = 'RECOVERY_BAY'
-    WHERE tenant_id = :'tenant' AND definition_code IN ('PROC-OGD', 'PROC-COLONOSCOPY', 'PROC-BRONCHOSCOPY');
+    WHERE tenant_id = '00000000-0000-4000-8000-000000000001' AND definition_code IN ('PROC-OGD', 'PROC-COLONOSCOPY', 'PROC-BRONCHOSCOPY');
 UPDATE procedures.procedure_definition SET default_recovery_setting_code = 'EXTENDED_OBSERVATION'
-    WHERE tenant_id = :'tenant' AND definition_code IN ('PROC-HAEMODIALYSIS', 'PROC-PERITONEAL-DIALYSIS');
+    WHERE tenant_id = '00000000-0000-4000-8000-000000000001' AND definition_code IN ('PROC-HAEMODIALYSIS', 'PROC-PERITONEAL-DIALYSIS');
 UPDATE procedures.procedure_definition SET default_recovery_setting_code = 'BEDSIDE_OBSERVATION'
-    WHERE tenant_id = :'tenant' AND definition_code IN ('PROC-CENTRAL-LINE', 'PROC-ARTERIAL-LINE', 'PROC-LUMBAR-PUNCTURE');
+    WHERE tenant_id = '00000000-0000-4000-8000-000000000001' AND definition_code IN ('PROC-CENTRAL-LINE', 'PROC-ARTERIAL-LINE', 'PROC-LUMBAR-PUNCTURE');
 
 UPDATE procedures.procedure_definition SET default_aftercare_template_code = 'AFTERCARE-THEATRE'
-    WHERE tenant_id = :'tenant' AND definition_code IN ('PROC-LAPAROTOMY', 'PROC-CAESAREAN-SECTION', 'PROC-TOTAL-HIP-REPLACEMENT');
+    WHERE tenant_id = '00000000-0000-4000-8000-000000000001' AND definition_code IN ('PROC-LAPAROTOMY', 'PROC-CAESAREAN-SECTION', 'PROC-TOTAL-HIP-REPLACEMENT');
 UPDATE procedures.procedure_definition SET default_aftercare_template_code = 'AFTERCARE-ENDOSCOPY'
-    WHERE tenant_id = :'tenant' AND definition_code IN ('PROC-OGD', 'PROC-COLONOSCOPY', 'PROC-BRONCHOSCOPY');
+    WHERE tenant_id = '00000000-0000-4000-8000-000000000001' AND definition_code IN ('PROC-OGD', 'PROC-COLONOSCOPY', 'PROC-BRONCHOSCOPY');
 UPDATE procedures.procedure_definition SET default_aftercare_template_code = 'AFTERCARE-DIALYSIS'
-    WHERE tenant_id = :'tenant' AND definition_code IN ('PROC-HAEMODIALYSIS', 'PROC-PERITONEAL-DIALYSIS');
+    WHERE tenant_id = '00000000-0000-4000-8000-000000000001' AND definition_code IN ('PROC-HAEMODIALYSIS', 'PROC-PERITONEAL-DIALYSIS');
 UPDATE procedures.procedure_definition SET default_aftercare_template_code = 'AFTERCARE-BEDSIDE'
-    WHERE tenant_id = :'tenant' AND definition_code IN ('PROC-CENTRAL-LINE', 'PROC-ARTERIAL-LINE', 'PROC-LUMBAR-PUNCTURE');
+    WHERE tenant_id = '00000000-0000-4000-8000-000000000001' AND definition_code IN ('PROC-CENTRAL-LINE', 'PROC-ARTERIAL-LINE', 'PROC-LUMBAR-PUNCTURE');

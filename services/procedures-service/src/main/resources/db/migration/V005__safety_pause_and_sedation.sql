@@ -133,40 +133,38 @@ ALTER TABLE procedures.procedure_requirement
 -- Seed: the ten safety-pause templates (§9) and their confirmation items, and the eight
 -- sedation levels (§10) with the rescue-capability chain and WFSA-WHO citations.
 -- -------------------------------------------------------------------------------------
-\set tenant '00000000-0000-4000-8000-000000000001'
-
 INSERT INTO procedures.safety_pause_template
     (tenant_id, template_code, template_name, applicable_setting, description,
      source_citation, status, approving_authority)
 VALUES
-(:'tenant','SAFETY-PAUSE-BEDSIDE','Bedside procedure safety pause','BEDSIDE',
+('00000000-0000-4000-8000-000000000001','SAFETY-PAUSE-BEDSIDE','Bedside procedure safety pause','BEDSIDE',
  'Confirmation before an invasive procedure performed at the bedside.',
  'PS.WRONG_SITE.PREVENTION','PUBLISHED','PENDING_MOHCC_RATIFICATION'),
-(:'tenant','SAFETY-PAUSE-SURGERY','WHO Surgical Safety Checklist Time Out','THEATRE',
+('00000000-0000-4000-8000-000000000001','SAFETY-PAUSE-SURGERY','WHO Surgical Safety Checklist Time Out','THEATRE',
  'The Time Out phase of the WHO Surgical Safety Checklist, before skin incision.',
  'SSC.2009.TIME_OUT','PUBLISHED','PENDING_MOHCC_RATIFICATION'),
-(:'tenant','SAFETY-PAUSE-SEDATION','Sedation safety pause','BEDSIDE',
+('00000000-0000-4000-8000-000000000001','SAFETY-PAUSE-SEDATION','Sedation safety pause','BEDSIDE',
  'Confirmation before administering sedation of any depth.',
  'SEDATION.CONTINUUM.DEPTH','PUBLISHED','PENDING_MOHCC_RATIFICATION'),
-(:'tenant','SAFETY-PAUSE-ENDOSCOPY','Endoscopy safety pause','ENDOSCOPY',
+('00000000-0000-4000-8000-000000000001','SAFETY-PAUSE-ENDOSCOPY','Endoscopy safety pause','ENDOSCOPY',
  'Confirmation before an endoscopic procedure, including scope reprocessing status.',
  'IPC.CORE.STERILE_PROCESSING','PUBLISHED','PENDING_MOHCC_RATIFICATION'),
-(:'tenant','SAFETY-PAUSE-INTERVENTIONAL','Interventional imaging safety pause','INTERVENTIONAL_RADIOLOGY',
+('00000000-0000-4000-8000-000000000001','SAFETY-PAUSE-INTERVENTIONAL','Interventional imaging safety pause','INTERVENTIONAL_RADIOLOGY',
  'Confirmation before an image-guided intervention.',
  'PS.WRONG_SITE.PREVENTION','PUBLISHED','PENDING_MOHCC_RATIFICATION'),
-(:'tenant','SAFETY-PAUSE-DIALYSIS','Dialysis safety pause','DIALYSIS',
+('00000000-0000-4000-8000-000000000001','SAFETY-PAUSE-DIALYSIS','Dialysis safety pause','DIALYSIS',
  'Confirmation before initiating a dialysis session, including vascular access.',
  'PS.WRONG_SITE.PREVENTION','PUBLISHED','PENDING_MOHCC_RATIFICATION'),
-(:'tenant','SAFETY-PAUSE-TRANSFUSION','Transfusion safety pause','WARD',
+('00000000-0000-4000-8000-000000000001','SAFETY-PAUSE-TRANSFUSION','Transfusion safety pause','WARD',
  'Bedside positive patient identification before transfusion, per WHO clinical transfusion guidance.',
  'BLOOD.TRANSFUSION.APPROPRIATE_USE','PUBLISHED','PENDING_MOHCC_RATIFICATION'),
-(:'tenant','SAFETY-PAUSE-IMPLANT','Implant insertion safety pause','THEATRE',
+('00000000-0000-4000-8000-000000000001','SAFETY-PAUSE-IMPLANT','Implant insertion safety pause','THEATRE',
  'Confirmation before inserting an implant, including UDI and recall check.',
  'MED.DEVICE.UDI_TRACEABILITY','PUBLISHED','PENDING_MOHCC_RATIFICATION'),
-(:'tenant','SAFETY-PAUSE-SPECIMEN','Specimen collection safety pause','BEDSIDE',
+('00000000-0000-4000-8000-000000000001','SAFETY-PAUSE-SPECIMEN','Specimen collection safety pause','BEDSIDE',
  'Confirmation before collecting a specimen, including labelling and destination.',
  'SPECIMEN.CHAIN_OF_CUSTODY','PUBLISHED','PENDING_MOHCC_RATIFICATION'),
-(:'tenant','SAFETY-PAUSE-INVASIVE','Generic invasive procedure safety pause','CLINIC',
+('00000000-0000-4000-8000-000000000001','SAFETY-PAUSE-INVASIVE','Generic invasive procedure safety pause','CLINIC',
  'The minimum confirmation for any invasive procedure not covered by a more specific template.',
  'PS.WRONG_SITE.PREVENTION','PUBLISHED','PENDING_MOHCC_RATIFICATION')
 ON CONFLICT (tenant_id, template_code) DO NOTHING;
@@ -254,7 +252,7 @@ JOIN (VALUES
   ('SAFETY-PAUSE-INVASIVE','PROCEDURE','Confirm the intended procedure.',20),
   ('SAFETY-PAUSE-INVASIVE','CONSENT','Confirm consent is recorded.',30)
 ) AS x(template_code, item, prompt, ord) ON x.template_code = t.template_code
-WHERE t.tenant_id = :'tenant'
+WHERE t.tenant_id = '00000000-0000-4000-8000-000000000001'
 ON CONFLICT DO NOTHING;
 
 -- Sedation levels, depth-ranked, each requiring the NEXT level's rescue capability — the
@@ -263,42 +261,42 @@ INSERT INTO procedures.sedation_level
     (tenant_id, level_code, level_label, depth_rank, monitoring_required,
      provider_competence_required, typical_recovery_criteria, source_citation)
 VALUES
-(:'tenant','NO_SEDATION','No sedation',0,
+('00000000-0000-4000-8000-000000000001','NO_SEDATION','No sedation',0,
  'Standard vital signs per the procedure''s own observation requirement.',
  'The performing clinician''s ordinary competence for the procedure.',
  'No sedation-specific recovery — the procedure''s own aftercare applies.',
  'SEDATION.CONTINUUM.DEPTH'),
-(:'tenant','NON_PHARMACOLOGICAL','Non-pharmacological support',0,
+('00000000-0000-4000-8000-000000000001','NON_PHARMACOLOGICAL','Non-pharmacological support',0,
  'Standard vital signs; behavioural distress monitored throughout.',
  'A person trained in the technique used (e.g. distraction, positioning, swaddling).',
  'No sedation-specific recovery.',
  'SEDATION.CONTINUUM.DEPTH'),
-(:'tenant','LOCAL_ANAESTHESIA','Local anaesthesia',1,
+('00000000-0000-4000-8000-000000000001','LOCAL_ANAESTHESIA','Local anaesthesia',1,
  'Standard vital signs; observation for local anaesthetic systemic toxicity.',
  'The performing clinician, competent in the local anaesthetic technique used.',
  'Resolution of any LAST symptoms; the procedure''s own aftercare otherwise applies.',
  'SEDATION.CONTINUUM.DEPTH'),
-(:'tenant','MINIMAL_SEDATION','Minimal sedation (anxiolysis)',2,
+('00000000-0000-4000-8000-000000000001','MINIMAL_SEDATION','Minimal sedation (anxiolysis)',2,
  'Continuous verbal contact; intermittent vital signs.',
  'A provider able to rescue from moderate sedation should depth exceed intention.',
  'Return to baseline verbal responsiveness and orientation.',
  'SEDATION.CONTINUUM.DEPTH'),
-(:'tenant','MODERATE_SEDATION','Moderate sedation',3,
+('00000000-0000-4000-8000-000000000001','MODERATE_SEDATION','Moderate sedation',3,
  'Continuous pulse oximetry; continuous verbal or tactile response monitoring.',
  'A provider able to rescue from deep sedation should depth exceed intention.',
  'Aldrete or equivalent discharge-readiness score met; airway and cardiovascular stability confirmed.',
  'SEDATION.CONTINUUM.DEPTH'),
-(:'tenant','DEEP_SEDATION','Deep sedation',4,
+('00000000-0000-4000-8000-000000000001','DEEP_SEDATION','Deep sedation',4,
  'Continuous pulse oximetry, continuous cardiac monitoring, capnography where available.',
  'A provider able to rescue from general anaesthesia should depth exceed intention.',
  'Aldrete or equivalent discharge-readiness score met; airway reflexes and cardiovascular stability confirmed.',
  'SEDATION.CONTINUUM.DEPTH'),
-(:'tenant','GENERAL_ANAESTHESIA','General anaesthesia',5,
+('00000000-0000-4000-8000-000000000001','GENERAL_ANAESTHESIA','General anaesthesia',5,
  'Continuous pulse oximetry, capnography, cardiac monitoring, temperature.',
  'An anaesthesia provider throughout, per WFSA-WHO mandatory-tier standards.',
  'Full Aldrete or equivalent discharge-readiness score; airway, ventilation and cardiovascular stability confirmed.',
  'ANAESTHESIA.WFSA_WHO.MONITORING'),
-(:'tenant','REGIONAL_ANAESTHESIA','Regional anaesthesia',5,
+('00000000-0000-4000-8000-000000000001','REGIONAL_ANAESTHESIA','Regional anaesthesia',5,
  'Continuous pulse oximetry, cardiac monitoring; block level and motor/sensory function assessed.',
  'A provider able to rescue to general anaesthesia should the block be inadequate or fail.',
  'Adequate return of motor and sensory function per the block performed, or discharge criteria met with documented residual block.',
@@ -309,28 +307,28 @@ ON CONFLICT (tenant_id, level_code) DO NOTHING;
 -- level one depth-rank higher. General anaesthesia sits at the top with no level above it to
 -- rescue into — its own monitoring and provider requirements ARE the ceiling.
 UPDATE procedures.sedation_level SET rescue_capability_level_code = 'MODERATE_SEDATION'
-    WHERE tenant_id = :'tenant' AND level_code = 'MINIMAL_SEDATION';
+    WHERE tenant_id = '00000000-0000-4000-8000-000000000001' AND level_code = 'MINIMAL_SEDATION';
 UPDATE procedures.sedation_level SET rescue_capability_level_code = 'DEEP_SEDATION'
-    WHERE tenant_id = :'tenant' AND level_code = 'MODERATE_SEDATION';
+    WHERE tenant_id = '00000000-0000-4000-8000-000000000001' AND level_code = 'MODERATE_SEDATION';
 UPDATE procedures.sedation_level SET rescue_capability_level_code = 'GENERAL_ANAESTHESIA'
-    WHERE tenant_id = :'tenant' AND level_code IN ('DEEP_SEDATION','REGIONAL_ANAESTHESIA');
+    WHERE tenant_id = '00000000-0000-4000-8000-000000000001' AND level_code IN ('DEEP_SEDATION','REGIONAL_ANAESTHESIA');
 
 -- Link the seeded endoscopy, dialysis and central-line procedures to their typical sedation
 -- depth, and their SEDATION requirement row to that level — proving the linkage the resolver
 -- will use, not leaving it as schema with nothing pointed at it.
 UPDATE procedures.procedure_definition SET default_sedation_level_code = 'MODERATE_SEDATION'
-    WHERE tenant_id = :'tenant' AND definition_code IN ('PROC-OGD','PROC-COLONOSCOPY','PROC-BRONCHOSCOPY');
+    WHERE tenant_id = '00000000-0000-4000-8000-000000000001' AND definition_code IN ('PROC-OGD','PROC-COLONOSCOPY','PROC-BRONCHOSCOPY');
 UPDATE procedures.procedure_definition SET default_sedation_level_code = 'NO_SEDATION'
-    WHERE tenant_id = :'tenant' AND definition_code IN ('PROC-HAEMODIALYSIS','PROC-PERITONEAL-DIALYSIS');
+    WHERE tenant_id = '00000000-0000-4000-8000-000000000001' AND definition_code IN ('PROC-HAEMODIALYSIS','PROC-PERITONEAL-DIALYSIS');
 UPDATE procedures.procedure_definition SET default_sedation_level_code = 'LOCAL_ANAESTHESIA'
-    WHERE tenant_id = :'tenant' AND definition_code IN ('PROC-CENTRAL-LINE','PROC-ARTERIAL-LINE','PROC-LUMBAR-PUNCTURE');
+    WHERE tenant_id = '00000000-0000-4000-8000-000000000001' AND definition_code IN ('PROC-CENTRAL-LINE','PROC-ARTERIAL-LINE','PROC-LUMBAR-PUNCTURE');
 UPDATE procedures.procedure_definition SET default_sedation_level_code = 'GENERAL_ANAESTHESIA'
-    WHERE tenant_id = :'tenant' AND definition_code IN ('PROC-LAPAROTOMY','PROC-CAESAREAN-SECTION','PROC-TOTAL-HIP-REPLACEMENT');
+    WHERE tenant_id = '00000000-0000-4000-8000-000000000001' AND definition_code IN ('PROC-LAPAROTOMY','PROC-CAESAREAN-SECTION','PROC-TOTAL-HIP-REPLACEMENT');
 
 UPDATE procedures.procedure_requirement r
    SET sedation_level_code = 'MODERATE_SEDATION'
   FROM procedures.procedure_definition d
  WHERE r.definition_id = d.id
-   AND d.tenant_id = :'tenant'
+   AND d.tenant_id = '00000000-0000-4000-8000-000000000001'
    AND d.definition_code = 'PROC-OGD'
    AND r.requirement_kind = 'SEDATION';

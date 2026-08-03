@@ -24,8 +24,23 @@ fb_ensure_reports() {
 }
 
 fb_helper_passwordless() {
+  # Answers exactly one question: will sudo run the import helper WITHOUT prompting?
+  #
+  # It used to answer that by running the LIST helper and checking its exit code. But that
+  # helper exits 1 when images are missing from containerd — precisely the state before an
+  # import. So the probe reported "passwordless sudo not active" whenever there was work to
+  # do, refused the import, and the images stayed missing. It could only return true once
+  # the thing it authorises had already happened. The 2026-08-03 boot stopped at a human
+  # sudo checkpoint after building 104 images, with a working NOPASSWD grant unused
+  # (SUMMARY ok=0 fail=15, exit 1 — from absent images, not from sudo).
+  #
+  # Match the NOPASSWD grant instead. `sudo -n true` is wrong here too: this estate grants
+  # NOPASSWD for exactly two binaries and nothing broader, so the generic probe fails while
+  # the specific capability is present. And `sudo -n -l <cmd>` is wrong as well — `sudo -l`
+  # reports whether the user MAY run a command, not whether they may run it without a
+  # password, so with `(ALL : ALL) ALL` in sudoers it returns success for anything.
   [[ -x /usr/local/sbin/impilo-k3s-import-images && -x /usr/local/sbin/impilo-k3s-list-images ]] \
-    && sudo -n /usr/local/sbin/impilo-k3s-list-images "$(fb_tag)" "$(fb_repo)" >/dev/null 2>&1
+    && sudo -n -l 2>/dev/null | grep -qE 'NOPASSWD:.*impilo-k3s-import-images'
 }
 
 fb_verify_images() {

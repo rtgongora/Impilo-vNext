@@ -35,25 +35,23 @@
 -- AFTERCARE-TRANSFUSION, AFTERCARE-UROLOGY, AFTERCARE-VASCULAR, AFTERCARE-VASCULAR-ACCESS,
 -- AFTERCARE-WOUND) remain UNRESOLVED — recorded here as a named debt, not silently left.
 
-\set tenant '00000000-0000-4000-8000-000000000001'
-
 INSERT INTO procedures.aftercare_template
     (tenant_id, template_code, template_name, applicable_setting, description,
      source_citation, status, approving_authority)
 VALUES
-(:'tenant', 'AFTERCARE-LAPAROTOMY', 'Laparotomy aftercare', 'THEATRE',
+('00000000-0000-4000-8000-000000000001', 'AFTERCARE-LAPAROTOMY', 'Laparotomy aftercare', 'THEATRE',
  'Aftercare specific to an open abdominal (laparotomy) wound.',
  'RESULTS.CRITICAL_ACKNOWLEDGEMENT', 'PUBLISHED', 'PENDING_MOHCC_RATIFICATION'),
-(:'tenant', 'AFTERCARE-CAESAREAN', 'Caesarean section aftercare', 'THEATRE',
+('00000000-0000-4000-8000-000000000001', 'AFTERCARE-CAESAREAN', 'Caesarean section aftercare', 'THEATRE',
  'Aftercare specific to a caesarean section, including neonatal and lactation guidance.',
  'RESULTS.CRITICAL_ACKNOWLEDGEMENT', 'PUBLISHED', 'PENDING_MOHCC_RATIFICATION'),
-(:'tenant', 'AFTERCARE-ARTHROPLASTY', 'Joint arthroplasty aftercare', 'THEATRE',
+('00000000-0000-4000-8000-000000000001', 'AFTERCARE-ARTHROPLASTY', 'Joint arthroplasty aftercare', 'THEATRE',
  'Aftercare specific to a joint replacement, including weight-bearing and rehabilitation guidance.',
  'MED.DEVICE.UDI_TRACEABILITY', 'PUBLISHED', 'PENDING_MOHCC_RATIFICATION'),
-(:'tenant', 'AFTERCARE-CENTRAL-LINE', 'Central venous catheter aftercare', 'BEDSIDE',
+('00000000-0000-4000-8000-000000000001', 'AFTERCARE-CENTRAL-LINE', 'Central venous catheter aftercare', 'BEDSIDE',
  'Aftercare specific to a central line, including dressing and line-care instructions.',
  'IPC.CORE.ASEPTIC_TECHNIQUE', 'PUBLISHED', 'PENDING_MOHCC_RATIFICATION'),
-(:'tenant', 'AFTERCARE-LUMBAR-PUNCTURE', 'Lumbar puncture aftercare', 'BEDSIDE',
+('00000000-0000-4000-8000-000000000001', 'AFTERCARE-LUMBAR-PUNCTURE', 'Lumbar puncture aftercare', 'BEDSIDE',
  'Aftercare specific to a lumbar puncture, including post-dural-puncture headache guidance.',
  'RESULTS.CRITICAL_ACKNOWLEDGEMENT', 'PUBLISHED', 'PENDING_MOHCC_RATIFICATION')
 ON CONFLICT (tenant_id, template_code) DO NOTHING;
@@ -86,7 +84,7 @@ JOIN (VALUES
   ('AFTERCARE-LUMBAR-PUNCTURE', 'WARNING_SIGNS', 'Return if you develop a severe headache worse on sitting up, fever, or leg weakness.', 20),
   ('AFTERCARE-LUMBAR-PUNCTURE', 'RESULTS_FOLLOW_UP', 'CSF results will be discussed at your follow-up appointment.', 30)
 ) AS x(template_code, kind, text, ord) ON x.template_code = t.template_code
-WHERE t.tenant_id = :'tenant'
+WHERE t.tenant_id = '00000000-0000-4000-8000-000000000001'
 ON CONFLICT DO NOTHING;
 
 INSERT INTO procedures.aftercare_template_channel (template_id, delivery_channel)
@@ -102,5 +100,5 @@ JOIN (VALUES
   ('AFTERCARE-CENTRAL-LINE', 'CLINICAL_SUMMARY'),
   ('AFTERCARE-LUMBAR-PUNCTURE', 'CLINICAL_SUMMARY'), ('AFTERCARE-LUMBAR-PUNCTURE', 'PRINTED_OFFLINE_HANDOUT')
 ) AS x(template_code, channel) ON x.template_code = t.template_code
-WHERE t.tenant_id = :'tenant'
+WHERE t.tenant_id = '00000000-0000-4000-8000-000000000001'
 ON CONFLICT DO NOTHING;

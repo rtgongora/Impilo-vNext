@@ -147,8 +147,22 @@ function specialEnv(serviceId) {
   }
   if (serviceId === "pct-service") {
     return {
-      KEYCLOAK_ISSUER: "",
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "",
+      // Blanking the issuer was the preview convention: an empty issuer made the service
+      // skip its OAuth resource-server block and authenticate internal calls through the
+      // trust-context filter. b12f5dcd3 ("remove oauth2-enabled permitAll off-switch from
+      // 23 services") removed the escape hatch that made that safe — pct's SecurityConfig
+      // now calls .oauth2ResourceServer(...) unconditionally, so a blank issuer leaves
+      // Spring unable to build a JwtDecoder and the service FAILS TO START. Observed
+      // 2026-08-03: pct + 5 others dead after the boot, "Parameter 0 of method
+      // setFilterChains required a bean of type JwtDecoder".
+      //
+      // Use the cohort pattern already proven on tshepo-audit/tshepo-authz: the PUBLIC
+      // issuer, because Keycloak advertises it even when reached in-cluster, paired with
+      // the INTERNAL JWKS route, because this VM cannot reach its own public address.
+      KEYCLOAK_ISSUER: "https://impilo.mohcc.gov.zw/realms/impilo",
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo",
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI:
+        "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs",
       // Queue materialisation pulls queue-definitions from TUSO; the code default
       // is localhost:8084, which in-pod means "no queues ever materialise".
       PCT_INTEGRATION_TUSO_BASE_URL: "http://tuso-service:8084",
@@ -159,13 +173,16 @@ function specialEnv(serviceId) {
     };
   }
   if (serviceId === "oros-service") {
-    // Same preview convention as pct-service: blank the issuer so the OAuth
-    // resource-server block is skipped and the trust-context filter
-    // authenticates internal calls (the default localhost issuer 401s
-    // every order placement from the BFF otherwise).
+    // Was blanked on the same preview convention as pct-service, and broke the same way
+    // once b12f5dcd3 removed the permitAll off-switch — see the pct-service note above.
+    // The original concern (a DEFAULT localhost issuer 401ing every BFF order placement)
+    // is not what this sets: naming the real issuer with the internal JWKS route means
+    // Keycloak-minted tokens validate rather than being rejected.
     return {
-      KEYCLOAK_ISSUER: "",
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "",
+      KEYCLOAK_ISSUER: "https://impilo.mohcc.gov.zw/realms/impilo",
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo",
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI:
+        "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs",
     };
   }
   if (serviceId === "ndila-service") {

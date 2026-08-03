@@ -110,35 +110,33 @@ CREATE INDEX idx_complication_class_never_event
 -- standard) and a handful of complication profiles mirroring the same demonstration
 -- procedures P7/P9 already linked, each with a defensible complication-class subset.
 -- -------------------------------------------------------------------------------------
-\set tenant '00000000-0000-4000-8000-000000000001'
-
 INSERT INTO procedures.clavien_dindo_grade (tenant_id, grade_code, grade_label, description, display_order, source_citation)
 VALUES
-(:'tenant', 'I', 'Grade I', 'Any deviation from the normal postoperative course, without the need for pharmacological, surgical, endoscopic or radiological intervention.', 1, 'Dindo, Demartines, Clavien 2004, Ann Surg'),
-(:'tenant', 'II', 'Grade II', 'Requiring pharmacological treatment beyond that allowed for Grade I complications (e.g. blood transfusions, total parenteral nutrition).', 2, 'Dindo, Demartines, Clavien 2004, Ann Surg'),
-(:'tenant', 'IIIA', 'Grade IIIa', 'Requiring surgical, endoscopic or radiological intervention, not under general anaesthesia.', 3, 'Dindo, Demartines, Clavien 2004, Ann Surg'),
-(:'tenant', 'IIIB', 'Grade IIIb', 'Requiring surgical, endoscopic or radiological intervention, under general anaesthesia.', 4, 'Dindo, Demartines, Clavien 2004, Ann Surg'),
-(:'tenant', 'IVA', 'Grade IVa', 'Life-threatening complication requiring intensive/critical care management, with single-organ dysfunction.', 5, 'Dindo, Demartines, Clavien 2004, Ann Surg'),
-(:'tenant', 'IVB', 'Grade IVb', 'Life-threatening complication requiring intensive/critical care management, with multi-organ dysfunction.', 6, 'Dindo, Demartines, Clavien 2004, Ann Surg'),
-(:'tenant', 'V', 'Grade V', 'Death of the patient.', 7, 'Dindo, Demartines, Clavien 2004, Ann Surg')
+('00000000-0000-4000-8000-000000000001', 'I', 'Grade I', 'Any deviation from the normal postoperative course, without the need for pharmacological, surgical, endoscopic or radiological intervention.', 1, 'Dindo, Demartines, Clavien 2004, Ann Surg'),
+('00000000-0000-4000-8000-000000000001', 'II', 'Grade II', 'Requiring pharmacological treatment beyond that allowed for Grade I complications (e.g. blood transfusions, total parenteral nutrition).', 2, 'Dindo, Demartines, Clavien 2004, Ann Surg'),
+('00000000-0000-4000-8000-000000000001', 'IIIA', 'Grade IIIa', 'Requiring surgical, endoscopic or radiological intervention, not under general anaesthesia.', 3, 'Dindo, Demartines, Clavien 2004, Ann Surg'),
+('00000000-0000-4000-8000-000000000001', 'IIIB', 'Grade IIIb', 'Requiring surgical, endoscopic or radiological intervention, under general anaesthesia.', 4, 'Dindo, Demartines, Clavien 2004, Ann Surg'),
+('00000000-0000-4000-8000-000000000001', 'IVA', 'Grade IVa', 'Life-threatening complication requiring intensive/critical care management, with single-organ dysfunction.', 5, 'Dindo, Demartines, Clavien 2004, Ann Surg'),
+('00000000-0000-4000-8000-000000000001', 'IVB', 'Grade IVb', 'Life-threatening complication requiring intensive/critical care management, with multi-organ dysfunction.', 6, 'Dindo, Demartines, Clavien 2004, Ann Surg'),
+('00000000-0000-4000-8000-000000000001', 'V', 'Grade V', 'Death of the patient.', 7, 'Dindo, Demartines, Clavien 2004, Ann Surg')
 ON CONFLICT (tenant_id, grade_code) DO NOTHING;
 
 INSERT INTO procedures.complication_profile
     (tenant_id, profile_code, profile_name, applicable_setting, description, source_citation, status, approving_authority)
 VALUES
-(:'tenant', 'COMPLICATIONS-LAPAROTOMY', 'Laparotomy complication profile', 'THEATRE',
+('00000000-0000-4000-8000-000000000001', 'COMPLICATIONS-LAPAROTOMY', 'Laparotomy complication profile', 'THEATRE',
  'Expected complications to monitor for after an open abdominal procedure.',
  'SURGERY.CLAVIEN_DINDO.SEVERITY_GRADING', 'PUBLISHED', 'PENDING_MOHCC_RATIFICATION'),
-(:'tenant', 'COMPLICATIONS-ARTHROPLASTY', 'Joint arthroplasty complication profile', 'THEATRE',
+('00000000-0000-4000-8000-000000000001', 'COMPLICATIONS-ARTHROPLASTY', 'Joint arthroplasty complication profile', 'THEATRE',
  'Expected complications to monitor for after a joint replacement, including device-specific risks.',
  'SURGERY.CLAVIEN_DINDO.SEVERITY_GRADING', 'PUBLISHED', 'PENDING_MOHCC_RATIFICATION'),
-(:'tenant', 'COMPLICATIONS-ENDOSCOPY', 'Endoscopy complication profile', 'ENDOSCOPY',
+('00000000-0000-4000-8000-000000000001', 'COMPLICATIONS-ENDOSCOPY', 'Endoscopy complication profile', 'ENDOSCOPY',
  'Expected complications to monitor for after an endoscopic procedure.',
  'SURGERY.CLAVIEN_DINDO.SEVERITY_GRADING', 'PUBLISHED', 'PENDING_MOHCC_RATIFICATION'),
-(:'tenant', 'COMPLICATIONS-DIALYSIS', 'Dialysis complication profile', 'DIALYSIS',
+('00000000-0000-4000-8000-000000000001', 'COMPLICATIONS-DIALYSIS', 'Dialysis complication profile', 'DIALYSIS',
  'Expected complications to monitor for around a dialysis session and its vascular access.',
  'SURGERY.CLAVIEN_DINDO.SEVERITY_GRADING', 'PUBLISHED', 'PENDING_MOHCC_RATIFICATION'),
-(:'tenant', 'COMPLICATIONS-BEDSIDE-LINE', 'Bedside line insertion complication profile', 'BEDSIDE',
+('00000000-0000-4000-8000-000000000001', 'COMPLICATIONS-BEDSIDE-LINE', 'Bedside line insertion complication profile', 'BEDSIDE',
  'Expected complications to monitor for after a bedside line or catheter insertion.',
  'SURGERY.CLAVIEN_DINDO.SEVERITY_GRADING', 'PUBLISHED', 'PENDING_MOHCC_RATIFICATION')
 ON CONFLICT (tenant_id, profile_code) DO NOTHING;
@@ -172,17 +170,17 @@ JOIN (VALUES
   ('COMPLICATIONS-BEDSIDE-LINE', 'DEVICE_MALFUNCTION', 'II', 'Line function checks per protocol.', 'Escalate for line review or replacement.', FALSE, 20),
   ('COMPLICATIONS-BEDSIDE-LINE', 'RENAL_INJURY', 'II', 'Renal function trend where contrast or nephrotoxic exposure applies.', 'Escalate to the requesting team for renal function review.', FALSE, 30)
 ) AS x(profile_code, ctype, grade, monitoring, escalation, never_event, ord) ON x.profile_code = p.profile_code
-WHERE p.tenant_id = :'tenant'
+WHERE p.tenant_id = '00000000-0000-4000-8000-000000000001'
 ON CONFLICT DO NOTHING;
 
 -- Link the same demonstration procedures P7/P9 already sedation/recovery/aftercare-linked.
 UPDATE procedures.procedure_definition SET complication_profile = 'COMPLICATIONS-LAPAROTOMY'
-    WHERE tenant_id = :'tenant' AND definition_code IN ('PROC-LAPAROTOMY', 'PROC-CAESAREAN-SECTION');
+    WHERE tenant_id = '00000000-0000-4000-8000-000000000001' AND definition_code IN ('PROC-LAPAROTOMY', 'PROC-CAESAREAN-SECTION');
 UPDATE procedures.procedure_definition SET complication_profile = 'COMPLICATIONS-ARTHROPLASTY'
-    WHERE tenant_id = :'tenant' AND definition_code = 'PROC-TOTAL-HIP-REPLACEMENT';
+    WHERE tenant_id = '00000000-0000-4000-8000-000000000001' AND definition_code = 'PROC-TOTAL-HIP-REPLACEMENT';
 UPDATE procedures.procedure_definition SET complication_profile = 'COMPLICATIONS-ENDOSCOPY'
-    WHERE tenant_id = :'tenant' AND definition_code IN ('PROC-OGD', 'PROC-COLONOSCOPY', 'PROC-BRONCHOSCOPY');
+    WHERE tenant_id = '00000000-0000-4000-8000-000000000001' AND definition_code IN ('PROC-OGD', 'PROC-COLONOSCOPY', 'PROC-BRONCHOSCOPY');
 UPDATE procedures.procedure_definition SET complication_profile = 'COMPLICATIONS-DIALYSIS'
-    WHERE tenant_id = :'tenant' AND definition_code IN ('PROC-HAEMODIALYSIS', 'PROC-PERITONEAL-DIALYSIS');
+    WHERE tenant_id = '00000000-0000-4000-8000-000000000001' AND definition_code IN ('PROC-HAEMODIALYSIS', 'PROC-PERITONEAL-DIALYSIS');
 UPDATE procedures.procedure_definition SET complication_profile = 'COMPLICATIONS-BEDSIDE-LINE'
-    WHERE tenant_id = :'tenant' AND definition_code IN ('PROC-CENTRAL-LINE', 'PROC-ARTERIAL-LINE', 'PROC-LUMBAR-PUNCTURE');
+    WHERE tenant_id = '00000000-0000-4000-8000-000000000001' AND definition_code IN ('PROC-CENTRAL-LINE', 'PROC-ARTERIAL-LINE', 'PROC-LUMBAR-PUNCTURE');

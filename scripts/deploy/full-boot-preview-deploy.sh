@@ -380,7 +380,20 @@ elif [[ -f "$DIGESTS_VALUES" ]] && [[ "${IMPILO_DEPLOY_NO_DIGEST_PIN:-}" != "1" 
     RUNTIME_ONLY_IDS="$(bash scripts/full-boot/list-runtime-service-ids.sh)"
     RUNTIME_IMPORT_COUNT="$(echo "$RUNTIME_ONLY_IDS" | tr ',' '\n' | grep -c . || echo 0)"
     echo "--- Import images (digest-pinned: force-sync all $RUNTIME_IMPORT_COUNT runtime images into k3s) ---"
-    if [[ -x /usr/local/sbin/impilo-k3s-import-images ]] && sudo -n true 2>/dev/null; then
+    # `sudo -n true` asks whether BROAD passwordless sudo exists, which is not what this needs
+    # and is deliberately not granted here. The estate's sudoers grants NOPASSWD for exactly two
+    # binaries (impilo-k3s-import-images, impilo-k3s-list-images) and nothing else, so the broad
+    # probe fails, the script concludes sudo is unavailable, and falls through to a path that
+    # needs an interactive password — which a non-interactive deploy cannot supply. The 2026-08-03
+    # boot died there after a full image build, with the correct grant sitting unused.
+    # scripts/operator/test-k3s-image-helper.sh:54 already warns against this exact probe.
+    #
+    # Nor is `sudo -n -l <cmd>` the answer: `sudo -l` reports whether the user MAY run a command,
+    # not whether they may run it WITHOUT a password. With `(ALL : ALL) ALL` in sudoers it returns
+    # success for /bin/rm too, so it is a blanket yes. Match the NOPASSWD grant itself, which is
+    # the only form that distinguishes the two — same approach as the helper's own test script.
+    if [[ -x /usr/local/sbin/impilo-k3s-import-images ]] \
+       && sudo -n -l 2>/dev/null | grep -qE 'NOPASSWD:.*impilo-k3s-import-images'; then
       if ! sudo -n /usr/local/sbin/impilo-k3s-import-images "$IMAGE_TAG" "$REPO_PATH" \
         --runtime-only --only "$RUNTIME_ONLY_IDS" --force; then
         echo "ABORT: digest-pinned k3s runtime image force-import failed."
