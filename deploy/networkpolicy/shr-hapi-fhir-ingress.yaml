@@ -1,0 +1,111 @@
+# Containment for the SHR (HAPI FHIR), 2026-08-03.
+#
+# WHY: `GET http://hapi-fhir:8090/fhir/Patient` returned 200 with a Bundle to any pod in the
+# namespace, with no credential. Every clinical resource type answered the same way -- Observation,
+# Condition, Encounter, DocumentReference, Consent. The image is stock `hapiproject/hapi` with no
+# authentication configured, so the consent PEP in fhir-gateway-service, the trust headers and the
+# audit trail were all bypassable in a single hop from inside the namespace.
+#
+# Two things bounded the severity at the time of writing, and neither is a reason to leave it:
+#   - the "No PII in SHR" doctrine held: the Patient resources carried identifiers only, with no
+#     name / birthDate / telecom / address / gender fields present;
+#   - the store was nearly empty (Patient 2, Encounter 1, everything else 0).
+# The DATA at risk was therefore negligible. The CONTROL was absent, and anything written to the
+# SHR from now on would have been readable by anything in the namespace.
+#
+# CONTAINMENT IS NOT AUTHORIZATION. This narrows who can *reach* HAPI. It does not authenticate
+# anyone, and HAPI still has no auth of its own -- a permitted caller reaching it is still
+# unauthenticated at that hop. The durable fix is authentication on HAPI, or making
+# fhir-gateway-service the only route and closing the direct ones. This is the additive,
+# reversible half that can land today.
+#
+# ── THE CALLER SET IS MEASURED, AND IT IS NOT THE OBVIOUS ONE ────────────────────────────────
+#
+# From the callers' own container environments (RUNTIME_ENV evidence, not source defaults):
+#
+#   butano-service         HAPI_FHIR_URL                    = http://hapi-fhir:8090/fhir
+#   fhir-gateway-service   FHIR_BASE_URL                    = http://hapi-fhir:8090/fhir
+#                          FHIR_GATEWAY_DEFAULT_TARGET_BASE = http://hapi-fhir:8090/fhir
+#   experience-bff         FHIR_BASE_URL                    = http://hapi-fhir:8090/fhir
+#                          FHIR_GATEWAY_DEFAULT_TARGET_BASE = http://hapi-fhir:8090/fhir
+#
+# `butano-fhir` is NOT a caller and is NOT a front door to this server. It is a SEPARATE FHIR
+# service with its own database (`butano_fhir`) and no reference to hapi-fhir anywhere in its
+# environment. Confining HAPI to "butano-fhir and fhir-gateway-service" -- the intuitive reading --
+# would have partitioned butano-service and experience-bff from the SHR.
+#
+# ── PORT: 8080, NOT 8090 ────────────────────────────────────────────────────────────────────
+#
+# NetworkPolicy ports are the port on the POD, never the Service port. The hapi-fhir Service is
+# `port 8090 -> targetPort 8080`, and the container listens on 8080, so traffic arrives at 8080
+# however callers address it.
+#
+# The first version of this policy said 8090 -- the address every caller uses -- and therefore
+# allowed a port nothing arrives on. No ingress rule matched and ALL THREE legitimate callers were
+# partitioned from the SHR alongside the attacker. Reverted within a minute and caught only
+# because the positive controls were run; the negative control passed perfectly, so a
+# negative-only check would have reported this as a clean success.
+#
+# The cohort-1 policy this was modelled on gets away with using the Service port because
+# workforce-governance-service maps 8165 -> 8165. Copying a working policy does not carry its
+# port assumption.
+#
+# ── A FINDING THIS POLICY DELIBERATELY DOES NOT CLOSE ────────────────────────────────────────
+#
+# experience-bff holds FHIR_BASE_URL pointing straight at HAPI, so it has a route that bypasses
+# fhir-gateway-service -- and the consent PEP lives in the gateway's forward path. That is a real
+# gap, but it is a configuration and code decision, not a containment one. Removing experience-bff
+# from this allow-list would enforce it by breaking it, silently, wherever that variable is used.
+# Recorded for the trust lane instead of closed by side effect.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: shr-hapi-fhir-ingress
+  namespace: impilo-full-preview
+  labels:
+    impilo.io/trust-cohort: "shr"
+  annotations:
+    impilo.io/rollback: "kubectl -n impilo-full-preview delete networkpolicy shr-hapi-fhir-ingress"
+    impilo.io/caller-evidence: "RUNTIME_ENV in butano-service, fhir-gateway-service, experience-bff (2026-08-03)"
+spec:
+  podSelector:
+    matchLabels:
+      app: hapi-fhir
+  policyTypes:
+    - Ingress
+  ingress:
+    # The three enumerated callers.
+    - from:
+        - podSelector:
+            matchLabels:
+              app: butano-service
+        - podSelector:
+            matchLabels:
+              app: fhir-gateway-service
+        - podSelector:
+            matchLabels:
+              app: experience-bff
+      ports:
+        - protocol: TCP
+          port: 8080
+
+    # Kubelet liveness/readiness probes originate from the NODE, not from any pod, so no
+    # podSelector can match them. Selecting a pod with any ingress rule denies everything else --
+    # omitting this would fail the probe, mark the pod unready and take the SHR down while the
+    # policy looked like a security improvement.
+    #
+    # SINGLE ADDRESSES ONLY, never the pod CIDR. An earlier policy in this estate allowed
+    # 10.42.0.0/24 "for probes", which is the pod CIDR and therefore admits every pod in the
+    # cluster; the negative control caught it. A containment policy that admits everything is
+    # worse than none, because it reads as a control.
+    #
+    # 10.42.0.1 is the cni0 bridge address the kubelet's probe actually arrives from; the node's
+    # own address is included for completeness.
+    - from:
+        - ipBlock:
+            cidr: 10.42.0.1/32
+        - ipBlock:
+            cidr: 10.50.1.67/32
+      ports:
+        - protocol: TCP
+          port: 8080
