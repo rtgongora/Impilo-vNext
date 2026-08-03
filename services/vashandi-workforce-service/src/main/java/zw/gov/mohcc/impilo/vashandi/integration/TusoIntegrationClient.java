@@ -32,14 +32,30 @@ public class TusoIntegrationClient {
         this.baseUrl = baseUrl;
     }
 
+    /**
+     * Registry-plane tenant. The estate runs a deliberate two-plane tenancy model
+     * (see experience-bff PublicTenants): the facility/provider/reference master lives on
+     * the registry plane, while episodes/orders/assignments live on the care plane.
+     * A reader must declare the plane holding the rows it reads.
+     */
+    private static final String REGISTRY_PLANE_TENANT = "00000000-0000-0000-0000-000000000001";
+
     public IntegrationCheckResult validateFacility(UUID facilityId) {
         if (facilityId == null) {
             return IntegrationCheckResult.degraded("tuso", "facility_id required");
         }
         try {
-            String url = baseUrl + "/v1/internal/facilities/" + facilityId;
+            // An assignment carries the canonical facility UUID, but /v1/internal/facilities/{id}
+            // takes the NUMERIC surrogate — so passing a UUID there returned 400 Bad Request on
+            // every activation. TUSO serves UUID lookups on /by-uid/{uuid}.
+            String url = baseUrl + "/v1/internal/facilities/by-uid/" + facilityId;
+            // The facility master is REGISTRY-plane data (PublicTenants); this call is made while
+            // acting in a CARE-plane trust context. Without declaring the plane, tuso's
+            // tenant filter matches nothing and a real facility reads as invalid.
+            HttpHeaders headers = buildTrustHeaders();
+            headers.set(TrustContext.H_TENANT_ID, REGISTRY_PLANE_TENANT);
             ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
-                    url, HttpMethod.GET, new HttpEntity<>(buildTrustHeaders()),
+                    url, HttpMethod.GET, new HttpEntity<>(headers),
                     new ParameterizedTypeReference<>() {});
             return IntegrationCheckResult.live("tuso", response.getBody());
         } catch (RestClientException ex) {

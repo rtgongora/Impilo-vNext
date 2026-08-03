@@ -41,9 +41,9 @@ public class FundoWorkforceReadinessController {
     @GetMapping("/learners/{providerWorkerId}/cpd-summary")
     public ResponseEntity<Map<String, Object>> cpdSummary(
             @PathVariable String providerWorkerId,
-            @RequestParam(name = "subjectType", defaultValue = "PROVIDER") String subjectType) {
-        RequestContext ctx = RequestContextHolder.require();
-        UUID tenantId = FundoV11Support.requireTenantOrNull(ctx);
+            @RequestParam(name = "subjectType", defaultValue = "PROVIDER") String subjectType,
+            jakarta.servlet.http.HttpServletRequest request) {
+        UUID tenantId = FundoV11Support.tenantOrNull(request);
         if (tenantId == null) {
             return FundoV11Support.badRequest("TENANT_REQUIRED",
                     "X-Tenant-ID is required for training-evidence lookups");
@@ -65,9 +65,9 @@ public class FundoWorkforceReadinessController {
     public ResponseEntity<Map<String, Object>> trainingGate(
             @PathVariable String subjectId,
             @RequestParam(name = "subjectType", defaultValue = "PROVIDER") String subjectType,
-            @RequestParam(name = "courseCodes", required = false, defaultValue = "") String courseCodes) {
-        RequestContext ctx = RequestContextHolder.require();
-        UUID tenantId = FundoV11Support.requireTenantOrNull(ctx);
+            @RequestParam(name = "courseCodes", required = false, defaultValue = "") String courseCodes,
+            jakarta.servlet.http.HttpServletRequest request) {
+        UUID tenantId = FundoV11Support.tenantOrNull(request);
         if (tenantId == null) {
             return FundoV11Support.badRequest("TENANT_REQUIRED",
                     "X-Tenant-ID is required for training-gate evaluation");

@@ -37,7 +37,16 @@ public class WorkforceGovernanceIntegrationClient {
             return IntegrationCheckResult.degraded("workforce-governance", "health_id required");
         }
         try {
-            String url = baseUrl + "/v1/internal/governance/hsc-employment/by-subject/" + healthId;
+            // workforce-governance serves HSC employment as a SEARCH over employment records,
+            // not as a by-subject resource. The path used before —
+            // /v1/internal/governance/hsc-employment/by-subject/{healthId} — has never been
+            // served by any service, so this check 404'd for every worker, every time.
+            // A 404 becomes DEGRADED, and WorkforceEligibilityService treats any degraded
+            // dependency as "pending_backend: upstream dependency unavailable" — so NO
+            // assignment could ever be activated through the governed lifecycle. The gate was
+            // not refusing anyone; it could never obtain an answer.
+            String url = baseUrl + "/v1/internal/governance/hsc/employment-records/search?healthId="
+                    + java.net.URLEncoder.encode(healthId, java.nio.charset.StandardCharsets.UTF_8);
             ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
                     url, HttpMethod.GET, new HttpEntity<>(buildTrustHeaders()),
                     new ParameterizedTypeReference<>() {});

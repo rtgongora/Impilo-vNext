@@ -29,6 +29,30 @@ final class FundoV11Support {
         return tryParseUuid(ctx.tenantId());
     }
 
+    /**
+     * Tenant for controllers published on {@code /v1/internal/**}.
+     *
+     * <p>{@code V11HeaderFilter} populates {@link RequestContext} only for
+     * {@code /internal/v1/**} and {@code /external/v1/**} — it self-excludes any other path
+     * shape. The Fundo workforce-readiness endpoints are published on {@code /v1/internal/fundo}
+     * (the shape in contracts/openapi/learning.openapi.yaml, and what vashandi calls), so the
+     * filter never ran for them and {@code RequestContextHolder.require()} threw on EVERY
+     * request. Those endpoints have therefore never served a response since they were written.
+     *
+     * <p>Reads the context when a filter did populate it, and falls back to the trust header on
+     * the request when one did not — so the endpoint works on its published path without moving
+     * it (which would break the contract) and without weakening anything: absent or unparseable
+     * tenant still yields null, and the caller still answers TENANT_REQUIRED.
+     */
+    static UUID tenantOrNull(jakarta.servlet.http.HttpServletRequest request) {
+        RequestContext ctx = zw.gov.mohcc.impilo.companion.context.RequestContextHolder.get();
+        if (ctx != null) {
+            UUID fromContext = tryParseUuid(ctx.tenantId());
+            if (fromContext != null) return fromContext;
+        }
+        return request == null ? null : tryParseUuid(request.getHeader("X-Tenant-ID"));
+    }
+
     static ResponseEntity<Map<String, Object>> dataEnvelope(Map<String, Object> data) {
         return ResponseEntity.ok(Map.of("data", data));
     }

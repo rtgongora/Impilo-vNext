@@ -36,7 +36,13 @@ public class VarapiIntegrationClient {
             return IntegrationCheckResult.degraded("varapi", "provider_worker_id required");
         }
         try {
-            String url = baseUrl + "/v1/internal/providers/" + providerWorkerId + "/status-summary";
+            // VARAPI serves professional standing at /standing-summary. The path used before
+            // — /status-summary — has never existed, so this check 404'd for every provider.
+            // A 404 becomes DEGRADED, which WorkforceEligibilityService reports as
+            // "pending_backend: upstream dependency unavailable", blocking activation of every
+            // assignment on the estate. Not a missing capability: ProviderController has served
+            // getStandingSummary all along, under the name this caller never used.
+            String url = baseUrl + "/v1/internal/providers/" + providerWorkerId + "/standing-summary";
             ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
                     url, HttpMethod.GET, new HttpEntity<>(buildTrustHeaders()),
                     new ParameterizedTypeReference<>() {});
