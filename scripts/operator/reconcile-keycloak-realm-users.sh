@@ -44,6 +44,9 @@ NAMESPACE = os.environ["NAMESPACE"]
 SECRET = os.environ["SECRET"]
 DRY = os.environ.get("DRY_RUN") == "1"
 
+class _DrySkip(Exception):
+    pass
+
 def k8s_secret(key):
     out = subprocess.check_output([
         "kubectl", "get", "secret", SECRET, "-n", NAMESPACE,
@@ -75,12 +78,24 @@ def req(method, path, token=None, body=None, form=None, ok=(200, 201, 204, 409))
         print(f"FAIL {method} {path} -> {e.code} {body_text[:200]!r}", file=sys.stderr)
         raise
 
-# Prefer env creds (compose/bootstrap path); fall back to the k8s secret (estate path).
-admin_user = os.environ.get("KEYCLOAK_ADMIN") or k8s_secret("keycloak-admin-user")
-admin_pw = os.environ.get("KEYCLOAK_ADMIN_PASSWORD") or k8s_secret("keycloak-admin-password")
-_, tok = req("POST", "/realms/master/protocol/openid-connect/token", form={
-    "grant_type": "password", "client_id": "admin-cli",
-    "username": admin_user, "password": admin_pw})
+# Authenticate as a SERVICE ACCOUNT via client_credentials.
+#
+# This previously did a password grant against realms/master. That realm has ZERO users on
+# this estate (KC_BOOTSTRAP_ADMIN_* only seeds when no admin exists, so it never fired against
+# the pre-existing DB), so this script — the persona reseeder added after the 2026-07-18 incident
+# where a Keycloak reset lost every persona — could never actually run. It sits behind
+# `|| echo WARN` in full-boot-preview-deploy.sh, so it failed into a warning every boot.
+#
+# impilo-realm-reconciler carries exactly the rights used below and no more:
+#   manage-users   -> personas, reset-password, realm role-mappings
+#   manage-realm   -> realm roles, users/profile unmanagedAttributePolicy
+#   manage-clients -> the `basic` default-scope repair (restores the `sub` claim)
+# Verified against the live admin API: GET client-scopes / users / roles all 200.
+admin_client = os.environ.get("KEYCLOAK_ADMIN_CLIENT_ID", "impilo-realm-reconciler")
+admin_secret = os.environ.get("KEYCLOAK_ADMIN_CLIENT_SECRET") or k8s_secret("keycloak-reconciler-secret")
+_, tok = req("POST", f"/realms/{REALM}/protocol/openid-connect/token", form={
+    "grant_type": "client_credentials", "client_id": admin_client,
+    "client_secret": admin_secret})
 token = tok["access_token"]
 
 realm = json.load(open(REALM_JSON))
@@ -166,20 +181,28 @@ for u in realm.get("users", []):
     if any(have_attrs.get(k) != v for k, v in want_attrs.items()):
         merged = dict(have_attrs)
         merged.update(want_attrs)
-        req("PUT", f"/admin/realms/{REALM}/users/{uid}", token, body={
-            "username": username,
-            "email": u.get("email") or user.get("email"),
-            "firstName": u.get("firstName") or user.get("firstName"),
-            "lastName": u.get("lastName") or user.get("lastName"),
-            "enabled": user.get("enabled", True),
-            "emailVerified": True,
-            "attributes": merged,
-        })
-        print(f"  attributes synced: {sorted(want_attrs.keys())}")
+        if DRY:
+            print(f"  would sync attributes: {sorted(want_attrs.keys())} (dry-run)")
+        else:
+            req("PUT", f"/admin/realms/{REALM}/users/{uid}", token, body={
+                "username": username,
+                "email": u.get("email") or user.get("email"),
+                "firstName": u.get("firstName") or user.get("firstName"),
+                "lastName": u.get("lastName") or user.get("lastName"),
+                "enabled": user.get("enabled", True),
+                "emailVerified": True,
+                "attributes": merged,
+            })
+            print(f"  attributes synced: {sorted(want_attrs.keys())}")
     if password:
         try:
+            if DRY:
+                print(f"  would reset password (dry-run)")
+                raise _DrySkip()
             req("PUT", f"/admin/realms/{REALM}/users/{uid}/reset-password", token, body={
                 "type": "password", "value": password, "temporary": False})
+        except _DrySkip:
+            pass
         except Exception as e:
             # Password-history rejection means the seeded password is already
             # current — that is the reconciled state, not a failure.
