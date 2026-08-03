@@ -26,7 +26,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ExternalLink, Loader2 } from "lucide-react";
-import { SIGN_IN_COMPLETE_MESSAGE } from "@/app/auth/complete/page";
+import { SIGN_IN_COMPLETE_MESSAGE } from "@/lib/auth/sign-in-window";
 
 const POPUP_W = 480;
 const POPUP_H = 640;

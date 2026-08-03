@@ -16,9 +16,7 @@
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
-
-/** Same-origin only. The listener checks this too; both ends must agree. */
-export const SIGN_IN_COMPLETE_MESSAGE = "impilo:sign-in-complete";
+import { SIGN_IN_COMPLETE_MESSAGE } from "@/lib/auth/sign-in-window";
 
 export default function AuthCompletePage() {
   const router = useRouter();

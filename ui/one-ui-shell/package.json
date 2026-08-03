@@ -18,6 +18,7 @@
     "test:decorative-controls": "node scripts/decorative-control-check.mjs",
     "test:launchers": "node ../../scripts/frontend/check-launcher-dead-ends.mjs",
     "test:no-stubs": "node scripts/no-stub-guard.mjs",
+    "test:page-exports": "node scripts/page-export-guard.mjs",
     "test:query-honesty": "node scripts/query-honesty-guard.mjs",
     "test:copy-audit": "node scripts/impilo-id-audit.mjs",
     "e2e": "playwright test",

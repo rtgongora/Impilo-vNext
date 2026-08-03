@@ -19,6 +19,16 @@ if ! (cd ui/one-ui-shell && npm run test:no-stubs); then
 fi
 guard_pass "no-stub guard (production path scan)"
 
+# Invalid route-segment exports (blocking). A page that exports an ordinary constant type-checks
+# clean and passes every unit test, then fails `next build` — so without this the first thing to
+# catch it is a multi-minute production build, usually immediately before a deploy.
+if ! (cd ui/one-ui-shell && npm run test:page-exports); then
+  guard_fail "invalid Next.js route-segment export (would fail next build)"
+  parity_record_blocking
+  exit 1
+fi
+guard_pass "route-segment export guard"
+
 # Heuristic scan on NEW/changed production files only
 NEW_FILES=$(git diff --name-only "$BASE" HEAD -- 'ui/one-ui-shell/src/' 2>/dev/null \
   | guard_filter '\.(tsx|ts)$' || true)
