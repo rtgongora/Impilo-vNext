@@ -136,7 +136,19 @@ NAMESPACE=impilo-full-preview bash scripts/keycloak/reconcile-client-secrets.sh
 
 Then prove an actual login — a 200 on discovery is not proof that anyone can sign in:
 
-- **Web / confidential client:** `POST /internal/v1/auth/login` with a seeded persona (`vashandi.worker` / `Vashandi@2024!`) → expect 200 with `data.attributes.token`.
+- **Web / browser session:** drive the real OIDC authorization-code flow —
+  `GET /internal/v1/auth/oidc/authorize?returnTo=/home` → Keycloak login form → callback →
+  then `GET /internal/v1/auth/oidc/session` → expect `authenticated: true` with `roles` and `acr`.
+  Confirm the two negative controls, or the check proves nothing: a wrong password must re-render
+  the form and issue no code, and no session cookie must yield `401 NO_ACTIVE_SESSION`.
+
+  > **Do NOT use `POST /internal/v1/auth/login`.** This runbook used to say so, and it is now
+  > `denyAll()` by design (`2790ffd6d`, "fail closed on every legacy browser credential/token
+  > endpoint") along with `/auth/refresh`, `/auth/register`, `/auth/passkey/*`,
+  > `/auth/biometric/identify-login` and `/auth/mfa/verify`. Passwords and authenticators are set
+  > only through native Keycloak actions. A responder following the old instruction during an
+  > outage would read a **deliberate refusal as a broken auth plane** and escalate the wrong
+  > thing — precisely when time matters most.
 - **Mobile / public PKCE client:** full authorization-code + S256 flow against `impilo-mobile-citizen`, redirect `impilo-citizen://auth/callback` → expect access + refresh + id_token with `iss: https://…`.
 
 ### Working preview credentials (verified 2026-07-26)
