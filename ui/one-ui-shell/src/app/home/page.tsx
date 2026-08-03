@@ -1474,9 +1474,12 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* ═══ PERSONAL TAB — same CitizenHome surface as citizen-only users ═══ */}
+          {/* ═══ PERSONAL TAB — the citizen surface, EMBEDDED ═══
+               Rendered inside the provider shell, which already supplies the greeting and
+               the navigation. Passing embedded drops that duplicated chrome; the citizen-only
+               path above still renders the full standalone home. */}
           {activeTab === "personal" && !focusedWorkMode && (
-            <CitizenHome user={user} greeting={greeting} />
+            <CitizenHome user={user} greeting={greeting} embedded />
           )}
 
         </div>
@@ -1523,9 +1526,26 @@ function normalizeCitizenAppointmentList(payload: unknown): Array<{ id: string; 
 function CitizenHome({
   user,
   greeting,
+  embedded = false,
 }: {
   user: AuthUser | null;
   greeting: string;
+  /**
+   * True when this surface is rendered INSIDE the provider shell's "My Life" tab rather
+   * than as a citizen's whole home.
+   *
+   * The two contexts need different chrome, and rendering the standalone version inside the
+   * shell stacked it three deep: the provider header already greets you by name, so
+   * CitizenHome's status bar greeted you a second time; and the global sidebar already
+   * carries navigation, so CitizenQuickAccessRail added a third column of links beside it.
+   * A person saw their own name twice and three separate navigations to the same places.
+   *
+   * Embedded therefore drops the chrome the host already provides — greeting and quick-nav
+   * rail — and keeps only what is genuinely this surface's own: the timeline and the
+   * personal widgets. Nothing is removed from the citizen-only path, which still renders
+   * the full standalone home.
+   */
+  embedded?: boolean;
 }) {
   const patientAnchor = (user?.healthId && user.healthId.trim()) || user?.id || "";
 
@@ -1577,7 +1597,10 @@ function CitizenHome({
 
   return (
     <>
-      {/* ── Top status bar ────────────────────────────────────────── */}
+      {/* ── Top status bar ──────────────────────────────────────────
+           Suppressed when embedded: the provider shell's header has already greeted this
+           person by name directly above, and repeating it is the double greeting. */}
+      {!embedded && (
       <div className="mb-4 flex -mx-3 items-center justify-between border-b border-border bg-card px-3 py-2.5 md:-mx-4 md:px-4">
         <div className="flex items-center gap-3 min-w-0">
           <div className="h-9 w-9 rounded-full bg-primary-soft flex items-center justify-center shrink-0">
@@ -1605,11 +1628,19 @@ function CitizenHome({
         </div>
       </div>
 
-      {/* ── 3-column grid ─────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr_260px] gap-5">
+      )}
 
-        {/* ════ LEFT COLUMN — Quick nav ════ */}
-        <CitizenQuickAccessRail className="hidden lg:block" />
+      {/* ── Column grid ────────────────────────────────────────────
+           Two columns when embedded, three standalone. The left quick-nav rail is the third
+           navigation on the provider shell — global sidebar, tab strip, then this — all
+           pointing at the same places. The host already navigates; this surface keeps only
+           the timeline and its own widgets. */}
+      <div className={embedded
+        ? "grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-5"
+        : "grid grid-cols-1 lg:grid-cols-[220px_1fr_260px] gap-5"}>
+
+        {/* ════ LEFT COLUMN — Quick nav (standalone citizen home only) ════ */}
+        {!embedded && <CitizenQuickAccessRail className="hidden lg:block" />}
 
         {/* ════ CENTRE COLUMN — Timeline ════ */}
         <main className="min-w-0 space-y-4">
