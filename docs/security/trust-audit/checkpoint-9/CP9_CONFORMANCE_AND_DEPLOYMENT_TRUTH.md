@@ -201,6 +201,37 @@ to progressive step-up before a server-side gate exists would remove the sole 2F
 subtler version of it in the correction. A facet name that cannot be disproved by a single
 observation will keep flattering whatever is underneath it, and "reachable" was still such a name.
 
+## Third correction — the bypass counts in this report are stale, and in the estate's favour
+
+Measured 2026-08-03, after the fullboot: **`IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS` is no longer
+set on any workload.** The boot regenerated the deployments from a values file that does not set
+it; the code default is `false`; so the enforcing chain now applies almost everywhere.
+
+Confirmed by probe rather than by reading config — three services that previously returned `404`
+(request reached the application) now return `401`:
+
+```
+vito-service /v1/patients 401 · rules-service /v1/rules 401 · guidance-service /v1/guidance 401
+```
+
+So "95 of 98 workloads bypassed" above is **wrong as of 2026-08-03**. It is left in place rather
+than edited, because the number was true when written and the correction is more informative than a
+silent overwrite.
+
+**This is the CP8 end-state reached by accident, not by the gated process.** None of the gates this
+report scores — caller enumeration, shadow parity, recorded rollback digests, performance baseline —
+were run for it. The fallout is already in the log: `a9bbfd220`, *"28 services expected the internal
+issuer; every S2S call 401'd 'iss not valid'"*, is exactly the breakage those gates exist to
+prevent, found and repaired reactively rather than predicted.
+
+It should not be read as CP8 complete. An unratified posture change that happened to survive is not
+the same as a cohort enforced against evidence, and the difference is invisible in any metric this
+report computes — which is the report's own recurring lesson, now applied to itself for the third
+time.
+
+The 16 services with no security chain are **unaffected**: they carry no flag, so nothing the boot
+did could have closed them. They remain the dominant gap.
+
 ## Recorded doctrine decisions
 
 ### TOTP algorithm: HmacSHA256 → HmacSHA1 (PO decision, 2026-08-03, `ccd2ed326`)
