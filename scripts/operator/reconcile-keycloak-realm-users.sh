@@ -188,17 +188,36 @@ if skip_reason:
     print(f"WARN {SUB_MARKER}: access tokens remain sub-less; jwt.getSubject() is null, "
           f"so every session carries user.id=null and the person anchor is anonymous")
 else:
-    for client_name in ("experience-ui", "impilo-backend", "integration-test"):
-            _, cl = req("GET", f"/admin/realms/{REALM}/clients?clientId={urllib.parse.quote(client_name)}", token)
-            client = (cl or [None])[0]
-            if not client:
-                continue
-            if "basic" not in (client.get("defaultClientScopes") or []):
-                if DRY:
-                    print(f"client {client_name}: would add default scope 'basic' (dry-run)")
-                else:
-                    req("PUT", f"/admin/realms/{REALM}/clients/{client['id']}/default-client-scopes/{basic_id}", token)
-                    print(f"client {client_name}: default scope 'basic' added (sub claim restored)")
+    # EVERY openid-connect client, not a named subset. The three previously named here
+    # were a guess at the affected set; measurement says every client in the realm mints
+    # sub-less tokens. `sub` in a token is never harmful, and a hand-maintained list is
+    # one more thing to drift. On a service-account client `sub` resolves to that account's
+    # own UUID — useful for audit correlation, harmless otherwise.
+    _, all_clients = req("GET", f"/admin/realms/{REALM}/clients", token)
+    for client in (all_clients or []):
+        if client.get("protocol") not in (None, "openid-connect"):
+            continue
+        cname = client.get("clientId")
+        if "basic" in (client.get("defaultClientScopes") or []):
+            continue
+        if DRY:
+            print(f"client {cname}: would add default scope 'basic' (dry-run)")
+        else:
+            req("PUT", f"/admin/realms/{REALM}/clients/{client['id']}/default-client-scopes/{basic_id}", token)
+            print(f"client {cname}: default scope 'basic' added (sub claim restored)")
+
+    # Realm-level default. Without this, attaching above fixes today's clients and every
+    # client created AFTERWARDS still mints sub-less tokens — including the per-workload
+    # clients provisioned for each service. `master` carries `basic` in its realm default
+    # list, which is why clients created there inherit it; `impilo` does not. Fixing the
+    # instance without this would leave the class.
+    _, realm_defaults = req("GET", f"/admin/realms/{REALM}/default-default-client-scopes", token)
+    if not any(sc.get("name") == "basic" for sc in (realm_defaults or [])):
+        if DRY:
+            print("realm: would add 'basic' to default-client-scopes (dry-run)")
+        else:
+            req("PUT", f"/admin/realms/{REALM}/default-default-client-scopes/{basic_id}", token)
+            print("realm: 'basic' added to default-client-scopes — new clients inherit sub")
 
 created = updated = skipped = 0
 for u in realm.get("users", []):
