@@ -24,7 +24,7 @@ and is not touching it. Canonical branch: `claude/staging-ux-orchestration-remed
 
 ```
 deployments            117      all ready
-netpol                 1        cohort-1 only
+netpol                 3        cohort-1, SHR (hapi-fhir), PACS (orthanc)
 OPA mode               SHADOW
 Envoy ext_authz        OFF      (matches in the running config are comments)
 Keycloak realm         otp HmacSHA1/6/30; scopes basic + acr present; 51 users, 35 with OTP
@@ -169,8 +169,14 @@ clinical data.
   in place deliberately; deleting it is a separate decision.
 - `butano-service` advertises `hapi-fhir`'s address as its own server address, though they are
   different FHIR servers with different databases. Very likely a config error. Not investigated.
-- `orthanc` answers `/patients` unauthenticated (empty at the time of measurement) and has **no**
-  NetworkPolicy. Same class as the HAPI finding, unaddressed.
+- `orthanc` is now contained too — `deploy/networkpolicy/pacs-orthanc-ingress.yaml`, admitting
+  `experience-bff` and `pacs-adapter-service` on 8042 only. Both verified as real clients by
+  call-direction (`PacsController`, `OrthancClient`), not by env name-match. **The DICOM port 4242
+  is deliberately not allowed**: no in-cluster DICOM client exists (every `4242` hit in
+  `services/*/src/main` is a facility code such as `ZW014242` in seed SQL), and the Service is
+  ClusterIP so nothing outside could reach it either. If a modality integration is added, add 4242
+  with its caller enumerated — do not widen to all ports for one device.
+  **Orthanc still has no authentication of its own**, so §4a's sequence applies here as well.
 
 ## 5. Constraints still in force
 

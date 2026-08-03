@@ -1,0 +1,90 @@
+# Containment for the PACS store (Orthanc), 2026-08-03.
+#
+# WHY: `GET http://orthanc:8042/patients` returned 200 to any pod in the namespace with no
+# credential. Same class as the SHR finding in `shr-hapi-fhir-ingress.yaml`, found in the same
+# sweep. Orthanc holds imaging studies -- DICOM carries patient demographics in the pixel data
+# headers themselves, so unlike the SHR there is no "identifiers only" bound to fall back on.
+#
+# The store was empty when measured, so nothing was disclosed. The control was absent, which is the
+# part that matters: anything ingested afterwards would have been readable by every workload.
+#
+# CONTAINMENT IS NOT AUTHENTICATION. Orthanc's own auth is not configured; a permitted caller still
+# reaches it with no credential. See `docs/security/trust-audit/NEXT_SESSION_BRIEF.md` §4a for why
+# the authentication half is a sequence rather than a switch -- the same reasoning applies here.
+#
+# ── CALLERS: TWO, BOTH VERIFIED AS CLIENTS ──────────────────────────────────────────────────
+#
+#   experience-bff         ORTHANC_BASE_URL     = http://orthanc:8042
+#                          ORTHANC_DICOMWEB_URL = http://orthanc:8042/dicom-web
+#   pacs-adapter-service   ORTHANC_BASE_URL     = http://orthanc:8042
+#
+# Direction checked in source, not inferred from the env name -- the SHR policy initially admitted
+# butano-service on exactly that mistake, where the URL turned out to be a self-advertised server
+# address rather than a client target:
+#
+#   - experience-bff: `PacsController` proxies to Orthanc deliberately, and says so -- "This keeps
+#     Orthanc unexposed to the public", with a C-STORE style ingest posting raw application/dicom
+#     to Orthanc `/instances` and a study list off its REST API. A real client.
+#   - pacs-adapter-service: `OrthancClientConfig` builds a dedicated `orthancRestTemplate` and
+#     `OrthancClient` is the live consumer. A real client.
+#
+# ── THE DICOM PORT (4242) IS DELIBERATELY NOT ALLOWED ───────────────────────────────────────
+#
+# The Service exposes 8042 (REST) and 4242 (DICOM). Selecting this pod denies everything not
+# explicitly allowed, so omitting 4242 closes it to in-cluster traffic.
+#
+# That is intended. No in-cluster DICOM client exists -- a search for 4242 across `services/*/src/main`
+# returns only false positives (facility codes such as `ZW014242` in seed SQL). The Service is
+# ClusterIP, so nothing outside the cluster can reach 4242 today either; an imaging modality would
+# need an explicit route that does not exist. An unused DICOM listener reachable by every pod is
+# exactly the exposure this closes.
+#
+# If a modality integration is added later, add 4242 here with its caller enumerated. Do not widen
+# this to "all ports" to make one device work.
+#
+# Ports are the POD's ports. Orthanc maps 8042->8042 and 4242->4242, so the numbers coincide here --
+# but see the SHR policy, where the Service maps 8090->8080 and using the Service port partitioned
+# every legitimate caller while the negative control still passed.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: pacs-orthanc-ingress
+  namespace: impilo-full-preview
+  labels:
+    impilo.io/trust-cohort: "pacs"
+  annotations:
+    impilo.io/rollback: "kubectl -n impilo-full-preview delete networkpolicy pacs-orthanc-ingress"
+    impilo.io/caller-evidence: "PacsController and OrthancClient are live outbound clients; verified by call-direction, not env name-match (2026-08-03)"
+spec:
+  podSelector:
+    matchLabels:
+      app: orthanc
+  policyTypes:
+    - Ingress
+  ingress:
+    # The two enumerated callers, REST port only.
+    - from:
+        - podSelector:
+            matchLabels:
+              app: experience-bff
+        - podSelector:
+            matchLabels:
+              app: pacs-adapter-service
+      ports:
+        - protocol: TCP
+          port: 8042
+
+    # Kubelet liveness/readiness probes arrive from the NODE, not from a pod, so no podSelector can
+    # match them. Both probes are httpGet on 8042 (verified), so omitting this would fail them,
+    # mark Orthanc unready and take the PACS store down while the policy looked like a hardening.
+    #
+    # SINGLE ADDRESSES ONLY, never the pod CIDR -- 10.42.0.1 is the cni0 bridge the probe actually
+    # arrives from, plus the node's own address.
+    - from:
+        - ipBlock:
+            cidr: 10.42.0.1/32
+        - ipBlock:
+            cidr: 10.50.1.67/32
+      ports:
+        - protocol: TCP
+          port: 8042
