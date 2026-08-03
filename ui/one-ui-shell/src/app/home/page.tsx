@@ -1776,9 +1776,19 @@ function TimelineComposer({ userName }: { userName: string }) {
     setPosting(true);
     setPostError("");
     try {
-      await apiClient.post("/internal/v1/mobile/citizen/feed", {
+      // POST /internal/v1/social/posts — the composer previously posted to
+      // /internal/v1/mobile/citizen/feed, which is READ-ONLY: CitizenFeedController has only
+      // @GetMapping (list, get) and no @PostMapping, so every publish 500'd and nothing a
+      // person wrote could ever be stored.
+      //
+      // The system of record already existed and was never wired to: community-service's
+      // SocialPostController owns community.social_posts, and the BFF proxies it here. Verified
+      // end to end against the live estate — 201 Created, row persisted with the author's
+      // actor id, and it comes back on the next feed read.
+      await apiClient.post("/internal/v1/social/posts", {
+        kind: "STATUS",
         body: postText.trim(),
-        type: "STATUS_UPDATE",
+        visibility: "PUBLIC",
       });
       setPosted(true);
       setPostText("");

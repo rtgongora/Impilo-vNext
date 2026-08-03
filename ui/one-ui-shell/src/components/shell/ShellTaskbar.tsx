@@ -237,7 +237,13 @@ export function ShellTaskbar() {
         style={{ paddingBottom: `max(${SHELL_DOCK_BOTTOM_INSET_PX}px, env(safe-area-inset-bottom, 0px))` }}
       >
         <nav
-          className="shell-floating-dock pointer-events-auto flex w-full max-w-[min(96vw,90rem)] items-center gap-0.5 overflow-x-auto rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface)]/92 px-1.5 text-foreground shadow-impilo-floating backdrop-blur-xl sm:gap-1 sm:px-2"
+          // No overflow-x-auto here. The dock has ONE scrolling region — the open-tasks list
+          // below, which is flex-1 min-w-0 and absorbs the overflow by design. Scrolling the
+          // OUTER container as well gave the bar two scroll contexts, so the fixed regions
+          // (actions, pinned apps, the PIN DEFAULTS control) slid across the task list instead
+          // of staying anchored, and the two collided in the bottom-right corner.
+          // overflow-hidden keeps the rounded corners clipping their children.
+          className="shell-floating-dock pointer-events-auto flex w-full max-w-[min(96vw,90rem)] items-center gap-0.5 overflow-hidden rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface)]/92 px-1.5 text-foreground shadow-impilo-floating backdrop-blur-xl sm:gap-1 sm:px-2"
           style={{ height: SHELL_DOCK_HEIGHT_PX }}
           role="navigation"
           aria-label="Experience shell"
