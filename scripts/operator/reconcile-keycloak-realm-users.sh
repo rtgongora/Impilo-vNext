@@ -110,6 +110,35 @@ for role in sorted(seeded_roles - have_roles):
         req("POST", f"/admin/realms/{REALM}/roles", token, body={"name": role})
 
 # --- Realm preconditions for identity-anchor claims -------------------------
+# 0) TOTP algorithm. This realm was on HmacSHA256 — stronger on paper and unusable in
+#    practice: Google Authenticator, by far the most widely installed authenticator,
+#    IGNORES the `algorithm` parameter in the otpauth:// URI and always computes SHA1.
+#    Against a SHA256 realm it produces well-formed codes that are ALWAYS WRONG, with no
+#    error anyone can act on — the code simply never works, which is indistinguishable
+#    from a broken login. Aegis, FreeOTP and 1Password honour the parameter; Google
+#    Authenticator does not, and it is what demo and field staff actually have installed.
+#
+#    PO decision 2026-08-03: enrolment must work with the authenticator people actually
+#    hold. SHA1 is RFC 6238's default and the near-universal interop baseline; the secret
+#    stays per-user, 20 chars, and rotates on re-enrolment. Recorded rather than drifted
+#    into: see docs/runbooks/keycloak-auth-outage-runbook.md.
+#
+#    IF YOU CHANGE THIS AGAIN: flipping otpPolicyAlgorithm INVALIDATES EVERY ENROLLED
+#    FACTOR. Same stored secret, different HMAC — every existing authenticator silently
+#    emits wrong codes and every enrolled person loses their second factor. Changing it
+#    means re-enrolling everyone, and that cost grows with each enrolment.
+_, realm_cfg = req("GET", f"/admin/realms/{REALM}", token)
+if realm_cfg is not None and realm_cfg.get("otpPolicyAlgorithm") != "HmacSHA1":
+    was = realm_cfg.get("otpPolicyAlgorithm")
+    if DRY:
+        print(f"realm: would set otpPolicyAlgorithm=HmacSHA1 (currently {was}) — "
+              f"this INVALIDATES every already-enrolled factor (dry-run)")
+    else:
+        realm_cfg["otpPolicyAlgorithm"] = "HmacSHA1"
+        req("PUT", f"/admin/realms/{REALM}", token, body=realm_cfg)
+        print(f"realm: otpPolicyAlgorithm=HmacSHA1 (was {was}) — "
+              f"every previously enrolled factor must now be re-enrolled")
+
 # 1) Keycloak 24+ declarative user profile drops "unmanaged" attributes silently
 #    unless the policy allows them. Our identity anchors (health_id, provider_id,
 #    facility_id, tenant_id, cpid) are unmanaged — enable ADMIN_EDIT so admin API

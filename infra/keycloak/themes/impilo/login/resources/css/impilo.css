@@ -86,3 +86,25 @@ a:focus {
   .impilo-continue-as__label { color: #9fb0be; }
   .impilo-continue-as__identity { color: #eef4f8; }
 }
+
+/* Later steps (one-time code, credential chooser) carry the identity forward. Keycloak's
+   template.ftl renders it as a readonly TEXT INPUT plus a "Restart login" icon button —
+   a different shape from the password step's "Continuing as" block, which made two
+   consecutive steps of one journey look unrelated. Suppress the stock block and let the
+   step template render the same block the password step uses.
+
+   :has() rather than forking template.ftl (200+ lines, moves every Keycloak release).
+   A browser without :has() shows the old block too: redundant, never broken. */
+.pf-v5-c-form__group:has(#kc-attempted-username) { display: none; }
+
+/* One line of plain guidance under the identity block, so a step states what it wants. */
+.impilo-step-hint {
+  margin: 0 0 1rem;
+  color: #4a5560;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+@media (prefers-color-scheme: dark) {
+  .impilo-step-hint { color: #9fb0be; }
+}
