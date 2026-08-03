@@ -113,6 +113,65 @@ exists would remove the sole 2FA path on the estate.
 
 ---
 
+## 4a. Authentication on HAPI — the sequence, and why it cannot be one step
+
+**Current state (2026-08-03).** `hapi-fhir` has **no authentication of its own** and cannot easily
+be given any: it is stock `hapiproject/hapi:v7.4.0`, and this estate has no Docker Hub egress, so
+neither a custom image carrying an `AuthorizationInterceptor` nor a pulled auth-proxy image is a
+given. What exists today is *containment only* —
+`deploy/networkpolicy/shr-hapi-fhir-ingress.yaml` admits exactly one pod selector,
+`fhir-gateway-service`, plus the kubelet probe addresses.
+
+**Containment is not authentication.** The permitted caller reaches HAPI with no credential at all.
+If that one policy is deleted, or a workload is relabelled `app: fhir-gateway-service`, the SHR is
+open again. The policy is a good control and it is not the control.
+
+### Why enabling auth today would take the SHR down
+
+`GatewayForwardService.forward(...)` is the **only** outbound client of HAPI in the estate, and it
+attaches **no `Authorization` header** — there is no `Bearer`, no `setBearerAuth`, no token
+plumbing in it at all. Switch HAPI to rejecting unauthenticated requests and the gateway's forwards
+begin failing, which is the clinical read/write path.
+
+### The sequence
+
+1. **Make `fhir-gateway-service` present a workload token when forwarding.** `WorkloadTokenProvider`
+   in `services/shared-core/.../auth/` exists from CP4.3 for exactly this — cached, audience-restricted,
+   fail-closed, with a jittered refresh. This is the prerequisite and it is self-contained: adding a
+   header that nothing yet checks changes no behaviour, so it can land and bake on its own.
+2. **Put a validating layer in front of HAPI in LOG-ONLY mode**, and confirm from its logs that
+   tokens actually arrive on real traffic. Same shadow-then-enforce discipline as the OPA work in
+   CP4.5. Do not skip this: step 1 landing green in tests is not evidence that a token reaches HAPI
+   on the live path.
+3. **Flip to enforcing**, with the prior state recorded for rollback, and verify BOTH directions —
+   the gateway still forwards successfully, and a direct unauthenticated request is refused.
+
+Compressed into one move, step 3 fails because step 1 has not happened, and the failure lands on
+clinical data.
+
+### Two traps specific to this work
+
+- **NetworkPolicy ports are POD ports, never Service ports.** `hapi-fhir` maps Service `8090` →
+  container `8080`. A policy written against 8090 partitions every legitimate caller — and the
+  *negative* control still passes, because the non-caller is blocked exactly as intended. **Always
+  run positive controls.** This already happened once; it was caught and reverted inside a minute.
+- **An env var naming a host is not evidence of a call.** `butano-service` was in the allow-list on
+  a `RUNTIME_ENV` name match. Its `HAPI_FHIR_URL` binds to `hapi.fhir.server-address`, used only in
+  `HardcodedServerAddressStrategy` — the address HAPI advertises for *itself*. Outbound
+  advertisement, not a client target. **Check which direction the URL points before counting a
+  caller.**
+
+### Also open, adjacent
+
+- `experience-bff`'s `FHIR_BASE_URL` still points at HAPI. The route is dead — `FhirPublisher` is
+  `@Component` but never injected, write-only, and `ServiceEndpoints.fhirBaseUrl()` is never read —
+  and it is now network-denied, so it fails closed if anyone wires it up. `FhirPublisher` was left
+  in place deliberately; deleting it is a separate decision.
+- `butano-service` advertises `hapi-fhir`'s address as its own server address, though they are
+  different FHIR servers with different databases. Very likely a config error. Not investigated.
+- `orthanc` answers `/patients` unauthenticated (empty at the time of measurement) and has **no**
+  NetworkPolicy. Same class as the HAPI finding, unaddressed.
+
 ## 5. Constraints still in force
 
 Withheld: production deployment · destructive fullboot · namespace/PVC/database/queue/user/audit

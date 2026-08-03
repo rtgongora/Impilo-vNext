@@ -23,9 +23,24 @@
 #
 # From the callers' own container environments (RUNTIME_ENV evidence, not source defaults):
 #
-#   butano-service         HAPI_FHIR_URL                    = http://hapi-fhir:8090/fhir
 #   fhir-gateway-service   FHIR_BASE_URL                    = http://hapi-fhir:8090/fhir
 #                          FHIR_GATEWAY_DEFAULT_TARGET_BASE = http://hapi-fhir:8090/fhir
+#
+# `GatewayForwardService.forward(...)` is the only outbound client of HAPI in the estate.
+#
+# butano-service was in an earlier version of this allow-list AND IT IS NOT A CALLER. Its
+# HAPI_FHIR_URL binds to `hapi.fhir.server-address`, consumed by
+# `FhirRestfulServlet` only as `HardcodedServerAddressStrategy(serverAddress)` -- the address HAPI
+# advertises for ITSELF in Bundle links and fullUrl fields. It is outbound advertisement, not a
+# client target. butano's only RestTemplate calls a terminology service, and its source contains no
+# reference to the hapi-fhir host at all.
+#
+# I enumerated it as a caller from a RUNTIME_ENV name match without checking which DIRECTION the
+# URL pointed. "This service's environment mentions X" is not "this service calls X" -- a
+# self-advertised base URL looks identical to a client target in an env dump.
+#
+# (Separately: butano advertising hapi-fhir's address as its own is very likely a config error,
+# since the two are different FHIR servers with different databases. Not fixed here.)
 #
 # experience-bff ALSO carries FHIR_BASE_URL and FHIR_GATEWAY_DEFAULT_TARGET_BASE pointing straight
 # at HAPI, and is deliberately NOT in the allow-list -- see below.
@@ -81,7 +96,7 @@ metadata:
     impilo.io/trust-cohort: "shr"
   annotations:
     impilo.io/rollback: "kubectl -n impilo-full-preview delete networkpolicy shr-hapi-fhir-ingress"
-    impilo.io/caller-evidence: "RUNTIME_ENV in butano-service, fhir-gateway-service, experience-bff (2026-08-03)"
+    impilo.io/caller-evidence: "GatewayForwardService is the sole outbound client; verified by call-direction, not env name-match (2026-08-03)"
 spec:
   podSelector:
     matchLabels:
@@ -91,9 +106,6 @@ spec:
   ingress:
     # The three enumerated callers.
     - from:
-        - podSelector:
-            matchLabels:
-              app: butano-service
         - podSelector:
             matchLabels:
               app: fhir-gateway-service
