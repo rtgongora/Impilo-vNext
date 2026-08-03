@@ -201,7 +201,13 @@ public class TusoServiceClient {
             String url = numeric
                     ? baseUrl + "/v1/internal/facilities/" + facilityUuid
                     : baseUrl + "/v1/internal/facilities/by-uid/" + facilityUuid;
-            ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+            // The facility master is REGISTRY-plane data, and this is called while composing a
+            // CARE-plane work context. Without declaring the plane, tuso's
+            // `WHERE tenant_id = ctx.tenantId()` matches nothing and the facility reads as
+            // unknown — the standing cross-plane-read defect, not a missing facility.
+            // See PublicTenants: the two planes are deliberate and collapsing them is out of scope.
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                    url, org.springframework.http.HttpMethod.GET, registryPlaneRequest(), JsonNode.class);
             JsonNode data = extractData(response);
             if (data == null || data.isMissingNode() || data.isNull()) {
                 return null;
