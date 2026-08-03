@@ -30,7 +30,9 @@ Of the three enforcing services, two predate this programme. **CP7 retired exact
 
 | Facet | SOURCE | TEST | DEPLOYED | ENFORCED |
 |---|:--:|:--:|:--:|:--:|
-| Authentication (Keycloak, PKCE, browser + mobile) | ✅ | ✅ | ✅ | ⚠️ 3 of 98 |
+| Authentication — a person signs in | ✅ | ✅ | ✅ | ⚠️ 3 of 98 |
+| Authentication — the session carries a subject | ✅ | ✅ | ✅ *(fixed 2026-08-03)* | n/a |
+| Authentication — AAL2 step-up is reachable | ✅ | ✅ | ✅ *(fixed 2026-08-03)* | n/a |
 | Identity assurance / step-up decisioning | ✅ | ✅ | ✅ | ❌ |
 | Workload identity — registry (130 rows) | ✅ | ✅ | ✅ | n/a |
 | Workload identity — ServiceAccounts | ✅ | ✅ | ✅ 108 | ❌ not yet bound as identity |
@@ -116,6 +118,55 @@ This is the status the evidence supports. It is not "Tshepo complete", and no fa
 be quoted without its layer.
 
 ---
+
+## Correction — the authentication facet was wrong when this report was written
+
+This report originally carried one line, `Authentication (Keycloak, PKCE, browser + mobile)`, marked
+`PREVIEW_DEPLOYED ✅`. That was true and misleading, and it is the most important error in the
+document. People genuinely signed in. Two things they could not do were invisible behind that tick:
+
+**1. Every session carried a null person anchor.** The `impilo` realm was imported from a pre-25
+Keycloak export and had **no `basic` client scope**, which is where Keycloak 25 moved the `sub`
+claim. So access tokens carried no subject, `jwt.getSubject()` returned null, and every
+`/auth/oidc/session` response returned `"user": {"id": null}`. Authentication succeeded and produced
+an anonymous anchor.
+
+**2. AAL2 was unreachable, so no provider could ever reach a work intent.** The same export lacked
+the **`acr` client scope**, so tokens carried no `acr` claim at all. `OidcSessionService.aalRank()`
+scored the absent claim 0, `0 < 2`, and the BFF refused every work-intent callback with
+`OIDC_AAL_NOT_SATISFIED` — *after* Keycloak had correctly performed the OTP step-up. **The
+authentication succeeded and was discarded at the last hop.** The realm's `AuthnContextClassRef`
+scope looks like the equivalent and is not: it is a `saml-authn-context-class-ref-mapper` and emits
+nothing for OIDC.
+
+Both were fixed on 2026-08-03 (`4e18a489f`, `d6405084b`), verified against the live realm:
+
+```
+scopes:          basic -> sub (oidc-sub-mapper), auth_time (oidc-usersessionmodel-note-mapper)
+                 acr   -> acr loa level (oidc-acr-mapper)
+attached:        basic 20 clients, acr 19  (delta = bearer-only realm-management, mints no tokens)
+realm defaults:  AuthnContextClassRef acr basic email impilo-tenant openid profile
+```
+
+```
+citizen.moyo  user.id 4a6c7696-46b2-4f90-8194-f0ee1cc1d4dc  acr urn:impilo:aal1  [CITIZEN]
+dr.mapfumo    user.id e80a298e-522e-476b-b379-27e58a85dcc2  acr urn:impilo:aal2  [CLINICIAN]
+```
+
+The subject is the Keycloak user UUID — opaque, never a national identifier, which is the direction
+the PII work wants.
+
+**What this says about the four-layer vocabulary.** `PREVIEW_DEPLOYED` answers "is it running",
+not "does it do what its name implies". A facet can be deployed, exercised daily and still be
+missing the thing it exists to provide. Both defects were found by capturing a real token and
+reading a real session response — neither was visible in source, in tests, or in any status this
+report could have computed. **Facet names must be narrow enough to be falsifiable**: the split
+above replaces "Authentication" with three claims that can each be individually disproved by one
+observation, which is why the row is now three rows.
+
+The realm-defaults step is the one that stops recurrence — without it, 20 clients would have been
+fixed and every client created later would have inherited the same silence, including the
+per-workload clients CP4.4 provisions and CP8 multiplies.
 
 ## Recorded doctrine decisions
 
