@@ -12,7 +12,8 @@ import { type FormEvent, type ReactNode, useState } from "react";
 import { ArrowRight, BadgeCheck, Building2, KeyRound, Stethoscope } from "lucide-react";
 import { INTENT_QUERY_PARAM } from "@/lib/gateway-intent";
 import { safePublicHref } from "@/components/public/ContinueWithoutSignIn";
-import { beginOidcLogin } from "@/lib/auth/web-session";
+import { buildOidcLoginUrl } from "@/lib/auth/web-session";
+import { SignInModal } from "@/components/auth/SignInModal";
 
 type EntryIntent = "personal" | "work" | "regulatory";
 
@@ -32,6 +33,9 @@ export function ProgressiveAuthForm({ returnTo }: ProgressiveAuthFormProps) {
         : "personal";
   const [intent, setIntent] = useState<EntryIntent>(defaultIntent);
   const [identifier, setIdentifier] = useState("");
+  // Non-null while the in-page sign-in modal is open. The credential step runs inside it
+  // rather than as a full-page redirect, so the person never leaves the shell.
+  const [signInUrl, setSignInUrl] = useState<string | null>(null);
 
   function destination(): string {
     if (returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//")) return returnTo;
@@ -42,11 +46,13 @@ export function ProgressiveAuthForm({ returnTo }: ProgressiveAuthFormProps) {
   function submit(event: FormEvent) {
     event.preventDefault();
     if (!identifier.trim()) return;
-    beginOidcLogin({
-      returnTo: destination(),
+    // returnTo points at /auth/complete, which signals this window and closes the modal.
+    // The real destination rides along so the opener — not the frame — does the navigating.
+    setSignInUrl(buildOidcLoginUrl({
+      returnTo: `/auth/complete?to=${encodeURIComponent(destination())}`,
       loginHint: identifier,
       requiredAcr: intent === "personal" ? null : "urn:impilo:aal2",
-    });
+    }));
   }
 
   return (
@@ -106,6 +112,13 @@ export function ProgressiveAuthForm({ returnTo }: ProgressiveAuthFormProps) {
           </Link>
         </div>
       </form>
+
+      {/* Credential step, in place. Same governed OIDC flow, same identity service, same
+          trust boundary — the shell still never sees a password, because the frame is a
+          separate document it cannot read into. Only the window changed. */}
+      {signInUrl && (
+        <SignInModal authorizeUrl={signInUrl} onClose={() => setSignInUrl(null)} />
+      )}
     </div>
   );
 }
