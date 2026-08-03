@@ -35,7 +35,7 @@ fi
 
 export KEYCLOAK_URL REALM_NAME REALM_JSON NAMESPACE SECRET DRY_RUN
 python3 - <<'PY'
-import base64, json, os, subprocess, sys, urllib.parse, urllib.request
+import base64, json, os, subprocess, sys, urllib.error, urllib.parse, urllib.request
 
 URL = os.environ["KEYCLOAK_URL"].rstrip("/")
 REALM = os.environ["REALM_NAME"]
@@ -127,20 +127,46 @@ if prof is not None and prof.get("unmanagedAttributePolicy") not in ("ENABLED", 
 #    imported from older realm exports lack it, producing sub-less access tokens
 #    (the BFF then mints a random person anchor per login). Ensure each browser/
 #    backend client carries `basic` as a default scope.
-_, basic_scopes = req("GET", f"/admin/realms/{REALM}/client-scopes", token)
+#    This repair must DEGRADE, never abort: it runs before the persona loop below, so
+#    a credential lacking client rights would otherwise kill the reseed at the top.
+#    Tolerate ONLY 403 — a 404/5xx/transport failure is a different condition and must
+#    still raise. Never exit non-zero: the caller (full-boot-preview-deploy.sh:637)
+#    swallows failure behind `|| echo WARN`, so a non-zero exit here is indistinguishable
+#    from the dead state this script is climbing out of. Hence the greppable marker.
+SUB_MARKER = "UNRESOLVED_SUB_CLAIM"
+basic_scopes, skip_reason = None, None
+try:
+    _, basic_scopes = req("GET", f"/admin/realms/{REALM}/client-scopes", token)
+except urllib.error.HTTPError as e:
+    if e.code != 403:
+        raise
+    skip_reason = "credential lacks client rights (403 on client-scopes)"
+
 basic_id = next((s["id"] for s in (basic_scopes or []) if s.get("name") == "basic"), None)
-if basic_id:
+if skip_reason is None and basic_id is None:
+    # Keycloak 25 moved `sub` into the `basic` client scope. A realm imported from an
+    # older export has no such scope at all, so there is nothing to attach and this
+    # repair cannot fire. This previously fell through a bare `if basic_id:` in total
+    # silence — the block ran, found its target missing, and reported success.
+    skip_reason = ("realm has no 'basic' client scope (pre-Keycloak-25 export) — "
+                   "it must be CREATED, with a sub mapper, before it can be attached")
+
+if skip_reason:
+    print(f"WARN {SUB_MARKER}: basic-scope repair skipped — {skip_reason}")
+    print(f"WARN {SUB_MARKER}: access tokens remain sub-less; jwt.getSubject() is null, "
+          f"so every session carries user.id=null and the person anchor is anonymous")
+else:
     for client_name in ("experience-ui", "impilo-backend", "integration-test"):
-        _, cl = req("GET", f"/admin/realms/{REALM}/clients?clientId={urllib.parse.quote(client_name)}", token)
-        client = (cl or [None])[0]
-        if not client:
-            continue
-        if "basic" not in (client.get("defaultClientScopes") or []):
-            if DRY:
-                print(f"client {client_name}: would add default scope 'basic' (dry-run)")
-            else:
-                req("PUT", f"/admin/realms/{REALM}/clients/{client['id']}/default-client-scopes/{basic_id}", token)
-                print(f"client {client_name}: default scope 'basic' added (sub claim restored)")
+            _, cl = req("GET", f"/admin/realms/{REALM}/clients?clientId={urllib.parse.quote(client_name)}", token)
+            client = (cl or [None])[0]
+            if not client:
+                continue
+            if "basic" not in (client.get("defaultClientScopes") or []):
+                if DRY:
+                    print(f"client {client_name}: would add default scope 'basic' (dry-run)")
+                else:
+                    req("PUT", f"/admin/realms/{REALM}/clients/{client['id']}/default-client-scopes/{basic_id}", token)
+                    print(f"client {client_name}: default scope 'basic' added (sub claim restored)")
 
 created = updated = skipped = 0
 for u in realm.get("users", []):
