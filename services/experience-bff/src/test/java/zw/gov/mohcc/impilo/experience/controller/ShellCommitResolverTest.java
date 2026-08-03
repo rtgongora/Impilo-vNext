@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.net.InetSocketAddress;
+import java.net.http.HttpClient;
 import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -74,6 +75,19 @@ class ShellCommitResolverTest {
         // came to report the BFF's SHA as the shell's.
         assertThat(resolution.commit()).isEmpty();
         assertThat(resolution.source()).isEqualTo(ShellCommitResolver.Source.UNKNOWN);
+    }
+
+    @Test
+    void speaksHttp11BecauseTheShellCannotSurviveAnH2cUpgrade() {
+        ShellCommitResolver resolver = resolverPointedAt("http://127.0.0.1:1/api/health/version");
+        HttpClient client = (HttpClient) ReflectionTestUtils.getField(resolver, "httpClient");
+
+        // Java's default is HTTP_2, which attempts an h2c upgrade on plaintext. Measured against
+        // the live estate, one-ui-shell:3000 fails that outright (http=000) while a Spring service
+        // negotiates down to 1.1 cleanly — so this pin is load-bearing, not stylistic. A local
+        // HttpServer-backed test cannot catch its removal, hence asserting the pin directly.
+        assertThat(client).isNotNull();
+        assertThat(client.version()).isEqualTo(HttpClient.Version.HTTP_1_1);
     }
 
     @Test

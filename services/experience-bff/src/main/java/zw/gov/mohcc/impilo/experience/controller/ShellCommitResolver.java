@@ -50,7 +50,19 @@ public class ShellCommitResolver {
     /** @param commit resolved commit, possibly blank; @param source how much to trust it. */
     public record Resolution(String commit, Source source) {}
 
-    private final HttpClient httpClient = HttpClient.newBuilder().connectTimeout(TIMEOUT).build();
+    /**
+     * Pinned to HTTP/1.1 deliberately. Java's HttpClient defaults to HTTP_2, which on a plaintext
+     * connection means attempting an h2c upgrade — and the shell's Node server does not survive
+     * that. Measured in-cluster: `curl --http2` against one-ui-shell:3000 returns http=000, while
+     * the identical call against a Spring service returns 200 over 1.1, so the fault is the Next
+     * server's upgrade handling and not the network. Without this pin every probe throws and
+     * shellCommit silently stays unverified — the endpoint degrades honestly, but never actually
+     * works.
+     */
+    private final HttpClient httpClient = HttpClient.newBuilder()
+            .version(HttpClient.Version.HTTP_1_1)
+            .connectTimeout(TIMEOUT)
+            .build();
 
     @Value("${IMPILO_SHELL_VERSION_URL:http://one-ui-shell:3000/api/health/version}")
     private String shellVersionUrl;
