@@ -82,10 +82,10 @@ export function beginOidcLogin(input: {
 /**
  * The same URL beginOidcLogin would navigate to, returned instead of followed.
  *
- * Lets the caller run the identical governed flow inside the in-page sign-in modal rather
- * than as a full-page redirect. One builder for both paths on purpose: a second copy of this
- * query construction is how a modal login and a redirect login quietly stop agreeing about
- * acr or the continuation id.
+ * Lets the caller run the identical governed flow in the separate sign-in window rather than
+ * as a full-page redirect. One builder for both paths on purpose: a second copy of this query
+ * construction is how a windowed login and a redirect login quietly stop agreeing about acr
+ * or the continuation id.
  */
 export function buildOidcLoginUrl(input: {
   returnTo?: string | null;

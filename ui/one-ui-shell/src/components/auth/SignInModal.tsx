@@ -1,63 +1,78 @@
 "use client";
 
 /**
- * In-page sign-in.
+ * In-place sign-in: the credential step runs in a separate popup WINDOW while the shell stays
+ * where it was. No full-page navigation away and back.
  *
- * The credential step used to be a full-page navigation to Keycloak: the shell disappeared,
- * a differently-shaped page appeared, and coming back was another navigation. This keeps the
- * person where they were and runs the same governed flow inside a modal.
+ * WHY A POPUP WINDOW AND NOT AN IN-PAGE FRAME. Framing would work technically — Keycloak
+ * serves `frame-ancestors 'self'` and is same-origin with the shell here, so no other site
+ * can frame it and there is no clickjacking vector. The objection is not technical, it is
+ * behavioural: a modal teaches people that typing a password into a box with NO VISIBLE
+ * ORIGIN is normal, and that habit travels to sites where the box is fake and no CSP is
+ * protecting them. We would be making this page safe by making our users marginally easier to
+ * phish elsewhere. A popup keeps its own address bar, so the origin stays checkable and the
+ * habit stays a good one. Google, Apple and Microsoft all made the same call for the same
+ * reason.
  *
- * WHY A FRAME IS LEGITIMATE HERE, when framing a login page usually is not: Keycloak serves
- * `frame-ancestors 'self'` and `X-Frame-Options: SAMEORIGIN`, and on this estate Keycloak is
- * served from the SAME ORIGIN as the shell (impilo.mohcc.gov.zw/realms/...). So this is not a
- * third-party IdP being embedded — there is no cross-origin clickjacking vector, and the
- * browser enforces that. Against a differently-hosted IdP the browser would simply refuse to
- * render, which is why the load-failure fallback below is not optional.
+ * The trust boundary is unchanged either way: Keycloak hosts and verifies every credential,
+ * the shell never sees a password, and denyAll() on POST /internal/v1/auth/login still stands.
  *
- * WHAT DOES NOT CHANGE: Keycloak still hosts and verifies every credential. The shell never
- * sees a password — it cannot read into the frame, which is a different document. The
- * denyAll() on POST /internal/v1/auth/login still stands. This moves the WINDOW, not the
- * trust boundary.
- *
- * The one real cost, stated because it is easy to gloss: inside a modal a person cannot see
- * the address bar while typing a password. Same-origin makes that far weaker than the usual
- * argument, and `Open in a full page` below gives anyone who wants that check a way to take
- * it.
+ * Popup blockers are the real cost, and the reason the fallback below is not optional. This
+ * opens synchronously inside the click handler, which browsers allow; if it is blocked anyway
+ * window.open returns null and we degrade to a full-page redirect rather than leaving someone
+ * looking at a dialog that will never resolve.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { X, ExternalLink, Loader2 } from "lucide-react";
+import { ExternalLink, Loader2 } from "lucide-react";
 import { SIGN_IN_COMPLETE_MESSAGE } from "@/app/auth/complete/page";
 
-/** If the frame has not rendered by now, assume it was refused and offer the full page. */
-const FRAME_LOAD_TIMEOUT_MS = 8000;
+const POPUP_W = 480;
+const POPUP_H = 640;
 
 export function SignInModal({
   authorizeUrl,
   onClose,
 }: {
-  /** Fully-formed /internal/v1/auth/oidc/authorize URL, returnTo already pointing at /auth/complete. */
+  /** Fully-formed authorize URL, returnTo already pointing at /auth/complete. */
   authorizeUrl: string;
   onClose: () => void;
 }) {
   const router = useRouter();
-  const [loaded, setLoaded] = useState(false);
   const [blocked, setBlocked] = useState(false);
-  const frameRef = useRef<HTMLIFrameElement | null>(null);
+  const popupRef = useRef<Window | null>(null);
+  const doneRef = useRef(false);
 
   const fallbackToFullPage = useCallback(() => {
     window.location.assign(authorizeUrl);
   }, [authorizeUrl]);
 
-  // Completion signal from the framed /auth/complete page.
+  // Open once, on mount — this component is rendered from the submit handler, so it is still
+  // within the user-gesture window that browsers require.
+  useEffect(() => {
+    const left = Math.max(0, window.screenX + (window.outerWidth - POPUP_W) / 2);
+    const top = Math.max(0, window.screenY + (window.outerHeight - POPUP_H) / 3);
+    const win = window.open(
+      authorizeUrl,
+      "impilo-sign-in",
+      `popup=yes,width=${POPUP_W},height=${POPUP_H},left=${Math.round(left)},top=${Math.round(top)}`,
+    );
+    if (!win) { setBlocked(true); return; }
+    popupRef.current = win;
+    win.focus();
+    return () => { if (!doneRef.current) { try { win.close(); } catch { /* already gone */ } } };
+  }, [authorizeUrl]);
+
+  // Completion signal from /auth/complete inside the popup.
   useEffect(() => {
     function onMessage(event: MessageEvent) {
-      // Origin check is the whole security of this listener: without it any frame could
-      // claim a sign-in completed and drive this shell wherever it liked.
+      // The origin check is the whole security of this listener: without it any document
+      // could claim a sign-in completed and drive this shell wherever it liked.
       if (event.origin !== window.location.origin) return;
       const data = event.data as { type?: string; destination?: string } | null;
       if (!data || data.type !== SIGN_IN_COMPLETE_MESSAGE) return;
+      doneRef.current = true;
       const to = typeof data.destination === "string" && data.destination.startsWith("/")
         ? data.destination
         : "/home";
@@ -69,12 +84,14 @@ export function SignInModal({
     return () => window.removeEventListener("message", onMessage);
   }, [router, onClose]);
 
-  // A frame that never loads means the browser refused it. Say so and offer the full page
-  // rather than leaving someone looking at a spinner that will not resolve.
+  // Someone closing the popup without finishing is a cancellation, not a hang — dismiss so
+  // they are returned to a usable form rather than a permanent overlay.
   useEffect(() => {
-    const t = setTimeout(() => { if (!loaded) setBlocked(true); }, FRAME_LOAD_TIMEOUT_MS);
-    return () => clearTimeout(t);
-  }, [loaded]);
+    const t = setInterval(() => {
+      if (popupRef.current?.closed && !doneRef.current) { clearInterval(t); onClose(); }
+    }, 700);
+    return () => clearInterval(t);
+  }, [onClose]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
@@ -87,66 +104,41 @@ export function SignInModal({
       className="fixed inset-0 z-[11000] flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
-      aria-label="Sign in to Impilo"
+      aria-label="Signing in"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="relative w-full max-w-[480px] overflow-hidden rounded-[1.75rem] border border-border bg-card shadow-2xl">
-        <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
-          <span className="text-xs font-medium text-muted-foreground">
-            Secure sign-in · Impilo identity service
-          </span>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full p-1.5 text-muted-foreground hover:bg-neutral-100 hover:text-foreground"
-            aria-label="Close sign-in"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
+      <div className="w-full max-w-[380px] rounded-2xl border border-border bg-card p-6 text-center shadow-2xl">
         {blocked ? (
-          <div className="space-y-3 p-6 text-center">
-            <p className="text-sm font-medium text-foreground">
-              This browser would not open sign-in here
-            </p>
-            <p className="text-xs text-muted-foreground">
+          <>
+            <p className="text-sm font-medium text-foreground">Your browser blocked the sign-in window</p>
+            <p className="mt-1 text-xs text-muted-foreground">
               Nothing is wrong with your account — continue on a full page instead.
             </p>
             <button
               type="button"
               onClick={fallbackToFullPage}
-              className="mx-auto flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white"
+              className="mx-auto mt-4 flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white"
             >
               Continue to sign-in <ExternalLink className="h-3.5 w-3.5" />
             </button>
-          </div>
+          </>
         ) : (
           <>
-            {!loaded && (
-              <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> Opening secure sign-in…
-              </div>
-            )}
-            <iframe
-              ref={frameRef}
-              src={authorizeUrl}
-              title="Impilo secure sign-in"
-              onLoad={() => setLoaded(true)}
-              className={loaded ? "h-[460px] w-full border-0" : "h-0 w-full border-0"}
-            />
+            <Loader2 className="mx-auto h-5 w-5 animate-spin text-primary" aria-hidden />
+            <p className="mt-3 text-sm font-medium text-foreground">Continue in the sign-in window</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Check the address bar there before entering your password. This page stays as you left it.
+            </p>
+            <div className="mt-4 flex items-center justify-center gap-4 text-xs">
+              <button type="button" onClick={() => popupRef.current?.focus()} className="font-medium text-primary hover:underline">
+                Bring it to the front
+              </button>
+              <button type="button" onClick={onClose} className="text-muted-foreground hover:text-foreground">
+                Cancel
+              </button>
+            </div>
           </>
         )}
-
-        <div className="border-t border-border px-4 py-2 text-center">
-          <button
-            type="button"
-            onClick={fallbackToFullPage}
-            className="text-xs text-muted-foreground underline hover:text-foreground"
-          >
-            Open in a full page
-          </button>
-        </div>
       </div>
     </div>
   );

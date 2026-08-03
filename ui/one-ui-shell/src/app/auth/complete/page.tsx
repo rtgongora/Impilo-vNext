@@ -1,16 +1,16 @@
 "use client";
 
 /**
- * Landing point for a sign-in that ran inside the in-page modal.
+ * Landing point for a sign-in that ran in the separate sign-in window.
  *
- * The OIDC round trip ends by redirecting to this route INSIDE the iframe. Left alone that
- * would load the whole shell inside a 460px box. Instead this page tells the opener that the
- * session is live and lets the opener do the navigating; the frame renders only a brief
- * confirmation, which is all anyone sees before the modal closes.
+ * The OIDC round trip ends by redirecting to this route inside that window. Left alone it
+ * would load the entire shell there — a second, orphaned copy of the app. Instead this page
+ * tells the window that opened it that the session is live, lets THAT window do the
+ * navigating, and closes itself. All anyone sees here is a brief confirmation.
  *
- * If it is ever reached UNFRAMED — popup blocked, someone opening the URL directly, a
- * redirect chain that lost the frame — it falls back to a normal navigation, so the route is
- * never a dead end.
+ * If it is ever reached as an ordinary top-level page — popup blocked, someone opening the
+ * URL directly, a redirect chain that lost the opener — it falls back to a normal navigation,
+ * so the route is never a dead end.
  */
 
 import { useEffect } from "react";
@@ -26,14 +26,22 @@ export default function AuthCompletePage() {
   const destination = params?.get("to") || "/home";
 
   useEffect(() => {
-    const framed = typeof window !== "undefined" && window.parent !== window;
-    if (framed) {
-      // postMessage targeted at our own origin — never "*", which would leak the fact and
-      // timing of a successful sign-in to any other frame that happened to be listening.
-      window.parent.postMessage(
-        { type: SIGN_IN_COMPLETE_MESSAGE, destination },
-        window.location.origin,
-      );
+    if (typeof window === "undefined") return;
+    // A popup reaches this page as window.opener's child; a frame as window.parent's. Handle
+    // both so the completion signal does not depend on which presentation the shell chose.
+    const target = window.opener && window.opener !== window
+      ? (window.opener as Window)
+      : window.parent !== window
+        ? window.parent
+        : null;
+    if (target) {
+      // Targeted at our own origin — never "*", which would leak the fact and timing of a
+      // successful sign-in to any other document that happened to be listening.
+      target.postMessage({ type: SIGN_IN_COMPLETE_MESSAGE, destination }, window.location.origin);
+      // Close only what we opened. A directly-visited tab is not ours to close.
+      if (window.opener && window.opener !== window) {
+        setTimeout(() => window.close(), 400);
+      }
       return;
     }
     router.replace(destination);

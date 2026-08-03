@@ -33,8 +33,8 @@ export function ProgressiveAuthForm({ returnTo }: ProgressiveAuthFormProps) {
         : "personal";
   const [intent, setIntent] = useState<EntryIntent>(defaultIntent);
   const [identifier, setIdentifier] = useState("");
-  // Non-null while the in-page sign-in modal is open. The credential step runs inside it
-  // rather than as a full-page redirect, so the person never leaves the shell.
+  // Non-null while the sign-in window is open. The credential step runs there rather than as
+  // a full-page redirect, so this page stays exactly where the person left it.
   const [signInUrl, setSignInUrl] = useState<string | null>(null);
 
   function destination(): string {
@@ -46,8 +46,8 @@ export function ProgressiveAuthForm({ returnTo }: ProgressiveAuthFormProps) {
   function submit(event: FormEvent) {
     event.preventDefault();
     if (!identifier.trim()) return;
-    // returnTo points at /auth/complete, which signals this window and closes the modal.
-    // The real destination rides along so the opener — not the frame — does the navigating.
+    // returnTo points at /auth/complete, which signals this window and closes itself. The
+    // real destination rides along so this window — not the sign-in window — navigates.
     setSignInUrl(buildOidcLoginUrl({
       returnTo: `/auth/complete?to=${encodeURIComponent(destination())}`,
       loginHint: identifier,
@@ -113,9 +113,9 @@ export function ProgressiveAuthForm({ returnTo }: ProgressiveAuthFormProps) {
         </div>
       </form>
 
-      {/* Credential step, in place. Same governed OIDC flow, same identity service, same
-          trust boundary — the shell still never sees a password, because the frame is a
-          separate document it cannot read into. Only the window changed. */}
+      {/* Credential step, in a window of its own. Same governed OIDC flow, same identity
+          service, same trust boundary — the shell still never sees a password. The window
+          keeps its address bar, so the origin stays checkable before anyone types one. */}
       {signInUrl && (
         <SignInModal authorizeUrl={signInUrl} onClose={() => setSignInUrl(null)} />
       )}
