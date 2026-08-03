@@ -142,14 +142,46 @@ except urllib.error.HTTPError as e:
         raise
     skip_reason = "credential lacks client rights (403 on client-scopes)"
 
+# Mirrors verbatim what Keycloak itself creates for a current realm — read off this
+# estate's own `master` realm, which has `basic` because Keycloak created it there.
+# `sub` is the Keycloak user UUID: opaque, never a national identifier.
+BASIC_SCOPE = {
+    "name": "basic", "protocol": "openid-connect",
+    "description": "OpenID Connect scope for the sub and auth_time claims",
+    "attributes": {"include.in.token.scope": "false", "display.on.consent.screen": "false"},
+    "protocolMappers": [
+        {"name": "sub", "protocol": "openid-connect", "protocolMapper": "oidc-sub-mapper",
+         "config": {"access.token.claim": "true", "introspection.token.claim": "true"}},
+        {"name": "auth_time", "protocol": "openid-connect",
+         "protocolMapper": "oidc-usersessionmodel-note-mapper",
+         "config": {"user.session.note": "AUTH_TIME", "claim.name": "auth_time",
+                    "jsonType.label": "long", "access.token.claim": "true",
+                    "id.token.claim": "true", "introspection.token.claim": "true"}},
+    ],
+}
+
 basic_id = next((s["id"] for s in (basic_scopes or []) if s.get("name") == "basic"), None)
 if skip_reason is None and basic_id is None:
     # Keycloak 25 moved `sub` into the `basic` client scope. A realm imported from an
-    # older export has no such scope at all, so there is nothing to attach and this
-    # repair cannot fire. This previously fell through a bare `if basic_id:` in total
-    # silence — the block ran, found its target missing, and reported success.
-    skip_reason = ("realm has no 'basic' client scope (pre-Keycloak-25 export) — "
-                   "it must be CREATED, with a sub mapper, before it can be attached")
+    # older export has no such scope at all, so there is nothing to attach — which is
+    # why this previously fell through a bare `if basic_id:` in total silence, running
+    # and repairing nothing. Create it here, idempotently: creating it by hand would fix
+    # today and vanish at the next realm reset, which is the 2026-07-18 incident recurring.
+    if DRY:
+        skip_reason = "realm has no 'basic' client scope; would CREATE it and attach (dry-run)"
+    else:
+        try:
+            req("POST", f"/admin/realms/{REALM}/client-scopes", token, body=BASIC_SCOPE)
+            _, basic_scopes = req("GET", f"/admin/realms/{REALM}/client-scopes", token)
+            basic_id = next((s["id"] for s in (basic_scopes or []) if s.get("name") == "basic"), None)
+            if basic_id:
+                print("client-scope 'basic': CREATED (sub + auth_time mappers)")
+            else:
+                skip_reason = "created 'basic' client scope but could not resolve its id afterwards"
+        except urllib.error.HTTPError as e:
+            if e.code != 403:
+                raise
+            skip_reason = "credential lacks client rights (403 creating the 'basic' scope)"
 
 if skip_reason:
     print(f"WARN {SUB_MARKER}: basic-scope repair skipped — {skip_reason}")
