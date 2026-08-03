@@ -117,6 +117,37 @@ be quoted without its layer.
 
 ---
 
+## Recorded doctrine decisions
+
+### TOTP algorithm: HmacSHA256 → HmacSHA1 (PO decision, 2026-08-03, `ccd2ed326`)
+
+The `impilo` realm minted TOTP under `HmacSHA256`. **Google Authenticator ignores the `algorithm`
+parameter in the `otpauth://` URI and always computes SHA1**, so against a SHA256 realm it produces
+well-formed codes that are *always wrong*, with no error message anyone can act on. A nurse
+enrolling with the most common authenticator would be permanently unable to sign in, and the
+failure is indistinguishable from mistyping.
+
+I initially ruled **against** the flip, on the grounds that lowering a realm-wide crypto policy so
+one app works is the same move as clearing `CONFIGURE_TOTP` — fixing a demo by weakening a control.
+That was right about a demo justification and wrong about this: the PO reframed it as an onboarding
+capability, not a convenience, and "the most common authenticator silently cannot enrol" is a
+different problem from "one app is inconvenient".
+
+**The security cost is small and worth stating precisely, because it is easy to overstate.**
+HMAC-SHA1 is not weakened by SHA1's broken collision resistance — HMAC's security rests on PRF
+properties, not collision resistance, and no practical attack exists against HMAC-SHA1. It is also
+RFC 6238's default and the interoperability baseline. This is a compatibility decision with a
+marginal cryptographic cost, not a meaningful downgrade.
+
+**Operational consequence, which recurs every time this is touched:** flipping `otpPolicyAlgorithm`
+**invalidates every enrolled factor** — same stored secret, different HMAC, every authenticator
+silently wrong. Two personas had to re-enrol. The cost scales with the number of enrolled users, so
+it was correct to settle this at 2 enrolments rather than at 38. The warning lives in
+`scripts/operator/reconcile-keycloak-realm-users.sh:126` so the next person meets it before acting.
+
+Applied **by the reconciler, not by hand**, so a realm reset replays it — the condition this
+programme keeps rediscovering is that a manual fix dies at the next reset.
+
 ## Ranked next actions
 
 1. **Write security chains for the 16 open services.** No flag closes them. `abis-service`,
