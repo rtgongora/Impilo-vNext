@@ -20,13 +20,16 @@ public class GovernanceContextSource {
     private final WorkforceGovernanceClient governanceClient;
     private final WorkModeResolution modeResolution;
     private final ProgrammeRegistryLookup programmeRegistry;
+    private final zw.gov.mohcc.impilo.experience.client.TusoServiceClient tusoClient;
 
     public GovernanceContextSource(WorkforceGovernanceClient governanceClient,
                                    WorkModeResolution modeResolution,
-                                   ProgrammeRegistryLookup programmeRegistry) {
+                                   ProgrammeRegistryLookup programmeRegistry,
+                                   zw.gov.mohcc.impilo.experience.client.TusoServiceClient tusoClient) {
         this.governanceClient = governanceClient;
         this.modeResolution = modeResolution;
         this.programmeRegistry = programmeRegistry;
+        this.tusoClient = tusoClient;
     }
 
     public String systemName() {
@@ -161,7 +164,8 @@ public class GovernanceContextSource {
             }
         }
 
-        String label = buildLabel(contextKind, targetId, organisationId, jurisdictionCode, roleCode, programmeName);
+        String label = buildLabel(contextKind, targetId, organisationId, jurisdictionCode, roleCode,
+                programmeName, facilityId, tusoClient);
         int rankBoost = primary ? 250 : (secondary ? 50 : 0);
 
         return new ResolvedWorkContext(
@@ -174,7 +178,9 @@ public class GovernanceContextSource {
     }
 
     private static String buildLabel(String contextKind, String targetId, String organisationId,
-                                      String jurisdictionCode, String roleCode, String programmeName) {
+                                      String jurisdictionCode, String roleCode, String programmeName,
+                                      String facilityId,
+                                      zw.gov.mohcc.impilo.experience.client.TusoServiceClient tusoClient) {
         String anchor = switch (contextKind) {
             case "jurisdiction" -> jurisdictionCode != null ? jurisdictionCode : "Jurisdiction";
             // The registry name where we have it — a picker row reading "Programme
@@ -183,7 +189,22 @@ public class GovernanceContextSource {
                     ? programmeName
                     : "Programme " + targetId;
             case "virtual" -> "Virtual " + targetId;
-            default -> organisationId != null ? "Organisation " + organisationId : "Organisation";
+            // Same reasoning as the programme case above, which this default had never been
+            // given: an oversight row reading "Organisation f2000000-…" identifies nothing.
+            // Prefer the facility's real name from TUSO where the context names one, then the
+            // organisation, and never fall through to a bare UUID — a short fragment keeps the
+            // row reportable to support without pretending the identifier is a name.
+            default -> {
+                String facilityName = facilityId != null ? tusoClient.facilityName(facilityId) : null;
+                if (facilityName != null) {
+                    yield facilityName;
+                }
+                if (organisationId != null) {
+                    String shortId = organisationId.length() > 8 ? organisationId.substring(0, 8) : organisationId;
+                    yield "Unnamed organisation (" + shortId + "…)";
+                }
+                yield "Organisation";
+            }
         };
         return roleCode != null ? anchor + " (" + roleCode + ")" : anchor;
     }

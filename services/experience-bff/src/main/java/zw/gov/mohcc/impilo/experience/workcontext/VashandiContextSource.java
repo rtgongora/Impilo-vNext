@@ -20,10 +20,14 @@ public class VashandiContextSource {
 
     private final VashandiServiceClient vashandiClient;
     private final WorkModeResolution modeResolution;
+    private final zw.gov.mohcc.impilo.experience.client.TusoServiceClient tusoClient;
 
-    public VashandiContextSource(VashandiServiceClient vashandiClient, WorkModeResolution modeResolution) {
+    public VashandiContextSource(VashandiServiceClient vashandiClient,
+                                 WorkModeResolution modeResolution,
+                                 zw.gov.mohcc.impilo.experience.client.TusoServiceClient tusoClient) {
         this.vashandiClient = vashandiClient;
         this.modeResolution = modeResolution;
+        this.tusoClient = tusoClient;
     }
 
     public String systemName() {
@@ -100,9 +104,35 @@ public class VashandiContextSource {
                 shift, restrictions, label, groupHint, 0);
     }
 
-    private static String buildLabel(String facilityId, String departmentId, String roleTemplateId, String virtualPoolId) {
+    /**
+     * Human label for a work context.
+     *
+     * <p>Previously this interpolated the raw facility UUID unconditionally — no name
+     * resolution existed at all — so a clinician's workplace rendered as
+     * "Facility f1000000-0000-0000-0000-000000000001". A person cannot tell one workplace
+     * from another by UUID, and cannot tell a real one from a dangling reference.</p>
+     *
+     * <p>Resolves the name from TUSO, the facility master. When it cannot be resolved —
+     * unknown id, unreadable tenant, TUSO down — say so in words rather than printing an
+     * identifier that means nothing to the reader, and keep a SHORT id fragment so the row
+     * is still reportable to support. The context itself always renders: a workplace that
+     * cannot be named is still a workplace the person may hold.</p>
+     */
+    private String buildLabel(String facilityId, String departmentId, String roleTemplateId, String virtualPoolId) {
         StringBuilder sb = new StringBuilder();
-        sb.append(virtualPoolId != null ? "Virtual pool " + virtualPoolId : (facilityId != null ? "Facility " + facilityId : "Workplace"));
+        if (virtualPoolId != null) {
+            sb.append("Virtual pool ").append(virtualPoolId);
+        } else if (facilityId != null) {
+            String name = tusoClient.facilityName(facilityId);
+            if (name != null) {
+                sb.append(name);
+            } else {
+                String shortId = facilityId.length() > 8 ? facilityId.substring(0, 8) : facilityId;
+                sb.append("Unnamed facility (").append(shortId).append("…)");
+            }
+        } else {
+            sb.append("Workplace");
+        }
         if (departmentId != null) sb.append(" — ").append(departmentId);
         if (roleTemplateId != null) sb.append(" (").append(roleTemplateId).append(")");
         return sb.toString();

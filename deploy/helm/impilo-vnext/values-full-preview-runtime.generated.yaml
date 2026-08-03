@@ -11,36 +11,48 @@ fullBootServices:
     database: ai_model_registry
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   analytics-pipeline-service:
     enabled: true
     port: 8365
     database: analytics_pipeline
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   asset-registry-service:
     enabled: true
     port: 8310
     database: asset_registry
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   audit-ledger-service:
     enabled: true
     port: 8350
     database: audit_ledger
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   booking-service:
     enabled: true
     port: 8265
     database: booking
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   butano-fhir:
     enabled: true
     port: 8289
     database: butano_fhir
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   butano-service:
     enabled: true
     port: 8090
@@ -48,6 +60,8 @@ fullBootServices:
     env:
       HAPI_FHIR_URL: http://hapi-fhir:8090/fhir
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
     readinessInitialDelay: 60
     livenessInitialDelay: 120
     resources:
@@ -63,12 +77,16 @@ fullBootServices:
     database: campaigns
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   card-print-agent:
     enabled: true
     port: 8291
     database: card_print_agent
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
     secretEnv:
       CARD_PRINT_QR_SIGNING_KEY_SEED:
         name: impilo-app-secrets
@@ -79,36 +97,48 @@ fullBootServices:
     database: channels
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   clinical-knowledge-platform-service:
     enabled: true
     port: 8270
     database: clinical_knowledge_platform
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   community-service:
     enabled: true
     port: 8122
     database: community
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   connector-fhir-adapter:
     enabled: true
     port: 8151
     database: connector_fhir_adapter
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   costing-engine-service:
     enabled: true
     port: 8101
     database: costing_engine
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   coverage-service:
     enabled: true
     port: 8140
     database: coverage
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
     secretEnv:
       RUVIMBO_TOKEN_SECRET:
         name: impilo-app-secrets
@@ -119,18 +149,24 @@ fullBootServices:
     database: credential_verification
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   daidzai-service:
     enabled: true
     port: 8392
     database: daidzai
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   data-access-governance-service:
     enabled: true
     port: 8170
     database: data_access_governance
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
     secretEnv:
       DAGS_ENFORCEMENT_SIGNING_KEY:
         name: impilo-app-secrets
@@ -141,30 +177,40 @@ fullBootServices:
     database: data_governance
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   data-ingestion-service:
     enabled: true
     port: 8210
     database: data_ingestion
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   data-pipeline-service:
     enabled: true
     port: 8215
     database: data_pipeline
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   data-warehouse-service:
     enabled: true
     port: 8233
     database: data_warehouse
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   developer-portal-service:
     enabled: true
     port: 8370
     database: developer_portal
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   dispatch-service:
     enabled: true
     port: 8320
@@ -172,12 +218,16 @@ fullBootServices:
     env:
       DISPATCH_SECURITY_OAUTH2_ENABLED: 'false'
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   document-service:
     enabled: true
     port: 8093
     database: document
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   fhir-gateway-service:
     enabled: true
     port: 8091
@@ -185,144 +235,192 @@ fullBootServices:
     env:
       FHIR_BASE_URL: http://hapi-fhir:8090/fhir
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   forms-service:
     enabled: true
     port: 8240
     database: forms
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   general-ledger-service:
     enabled: true
     port: 8281
     database: general_ledger
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   guidance-service:
     enabled: true
     port: 8260
     database: guidance
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   hr-payroll-service:
     enabled: true
     port: 8282
     database: hr_payroll
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   identity-assurance-service:
     enabled: true
     port: 8201
     database: identity_assurance
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   indawo-service:
     enabled: true
     port: 8150
     database: indawo
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   inpatient-service:
     enabled: true
     port: 8121
     database: inpatient
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   integration-hub:
     enabled: true
     port: 8110
     database: integration_hub
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   inventory-elmis-adapter:
     enabled: true
     port: 8108
     database: inventory_elmis_adapter
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   inventory-service:
     enabled: true
     port: 8098
     database: inventory
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   iot-ingestion-service:
     enabled: true
     port: 8330
     database: iot_ingestion
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   jobs-service:
     enabled: true
     port: 8109
     database: jobs
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   khuluma-service:
     enabled: true
     port: 8390
     database: khuluma
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   landela-adapter-service:
     enabled: true
     port: 8092
     database: landela_adapter
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   learning-service:
     enabled: true
     port: 8235
     database: learning
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   live-service:
     enabled: true
     port: 8380
     database: live
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   llm-orchestration-service:
     enabled: true
     port: 8265
     database: llm_orchestration
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   madi-service:
     enabled: true
     port: 8300
     database: madi
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   mental-health-service:
     enabled: true
     port: 8397
     database: mental_health
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   msika-apps-service:
     enabled: true
     port: 8181
     database: msika_apps
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   msika-flow-service:
     enabled: true
     port: 8100
     database: msika_flow
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   msika-service:
     enabled: true
     port: 8086
     database: msika
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   mushe-wallet-service:
     enabled: true
     port: 8126
     database: mushe_wallet
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
     secretEnv:
       WALLET_CARD_ENCRYPTION_MASTER_KEY:
         name: impilo-app-secrets
@@ -336,6 +434,8 @@ fullBootServices:
       MUSHEX_SANDBOX_BYPASS_CREDENTIAL_CHECK: 'true'
       MUSHEX_SANDBOX_APPLY_SIMULATION_OUTCOME: 'true'
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
     secretEnv:
       MUSHEX_HMAC_PEPPER:
         name: impilo-app-secrets
@@ -346,12 +446,16 @@ fullBootServices:
     database: mvumo
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   national-data-repository-service:
     enabled: true
     port: 8152
     database: national_data_repository
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   ndila-service:
     enabled: true
     port: 8155
@@ -366,18 +470,24 @@ fullBootServices:
       NDILA_PREVIEW_SOVEREIGN_TILES_ENABLED: 'true'
       NDILA_POSTGIS_ENABLED: 'false'
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   ndr-service:
     enabled: true
     port: 8232
     database: ndr
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   nhume-service:
     enabled: true
     port: 8210
     database: nhume
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
     secretEnv:
       NHUME_WEBHOOK_SECRET:
         name: impilo-app-secrets
@@ -388,24 +498,32 @@ fullBootServices:
     database: notification
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   observability-service:
     enabled: true
     port: 8211
     database: observability
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   offline-edge-service:
     enabled: true
     port: 8360
     database: offline_edge
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   offline-sync-service:
     enabled: true
     port: 8095
     database: offline_sync
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   organization-registry-service:
     enabled: true
     port: 8153
@@ -416,6 +534,8 @@ fullBootServices:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: 'true'
       WORKFLOW_SERVICE_URL: http://workflow-service:8250
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   oros-service:
     enabled: true
     port: 8089
@@ -431,18 +551,24 @@ fullBootServices:
     env:
       ORTHANC_BASE_URL: http://orthanc:8042
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   participation-service:
     enabled: true
     port: 8393
     database: participation
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   patient-safety-service:
     enabled: true
     port: 8202
     database: patient_safety
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   pct-service:
     enabled: true
     port: 8088
@@ -464,24 +590,32 @@ fullBootServices:
     database: pharmacy_elmis_adapter
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   pharmacy-service:
     enabled: true
     port: 8096
     database: pharmacy
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   procedures-service:
     enabled: true
     port: 8395
     database: procedures
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   procurement-service:
     enabled: true
     port: 8283
     database: procurement
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   product-registry-service:
     enabled: true
     port: 8097
@@ -496,18 +630,24 @@ fullBootServices:
     database: referral
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   reporting-service:
     enabled: true
     port: 8176
     database: reporting
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   rito-quality-safety-service:
     enabled: true
     port: 8391
     database: rito_quality_safety
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   rtc-gateway-service:
     enabled: true
     port: 8196
@@ -518,6 +658,8 @@ fullBootServices:
       LIVEKIT_CLIENT_URL: wss://impilo.mohcc.gov.zw
       LIVEKIT_API_KEY: impilo-preview-key
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
     secretEnv:
       LIVEKIT_API_SECRET:
         name: impilo-app-secrets
@@ -528,66 +670,88 @@ fullBootServices:
     database: rules
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   scheduling-service:
     enabled: true
     port: 8128
     database: scheduling
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   schema-registry-service:
     enabled: true
     port: 8371
     database: schema_registry
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   search-service:
     enabled: true
     port: 8230
     database: search
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   security-hardening-service:
     enabled: true
     port: 8221
     database: security_hardening
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   share-slip-service:
     enabled: true
     port: 8104
     database: share_slip
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   simba-service:
     enabled: true
     port: 8125
     database: simba
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   support-service:
     enabled: true
     port: 8340
     database: support
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   surgery-service:
     enabled: true
     port: 8396
     database: surgery
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   surveillance-service:
     enabled: true
     port: 8180
     database: surveillance
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   telemonitoring-service:
     enabled: true
     port: 8394
     database: telemonitoring
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   tshepo-audit-service:
     enabled: true
     port: 8183
@@ -600,6 +764,8 @@ fullBootServices:
       IMPILO_KEYCLOAK_EVENTS_OVERLAP_SECONDS: '120'
       IMPILO_KEYCLOAK_EVENTS_BATCH_SIZE: '200'
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
     secretEnv:
       IMPILO_KEYCLOAK_EVENTS_CLIENT_SECRET:
         name: impilo-app-secrets
@@ -614,24 +780,32 @@ fullBootServices:
       TSHEPO_IDENTITY_URL: http://tshepo-identity-service:8181
       TSHEPO_WORK_CONTEXT_MODE: SHADOW
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   tshepo-consent-service:
     enabled: true
     port: 8182
     database: tshepo_consent
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   tshepo-identity-service:
     enabled: true
     port: 8181
     database: tshepo_identity
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   tshepo-keys-service:
     enabled: true
     port: 8184
     database: tshepo_keys
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
     secretEnv:
       TSHEPO_KEYS_KEK:
         name: impilo-app-secrets
@@ -642,6 +816,8 @@ fullBootServices:
     database: tshepo_offline
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   tuso-service:
     enabled: true
     port: 8084
@@ -649,30 +825,40 @@ fullBootServices:
     env:
       VARAPI_BASE_URL: http://varapi-service:8083
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   ubomi-service:
     enabled: true
     port: 8087
     database: ubomi
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   varapi-service:
     enabled: true
     port: 8083
     database: varapi
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   vashandi-workforce-service:
     enabled: true
     port: 8167
     database: vashandi_workforce
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   vito-service:
     enabled: true
     port: 8082
     database: vito
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
     secretEnv:
       VITO_HMAC_PEPPER:
         name: impilo-app-secrets
@@ -695,12 +881,16 @@ fullBootServices:
     database: wellness
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   workflow-service:
     enabled: true
     port: 8250
     database: workflow
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   workforce-governance-service:
     enabled: true
     port: 8165
@@ -708,12 +898,16 @@ fullBootServices:
     env:
       GOVERNANCE_KAFKA_EVENTS_ENABLED: 'true'
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
   zibo-service:
     enabled: true
     port: 8085
     database: zibo
     env:
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
 postgres:
   maxConnections: 600
   sharedBuffers: 256MB

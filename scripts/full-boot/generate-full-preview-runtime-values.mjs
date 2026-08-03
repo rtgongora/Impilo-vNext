@@ -391,6 +391,23 @@ function main() {
     if (!("KEYCLOAK_ISSUER" in env)) {
       env.KEYCLOAK_ISSUER = "https://impilo.mohcc.gov.zw/realms/impilo";
     }
+    // KEYCLOAK_ISSUER alone is not enough. 20 deployed services build issuer-uri from
+    // KEYCLOAK_URL and read no issuer override at all, and have no jwk-set-uri — so Spring
+    // performs OIDC DISCOVERY against http://keycloak:8080/realms/impilo, gets back the
+    // PUBLIC issuer Keycloak advertises, and refuses to build a decoder:
+    //   IllegalStateException: The Issuer "https://impilo.mohcc.gov.zw/realms/impilo"
+    //   provided in the configuration did not match the requested issuer "http://keycloak:8080/..."
+    // That surfaces as 500 (tuso, which builds eagerly) or 401 (vito/varapi, where
+    // SupplierJwtDecoder defers the failure to first use) — the same fault wearing two
+    // status codes, which is why a status-code survey mis-groups them.
+    //
+    // Setting jwk-set-uri makes Spring use JwkSetUriJwtDecoderBuilder directly and SKIP
+    // discovery, so the public issuer is asserted for validation while keys are fetched
+    // internally — the VM cannot reach its own public address (hairpin NAT).
+    if (!("SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI" in env)) {
+      env.SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI = "https://impilo.mohcc.gov.zw/realms/impilo";
+      env.SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI = "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs";
+    }
     if (Object.keys(env).length > 0) block.env = env;
     const secretEnv = specialSecretEnv(entry.id);
     if (secretEnv) block.secretEnv = secretEnv;

@@ -179,6 +179,41 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    /**
+     * Facility display name by canonical UUID, for labelling a work context.
+     *
+     * <p>Returns {@code null} rather than throwing when the facility cannot be resolved —
+     * unknown UUID, a tenant the caller may not read, or TUSO unavailable. A work context
+     * must still render when its facility cannot be named; the caller degrades the LABEL,
+     * never the context.</p>
+     */
+    public String facilityName(String facilityUuid) {
+        if (facilityUuid == null || facilityUuid.isBlank()) {
+            return null;
+        }
+        try {
+            // Work contexts carry BOTH identifier shapes: Vashandi assignments name the
+            // canonical facility UUID, governance assignments the numeric surrogate id.
+            // TUSO serves them on different paths, and asking the wrong one simply misses —
+            // which is why a context with a perfectly resolvable facility could still render
+            // as "Unnamed".
+            boolean numeric = facilityUuid.chars().allMatch(Character::isDigit);
+            String url = numeric
+                    ? baseUrl + "/v1/internal/facilities/" + facilityUuid
+                    : baseUrl + "/v1/internal/facilities/by-uid/" + facilityUuid;
+            ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+            JsonNode data = extractData(response);
+            if (data == null || data.isMissingNode() || data.isNull()) {
+                return null;
+            }
+            String name = data.path("name").asText(null);
+            return (name == null || name.isBlank()) ? null : name;
+        } catch (Exception ex) {
+            log.debug("TUSO: facility name lookup failed for {}: {}", facilityUuid, ex.getMessage());
+            return null;
+        }
+    }
+
     /** Generic GET against a whitelisted tuso internal path (HPA regulatory ops surface). */
     public JsonNode regulatoryGet(String subPath) {
         String url = baseUrl + "/v1/internal/facility-registry" + subPath;

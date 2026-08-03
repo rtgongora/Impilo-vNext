@@ -29,10 +29,14 @@ class GovernanceContextSourceProgrammeTest {
 
     @Mock private WorkforceGovernanceClient governanceClient;
     @Mock private WorkModeResolution modeResolution;
+    // Facility-name lookup for context labels. Unstubbed here on purpose: these tests cover
+    // programme resolution, and a lenient mock returns null, which is exactly the
+    // "cannot name the facility" path the label builder must survive.
+    @Mock(lenient = true) private zw.gov.mohcc.impilo.experience.client.TusoServiceClient tusoClient;
 
     private GovernanceContextSource source() {
         return new GovernanceContextSource(governanceClient, modeResolution,
-                new ProgrammeRegistryLookup(governanceClient));
+                new ProgrammeRegistryLookup(governanceClient), tusoClient);
     }
 
     private void stubAssignment() {
