@@ -5,6 +5,23 @@
 # securityFilterChain, not a flag flip. Shrinking this file IS the CP8 work.
 #
 # Enforced by scripts/guard/check-enforcement-posture.sh in BOTH directions.
+#
+# ⚠️ 2026-08-03: THIS FILE IS A SOURCE-LEVEL HYPOTHESIS LIST, NOT A MEASUREMENT.
+# It is the output of audit-enforcement-posture.py, which reads services/*/src/main/java and
+# never touches a running pod. Probing all 16 names live found FOUR FALSE POSITIVES —
+# abis-service, indawo-service, ndila-service and wellness-service all return 401 to an
+# unauthenticated business request — and one entry, shared-core, is a library that is not
+# deployed and cannot be probed at all. abis-service matters most: CP8 headlines it as the
+# biometric-identity case.
+#
+# Eleven names are confirmed open by probe. Do not quote any row of this file as an exposure
+# without probing it first. Evidence and method:
+#   docs/security/trust-audit/checkpoint-10/CP10_MEASURED_ENFORCEMENT_POSTURE.md
+#
+# The names are deliberately NOT edited: the guard diffs this file against the script's output,
+# so removing a false positive here would turn the guard red without changing the estate. The
+# fix is to correct the classifier, then this baseline. Until then, read it as "the script says
+# these are open", not "these are open".
 
 abis-service
 analytics-pipeline-service

@@ -232,6 +232,32 @@ time.
 The 16 services with no security chain are **unaffected**: they carry no flag, so nothing the boot
 did could have closed them. They remain the dominant gap.
 
+## Fourth correction — the replacement numbers, and one claim above that is now falsified
+
+Superseded 2026-08-03 by
+[`checkpoint-10/CP10_MEASURED_ENFORCEMENT_POSTURE.md`](../checkpoint-10/CP10_MEASURED_ENFORCEMENT_POSTURE.md),
+which probed all 102 running Spring services from inside the namespace rather than sampling three:
+
+```
+enforcing  91      open  11      (9 of the 11 proven with a 200 and a response body)
+```
+
+Two corrections to the paragraph immediately above this one:
+
+- **"The 16 services … remain the dominant gap" is wrong twice.** The set is **11**, not 16 — four
+  of the baseline's names (`abis-service`, `indawo-service`, `ndila-service`, `wellness-service`)
+  return `401` to unauthenticated business requests and a fifth, `shared-core`, is a library that
+  cannot be probed. And they are not the dominant gap: **`hapi-fhir` serves `GET /fhir/Patient`
+  unauthenticated**, while its governed front doors `butano-fhir` and `fhir-gateway-service` both
+  correctly `401`. `orthanc` answers too. Neither is in `services/`, so no source-level screen
+  scoped to that tree could ever have seen them.
+- `abis-service` is the one that stings: CP8 headlines it as the *biometric identity* case, and it
+  is enforcing. The baseline's argument now rests on `audit-ledger-service` and `matcher-engine`,
+  both of which were confirmed open by probe.
+
+The recurring lesson applies to the correction itself: this report's numbers were never measured
+per-service, only sampled and generalised. The count was the artefact of the method.
+
 ## Recorded doctrine decisions
 
 ### TOTP algorithm: HmacSHA256 → HmacSHA1 (PO decision, 2026-08-03, `ccd2ed326`)
