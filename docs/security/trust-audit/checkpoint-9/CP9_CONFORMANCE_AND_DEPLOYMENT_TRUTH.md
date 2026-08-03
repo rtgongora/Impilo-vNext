@@ -33,6 +33,7 @@ Of the three enforcing services, two predate this programme. **CP7 retired exact
 | Authentication — a person signs in | ✅ | ✅ | ✅ | ⚠️ 3 of 98 |
 | Authentication — the session carries a subject | ✅ | ✅ | ✅ *(fixed 2026-08-03)* | n/a |
 | Authentication — AAL2 step-up is reachable | ✅ | ✅ | ✅ *(fixed 2026-08-03)* | n/a |
+| Authentication — AAL2 is **required** for clinical work | ❌ | ❌ | ❌ | ❌ **client-elective** |
 | Identity assurance / step-up decisioning | ✅ | ✅ | ✅ | ❌ |
 | Workload identity — registry (130 rows) | ✅ | ✅ | ✅ | n/a |
 | Workload identity — ServiceAccounts | ✅ | ✅ | ✅ 108 | ❌ not yet bound as identity |
@@ -167,6 +168,38 @@ observation, which is why the row is now three rows.
 The realm-defaults step is the one that stops recurrence — without it, 20 clients would have been
 fixed and every client created later would have inherited the same silence, including the
 per-workload clients CP4.4 provisions and CP8 multiplies.
+
+## Second correction — "reachable" is not "required", and I made the same error twice
+
+Having split the authentication row because `PREVIEW_DEPLOYED` answered "is it running" rather than
+"does it do what its name implies", I then wrote **"AAL2 step-up is reachable ✅"** — which is true
+and misleading in precisely the way I had just criticised. Reachable is not required.
+
+`OidcSessionService.assertAcr` compares the acr **requested** against the acr **achieved**:
+
+```java
+int requestedRank = aalRank(requested);
+int actualRank    = aalRank(actual);
+if (actualRank < requestedRank) throw new OidcProtocolException("OIDC_AAL_NOT_SATISFIED");
+```
+
+and the requested value originates in the browser — `ProgressiveAuthForm.tsx:48`,
+`intent === "personal" ? null : "urn:impilo:aal2"`. So the server verifies *you got what you asked
+for*; it never verifies *you asked for enough*.
+
+**Consequently a second factor for clinical work is client-elective.** A caller that requests no
+acr — a modified shell, a direct API call, any non-browser client — obtains a session with no
+second factor, and nothing server-side then refuses it clinical work: Envoy `extAuthz` is off, and
+no BFF endpoint gates on assurance. Door-level AAL2 is not merely the *only* 2FA enforcement on the
+estate; it is **enforcement the client opts into**.
+
+This is not a regression. It is the honest description of a control that has always worked this way
+and that the previous row's wording concealed. It also constrains the enrolment fix below: moving
+to progressive step-up before a server-side gate exists would remove the sole 2FA path entirely.
+
+**The pattern, for the eighth time and this one mine:** I corrected an over-claim and introduced a
+subtler version of it in the correction. A facet name that cannot be disproved by a single
+observation will keep flattering whatever is underneath it, and "reachable" was still such a name.
 
 ## Recorded doctrine decisions
 
