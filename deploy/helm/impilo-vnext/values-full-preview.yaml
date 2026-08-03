@@ -101,7 +101,7 @@ keycloak:
     # 26.7.0-continue-as: same Keycloak build, carrying the impilo login theme's
     # login.ftl override so a login_hint arriving from the shell renders as
     # "Continuing as <identifier>" rather than a second, editable credential prompt.
-    tag: "26.7.0-shell-theme"
+    tag: "26.7.0-shell-theme2"
     digest: ""
     pullPolicy: IfNotPresent
   hostname: "https://impilo.mohcc.gov.zw"

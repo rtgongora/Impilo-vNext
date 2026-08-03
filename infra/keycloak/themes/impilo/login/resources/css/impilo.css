@@ -199,6 +199,84 @@ input[type="submit"]:hover {
 #kc-registration a,
 .pf-v5-c-login__footer a { color: var(--impilo-accent-bright) !important; }
 
+/* ── Authenticator enrolment (the QR page) ──────────────────────────── */
+/* First screen a new staff member ever sees. Stock keycloak.v2 renders the QR raw on the
+   card and the app list as an unstyled <ul>; on the white card that reads as a debug page
+   rather than the one moment we ask someone to trust a secret to their phone. */
+
+#kc-totp-settings,
+#kc-totp-settings-form { color: var(--impilo-ink); }
+
+/* The QR sits in its own quiet frame — a scannable target, not a floating image. */
+#kc-totp-secret-qr-code {
+  display: block;
+  margin: 0.5rem auto 1rem;
+  padding: 0.75rem;
+  width: 190px;
+  height: 190px;
+  background: #ffffff;
+  border: 1px solid var(--impilo-line);
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+/* Manual key, for anyone who cannot scan. Monospace and breakable: it gets typed by hand
+   off a screen, often onto a phone. */
+#kc-totp-secret-key {
+  display: block;
+  margin: 0 auto 1rem;
+  padding: 0.6rem 0.8rem;
+  max-width: 100%;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.9375rem;
+  letter-spacing: 0.06em;
+  text-align: center;
+  overflow-wrap: anywhere;
+  color: var(--impilo-ink);
+  background: #f8fafc;
+  border: 1px solid var(--impilo-line);
+  border-radius: 10px;
+}
+
+/* "Install one of the following applications" — a short, scannable list, not prose. */
+#kc-totp-supported-apps {
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.9rem;
+  list-style: none;
+  color: var(--impilo-ink-muted);
+  font-size: 0.875rem;
+  background: #f8fafc;
+  border: 1px solid var(--impilo-line);
+  border-radius: 12px;
+}
+
+#kc-totp-supported-apps li { padding: 0.15rem 0; }
+
+#kc-totp-supported-apps li::before {
+  content: "•";
+  color: var(--impilo-accent);
+  font-weight: 700;
+  margin-right: 0.5rem;
+}
+
+/* The "Impilo never receives or stores this secret" notice. This is the reassurance that
+   makes the step legible, so it is styled as a statement rather than a warning banner. */
+.pf-v5-c-alert,
+.kc-feedback-text {
+  color: var(--impilo-ink-muted) !important;
+  background: #f0fdf4 !important;            /* emerald-50 */
+  border: 1px solid #a7f3d0 !important;      /* emerald-200 */
+  border-radius: 12px;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.875rem;
+}
+
+.pf-v5-c-alert__title { color: var(--impilo-ink) !important; font-weight: 600; }
+
+/* Device-label field and the "logout other sessions" checkbox. */
+.pf-v5-c-check__label { color: var(--impilo-ink-muted) !important; font-size: 0.875rem; }
+.pf-v5-c-check__input { accent-color: var(--impilo-accent); }
+
 /* The shell's card is white in every colour scheme — do not let the browser invert it. */
 @media (prefers-color-scheme: dark) {
   .pf-v5-c-login__main,
