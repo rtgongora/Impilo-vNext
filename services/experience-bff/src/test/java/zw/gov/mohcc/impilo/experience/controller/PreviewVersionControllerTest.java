@@ -17,7 +17,11 @@ class PreviewVersionControllerTest {
 
     private static PreviewVersionController controller(String bffCommit, String estateCommit,
                                                        String certifiedCommit, String digestsJson) {
-        PreviewVersionController controller = new PreviewVersionController();
+        // Pointed at a port nothing listens on: these cases are about the digest map, and the
+        // shell being unreachable is the honest default for a unit test with no shell running.
+        ShellCommitResolver resolver = new ShellCommitResolver();
+        ReflectionTestUtils.setField(resolver, "shellVersionUrl", "http://127.0.0.1:1/api/health/version");
+        PreviewVersionController controller = new PreviewVersionController(resolver);
         ReflectionTestUtils.setField(controller, "serviceName", "experience-bff");
         ReflectionTestUtils.setField(controller, "environment", "test");
         ReflectionTestUtils.setField(controller, "gitBranch", "test-branch");
@@ -65,5 +69,29 @@ class PreviewVersionControllerTest {
 
         assertEquals(Boolean.TRUE, body.get("imageDigestsAuthoritativeForThisRuntime"));
         assertEquals(Map.of(), body.get("imageDigests"));
+    }
+
+    @Test
+    @DisplayName("An unreachable shell never reports shellCommit as verified")
+    void unverifiedShellCommitIsLabelled() {
+        Map<String, Object> body = controller(
+                "bff-commit", "estate-commit", "", "").version();
+
+        assertEquals(Boolean.FALSE, body.get("shellCommitVerified"));
+        assertEquals("UNKNOWN", body.get("shellCommitSource"));
+    }
+
+    @Test
+    @DisplayName("shellCommit never falls back to the BFF's own commit")
+    void shellCommitDoesNotBorrowTheBffCommit() {
+        // This is the original defect in its purest form. The old chain was
+        // nonBlank(shellGitCommit, effectiveBffCommit), so with no shell value configured the
+        // endpoint reported the BFF's SHA under the name shellCommit — a wrong answer that looked
+        // exactly like a right one.
+        Map<String, Object> body = controller(
+                "bff-commit", "estate-commit", "", "").version();
+
+        assertEquals("", body.get("shellCommit"));
+        assertEquals("bff-commit", body.get("bffCommit"));
     }
 }

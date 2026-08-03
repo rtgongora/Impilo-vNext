@@ -317,6 +317,10 @@ HEALTH="$(preview_fetch_health_version)"
 VERSION_OK=1
 LIVE_MODE="$(echo "$HEALTH" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("deploymentMode",""))' 2>/dev/null || true)"
 LIVE_SHELL="$(echo "$HEALTH" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("shellCommit",""))' 2>/dev/null || true)"
+# Whether shellCommit was READ FROM the running shell or merely carried over from the last Helm
+# release. IMPILO_SHELL_GIT_COMMIT is only ever set at release time, so before this field existed
+# a shell-only roll left shellCommit naming the previous commit — confidently, and wrongly.
+LIVE_SHELL_VERIFIED="$(echo "$HEALTH" | python3 -c 'import json,sys; print(str(json.load(sys.stdin).get("shellCommitVerified", False)).lower())' 2>/dev/null || true)"
 LIVE_BFF="$(echo "$HEALTH" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("bffCommit", d.get("commit","")))' 2>/dev/null || true)"
 HEAD_SHA="$(preview_head_sha)"
 
@@ -325,6 +329,12 @@ if [[ -n "$LIVE_MODE" && "$LIVE_MODE" != "targeted" && "$LIVE_MODE" != "unknown"
 fi
 if [[ "$IMAGES_CSV" == *"one-ui-shell"* ]]; then
   [[ "$LIVE_SHELL" == "$HEAD_SHA" ]] || VERSION_OK=0
+  # An unverified value must not satisfy this gate even when it happens to equal HEAD — that
+  # would pass on a coincidence rather than on evidence the new shell is serving.
+  if [[ "$LIVE_SHELL_VERIFIED" != "true" ]]; then
+    echo "FAIL: shellCommit was not read from the running shell (shellCommitVerified=$LIVE_SHELL_VERIFIED)"
+    VERSION_OK=0
+  fi
 fi
 if [[ "$IMAGES_CSV" == *"experience-bff"* ]]; then
   [[ "$LIVE_BFF" == "$HEAD_SHA" ]] || VERSION_OK=0

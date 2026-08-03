@@ -15,6 +15,12 @@ public class PreviewVersionController {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
+    private final ShellCommitResolver shellCommitResolver;
+
+    public PreviewVersionController(ShellCommitResolver shellCommitResolver) {
+        this.shellCommitResolver = shellCommitResolver;
+    }
+
     @Value("${spring.application.name:experience-bff}")
     private String serviceName;
 
@@ -60,8 +66,13 @@ public class PreviewVersionController {
     @GetMapping("/health/version")
     public Map<String, Object> version() {
         String effectiveBffCommit = nonBlank(bffGitCommit, gitCommit);
-        String effectiveShellCommit = nonBlank(shellGitCommit, effectiveBffCommit);
         String effectiveEstateCommit = nonBlank(fullEstateCommit, effectiveBffCommit);
+
+        // Ask the shell rather than asserting on its behalf. The old fallback chain ended at the
+        // BFF's OWN commit, so a shell rolled on its own reported the BFF's commit as the shell's
+        // — a wrong answer indistinguishable from a right one.
+        ShellCommitResolver.Resolution shell =
+                shellCommitResolver.resolve(nonBlank(shellGitCommit, ""));
 
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("service", serviceName);
@@ -74,7 +85,12 @@ public class PreviewVersionController {
         body.put("buildDate", buildDate);
 
         body.put("deploymentMode", deploymentMode);
-        body.put("shellCommit", effectiveShellCommit);
+        body.put("shellCommit", shell.commit());
+        // Consumers that gate a deploy on shellCommit must be able to tell an observed value from
+        // a deploy-time assumption. LIVE means the running shell said so; anything else means it
+        // did not answer and this figure is not evidence of what is deployed.
+        body.put("shellCommitSource", shell.source().name());
+        body.put("shellCommitVerified", shell.source() == ShellCommitResolver.Source.LIVE);
         body.put("bffCommit", effectiveBffCommit);
         body.put("fullEstateCommit", effectiveEstateCommit);
         body.put("fullEstateCertifiedCommit", nonBlank(fullEstateCertifiedCommit, ""));
