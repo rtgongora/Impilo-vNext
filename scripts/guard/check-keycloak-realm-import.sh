@@ -106,9 +106,19 @@ command -v docker >/dev/null 2>&1 || fail_hard "docker is unavailable.
   This guard is only meaningful if Keycloak actually parses the realm. Refusing
   to report PASS on an unverified realm set."
 docker info >/dev/null 2>&1 || fail_hard "docker is installed but not usable (daemon unreachable)."
-docker image inspect "$KEYCLOAK_IMAGE" >/dev/null 2>&1 \
-  || fail_hard "Keycloak image unavailable locally: $KEYCLOAK_IMAGE
-  Pull or build it, or set KEYCLOAK_IMAGE to the image the estate runs."
+
+# Present locally, else pull. The predecessor used `docker run`, which auto-pulls;
+# requiring the image to be resident already would fail on any machine that had
+# simply never pulled it — fail-closed is about refusing to pass unverified, not
+# about refusing to fetch. A pull that fails is still a hard failure.
+if ! docker image inspect "$KEYCLOAK_IMAGE" >/dev/null 2>&1; then
+  echo "image not present locally, pulling: $KEYCLOAK_IMAGE"
+  if ! docker pull "$KEYCLOAK_IMAGE" >/dev/null 2>&1; then
+    fail_hard "Keycloak image unavailable and not pullable: $KEYCLOAK_IMAGE
+  Build or pull it, or set KEYCLOAK_IMAGE to the image the estate runs.
+  This guard will not report PASS against an image it could not obtain."
+  fi
+fi
 
 IMAGE_DIGEST="$(docker image inspect "$KEYCLOAK_IMAGE" --format '{{if .RepoDigests}}{{index .RepoDigests 0}}{{else}}<none>{{end}}' 2>/dev/null || echo '<none>')"
 
