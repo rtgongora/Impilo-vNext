@@ -68,14 +68,33 @@ describe("useWorkHome", () => {
     await waitFor(() => expect(get).toHaveBeenCalledWith("/internal/v1/work-home?context_id=ctx-1&mode=CLINICAL_CARE"));
   });
 
-  it("degrades to work_context_unavailable (never throws) when the BFF call fails", async () => {
+  it("a failed READ surfaces as readFailed — never as a server verdict (item 72 / A81)", async () => {
+    // This test previously pinned the DEFECT: a network error was converted
+    // into friendlyState "work_context_unavailable", so a BFF 502 rendered as
+    // "the assignment could not be re-proven from its source" — a verdict the
+    // server never issued. The honest contract: read failure ⇒ readFailed,
+    // and NO fabricated friendlyState.
     get.mockRejectedValue(new Error("network error"));
 
     const { result } = renderHook(() => useWorkHome("ctx-1"), { wrapper });
 
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.workHome.friendlyState).toBe("work_context_unavailable");
+    await waitFor(() => expect(result.current.readFailed).toBe(true), { timeout: 4000 });
+    expect(result.current.workHome.friendlyState).toBe("");
+    expect(result.current.workHome.friendlyState).not.toBe("work_context_unavailable");
     expect(result.current.workHome.sections).toEqual([]);
+  });
+
+  it("a successful read with zero sections is EMPTY, not readFailed", async () => {
+    get.mockResolvedValue({
+      data: { id: "hid-1", type: "work-home", attributes: { ...WORK_HOME_ATTRS, sections: [] } },
+    });
+
+    const { result } = renderHook(() => useWorkHome("ctx-1"), { wrapper });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.readFailed).toBe(false);
+    expect(result.current.workHome.sections).toEqual([]);
+    expect(result.current.workHome.friendlyState).toBe("");
   });
 });
 

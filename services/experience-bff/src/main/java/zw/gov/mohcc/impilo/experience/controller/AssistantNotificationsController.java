@@ -14,6 +14,8 @@ import zw.gov.mohcc.impilo.experience.intelligence.HealthIntelligenceService;
 import zw.gov.mohcc.impilo.experience.service.NompiloSignalService;
 import zw.gov.mohcc.impilo.experience.service.NompiloSignalService.CitizenSignals;
 import zw.gov.mohcc.impilo.experience.service.PiiAccessAuditService;
+import zw.gov.mohcc.impilo.experience.workcontext.ResolvedWorkContext;
+import zw.gov.mohcc.impilo.experience.workcontext.WorkContextResolutionService;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -57,31 +59,65 @@ public class AssistantNotificationsController {
     private final GuidanceServiceClient guidanceClient;
     private final NompiloSignalService signalService;
     private final PiiAccessAuditService auditService;
+    private final WorkContextResolutionService workContextResolution;
 
     public AssistantNotificationsController(HealthIntelligenceService healthIntelligenceService,
                                             GuidanceServiceClient guidanceClient,
                                             NompiloSignalService signalService,
-                                            PiiAccessAuditService auditService) {
+                                            PiiAccessAuditService auditService,
+                                            WorkContextResolutionService workContextResolution) {
         this.healthIntelligenceService = healthIntelligenceService;
         this.guidanceClient = guidanceClient;
         this.signalService = signalService;
         this.auditService = auditService;
+        this.workContextResolution = workContextResolution;
     }
 
+    /**
+     * Notification scope is server-derived (Target Architecture v1.3.2 §40.1,
+     * backlog item 83, test A91). This endpoint previously accepted
+     * {@code work_mode}, {@code facility_id} and {@code shift_id} as query
+     * parameters — the browser asserting its own notification scope, the same
+     * client-authoritative-context class §12.4 eliminates for trust headers.
+     * The parameters are gone: scope now comes from the actor identity (which
+     * {@code ActorContextFilter} forces from the verified session) resolved
+     * through the same {@link WorkContextResolutionService} that drives every
+     * landing decision. A request with no trusted actor identity is refused.
+     * Any query parameters a client still sends are ignored by construction —
+     * they no longer exist as inputs.
+     */
     @GetMapping("/notifications")
     public ResponseEntity<Map<String, Object>> getNotifications(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
-            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
-            @RequestParam(required = false) String work_mode,
-            @RequestParam(required = false) String facility_id,
-            @RequestParam(required = false) String shift_id) {
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId) {
+
+        if (actorId == null || actorId.isBlank()) {
+            // Reject rather than degrade: an unidentified caller has no scope,
+            // and inventing one (or accepting a client-asserted one) is the
+            // defect this endpoint used to have.
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Assistant notifications require an authenticated actor identity");
+        }
 
         try {
+            WorkContextResolutionService.ResolutionOutcome outcome =
+                    workContextResolution.resolve(actorId, null);
+            ResolvedWorkContext top = outcome.contexts().isEmpty() ? null : outcome.contexts().get(0);
+
+            String workMode = top == null ? null : top.defaultMode();
+            String facilityId = top == null ? null : top.facilityId();
+            String shiftId = top == null || top.shift() == null
+                    ? null
+                    : asNullableString(top.shift().get("shift_id"));
+
             List<Map<String, Object>> notifications = new ArrayList<>();
-            notifications.addAll(buildContextualNotifications(work_mode, tenantId));
+            notifications.addAll(buildContextualNotifications(workMode, tenantId));
             notifications.addAll(healthIntelligenceService.buildAssistantNotifications(
-                    work_mode, tenantId, facility_id, shift_id));
+                    workMode, tenantId, facilityId, shiftId));
             return ResponseEntity.ok(Map.of("data", notifications));
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             log.warn("Assistant notifications aggregation failed: {}", e.getMessage());
             throw new ResponseStatusException(
@@ -89,6 +125,10 @@ public class AssistantNotificationsController {
                     "Assistant notifications aggregation failed",
                     e);
         }
+    }
+
+    private static String asNullableString(Object value) {
+        return value == null ? null : String.valueOf(value);
     }
 
     /**

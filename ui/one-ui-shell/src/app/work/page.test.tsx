@@ -150,10 +150,57 @@ describe("WorkHomePage", () => {
       workHome: { sections: [], friendlyState: "work_context_unavailable" },
       isLoading: false,
       isError: false,
+      readFailed: false,
     });
 
     render(<WorkHomePage />);
     expect(screen.getByText(/Your work context isn't available right now/)).toBeTruthy();
+  });
+
+  it("a failed READ renders UNAVAILABLE with retry — never the server-verdict copy, never a claim about assignments (item 72 / A81)", () => {
+    sessionState.session = MINTED_SESSION;
+    useSessionExperienceContractMock.mockReturnValue({
+      contract: { resolvedWorkContexts: [RESOLVED_CONTEXT], recommendedContextId: "ctx-1" },
+      isLoading: false,
+    });
+    const refetch = vi.fn();
+    useWorkHomeMock.mockReturnValue({
+      workHome: { sections: [], friendlyState: "" },
+      isLoading: false,
+      isError: true,
+      readFailed: true,
+      refetch,
+    });
+
+    render(<WorkHomePage />);
+    expect(screen.getByTestId("work-home-unavailable")).toBeTruthy();
+    expect(screen.getByText(/could not be reached/i)).toBeTruthy();
+    expect(screen.getByText(/not a statement about your assignments or your access/i)).toBeTruthy();
+    fireEvent.click(screen.getByText("Try again"));
+    expect(refetch).toHaveBeenCalled();
+    // Mutation targets: the old behaviour rendered the server-verdict copy on
+    // a transport failure. It must never come back:
+    expect(screen.queryByText(/could not be re-proven/i)).toBeNull();
+    // And an outage must never read as an absence of work:
+    expect(screen.queryByText(/no assignments|nothing here right now|request access/i)).toBeNull();
+  });
+
+  it("a successful read with zero sections renders the landing (EMPTY), not the unavailable panel", () => {
+    sessionState.session = MINTED_SESSION;
+    useSessionExperienceContractMock.mockReturnValue({
+      contract: { resolvedWorkContexts: [RESOLVED_CONTEXT], recommendedContextId: "ctx-1" },
+      isLoading: false,
+    });
+    useWorkHomeMock.mockReturnValue({
+      workHome: { contextId: "ctx-1", family: "FACILITY_CLINICAL", mode: "CLINICAL_CARE", friendlyState: "", sections: [] },
+      isLoading: false,
+      isError: false,
+      readFailed: false,
+    });
+
+    render(<WorkHomePage />);
+    expect(screen.queryByTestId("work-home-unavailable")).toBeNull();
+    expect(screen.queryByText(/could not be reached/i)).toBeNull();
   });
 
   it("renders sections from the BFF for the minted session context", () => {
