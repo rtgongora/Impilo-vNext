@@ -32,6 +32,24 @@ const ACTIVITY_EVENTS = ["mousemove", "mousedown", "keydown", "touchstart", "scr
 /** Paths exempt from inactivity lock (public routes). */
 const EXEMPT_PREFIXES = ["/", "/welcome", "/auth", "/privacy", "/terms", "/consent", "/account-deletion", "/kiosk"];
 
+/**
+ * Whether a pathname is exempt from the inactivity lock.
+ *
+ * The bare "/" entry means the public landing page EXACTLY — it must never be
+ * prefix-matched, because every pathname starts with "/". That defect shipped
+ * once and silently disabled the lock on every route (Target Architecture
+ * v1.3.2 §29.3, backlog item 82): `EXEMPT_PREFIXES.some((p) =>
+ * pathname.startsWith(p))` was unconditionally true. The guarded idiom below
+ * mirrors `handleAuthFailure` in api-client.ts, the one place that already got
+ * this right.
+ */
+export function isExemptFromInactivityLock(pathname: string): boolean {
+  return (
+    pathname === "/" ||
+    EXEMPT_PREFIXES.some((p) => p !== "/" && pathname.startsWith(p))
+  );
+}
+
 export function InactivityLockProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -45,7 +63,7 @@ export function InactivityLockProvider({ children }: { children: ReactNode }) {
   const lockTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const logoutTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const isExempt = EXEMPT_PREFIXES.some((p) => pathname.startsWith(p));
+  const isExempt = isExemptFromInactivityLock(pathname);
 
   // Track user activity
   useEffect(() => {

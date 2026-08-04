@@ -57,7 +57,7 @@ export default function WorkHomePage() {
   const activeContext = resolvedContexts.find((c) => c.contextId === activeContextId);
   const restrictionLines = describeWorkContextRestrictions(activeContext?.restrictions);
 
-  const { workHome, isLoading: workHomeLoading, isError } = useWorkHome(activeContextId, activeMode);
+  const { workHome, isLoading: workHomeLoading, readFailed, refetch } = useWorkHome(activeContextId, activeMode);
   const retrySection = useWorkHomeSectionRetry(activeContextId, activeMode);
 
   function returnToPicker() {
@@ -103,7 +103,46 @@ export default function WorkHomePage() {
     );
   }
 
-  if (isError || workHome.friendlyState) {
+  // UNAVAILABLE ≠ EMPTY ≠ a server verdict (v1.3.2 §29.2, item 72, A81).
+  // A failed READ renders as "we could not check" with a retry — it must never
+  // claim anything about the person's assignments, and must never borrow the
+  // server-verdict copy below ("could not be re-proven"), which the BFF did
+  // not issue.
+  if (readFailed) {
+    return (
+      <AppLayout>
+        <PageShell title="Work" density="compact">
+          <div data-testid="work-home-unavailable" className="rounded-lg border border-border bg-card p-6 text-center">
+            <p className="text-sm font-medium text-foreground">We can&apos;t check your work right now.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              The work service could not be reached. This is not a statement about your
+              assignments or your access — try again in a moment.
+            </p>
+            <div className="mt-3 flex items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => refetch()}
+                className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-background"
+              >
+                <RefreshCw className="h-3.5 w-3.5" /> Try again
+              </button>
+              <button
+                type="button"
+                onClick={returnToPicker}
+                className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-background"
+              >
+                Choose a workplace
+              </button>
+            </div>
+          </div>
+        </PageShell>
+      </AppLayout>
+    );
+  }
+
+  // A server-STATED verdict (the read succeeded; the BFF itself said the
+  // context/mode cannot be served) keeps its honest, non-enumerating copy.
+  if (workHome.friendlyState) {
     const copy = friendlyWorkHomeMessage(workHome.friendlyState);
     return (
       <AppLayout>

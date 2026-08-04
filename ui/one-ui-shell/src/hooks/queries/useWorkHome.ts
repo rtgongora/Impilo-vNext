@@ -74,11 +74,21 @@ interface WorkHomeSectionResource {
 type WorkHomeResponse = ApiResponse<WorkHomeResource>;
 type WorkHomeSectionResponse = ApiResponse<WorkHomeSectionResource>;
 
-const UNAVAILABLE: WorkHomeAttributes = {
+/**
+ * Shape returned while no data exists. Deliberately NOT a server verdict:
+ * `friendlyState` stays empty. The old constant here carried
+ * `friendlyState: "work_context_unavailable"` and was returned from a
+ * catch-all — so a BFF 502 rendered as "the assignment could not be re-proven
+ * from its source", a false explanation of a transport outage (Target
+ * Architecture v1.3.2 §29.2, backlog item 72, test A81). A failed read is now
+ * surfaced as `readFailed`, never converted into a verdict the server never
+ * issued.
+ */
+const NO_DATA: WorkHomeAttributes = {
   contextId: null,
   family: null,
   mode: null,
-  friendlyState: "work_context_unavailable",
+  friendlyState: "",
   sections: [],
 };
 
@@ -101,22 +111,26 @@ export function useWorkHome(contextId: string | undefined, mode?: string) {
     queryFn: async () => {
       const params = new URLSearchParams({ context_id: contextId as string });
       if (mode) params.set("mode", mode);
-      try {
-        const res = await apiClient.get<WorkHomeResponse>(`/internal/v1/work-home?${params.toString()}`);
-        return res.data.attributes;
-      } catch {
-        return UNAVAILABLE;
-      }
+      // No catch: a transport failure must surface as a failed READ
+      // (query.isError), not masquerade as a server-issued verdict. EMPTY is
+      // a successful read whose sections are empty; UNAVAILABLE is a read
+      // that did not succeed — the page renders them differently (A81).
+      const res = await apiClient.get<WorkHomeResponse>(`/internal/v1/work-home?${params.toString()}`);
+      return res.data.attributes;
     },
     enabled: isAuthenticated && !!user && !!contextId,
     staleTime: 30_000,
     refetchOnWindowFocus: false,
+    retry: 1,
+    retryDelay: 500,
   });
 
   return {
-    workHome: query.data ?? UNAVAILABLE,
+    workHome: query.data ?? NO_DATA,
     isLoading: query.isLoading,
     isError: query.isError,
+    /** True when the work-home READ failed (transport/5xx). Distinct from a server-stated friendlyState. */
+    readFailed: query.isError,
     refetch: query.refetch,
   };
 }

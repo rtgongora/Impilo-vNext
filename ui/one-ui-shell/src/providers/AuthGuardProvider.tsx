@@ -45,6 +45,54 @@ const CONSENT_EXEMPT_PREFIXES = [
   "/collaboration",
 ];
 
+/**
+ * Whether a pathname sits on a deliberately public surface (anonymous lane).
+ * Bare "/" means the landing page exactly — never a prefix.
+ */
+function isPublicSurface(pathname: string): boolean {
+  return CONSENT_EXEMPT_PREFIXES.some((p) =>
+    p === "/" ? pathname === "/" : pathname.startsWith(p),
+  );
+}
+
+/**
+ * Deny-by-default for unregistered routes (Target Architecture v1.3.2 §29.2,
+ * backlog item 73, test A74).
+ *
+ * The guard used to return early when `matchRouteDefinition` found nothing, so
+ * a page that existed but was missing from the route registry ran with NO
+ * auth, facility, role or citizen check at all — three emergency routes once
+ * shipped exactly that way. Outside the public surface, an unknown route is
+ * now denied: nothing of the page renders, and the person is told why rather
+ * than being silently bounced.
+ */
+function UnregisteredRouteDenied({ pathname }: { pathname: string }) {
+  return (
+    <main
+      data-testid="unregistered-route-denied"
+      className="min-h-screen flex items-center justify-center p-6"
+    >
+      <div className="max-w-md text-center space-y-4">
+        <h1 className="text-xl font-semibold">This page is not available</h1>
+        <p className="text-sm text-muted-foreground">
+          For safety, pages the platform does not recognise are not shown.
+          Nothing is wrong with your account, and this is not a record of what
+          you can or cannot access.
+        </p>
+        <p className="text-xs text-muted-foreground break-all">{pathname}</p>
+        <div className="flex items-center justify-center gap-3">
+          <a href="/home" className="text-sm font-medium underline underline-offset-4">
+            Go to your home
+          </a>
+          <a href="/welcome" className="text-sm font-medium underline underline-offset-4">
+            Public services
+          </a>
+        </div>
+      </div>
+    </main>
+  );
+}
+
 export function AuthGuardProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -66,11 +114,17 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
     // /auth/login before the session had been read. Wait for the read to have happened.
     if (!sessionRestoreAttempted) return;
 
+    // Deny-by-default (item 73): an unregistered non-public route never runs.
+    // Unauthenticated visitors go to login; authenticated ones stay on the
+    // rendered denial (below) rather than being silently redirected.
+    if (!matchRouteDefinition(pathname) && !isPublicSurface(pathname)) {
+      if (!isAuthenticated) router.replace("/auth/login");
+      return;
+    }
+
     // Consent gate: redirect authenticated users who haven't consented,
     // unless they're on a consent-exempt path.
-    const isConsentExempt = CONSENT_EXEMPT_PREFIXES.some((p) =>
-      p === "/" ? pathname === "/" : pathname.startsWith(p)
-    );
+    const isConsentExempt = isPublicSurface(pathname);
 
     if (
       isAuthenticated &&
@@ -113,7 +167,7 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
     }
 
     const routeInfo = matchRouteDefinition(pathname);
-    if (!routeInfo) return;
+    if (!routeInfo) return; // unreachable for non-public paths — denied above; public paths fall through to middleware's anonymous lane
 
     // The BFF Session Experience Contract is authoritative for visibility. The client-side
     // isCitizenOnly heuristic only blocks when the contract does NOT grant the route, so a
@@ -200,6 +254,13 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
         break;
     }
   }, [pathname, sessionRestoreAttempted, isAuthenticated, hasConsented, consentHydrated, hasFacility, hasWorkspace, hasShift, hasRole, hasActiveProvider, user, identity, contract, contractLoading, router]);
+
+  // Deny-by-default is enforced at render, not only in the effect: an
+  // unregistered non-public route's content must never mount, not even for a
+  // frame. Registered and public routes render as before.
+  if (!matchRouteDefinition(pathname) && !isPublicSurface(pathname)) {
+    return <UnregisteredRouteDenied pathname={pathname} />;
+  }
 
   return <>{children}</>;
 }
