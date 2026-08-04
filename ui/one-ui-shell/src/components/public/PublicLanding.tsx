@@ -148,7 +148,7 @@ export function PublicLanding() {
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <Link
             href="/welcome/report"
-            className="rounded-xl border border-slate-200 bg-white p-4 hover:border-emerald-300 hover:bg-emerald-50/40"
+            className="rounded-xl border border-white/60 bg-white/70 p-4 shadow-[0_10px_24px_-16px_rgba(2,30,26,.35)] backdrop-blur-sm hover:border-emerald-300 hover:bg-white/90 [.low-blur_&]:bg-white"
           >
             <MessageSquareHeart className="h-5 w-5 text-emerald-700" aria-hidden />
             <p className="mt-2 font-semibold text-slate-900">Report a problem</p>
@@ -158,7 +158,7 @@ export function PublicLanding() {
           </Link>
           <Link
             href="/welcome/report"
-            className="rounded-xl border border-slate-200 bg-white p-4 hover:border-emerald-300 hover:bg-emerald-50/40"
+            className="rounded-xl border border-white/60 bg-white/70 p-4 shadow-[0_10px_24px_-16px_rgba(2,30,26,.35)] backdrop-blur-sm hover:border-emerald-300 hover:bg-white/90 [.low-blur_&]:bg-white"
           >
             <HeartHandshake className="h-5 w-5 text-emerald-700" aria-hidden />
             <p className="mt-2 font-semibold text-slate-900">Give a compliment or idea</p>
@@ -168,7 +168,7 @@ export function PublicLanding() {
           </Link>
           <Link
             href="/welcome/report"
-            className="rounded-xl border border-slate-200 bg-white p-4 hover:border-emerald-300 hover:bg-emerald-50/40"
+            className="rounded-xl border border-white/60 bg-white/70 p-4 shadow-[0_10px_24px_-16px_rgba(2,30,26,.35)] backdrop-blur-sm hover:border-emerald-300 hover:bg-white/90 [.low-blur_&]:bg-white"
           >
             <BadgeCheck className="h-5 w-5 text-emerald-700" aria-hidden />
             <p className="mt-2 font-semibold text-slate-900">Follow an existing case</p>
@@ -229,7 +229,7 @@ export function PublicLanding() {
               dest="/home"
               from="/"
               href="/auth/login?returnTo=%2Fhome"
-              className="inline-flex min-h-11 items-center rounded-xl bg-sky-800 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-900"
+              className="inline-flex min-h-11 items-center rounded-xl bg-gradient-to-br from-sky-600 to-sky-800 px-5 py-2.5 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,.3)] hover:brightness-110"
             >
               Sign in to My Impilo
             </IntentLink>
@@ -266,7 +266,7 @@ export function PublicLanding() {
           <div className="mt-5 flex flex-wrap gap-3">
             <Link
               href="/provider/get-access"
-              className="inline-flex min-h-11 items-center rounded-xl bg-amber-800 px-5 py-2.5 text-sm font-semibold text-white hover:bg-amber-900"
+              className="inline-flex min-h-11 items-center rounded-xl bg-gradient-to-br from-amber-600 to-amber-800 px-5 py-2.5 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,.3)] hover:brightness-110"
             >
               Explore professional access
             </Link>
@@ -281,7 +281,7 @@ export function PublicLanding() {
       </section>
 
       <section
-        className="mt-14 rounded-[2rem] border border-emerald-100 bg-white p-7 shadow-sm sm:p-9"
+        className="mt-14 rounded-[2rem] border border-white/60 bg-white/75 p-7 shadow-[0_20px_50px_-30px_rgba(2,30,26,.4)] backdrop-blur-sm sm:p-9 [.low-blur_&]:bg-white"
         aria-labelledby="trust-title"
       >
         <div className="max-w-3xl">
@@ -333,7 +333,7 @@ export function PublicLanding() {
 
       <section
         id="about-impilo"
-        className="mt-14 grid gap-6 rounded-[2rem] bg-emerald-950 p-7 text-white sm:p-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(18rem,.8fr)]"
+        className="mt-14 grid gap-6 rounded-[2rem] bg-gradient-to-br from-emerald-950 via-[#073540] to-[#03222A] p-7 text-white shadow-[0_30px_80px_-40px_rgba(2,30,26,.8)] sm:p-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(18rem,.8fr)]"
       >
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.08em] text-emerald-200">
@@ -379,7 +379,7 @@ export function PublicLanding() {
           </p>
           <Link
             href="/get-involved"
-            className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-violet-800 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-900"
+            className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-gradient-to-br from-violet-600 to-violet-800 px-5 py-2.5 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,.3)] hover:brightness-110"
           >
             Get involved
           </Link>
@@ -393,7 +393,7 @@ export function PublicLanding() {
           </p>
           <Link
             href="/download"
-            className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-sky-800 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-900"
+            className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-gradient-to-br from-sky-600 to-sky-800 px-5 py-2.5 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,.3)] hover:brightness-110"
           >
             Download and app information
           </Link>
