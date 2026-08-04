@@ -27,6 +27,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ExternalLink, Loader2 } from "lucide-react";
 import { SIGN_IN_COMPLETE_MESSAGE } from "@/lib/auth/sign-in-window";
+import { restoreSessionIntoStore } from "@/lib/api-client";
 
 const POPUP_W = 480;
 const POPUP_H = 640;
@@ -76,9 +77,21 @@ export function SignInModal({
       const to = typeof data.destination === "string" && data.destination.startsWith("/")
         ? data.destination
         : "/home";
-      onClose();
-      router.replace(to);
-      router.refresh();
+      // The cookie session exists (the popup just finished the OIDC round trip), but this
+      // window's auth store still says signed-out — StoreHydrator only runs at page load, and
+      // attemptRefresh only fires on a 401 that a valid cookie will never produce. Navigating
+      // before the store knows about the session sent AuthGuardProvider's auth gate straight
+      // back to /auth/login: OTP accepted, popup closed, sign-in form again. So hydrate FIRST,
+      // and if that fails fall back to a full navigation, whose page load re-runs StoreHydrator.
+      void restoreSessionIntoStore().then((hydrated) => {
+        onClose();
+        if (hydrated) {
+          router.replace(to);
+          router.refresh();
+        } else {
+          window.location.assign(to);
+        }
+      });
     }
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
