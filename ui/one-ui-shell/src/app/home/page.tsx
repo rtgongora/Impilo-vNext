@@ -749,11 +749,11 @@ export default function HomePage() {
           {operationalMode}
         </span>
         <div className="space-y-6">
-          {/* Welcome + Context — flush under shell header */}
-          <div className="-mx-3 border-b border-border bg-card p-4 md:-mx-4 md:p-5">
+          {/* Welcome + Context — flush under shell header, on the living-canvas strip */}
+          <div className="-mx-3 border-b border-emerald-900/10 bg-[linear-gradient(100deg,#F2FBF7_0%,#E4F4EC_44%,#BBE2D4_78%,#8FCDBD_100%)] p-4 md:-mx-4 md:p-5">
             <div className="flex items-start justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-foreground">
+                <h2 className="bg-gradient-to-r from-[#0A3A30] to-[#0C7A5B] bg-clip-text text-xl font-extrabold tracking-tight text-transparent">
                   {greeting}, {user?.displayName ?? "User"}
                 </h2>
                 <p className="text-sm text-muted-foreground mt-1">
@@ -1600,30 +1600,32 @@ function CitizenHome({
       {/* ── Top status bar ──────────────────────────────────────────
            Suppressed when embedded: the provider shell's header has already greeted this
            person by name directly above, and repeating it is the double greeting. */}
+      {/* The citizen's own living-canvas strip: the hero's mint-to-teal ramp, horizontal.
+          Greeting in gradient ink on the light end; actions in white on the deep end. */}
       {!embedded && (
-      <div className="mb-4 flex -mx-3 items-center justify-between border-b border-border bg-card px-3 py-2.5 md:-mx-4 md:px-4">
+      <div className="mb-4 flex -mx-3 items-center justify-between px-3 py-3 md:-mx-4 md:px-4 border-b border-emerald-900/10 bg-[linear-gradient(100deg,#F2FBF7_0%,#DFF3EC_30%,#8FCDBD_62%,#1B8477_88%,#0F6B62_100%)]">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="h-9 w-9 rounded-full bg-primary-soft flex items-center justify-center shrink-0">
-            <User className="h-4.5 w-4.5 text-primary" />
+          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-[inset_0_1px_0_rgba(255,255,255,.45),0_6px_14px_-6px_rgba(6,95,70,.6)] flex items-center justify-center shrink-0">
+            <User className="h-5 w-5 text-white" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground truncate">
+            <p className="truncate bg-gradient-to-r from-[#0A3A30] to-[#0C7A5B] bg-clip-text text-base font-extrabold tracking-tight text-transparent">
               {greeting}, {user?.displayName?.split(" ")[0] ?? "there"}
             </p>
-            <p className="text-[11px] text-muted-foreground truncate">
+            <p className="text-[11px] font-medium text-emerald-900/60 truncate">
               {user?.email}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
-          <Link href="/home/notifications" className="p-2 rounded-full hover:bg-neutral-100 relative" title="Notifications">
-            <Activity className="w-4.5 h-4.5 text-muted-foreground" />
+          <Link href="/home/notifications" className="p-2 rounded-full text-white/90 hover:bg-white/15 relative" title="Notifications">
+            <Activity className="w-4.5 h-4.5" />
           </Link>
-          <Link href="/ask" className="p-2 rounded-full hover:bg-neutral-100" title="Ask Nompilo">
-            <MessageSquare className="w-4.5 h-4.5 text-muted-foreground" />
+          <Link href="/ask" className="p-2 rounded-full text-white/90 hover:bg-white/15" title="Ask Nompilo">
+            <MessageSquare className="w-4.5 h-4.5" />
           </Link>
-          <Link href="/auth/logout" className="p-2 rounded-full hover:bg-neutral-100" title="Switch account">
-            <UserCog className="w-4.5 h-4.5 text-muted-foreground" />
+          <Link href="/auth/logout" className="p-2 rounded-full text-white/90 hover:bg-white/15" title="Switch account">
+            <UserCog className="w-4.5 h-4.5" />
           </Link>
         </div>
       </div>
@@ -1652,7 +1654,7 @@ function CitizenHome({
         <aside className="hidden lg:block space-y-4">
           {/* My Wallet — prominent at top (Health ID lives in left column) */}
           <Link href="/wallet"
-            className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-br from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 transition-colors text-[color:var(--on-yellow)]">
+            className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-br from-amber-400 to-amber-500 text-[color:var(--on-yellow)] shadow-[inset_0_1px_0_rgba(255,255,255,.45),0_12px_26px_-12px_rgba(150,90,0,.55)] transition hover:-translate-y-0.5 hover:brightness-105">
             <Wallet className="w-8 h-8" />
             <div>
               <p className="text-sm font-semibold">My Wallet</p>
@@ -1713,18 +1715,20 @@ function CitizenHome({
             <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Quick Actions</h3>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { href: "/home/medications", label: "Medications", icon: Pill, color: "text-amber-500" },
-                { href: "/home/conditions", label: "Conditions", icon: FlaskConical, color: "text-purple-500" },
-                { href: "/home/allergies", label: "Allergies", icon: AlertTriangle, color: "text-red-500" },
-                { href: "/home/documents", label: "Documents", icon: FileCheck, color: "text-blue-500" },
-                { href: "/home/results", label: "Lab Results", icon: Clipboard, color: "text-green-500" },
+                { href: "/home/medications", label: "Medications", icon: Pill, tile: "border-amber-200 bg-amber-50/80 hover:bg-amber-100/80", chip: "from-amber-400 to-amber-600" },
+                { href: "/home/conditions", label: "Conditions", icon: FlaskConical, tile: "border-violet-200 bg-violet-50/80 hover:bg-violet-100/80", chip: "from-violet-400 to-violet-600" },
+                { href: "/home/allergies", label: "Allergies", icon: AlertTriangle, tile: "border-rose-200 bg-rose-50/80 hover:bg-rose-100/80", chip: "from-rose-400 to-rose-600" },
+                { href: "/home/documents", label: "Documents", icon: FileCheck, tile: "border-sky-200 bg-sky-50/80 hover:bg-sky-100/80", chip: "from-sky-400 to-sky-600" },
+                { href: "/home/results", label: "Lab Results", icon: Clipboard, tile: "border-emerald-200 bg-emerald-50/80 hover:bg-emerald-100/80", chip: "from-emerald-400 to-emerald-600" },
               ].map((a) => {
                 const Icon = a.icon;
                 return (
                   <Link key={a.href} href={a.href}
-                    className="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-border hover:border-primary/25 hover:bg-primary-soft/50 transition-colors text-center">
-                    <Icon className={`w-5 h-5 ${a.color}`} />
-                    <span className="text-[11px] font-medium text-muted-foreground">{a.label}</span>
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border text-center transition hover:-translate-y-0.5 hover:shadow-md ${a.tile}`}>
+                    <span className={`grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br text-white shadow-[inset_0_1px_0_rgba(255,255,255,.4)] ${a.chip}`}>
+                      <Icon className="w-4 h-4" />
+                    </span>
+                    <span className="text-[11px] font-semibold text-foreground/80">{a.label}</span>
                   </Link>
                 );
               })}
@@ -1887,15 +1891,15 @@ function TimelineFeed({ userId }: { userId?: string }) {
       {/* Call / video shortcuts — prominent strip */}
       <div className="grid grid-cols-3 gap-3">
         <Link href="/telemedicine"
-          className="flex items-center justify-center gap-2 py-3 bg-green-50 border border-green-200 rounded-xl text-sm font-medium text-green-700 hover:bg-green-100 transition-colors">
+          className="flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,.35),0_10px_22px_-10px_rgba(6,95,70,.7)] hover:brightness-110 transition">
           <Video className="w-4 h-4" /> Video call
         </Link>
         <Link href="/telemedicine?mode=audio"
-          className="flex items-center justify-center gap-2 py-3 bg-info-soft border border-info/25 rounded-xl text-sm font-medium text-primary-hover hover:bg-blue-100 transition-colors">
+          className="flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-br from-sky-500 to-sky-700 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,.35),0_10px_22px_-10px_rgba(3,60,90,.7)] hover:brightness-110 transition">
           <Phone className="w-4 h-4" /> Voice call
         </Link>
         <Link href="/scheduling"
-          className="flex items-center justify-center gap-2 py-3 bg-primary-soft border border-primary/25 rounded-xl text-sm font-medium text-primary-hover hover:bg-primary-soft transition-colors">
+          className="flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-br from-violet-500 to-violet-700 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,.35),0_10px_22px_-10px_rgba(60,20,120,.7)] hover:brightness-110 transition">
           <Calendar className="w-4 h-4" /> Book visit
         </Link>
       </div>
