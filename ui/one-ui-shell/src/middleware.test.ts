@@ -86,7 +86,11 @@ describe("the manifest the app actually declares is publicly reachable", () => {
     expect(declared, "layout.tsx no longer declares a manifest - update this test").toBeTruthy();
 
     const middlewareSrc = readFileSync(join(__dirname, "middleware.ts"), "utf8");
-    const publicFiles = middlewareSrc.match(/const PUBLIC_FILES = \[([^\]]*)\]/s)?.[1] ?? "";
+    // No `/s` flag: dotAll only changes what `.` matches, and this pattern has no `.`.
+    // `[^\]]*` already spans newlines by itself, so the flag was doing nothing — while
+    // costing a compile error under the repo's `target: es2017` (TS1501: dotAll requires
+    // es2018+). Removing it is behaviour-identical; verified by capturing the same bytes.
+    const publicFiles = middlewareSrc.match(/const PUBLIC_FILES = \[([^\]]*)\]/)?.[1] ?? "";
     expect(publicFiles, "PUBLIC_FILES not found - the constant was renamed").not.toEqual("");
 
     expect(
