@@ -433,12 +433,19 @@ export function HeroDiscoverySurface() {
       aria-label="Get health services"
       className="flex h-full min-h-[32rem] flex-col overflow-hidden rounded-[1.6rem] xl:min-h-0 border border-white/40 bg-white/85 shadow-[0_30px_80px_-28px_rgba(0,0,0,.65)] ring-1 ring-inset ring-white/50 backdrop-blur-glass-strong supports-[not(backdrop-filter:blur(0px))]:bg-white [.low-blur_&]:bg-white [.low-blur_&]:backdrop-blur-none"
     >
-      {/* Header + Map/List toggle */}
-      <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 pt-4 pb-3 sm:px-5">
-        <div>
-          <h2 className="text-lg font-bold text-slate-900 sm:text-xl">Get Health Services</h2>
-          <p className="text-xs text-slate-500">Search care, providers, medicines and wellness support</p>
-        </div>
+      {/* Header + Map/List toggle. One row, no subtitle — the vertical space belongs to
+          the map below. The Live dot replaces the sentence the subtitle used to carry. */}
+      <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 pt-3 pb-2.5 sm:px-5">
+        <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+          Get Health Services
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+            <span
+              className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,.18)]"
+              aria-hidden
+            />
+            Live
+          </span>
+        </h2>
         <div className="inline-flex shrink-0 rounded-lg border border-slate-200 bg-slate-50 p-0.5 text-xs font-semibold">
           <button
             type="button"
@@ -464,7 +471,7 @@ export function HeroDiscoverySurface() {
       </div>
 
       {/* Unified search + Near me */}
-      <div className="space-y-2.5 px-4 pt-3 sm:px-5">
+      <div className="space-y-2 px-4 pt-2.5 sm:px-5">
         <form onSubmit={submit} role="search" aria-label="Search health services">
           <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20">
             <Search className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
@@ -480,7 +487,7 @@ export function HeroDiscoverySurface() {
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex min-h-9 shrink-0 items-center rounded-lg bg-emerald-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"
+              className="inline-flex min-h-9 shrink-0 items-center rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 px-3 py-1.5 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,.3),0_6px_14px_-6px_rgba(6,95,70,.6)] hover:brightness-110 disabled:opacity-50"
             >
               Search
             </button>
@@ -546,8 +553,8 @@ export function HeroDiscoverySurface() {
                 onClick={() => pickCategory(c.value)}
                 className={`inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${
                   category === c.value
-                    ? "border-emerald-500 bg-emerald-600 text-white"
-                    : "border-slate-200 bg-slate-50 text-slate-700 hover:border-emerald-300 hover:bg-emerald-50"
+                    ? "border-transparent bg-gradient-to-br from-emerald-500 to-emerald-700 font-semibold text-white shadow-[0_5px_12px_-5px_rgba(6,95,70,.65)]"
+                    : "border-slate-200 bg-white/75 text-slate-700 hover:border-emerald-300 hover:bg-emerald-50"
                 }`}
               >
                 {c.label}
@@ -602,7 +609,7 @@ export function HeroDiscoverySurface() {
               of it — the map resolved to 28px at 390 and 105px at 768, a strip of
               nothing. The floor makes the surface grow instead of crushing the map.
             */}
-            <div className="relative min-h-[16rem] flex-1 overflow-hidden rounded-xl border border-slate-200 lg:min-h-[14rem] xl:min-h-[13rem]">
+            <div className="relative min-h-[20rem] flex-1 overflow-hidden rounded-xl border border-slate-200 shadow-[inset_0_2px_10px_rgba(10,42,32,.08)] lg:min-h-[17rem] xl:min-h-[16rem]">
               <FindCareMap
                 results={[]}
                 geoMarkers={geoMarkers}

@@ -200,15 +200,25 @@ export function WelcomeHero() {
 
   return (
     <section
-      // Full-bleed living canvas beneath the white shell — not an inset card. The gradient
-      // sits BEHIND the composition: pale mint behind the wordmark, soft teal through the
-      // middle-left, deeper teal-green toward the lower-left and bottom, and a lighter mist
-      // behind the right-hand discovery surface so the map panel reads as lifted, not sunk.
-      // Baked into the background because the section is overflow-hidden and would clip
-      // blurred orb divs.
-      className="public-living-canvas relative overflow-hidden border-y border-white/10 bg-[radial-gradient(38%_46%_at_10%_-6%,rgba(233,250,246,.30),transparent_62%),radial-gradient(52%_60%_at_78%_18%,rgba(178,232,226,.20),transparent_66%),radial-gradient(56%_58%_at_-6%_104%,rgba(16,185,160,.42),transparent_66%),linear-gradient(150deg,#12615b_0%,#0d4d4d_34%,#093c42_64%,#05282f_88%,#03222a_100%)] shadow-[0_30px_90px_-46px_rgba(2,30,26,.8)]"
+      // Full-bleed living canvas beneath the white shell — not an inset card. One vertical
+      // story: near-white mint at the top so the colourful brand mark sits on its natural
+      // ground, ramping through living teal to a deep calm floor. The base gradient uses
+      // PX-ANCHORED stops (not percentages): the section's height changes when Nompilo
+      // guidance expands, and a percentage ramp would drift through the text — growth
+      // extends the dark floor instead. Baked into the background because the section is
+      // overflow-hidden and would clip blurred orb divs.
+      className="public-living-canvas relative overflow-hidden border-y border-white/10 bg-[radial-gradient(56%_58%_at_-6%_104%,rgba(16,185,160,.35),transparent_66%),linear-gradient(180deg,#2E8C84_0px,#1A6E68_240px,#0B4A4D_430px,#063139_620px,#03222A_100%)] shadow-[0_30px_90px_-46px_rgba(2,30,26,.8)]"
       aria-labelledby="living-canvas-title"
     >
+      {/* The light band the brand needs, as a FIXED-HEIGHT fading wash over the dark base —
+          the Wave-1 lesson kept: it must stay behind the brand/headline/intro block and the
+          discovery panel's top edge, never grow into a decorative band of its own. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-[26rem] sm:h-[24rem] lg:h-[21rem] bg-[linear-gradient(180deg,#F7FCFA_0%,#EDF7F1_35%,#CFE9DD_62%,rgba(148,208,192,.55)_82%,rgba(148,208,192,0)_100%)]"
+      />
+      {/* Fine grain so the teal ramp reads as material, not banded screen. */}
+      <div aria-hidden className="impilo-grain pointer-events-none absolute inset-0 opacity-50" />
       {/* 38/62 split: intent and continuity left, service discovery right. Both zones start
           at the same top edge and run to the same depth — the right side must never begin
           halfway down the viewport. */}
@@ -219,20 +229,22 @@ export function WelcomeHero() {
             overflow-hidden hid the symptom instead of scrolling). */}
         <div className="relative z-10 flex min-w-0 flex-col">
           {/* Wordmark + tagline + question read as ONE compact composition, not a floating
-              brand block with the message far below it. */}
+              brand block with the message far below it. The COLOURFUL mark, at roughly twice
+              the old scale — the light band above exists so its flag colours read true. */}
           <div className="flex flex-col gap-1">
-            <ImpiloBrandLogo variant="full" tone="white" size={34} />
-            <p className="text-sm font-medium text-teal-100/80">One Health OS. For everyone.</p>
+            <ImpiloBrandLogo variant="full" tone="brand" size={64} />
+            <p className="text-sm font-semibold text-[#23564B]">One Health OS. For everyone.</p>
           </div>
           <h1
             id="living-canvas-title"
             // Smaller than the earlier concept: still the loudest thing on the canvas,
             // but no longer consuming the vertical space the discovery surface needs.
-            className="mt-4 max-w-xl text-[clamp(1.5rem,2.2vw,2.1rem)] font-extrabold leading-[1.1] tracking-[-0.03em] text-white [text-shadow:0_1px_40px_rgba(45,212,191,.25)]"
+            // Dark forest→emerald clip: this sits on the light band, not the teal floor.
+            className="mt-4 max-w-xl bg-gradient-to-b from-[#0A3A30] to-[#0C7A5B] bg-clip-text text-[clamp(1.5rem,2.2vw,2.1rem)] font-extrabold leading-[1.1] tracking-[-0.03em] text-transparent"
           >
             {t("public.welcome.needFirstTitle")}
           </h1>
-          <p className="mt-3 max-w-xl text-[15px] leading-6 text-emerald-50/85">
+          <p className="mt-3 max-w-xl text-[15px] leading-6 text-[#245549]">
             {t("public.welcome.needFirstIntro")}
           </p>
 
@@ -242,7 +254,13 @@ export function WelcomeHero() {
             aria-label="Ask Nompilo about health, services or support"
             className="mt-5"
           >
-            <label htmlFor="public-nompilo-intent" className="text-sm font-semibold text-white">
+            {/* The label sits exactly where the light wash hands over to the teal floor, so
+                it carries its own ground — a translucent pill — instead of gambling on
+                whichever tone the ramp happens to be at this viewport width. */}
+            <label
+              htmlFor="public-nompilo-intent"
+              className="inline-flex items-center gap-1.5 rounded-full bg-emerald-950/35 px-2.5 py-0.5 text-sm font-semibold text-white backdrop-blur-sm"
+            >
               Ask Nompilo
             </label>
             <div className="mt-2 flex items-center gap-2 rounded-2xl border border-white/25 bg-white/95 p-2 shadow-[0_18px_50px_-18px_rgba(0,0,0,.6)] focus-within:border-teal-300 focus-within:ring-2 focus-within:ring-teal-300/30">
@@ -259,7 +277,7 @@ export function WelcomeHero() {
               <button
                 type="submit"
                 disabled={loading || question.trim().length < 3}
-                className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2"
+                className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 px-4 py-2.5 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,.35),0_8px_20px_-8px_rgba(6,95,70,.7)] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2"
               >
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
@@ -277,7 +295,7 @@ export function WelcomeHero() {
                 key={prompt}
                 type="button"
                 onClick={() => void askNompilo(prompt)}
-                className="min-h-9 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-left text-xs font-medium text-emerald-50 backdrop-blur-sm hover:border-teal-300/60 hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-300"
+                className="min-h-9 rounded-full border border-white/20 bg-emerald-950/30 px-3 py-1.5 text-left text-xs font-medium text-emerald-50 backdrop-blur-sm hover:border-teal-300/60 hover:bg-emerald-950/45 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-300"
               >
                 {prompt}
               </button>
@@ -371,7 +389,7 @@ export function WelcomeHero() {
           <div className="mt-7 flex flex-wrap items-center gap-2.5" aria-label="Primary Impilo actions">
             <Link
               href="/welcome/find-care"
-              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 px-4 py-2.5 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,.35),0_10px_24px_-10px_rgba(6,95,70,.8)] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2"
             >
               <HeartHandshake className="h-4 w-4" aria-hidden />
               Get care

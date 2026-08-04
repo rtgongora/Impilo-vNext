@@ -32,7 +32,7 @@ export function HeroContinuity() {
     return (
       <div
         data-testid="hero-continuity"
-        className="mt-5 rounded-2xl border border-white/15 bg-white/10 p-3.5 backdrop-blur-md supports-[not(backdrop-filter:blur(0px))]:bg-emerald-950/70 [.low-blur_&]:bg-emerald-950/80 [.low-blur_&]:backdrop-blur-none"
+        className="relative mt-5 overflow-hidden rounded-2xl border border-white/15 bg-white/10 p-3.5 backdrop-blur-md before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1/2 before:bg-gradient-to-b before:from-white/10 before:to-transparent supports-[not(backdrop-filter:blur(0px))]:bg-emerald-950/70 [.low-blur_&]:bg-emerald-950/80 [.low-blur_&]:backdrop-blur-none"
       >
         <div className="flex items-center gap-2.5">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-teal-400/20 text-teal-200 ring-1 ring-teal-300/30">
@@ -46,7 +46,7 @@ export function HeroContinuity() {
         <div className="mt-2.5 flex flex-wrap items-center gap-2">
           <Link
             href="/auth/login?returnTo=%2Fhome"
-            className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-500"
+            className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 px-3 py-1.5 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,.3)] hover:brightness-110"
           >
             My Impilo
             <ArrowRight className="h-3.5 w-3.5" aria-hidden />
@@ -75,7 +75,7 @@ export function HeroContinuity() {
   return (
     <div
       data-testid="hero-continuity"
-      className="mt-5 rounded-2xl border border-white/15 bg-white/10 p-3.5 backdrop-blur-md supports-[not(backdrop-filter:blur(0px))]:bg-emerald-950/70 [.low-blur_&]:bg-emerald-950/80 [.low-blur_&]:backdrop-blur-none"
+      className="relative mt-5 overflow-hidden rounded-2xl border border-white/15 bg-white/10 p-3.5 backdrop-blur-md before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1/2 before:bg-gradient-to-b before:from-white/10 before:to-transparent supports-[not(backdrop-filter:blur(0px))]:bg-emerald-950/70 [.low-blur_&]:bg-emerald-950/80 [.low-blur_&]:backdrop-blur-none"
     >
       <p className="flex items-center gap-2 text-sm font-semibold text-white">
         <ShieldCheck className="h-4 w-4 text-teal-300" aria-hidden />
@@ -88,7 +88,7 @@ export function HeroContinuity() {
       <div className="mt-2.5 flex flex-wrap items-center gap-2">
         <Link
           href="/auth/login?returnTo=%2Fhome"
-          className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-500"
+          className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 px-3 py-1.5 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,.3)] hover:brightness-110"
         >
           My Impilo
           <ArrowRight className="h-3.5 w-3.5" aria-hidden />
