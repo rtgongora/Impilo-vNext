@@ -72,8 +72,24 @@
   }
 
   .impilo-surface-card {
-    @apply rounded-3xl border bg-card shadow-impilo-card;
+    @apply rounded-3xl border shadow-impilo-card;
+    /* Gloss: the working card lifts off the aurora canvas as glass. color-mix from
+       the surface token keeps light/dark themes each their own; fallbacks return to
+       the opaque surface so blur stays decoration, never information. */
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    backdrop-filter: blur(10px) saturate(1.05);
     border-color: var(--border-strong);
+  }
+
+  @supports not (backdrop-filter: blur(1px)) {
+    .impilo-surface-card {
+      background: var(--surface);
+    }
+  }
+
+  .low-blur .impilo-surface-card {
+    background: var(--surface);
+    backdrop-filter: none;
   }
 
   .impilo-surface-soft {
@@ -245,6 +261,7 @@
     background-color: color-mix(in srgb, var(--surface) 92%, var(--background-deep) 8%);
     background-image:
       var(--impilo-african-print),
+      radial-gradient(40% 70% at 100% 0%, rgba(45, 212, 191, 0.1), transparent 60%),
       radial-gradient(circle at 12% 20%, rgba(15, 45, 35, 0.06) 0, transparent 36%),
       radial-gradient(circle at 88% 18%, rgba(212, 175, 55, 0.08) 0, transparent 28%),
       linear-gradient(
@@ -253,7 +270,7 @@
         transparent 42%,
         color-mix(in srgb, var(--surface-warm) 35%, transparent) 100%
       );
-    background-size: 48px 48px, auto, auto, auto;
+    background-size: 48px 48px, auto, auto, auto, auto;
   }
 
   .module-hero-logo-tile {

@@ -80,7 +80,10 @@ export function WorkHomeSectionCard({ section, onRetry }: WorkHomeSectionCardPro
   }
 
   return (
-    <div className="flex flex-col rounded-lg border border-border bg-card p-4" data-section-id={section.sectionId}>
+    <div
+      className="flex flex-col rounded-2xl border border-border bg-card p-4 shadow-[0_14px_34px_-24px_rgba(2,30,26,.45)]"
+      data-section-id={section.sectionId}
+    >
       <div className="mb-2 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Icon className={`h-4 w-4 ${meta.accentClassName}`} />
