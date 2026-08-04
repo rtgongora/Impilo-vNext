@@ -42,7 +42,7 @@ export function JourneyContextPanel({ returnTo, intentGoal }: JourneyContextPane
     return (
       <div
         data-testid="journey-context-booking"
-        className="rounded-[2rem] border border-emerald-200 bg-gradient-to-br from-emerald-900 to-slate-900 p-7 text-white shadow-lg sm:p-8"
+        className="rounded-[2rem] border border-emerald-200 bg-gradient-to-br from-emerald-900 to-[#052B33] p-7 text-white shadow-lg sm:p-8"
       >
         <div className="flex items-center gap-3">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-400/30">
@@ -106,7 +106,7 @@ export function JourneyContextPanel({ returnTo, intentGoal }: JourneyContextPane
     return (
       <div
         data-testid="journey-context-emergency"
-        className="rounded-[2rem] border border-red-200 bg-gradient-to-br from-red-950 to-slate-900 p-7 text-white shadow-lg sm:p-8"
+        className="rounded-[2rem] border border-red-200 bg-gradient-to-br from-red-950 to-[#052B33] p-7 text-white shadow-lg sm:p-8"
       >
         <div className="flex items-center gap-3">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-red-500/20 text-red-300 ring-1 ring-red-400/30">
@@ -136,7 +136,7 @@ export function JourneyContextPanel({ returnTo, intentGoal }: JourneyContextPane
     return (
       <div
         data-testid="journey-context-provider"
-        className="rounded-[2rem] border border-amber-200 bg-gradient-to-br from-amber-950 to-slate-900 p-7 text-white shadow-lg sm:p-8"
+        className="rounded-[2rem] border border-amber-200 bg-gradient-to-br from-amber-950 to-[#052B33] p-7 text-white shadow-lg sm:p-8"
       >
         <div className="flex items-center gap-3">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-amber-500/20 text-amber-300 ring-1 ring-amber-400/30">
@@ -173,7 +173,7 @@ export function JourneyContextPanel({ returnTo, intentGoal }: JourneyContextPane
   return (
     <div
       data-testid="journey-context-default"
-      className="rounded-[2rem] border border-slate-200 bg-gradient-to-br from-emerald-950 via-slate-900 to-slate-950 p-7 text-white shadow-lg sm:p-9"
+      className="rounded-[2rem] border border-slate-200 bg-gradient-to-br from-emerald-950 via-[#073540] to-[#03222A] p-7 text-white shadow-lg sm:p-9"
     >
       <div className="flex items-center gap-3">
         <span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-400/30">

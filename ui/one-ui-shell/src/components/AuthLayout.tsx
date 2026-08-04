@@ -25,7 +25,15 @@ export function AuthLayout({
   width?: "md" | "xl";
 }) {
   return (
-    <div className="min-h-screen flex flex-col bg-slate-900 text-slate-100 selection:bg-emerald-500 selection:text-white" data-testid="auth-trust-scene">
+    <div
+      // The trust conversation happens on the deep end of the Impilo canvas: the same
+      // teal family as the public hero's floor, with a soft emerald bloom low-left.
+      // Trust rises with the action — the ground darkens with it, calmly, not to slate.
+      className="relative min-h-screen flex flex-col bg-[radial-gradient(56%_58%_at_-6%_104%,rgba(16,185,160,.28),transparent_66%),linear-gradient(180deg,#0B4A4D_0%,#073540_48%,#03222A_100%)] text-slate-100 selection:bg-emerald-500 selection:text-white"
+      data-testid="auth-trust-scene"
+    >
+      {/* Grain keeps the deep gradient from banding on low-end panels. */}
+      <div aria-hidden className="impilo-grain pointer-events-none absolute inset-0 opacity-50" />
       {/* Shared Responsive Public Header (Emergency, Language, Accessibility, Logo) */}
       <PublicHeader />
 
@@ -39,25 +47,25 @@ export function AuthLayout({
 
           {/* Right Column: Interactive Authentication Surface */}
           <div className="lg:col-span-6 xl:col-span-5 flex flex-col justify-center">
-            <div className="rounded-[2rem] border border-slate-200/90 bg-white p-6 sm:p-8 shadow-2xl text-slate-900">
+            <div className="rounded-[2rem] border border-white/40 bg-white/95 p-6 sm:p-8 text-slate-900 shadow-[0_36px_90px_-30px_rgba(2,30,26,.85)] ring-1 ring-inset ring-white/60 backdrop-blur-md [.low-blur_&]:bg-white [.low-blur_&]:backdrop-blur-none">
               {children}
             </div>
 
-            <div className="mt-4 space-y-2 text-center text-xs text-slate-400">
+            <div className="mt-4 space-y-2 text-center text-xs text-teal-100/60">
               <p className="flex items-center justify-center gap-1.5 font-medium">
                 <Shield className="h-3.5 w-3.5 text-emerald-400" />
                 Protected by Impilo Trust Layer & TSHEPO Policy Engine
               </p>
               <p className="flex items-center justify-center gap-3">
-                <Link href="/privacy" className="hover:text-slate-200 underline">
+                <Link href="/privacy" className="hover:text-white underline">
                   Privacy Policy
                 </Link>
                 <span>&middot;</span>
-                <Link href="/terms" className="hover:text-slate-200 underline">
+                <Link href="/terms" className="hover:text-white underline">
                   Terms of Use
                 </Link>
                 <span>&middot;</span>
-                <Link href="/account-deletion" className="hover:text-slate-200 underline">
+                <Link href="/account-deletion" className="hover:text-white underline">
                   Account Deletion
                 </Link>
               </p>
