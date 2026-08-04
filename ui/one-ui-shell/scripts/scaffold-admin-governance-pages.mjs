@@ -197,7 +197,31 @@ const allRoutes = [
   ...dynamicPages.map((p) => p.route),
 ];
 
-const uniqueRoutes = [...new Set(allRoutes)].sort();
+/**
+ * Order matters: matchRouteDefinition compiles `[param]` to `[^/]+` and returns the FIRST entry
+ * that matches, so a dynamic segment registered above its literal siblings swallows them. Plain
+ * `.sort()` put "[orgId]" before "new" and "[assignmentId]" before "add", which is exactly how
+ * two routes ended up rendering under a sibling's title and nav label. Sort segment by segment
+ * with literals ahead of dynamic segments so the emitted order is matchable.
+ */
+function compareRoutes(a, b) {
+  const as = a.split("/");
+  const bs = b.split("/");
+  for (let i = 0; i < Math.max(as.length, bs.length); i++) {
+    const x = as[i];
+    const y = bs[i];
+    if (x === undefined) return -1;
+    if (y === undefined) return 1;
+    if (x === y) continue;
+    const xd = x.startsWith("[");
+    const yd = y.startsWith("[");
+    if (xd !== yd) return xd ? 1 : -1;
+    return x < y ? -1 : 1;
+  }
+  return 0;
+}
+
+const uniqueRoutes = [...new Set(allRoutes)].sort(compareRoutes);
 
 const registryLines = uniqueRoutes.map((route) => {
   const title = routeTitle(route);
