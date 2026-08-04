@@ -1,6 +1,6 @@
 # Impilo vNext — Hybrid / Federated Target Architecture
 
-**Status:** Controlling architecture · **Version:** 1.1 · **Date:** 2026-08-03
+**Status:** Controlling architecture · **Version:** 1.2 (correction pass on v1.1) · **Date:** 2026-08-04
 **Factual basis:** [`vnext-current-state-recovery-2026-08-03.md`](vnext-current-state-recovery-2026-08-03.md) (commit `1870cf33d`), plus targeted evidence sweeps for the v1.1 additions. Every current-state statement is a reference, not a re-derivation.
 **Scope:** Converts vNext from a single-instance national deployment into a hub-and-spoke federated national platform, consumed through four service profiles. Immediate delivery target is the **large Hospital Node**. This document does not implement; it governs implementation.
 
@@ -34,6 +34,25 @@ v1.0 settled how the federation works. It did not govern how organisations *cons
 | MoHCC domains | Single `MOHCC-ZW`, flagged unresolved | **§6A** three options evaluated; hierarchical recommended, all three supportable |
 
 Everything else in v1.0 is preserved: hub-and-spoke federation, National Core as governed hub, local-primary Hospital Nodes, no database replication, no raw cross-site Kafka, no uncontrolled peer exchange, one codebase and one signed artefact set, the six-identifier split, Tshepo local enforcement, seven-day autonomy, origin-node clinical authority, National Butano as projection, runtime endpoint discovery, institutional IdP and key custody, non-MoHCC contribution restricted by default, and the Phase 0 safety corrections with their evidence-based gates.
+
+## v1.2 — correction pass on v1.1 (PO review, 2026-08-04)
+
+Ten corrections and two settled decisions. Three of the ten are **claims v1.1 made that it could not support** — each is now stated at the strength the evidence actually permits.
+
+| # | Correction | Where | Nature |
+|---|---|---|---|
+| 1 | **Compute locality ≠ authority primacy.** A remotely hosted node survives a National Core outage but not the loss of the hospital's link to its host. Three independent attributes introduced | §2A.2, §2B.2, §3A, §17A | Genuine architectural gap |
+| 2 | **Legal controllership ≠ source authority.** Seven distinct authority roles separated; the matrix no longer asserts a controller that §26.2 says is undetermined | §2B.2, §4A.0, §19A.1 | Internal contradiction |
+| 3 | **Key custody does not defeat a managed platform operator at runtime.** v1.1 claimed the operator "holds ciphertext and cannot decrypt". False under managed Kubernetes | §2B.3, §23.2 | **Overclaim — corrected** |
+| 4 | **Work-context concurrency was too absolute** and contradicted its own test | §4B.5, §11A.2, §11C | Internal contradiction |
+| 5 | **National → node transition need not always be full reauthentication** | §11C.5 | Usability refinement |
+| 6 | **Air-gapped *installation* ≠ air-gapped *operation*** | §22B.4, §22B.6 | Genuine gap |
+| 7 | **The cache cannot suppress a revocation it has not received.** v1.1 claimed immediate offline suppression | §19B.6 | **Overclaim — corrected** |
+| 8 | **Non-MoHCC allergy contribution marked `[D]` while §26.2 says it is undecided** | §4.2 | Internal contradiction |
+| 9 | **Compact Node topology too heavy;** no bill of materials | §17A.2, §17A.6 | Operational gap |
+| 10 | **"Any node-only code path is a defect" condemned this architecture's own required functionality** | §1.5, §2, ADR-16 | **Self-contradiction — corrected** |
+| **D1** | Marketplace is **multi-domain**: one service, three separately authorised surfaces | §4A.4 | PO decision, was open |
+| **D2** | Personal and work sessions **may coexist** under stated conditions | §4B.5 | PO decision, was open |
 
 ---
 
@@ -77,7 +96,7 @@ These are testable statements. The acceptance plan in §19 proves each one.
 3. **Offline never weakens policy.** When a signed bundle expires beyond its permitted staleness, the affected decision class **fails closed**, except for the explicitly enumerated emergency classes in §4.7, which proceed with elevated, non-repudiable audit.
 4. **National administration is not clinical access.** A National Core platform administrator role grants no clinical read inside any trust domain. Cross-domain clinical access requires a federation agreement, a consent or legal basis, and produces a disclosure record visible to the institution.
 5. **Local care has no synchronous national dependency.** No routine clinical action in the seven-day autonomy set makes a blocking call to the National Core. Verified by the disconnection test, not by inspection.
-6. **One artefact set.** A Hospital Node runs the same signed images as the National Core, selected by profile. Any node-only code path is a defect.
+6. **One artefact set.** A Hospital Node runs the same signed images as the National Core, selected by profile. **No forked or independently maintained hospital implementation exists**; profile-specific behaviour is permitted only where it is configuration-driven, declared, tested and compatibility-governed (§2).
 7. **Honest failure is preserved.** The recovery's honest degradations (fail-closed consent, `pending_backend` eligibility, the 502 on national KPIs, the "do not treat as absence of allergies" body) are retained as-is. The false-success paths it named are retired, not federated.
 
 ## 1.4 The v1.1 doctrine lines **[D]**
@@ -98,7 +117,7 @@ These are testable statements. The acceptance plan in §19 proves each one.
 
 - Peer-to-peer node exchange without a national federation route.
 - Database replication of any kind between sites.
-- A second vNext codebase, a hospital fork, a hospital "edition", or a node-only service.
+- A **forked or independently maintained** hospital implementation. (Profile-specific *behaviour* is permitted and in places required — see the corrected rule in §2.)
 - An employer-owned copy of My Life, or the full professional domain under facility administration.
 - Facility Edge as a first-wave deliverable — profiled in §17A, sequenced after the first Hospital Node pilot.
 
@@ -117,6 +136,12 @@ These are testable statements. The acceptance plan in §19 proves each one.
 | **Impilo Facility Edge** | A reduced profile for small facilities: local registration, OPD, dispensing, offline capture; no local inpatient/theatre/lab estate | `values-facility-edge.yaml` | Post-pilot |
 
 **Product relationship rule.** National Core and Hospital Node are *profiles of the same chart and the same images*. Federation Gateway, Fleet Service and the Bootstrap Agent are new code. Tshepo Local Enforcement is a *packaging* of existing services plus one new agent. Nothing else is new.
+
+**The one-product rule, corrected [D].** v1.1 stated that "any node-only code path is a defect". That was too strong, and it condemned functionality this architecture itself requires: local identifier allocation, the Bundle Agent, local work-context minting, the Shared-Care Cache, the Bootstrap Agent and the node side of the Federation Gateway are all legitimately node-only. The rule is therefore:
+
+> **No forked or independently maintained hospital implementation is permitted.** Shared domain behaviour uses the same code and the same contracts everywhere. **Profile-specific behaviour is permitted where it is configuration-driven, explicitly declared in the profile, separately tested, and governed by the compatibility contract.** An undeclared divergence, a hospital-only copy of a shared service, or a behaviour that cannot be reached from the National Core profile's own test suite is the defect.
+
+Practically: a node-only *component* (Bundle Agent) is fine; a node-only *fork of PCT* is not. The test is whether the divergence is declared, packaged and versioned as part of the one artefact set.
 
 **Consumption is orthogonal to all of the above.** Each product may be consumed under any of the four service profiles in §2B — which is the distinction v1.0 did not draw.
 
@@ -148,6 +173,45 @@ Three worked consequences:
 1. **MoHCC may host a private hospital's dedicated node** and hold no ordinary clinical access to it (§2B, §6).
 2. **A hospital may own the hardware while Impilo operates the platform** and still be the data controller and clinical-governance authority (§3A).
 3. **A DR node may be operated by a different infrastructure provider from production** without changing the controller — which is why responsibility is versioned per node, not per organisation (§3A).
+
+## 2A.2 Authority primacy is not site continuity — two different outages **[D]**
+
+v1.1 asserted both that a Hospital Node may be hosted remotely *and* that Hospital Nodes provide seven-day autonomous care. **Those are only compatible if two distinct outages are distinguished**, and v1.1 did not distinguish them:
+
+```
+Outage A — Hospital Node ↔ National Core        (federation link)
+Outage B — Facility users ↔ Hospital Node       (site link)
+```
+
+A dedicated Hospital Node running at the National Data Centre survives **Outage A** completely: it is local-primary in *authority*, it holds the record, and it keeps working when the National Core is unavailable. It does **not** survive **Outage B**: if the hospital's WAN link to the NDC is cut, the hospital stops, because the node is not *site-local in execution*.
+
+**Advertising a nationally hosted node as providing seven-day hospital continuity is therefore false** unless it is paired with a site-reachable continuity mechanism. Three independent attributes replace the single conflated one:
+
+```sql
+deployment_node
+  ADD COLUMN clinical_authority_primacy VARCHAR(16) NOT NULL,  -- NATIONAL | NODE
+  ADD COLUMN compute_locality           VARCHAR(24) NOT NULL,  -- FACILITY_SITE | REMOTE_HOSTED |
+                                                               -- MULTI_SITE
+  ADD COLUMN site_continuity_profile    VARCHAR(24) NOT NULL;  -- NONE | EDGE_ASSISTED | FULL_LOCAL
+```
+
+| Attribute | Answers | Determines |
+|---|---|---|
+| `clinical_authority_primacy` | Whose record is this? | Whether the node or the Core is the system of record (§16A.2) |
+| `compute_locality` | Where does the software execute relative to the people using it? | Which outage class the deployment is exposed to |
+| `site_continuity_profile` | What happens at the *facility* when the site link fails? | Whether seven-day hospital continuity may be claimed at all |
+
+### The combinations that are honest
+
+| Deployment | authority | locality | site continuity | Survives Outage A | Survives Outage B |
+|---|---|---|---|---|---|
+| Hosted facility on the National Core | `NATIONAL` | `REMOTE_HOSTED` | `NONE` | ✘ | ✘ |
+| **Dedicated node at the NDC, no site presence** | `NODE` | `REMOTE_HOSTED` | **`NONE`** | ✔ | **✘ — may not be sold as seven-day hospital continuity** |
+| Dedicated node at the NDC **+ Facility Edge at the hospital** | `NODE` | `REMOTE_HOSTED` | `EDGE_ASSISTED` | ✔ | Partial, to the Edge's declared scope |
+| **Node on hospital premises** | `NODE` | `FACILITY_SITE` | `FULL_LOCAL` | ✔ | ✔ |
+| Node on premises + DR at the NDC | `NODE` | `MULTI_SITE` | `FULL_LOCAL` | ✔ | ✔, with a tested failover |
+
+> **[D] Seven-day *hospital* continuity may be claimed only where `site_continuity_profile = FULL_LOCAL`, or where an `EDGE_ASSISTED` profile's declared and tested scope covers the clinical workflows the claim refers to.** Anything else is seven-day *authority* continuity, which is a different and lesser promise. The Fleet Service records both, and the service agreement states which was sold.
 
 ---
 
@@ -191,7 +255,8 @@ A later, reduced profile for small facilities: local gateway, cache, device inte
 | **Infrastructure operator** | Impilo/MoHCC | Impilo/MoHCC | Institution | Institution | Managed |
 | **Platform operator** | Impilo/MoHCC | Impilo/MoHCC | **Impilo/MoHCC or accredited operator** | **Institution or accredited operator** | Managed |
 | **Application operator** | Impilo/MoHCC | Impilo/MoHCC, institution-controlled configuration | Impilo/MoHCC | Institution, on signed Impilo releases | Managed |
-| **Data controller** | **The organisation** (never the host) | **The organisation** | **The institution** | **The institution** | The organisation |
+| **Data controller** | **[L]** The party designated by the applicable trust domain and the governing legal determination (§26.2 #1) — **never inferred from hosting** | as left | as left | as left | as left |
+| **Source authority** (who created the fact) | The facility that created it | The facility | The facility | The facility | The facility |
 | **Data processor** | Impilo/MoHCC | Impilo/MoHCC | Impilo/MoHCC or operator | Institution | Managed operator |
 | **Key custodian** | National (per-domain keys) | National or **institutional** (D1+) | National or institutional | **Institutional** | National |
 | **Backup operator** | Impilo/MoHCC | Impilo/MoHCC | Operator, institution-verified | Institution | Managed |
@@ -201,17 +266,49 @@ A later, reduced profile for small facilities: local gateway, cache, device inte
 | **Clinical governance** | **The organisation** | **The organisation** | **The institution** | **The institution** | The organisation |
 | **Upgrade authority** | Platform | Institution window, platform floor | Institution window, platform floor | **Institution**, platform compatibility floor | Platform |
 | **Federation obligations** | Full national participation | Per agreement | Per agreement | Per agreement + accreditation | Full (via its parent) |
-| **Disconnection capability** | **None** — central-primary | None unless D5 | **Seven days** | **Seven days** | Constrained (hours–days, defined scope) |
+| **Survives National Core outage** (Outage A) | ✘ | ✔ at D5 | ✔ | ✔ | ✔ within scope |
+| **Survives site-link outage** (Outage B) | ✘ | **✘ — D5 at the NDC does *not* solve this** (§2A.2) | ✔ if `FULL_LOCAL` | ✔ | Partial, declared scope |
+| **May be sold as seven-day *hospital* continuity** | No | **Only when paired with a Facility Edge or a local secondary node** | Yes | Yes | No — constrained continuity only |
 | **Suitable for** | Clinics, small hospitals, organisations wanting a complete managed service | Large organisations wanting isolation without hardware | Hospitals providing infrastructure but wanting the platform managed | Highly autonomous non-MoHCC and specialised institutions | Small facilities with intermittent connectivity |
 
-## 2B.3 Hosting confers real capability — say so **[D]**
+## 2B.3 What hosting actually gives the platform operator **[D]**
 
-A platform operator with cluster administration **can** reach the data. Any claim otherwise would be false, and a contract built on a false claim is worse than no contract. The controls are therefore cryptographic, procedural and evidentiary, in that order:
+**Correction to v1.1.** The previous version claimed that with institution-held key custody "the platform operator holds ciphertext and cannot decrypt without an institution-held key". **That is false under managed Kubernetes**, and stating it would have put a claim into contracts that the architecture cannot honour.
 
-1. **Institution-held key custody.** At D1 and above, the institution holds the key-encryption key under envelope encryption; the platform operator holds ciphertext and cannot decrypt without an institution-held key. This is a real limit on a real capability. It has a real cost: **the institution becomes responsible for key availability**, and a lost KEK is unrecoverable data — which is why D1+ requires a key-management attestation at accreditation.
-2. **Just-in-time support access.** No standing administrative access to a dedicated or on-premises environment. Access is requested against a support case, approved by the institution, time-boxed, scoped, and **session-recorded**.
-3. **Institution-visible audit.** Every support session and every platform-originated query appears on the institution's disclosure dashboard (§6), itemised with actor, purpose, duration and what was reached.
-4. **Separation of duties.** Platform administration grants no application role and no clinical role (§4A); a platform administrator who wants clinical data must obtain it the same way anyone else does, and the attempt is recorded.
+An operator who controls the cluster, the images, the pods, the service accounts, the database networking and the runtime configuration can — in principle — alter a workload, exec into a container, read process memory, capture logs, retrieve secrets, or observe plaintext once the application has legitimately received its data keys. **Encryption at rest does not survive an adversary who controls the process that decrypts.**
+
+There are two honest positions. The platform offers both, and every agreement states which one it is buying.
+
+### Position 1 — Standard managed hosting (the default)
+
+Institution-held keys protect **backups, snapshots, offline and detached storage, and accidental storage-operator access**. They do **not** cryptographically eliminate the managed platform operator's runtime capability.
+
+Runtime access is therefore controlled **procedurally and evidentially**, and is stated as such:
+
+1. **Just-in-time access.** No standing administrative access to a dedicated or on-premises environment. Access is requested against a support case, approved by the institution, time-boxed, scoped and **session-recorded**.
+2. **Separation of duties.** Platform administration grants no application role and no clinical role (§4A); the attempt to obtain one is recorded.
+3. **Institution-visible audit,** covering **infrastructure paths as well as application paths** — database administration, storage snapshots, object-store access, backup restoration, `pod exec`, log and memory access, and secret retrieval. Application-layer audit alone would miss every route that matters here.
+4. **Independent audit sink.** Support-session records are written to a sink the platform operator cannot silently alter (§2B.4).
+
+**This is the position on offer unless the agreement says otherwise, and it must be described to institutions in these terms** — not as technical impossibility, but as contractual restraint with detection.
+
+### Position 2 — Strong cryptographic separation (an accreditable tier, not the default)
+
+Where an institution requires that the operator's runtime capability be *technically* constrained rather than contractually restrained, that is a distinct architecture with distinct cost, and it requires **all** of:
+
+| Requirement | Why |
+|---|---|
+| Institution-controlled external KMS or HSM | The key never exists inside the operator's trust boundary |
+| **Workload attestation** | Keys are released only to a measured, signed, expected workload |
+| Confidential-computing boundary (memory encryption / enclaves) | Denies memory inspection by the host |
+| Key release conditioned on attestation | An altered image or pod spec gets no key |
+| **Tamper-resistant audit outside the operator's control** | Otherwise the evidence trail has the same weakness as the data |
+
+**Until all five are in place, no document, contract or sales conversation may claim the platform operator cannot read live data.** This tier is out of scope for the first pilot and is recorded here so that it is designed rather than improvised if an institution demands it.
+
+## 2B.4 Consequences for the acceptance plan
+
+Because the exposure is at the infrastructure layer, the acceptance tests must exercise the infrastructure layer. Application-API tests would pass while every real route remained open. See A50–A56 (§23.2), which probe database administration, storage snapshots, object-store access, backup restoration, `pod exec`, log/memory exposure and secret retrieval — each asserting that the path is either blocked, or permitted only under an approved, recorded, institution-visible session.
 
 ---
 
@@ -567,7 +664,7 @@ Columns are defaults per context; a `data_sharing_policy` may tighten them and m
 | Encounters | **Local** | SUMMARY (encounter header: type, facility, dates, provider, disposition) | INDEX_ONLY *(negotiable → SUMMARY)* | SUMMARY under consent | Aggregate counts | SUMMARY |
 | Clinical notes (free text) | **Local** | **NEVER without specific authority** | NEVER | ON_DEMAND under explicit consent | Never | ON_DEMAND, elevated audit |
 | Problems / diagnoses | **Local** | FULL (coded) | SUMMARY *(negotiable)* | FULL under consent | Aggregate + notifiable | FULL |
-| Allergies / intolerances | **Local** | **FULL** — safety-critical, always contributed | **FULL** — the one clinical domain non-negotiable for patient safety | FULL | — | FULL |
+| Allergies / intolerances | **Local** | **FULL** — safety-critical, always contributed | **[L] Proposed** mandatory patient-safety contribution — **not settled doctrine** pending §26.2 #2 | FULL | — | FULL |
 | Medications | **Local** | FULL (coded, dispensed + active) | SUMMARY *(negotiable → FULL)* | FULL under consent | Aggregate | FULL |
 | Orders | **Local** | SUMMARY (order header + status) | INDEX_ONLY | SUMMARY | Aggregate | SUMMARY |
 | Results | **Local** | FULL (coded results + abnormal flags) | SUMMARY *(negotiable)* | FULL under consent | Notifiable + aggregate | FULL |
@@ -594,6 +691,8 @@ Columns are defaults per context; a `data_sharing_policy` may tighten them and m
 3. **Statutory beats consent; consent beats convenience.** Notifiable-disease reporting proceeds under legal basis with no consent gate and is recorded as such (`consent_basis = LEGAL_OBLIGATION`). Everything else that lacks a legal basis requires consent, and "the receiving clinician would find it useful" is not a basis.
 4. **Emergency is a disclosure *mode*, not a policy bypass.** It raises what may cross for a bounded window under break-glass, records a disclosure record on both sides, and triggers post-hoc review in the *disclosing* institution.
 5. **Non-MoHCC defaults are tighter and negotiable upward only.** A non-MoHCC institution starts at INDEX_ONLY for most clinical domains and negotiates outward through a `federation_agreement`. It cannot be defaulted into contribution.
+
+6. **Cells are marked at the strength of their authority [D].** A matrix cell asserting a mandatory contribution from an independently governed institution is a **legal** claim, not a technical one. Until §26.2 #2 is determined, every non-MoHCC mandatory-contribution cell is marked `[L] Proposed` and is implemented as a **default that the institution may decline at accreditation**, with the decline recorded on the federation agreement. Only statutory public-health reporting is `[D]` today, because its legal basis already exists independently of this platform.
 
 ## 4.4 Extended domains (v1.1) — personal, professional and operational
 
@@ -622,6 +721,22 @@ These domains were absent from v1.0. They need different columns from the clinic
 # 4A. The five rights and business domains **[D]**
 
 A person is one identity operating in several capacities. The platform must keep those capacities apart — technically, not by menu labels.
+
+## 4A.0 Seven authority roles, never collapsed **[D]**
+
+v1.1 used "authority" loosely, and in one place asserted a data controller that §26.2 records as legally undetermined. Seven roles are now distinguished, and **a single party may hold several without holding all**:
+
+| Role | Question it answers | Example |
+|---|---|---|
+| **Legal data controller** | Who determines the purposes and means of processing, and answers to the law? | **[L]** For a MoHCC hospital record: undetermined (§26.2 #1) |
+| **Data processor** | Who processes on the controller's instructions? | The platform operator in a hosted profile |
+| **Source authority** | Who created this fact and may amend it? | The originating facility — the v1.0 origin-authority rule |
+| **Clinical author** | Which clinician made this assertion? | The named provider on the record |
+| **Custodian** | Who physically holds and safeguards the bytes? | The infrastructure operator |
+| **Data subject / rightsholder** | Whose data is it, and who holds access, correction and consent rights? | The person |
+| **Disclosure authority** | Who may authorise a release to a third party? | Trust-domain governance, or the person, per basis |
+
+Two consequences that v1.1 got wrong by conflation. **A facility may be the source authority for a clinical fact without being the legal controller of the record estate** — it created the fact and may amend it; who answers to the regulator for the estate is a separate, legal question. And **the individual being the rightsholder for the PHR does not make them the legal controller of the hosted PHR service** (§19A.1); they hold the rights, the operator processes, and controllership follows the law.
 
 ## 4A.1 Domain definitions
 
@@ -681,6 +796,20 @@ Measured for this version:
 
 Three concrete leaks to close in Phase 2:
 
+## 4A.4 Marketplace is multi-domain **[O — PO decision, 2026-08-04]**
+
+v1.1 left open whether Marketplace is personal, organisational or both. **It is one platform service with three separately authorised surfaces**, and the resolution matters because today most of it is work-zoned while presenting as personal:
+
+| Surface | Audience | Contains |
+|---|---|---|
+| **Personal / public marketplace** | `impilo-personal` (+ anonymous public lane) | Consumer listings, personal purchases, wellness and commodity items, personal payment views |
+| **Professional marketplace** | `impilo-professional` | Professional goods and services, learning products, professional subscriptions |
+| **Institutional procurement / service marketplace** | `impilo-org-admin:<org_id>` / `impilo-work:<node_id>` | Facility procurement, vendor management, stock requisition, institutional contracts |
+
+Listings, transactions, audiences and disclosures are **domain-scoped**: a personal purchase is never visible to an employer, an institutional procurement is never charged to a person, and a single service (`msika` + `msika-flow`) serves all three behind audience-bound APIs. The Phase 2 refile (§4A.3) assigns every existing marketplace route to exactly one of these three.
+
+## 4A.5 Boundary leaks to close
+
 | Leak | Evidence | Fix |
 |---|---|---|
 | Personal documents served from the clinical lane | the personal document vault calls `/internal/v1/clinical-tools/documents` | Move to a personal-audience endpoint family |
@@ -732,6 +861,21 @@ In both cases the resulting personal session is **never returned to the node**, 
 ## 4B.4 What must be built
 
 `SessionExperienceService`'s three-tab model is the right seam and is kept — but it is promoted from a *response payload* to an *audience-bound session decision*. Concretely: audience mappers per client scope in Keycloak (none exist today), per-domain client registration, audience validation in every resource server, and the client-side `OperationalMode`/`navZone` tables replaced by a server-derived domain claim with unregistered routes defaulting to deny.
+
+## 4B.5 Concurrency doctrine **[D — corrects v1.1]**
+
+v1.1 said switching work contexts revokes the previous `jti` and "two work contexts are never live at once", then its own test asserted the rule was per-node. Neither was right as a global statement, and the absolute version would forbid legitimate practice: a consultant at two hospitals, a manager who also treats, a specialist taking a virtual consultation for another facility, a clinician reviewing an inbound referral while working locally, or anyone using a workstation and the provider handset at the same time.
+
+> **The rule is to prevent context *mixing*, not concurrent professional work.**
+> 1. **One request operates under exactly one work context.** Always. No request carries two.
+> 2. **One UI workspace has one active context.** Switching within a workspace revokes and re-mints — the existing `previousJti` behaviour, unchanged.
+> 3. **Multiple contexts may be concurrently live across explicitly separated sessions or devices, where policy permits** — a second workspace, a second device, a second node.
+> 4. **Every live context is visible to the holder, independently revocable, and audited** — including a "your active contexts" surface, because a context a person cannot see is one they cannot revoke.
+> 5. **A trust domain or facility may restrict concurrency** (for example, no concurrent contexts on shared clinical workstations). The restriction is configuration, not architecture.
+
+**Personal and work sessions may coexist [O — PO decision, 2026-08-04].** A provider may keep My Life or My Professional open while working, subject to four conditions, all testable: the tokens carry different audiences; cookie and storage scopes are isolated so neither can read the other; the active domain is **prominently displayed** in the interface at all times; and **a personal request can never silently become a work request** — a cross-domain call is rejected on audience, never coerced. Workstation policy may disable personal sessions on shared clinical devices, which is the right place for that decision to live.
+
+This is more usable than forced global switching and no weaker, because the boundary is enforced by audience validation rather than by the absence of a second tab.
 
 ---
 
@@ -1255,7 +1399,7 @@ Sally Mugabe Central Hospital
   └── Virtual Specialist Service — Consultant
 ```
 
-- **Selecting one mints a work session** and does not alter the personal or professional identity beneath it. Switching revokes the previous `jti` — two work contexts are never live at once.
+- **Selecting one mints a work session** and does not alter the personal or professional identity beneath it. Switching **within that workspace** revokes the previous `jti`; concurrent contexts across separated sessions or devices are governed by §4B.5.
 - **Every context switch is audited** with the previous and new context, the proof source and the mode.
 - **A person with no active workplace still has My Life and My Professional.** Work is absent, not broken — and it must not present as an error, since most citizens will never have it.
 
@@ -1376,7 +1520,7 @@ sequenceDiagram
 
 **4 — Node → My Life** — identical to 3, terminating in `aud impilo-personal`. The node is told only "transition completed"; never the session, never its contents.
 
-**5 — National → Hospital Node work context**
+**5 — National → Hospital Node work context** *(corrected in v1.2: signed authentication intent replaces mandatory reauthentication)*
 
 ```mermaid
 sequenceDiagram
@@ -1385,13 +1529,24 @@ sequenceDiagram
   participant NAT as National shell
   participant DIR as Federation directory
   participant NODE as Node
+  participant BND as Node bundles
   P->>NAT: choose a facility whose primary node is NODE-X
   NAT->>DIR: resolve facility → node endpoint + signed node config
-  NAT-->>P: hand off to the node's own endpoint
-  P->>NODE: authenticate at the node (its issuer)
-  NODE->>NODE: mint local work session
-  Note over NAT,NODE: The national session is NOT carried into the node.<br/>Clinical work happens under node-issued authority, always.
+  alt Node accepts brokered intent (MoHCC-managed default)
+    NAT->>NODE: short-lived SIGNED AUTHENTICATION INTENT<br/>{subject binding, acr/amr, issued_at, exp, audience=NODE-X}
+    NODE->>NODE: validate national issuer + identity binding + intent freshness
+    NODE->>BND: recheck local assignment · standing · revocation
+    NODE->>NODE: mint its OWN local work token
+  else Node requires step-up or full local reauthentication
+    P->>NODE: authenticate (or step up) at the node's issuer
+    NODE->>NODE: mint local work token
+  end
+  Note over NAT,NODE: In BOTH paths the national token never becomes the work token.<br/>The intent proves who authenticated; the node decides what they may do.
 ```
+
+**Why the intent is safe.** It is audience-bound to one node, single-use, short-lived, and it asserts *only* that this person authenticated nationally at a stated assurance. It confers no authority: the node still re-checks assignment, standing and revocation against its own bundles, and still mints its own token. What it removes is a second password prompt, not a check.
+
+Each node declares its posture in the node configuration document: `brokered_intent` (MoHCC-managed default), `step_up_required`, or `full_local_reauthentication` (available to any institution, and the default for institution-owned IdPs marked `LOCAL_ONLY`).
 
 **6 — Returning from personal/professional to local Work** — the node work session is resumed if still within its 900-second TTL, otherwise re-minted from the bundles. The personal session persists independently in its own tab and is not revoked by returning.
 
@@ -1406,10 +1561,10 @@ sequenceDiagram
   P->>A: work session (aud impilo-work:NODE-A)
   P->>B: work session (aud impilo-work:NODE-B)
   Note over A,B: Distinct audiences, distinct issuers, distinct jti.<br/>A's token presented to B is rejected on audience — not downgraded.
-  Note over P: Both may be live at once (different institutions,<br/>different sessions). Within ONE node, switching context still<br/>revokes the previous jti.
+  Note over P: Both may be live at once (§4B.5). Within ONE workspace,<br/>switching context still revokes the previous jti.
 ```
 
-The one-live-context rule is **per node**, not per person: a consultant may hold a session at each of two hospitals simultaneously, because they are two employments in two institutions. What is forbidden is two contexts at the same node, because that is one duty with two answers.
+Per §4B.5 the constraint is **one context per request and one active context per workspace** — not one per person. A consultant may hold a live session at each of two hospitals, because those are two employments in two institutions. What is forbidden is a single request carrying two contexts, or one workspace silently holding two, because that is one duty with two answers.
 
 **8 — National disconnection during an active local work session**
 
@@ -2056,9 +2211,51 @@ Core (every node profile): trust tier, registry caches, PCT, OROS, local Butano,
 
 **FACILITY_EDGE** adds a secure edge gateway, runtime endpoint discovery, device and printer adapters, an encrypted local patient-worklist cache, a store-and-forward queue, local emergency workflow, local policy and identity cache, and a sync agent. It supports **constrained continuity** — emergency workflow, OPD capture and dispensing for a bounded window — and **does not pretend to be a seven-day autonomous hospital**. Everything it captures is explicitly reconciled, and its cohort and cache rules are those of §19B at a smaller scale.
 
-## 17A.5 How every band above gets replaced by a measurement
+## 17A.5 Compact has two topologies, not one **[T — corrects v1.1]**
 
-Each figure is a hypothesis with a named replacement method: node instrumentation reports concurrent sessions, encounters, orders, results, imaging studies, storage growth, federation queue depth and p95 latency to the Fleet Service (§17.2); the Phase 5 pilot runs at a central hospital under real load; and the bands are re-issued from observed percentiles per facility tier. **Until that happens, no procurement decision should treat a number in §17A.2 as more than a starting point**, and the acceptance plan (A45) requires the pilot to publish measured figures against these estimates.
+v1.1's single Compact profile asked a district or mission hospital with one or two ICT staff to run three Kubernetes nodes, three Kafka brokers, a synchronous PostgreSQL replica, replicated Redis and MinIO, and a local Keycloak. That is an operationally awkward combination and, for many such hospitals, an unrealistic one. Compact therefore has **two topologies over identical service code**:
+
+| | **COMPACT_HA** | **COMPACT_MANAGED_APPLIANCE** |
+|---|---|---|
+| For | Hospitals with real infrastructure and ICT capacity | Hospitals with power, network and a rack, but no platform capability |
+| Cluster | 3 nodes | **1–2 nodes**, pre-built appliance |
+| Operated by | Institution or accredited operator | **Impilo or an accredited operator, remotely** |
+| PostgreSQL | Primary + synchronous replica, PITR | **Single primary + PITR + frequent off-box snapshots** |
+| Kafka | 3 brokers RF=3 | **Single broker** (or the store-and-forward queue where the workload permits) |
+| Redis / MinIO | Replicated | Single, persistent, backed up off-box |
+| Local Keycloak | Yes | Yes, remotely managed |
+| Failure characteristic | Survives a node loss | **Does not survive host loss** — recovery is restore-based |
+| **What is promised** | Local HA within the site | **An explicit RPO and RTO, and no claim of local enterprise-grade HA** |
+| Site continuity (§2A.2) | `FULL_LOCAL` | `FULL_LOCAL` while the host is healthy; **restore-bounded** thereafter |
+
+> **[D] The appliance topology must never be described as highly available.** It is a single-host deployment with a stated recovery objective. Selling it as HA would repeat, at a hospital's expense, exactly the overclaim §2B.3 corrects.
+
+Both topologies run the same images, the same charts and the same tests. The difference is infrastructure declaration, and it is recorded on `deployment_node` alongside `site_continuity_profile`.
+
+## 17A.6 Bill of materials **[O — planning estimates, same caption as §17A.2]**
+
+No procurement should proceed from encounter counts alone. Each profile carries an infrastructure BOM; these figures are **derived, not measured**, and are replaced per §17A.7.
+
+| | HOSTED_FACILITY | FACILITY_EDGE | COMPACT_APPLIANCE | COMPACT_HA | HOSPITAL_STANDARD | HOSPITAL_ENTERPRISE |
+|---|---|---|---|---|---|---|
+| Nodes | — (clients only) | 1 appliance | 1–2 | 3 | 3 | 3+ across failure domains |
+| vCPU (total) | — | 4–8 | 24–32 | 48–64 | 96–160 | 240+ |
+| RAM (total) | — | 16–32 GB | 96–128 GB | 192–256 GB | 384–512 GB | 768 GB+ |
+| Usable storage (yr 1) | — | 250 GB | 2–4 TB | 4–6 TB | 8–16 TB | 24 TB+ |
+| Storage IOPS (sustained) | — | 500 | 3,000 | 5,000 | 10,000 | 20,000+ |
+| Imaging storage (if local PACS) | — | — | +2 TB/yr | +2 TB/yr | +8 TB/yr | +20 TB/yr |
+| LAN | — | 1 GbE | 1 GbE | 10 GbE | 10 GbE | 10 GbE redundant |
+| WAN to National Core | 10–50 Mbps, **availability-critical** | 4–10 Mbps | 10–20 Mbps | 20–50 Mbps | 50–100 Mbps | 100 Mbps+ redundant |
+| Backup egress | — | 50 GB/night | 200 GB/night | 200 GB/night | 500 GB/night | 1 TB+/night |
+| Power / runtime | — | UPS 30 min | **UPS 1 h + generator** | UPS 1 h + generator | UPS + generator, N+1 | UPS + generator, N+1, tested |
+| Annual data growth | — | ~20% | ~30% | ~30% | ~30% | ~30% |
+| Local ICT | none | site champion | **none on site** (remote-operated) | 1–2 staff | small team | 24/7 + on-call |
+
+Two figures deserve emphasis. **A hosted facility's WAN link is availability-critical** — it has no local runtime, so the link *is* the clinical system, and it should be engineered and monitored as such. And **power runtime is a clinical requirement, not a facilities one**: a Compact appliance that loses power loses the hospital's record system, which is why a generator appears in the BOM rather than in a footnote.
+
+## 17A.7 How every band and BOM figure gets replaced by a measurement
+
+Each figure is a hypothesis with a named replacement method: node instrumentation reports concurrent sessions, encounters, orders, results, imaging studies, storage growth and IOPS, federation queue depth, backup egress volume and p95 latency to the Fleet Service (§17.2); the Phase 5 pilot runs at a central hospital under real load; and both the volumetric bands and the BOM are re-issued from observed percentiles per facility tier. **Until that happens, no procurement decision should treat a number in §17A.2 or §17A.6 as more than a starting point**, and the acceptance plan (A45) requires the pilot to publish measured figures against these estimates.
 
 ---
 
@@ -2189,12 +2386,14 @@ The existing `ProvenanceStampingInterceptor` already stamps eight tag codes and 
 
 ## 19A.1 Four record concepts, four authorities
 
-| Record | What it is | Authority | Lives |
-|---|---|---|---|
-| **A. Facility Operational Health Record** | The detailed legal and operational record created by a facility's clinical systems — notes, orders, results, medication administration, ward and theatre records, local documents and images, billing events | **The originating facility** (PCT, OROS, inpatient, pharmacy, theatre are the systems of record) | Node |
-| **B. Node Butano projection** | The governed FHIR projection of facts produced at that node | A projection — authoritative for nothing | Node |
-| **C. National Butano longitudinal projection** | The cross-node, provenance-preserving national longitudinal record: summaries, problems, allergies, active medications, significant results, discharge summaries, procedures, referrals, selected documents, links to externally held imaging | A projection — **never overwrites its source** | National |
-| **D. Personal Health Record** | The individual-facing record inside My Life | **The individual** | National only |
+| Record | What it is | **Source authority** | Rightsholder | Legal controller | Lives |
+|---|---|---|---|---|---|
+| **A. Facility Operational Health Record** | The detailed operational record created by a facility's clinical systems — notes, orders, results, medication administration, ward and theatre records, local documents and images, billing events | **The originating facility** (PCT, OROS, inpatient, pharmacy, theatre are the systems of record) | The patient | **[L]** per trust domain + legal determination | Node |
+| **B. Node Butano projection** | The governed FHIR projection of facts produced at that node | Inherits from A — authoritative for nothing itself | The patient | as A | Node |
+| **C. National Butano longitudinal projection** | The cross-node, provenance-preserving national longitudinal record: summaries, problems, allergies, active medications, significant results, discharge summaries, procedures, referrals, selected documents, links to externally held imaging | Inherits per item from its origin node — **never overwrites its source** | The patient | **[L]** national determination | National |
+| **D. Personal Health Record** | The individual-facing record inside My Life | The individual, for content they author; inherits for projected content | **The individual** | **[L]** the PHR service's controller — *not automatically the individual* (§4A.0) | National only |
+
+Applying §4A.0: the individual is the **rightsholder** for the PHR and the source authority for what they write in it. That does **not** make them the legal controller of the hosted PHR service, and v1.1's shorthand "authority: the individual" blurred the two.
 
 Neither Butano instance is the source of truth for a clinical event; PCT, OROS, inpatient and their peers remain authoritative. The PHR is not the legal record merely because it displays one.
 
@@ -2288,12 +2487,32 @@ sequenceDiagram
   loop while in cohort and connected
     CORE-->>CACHE: deltas; consent revocations applied immediately
   end
-  Note over CACHE: On cohort exit → expire per policy.<br/>On revocation → suppress immediately, even offline.<br/>On 7-day outage → serve with age shown, never claim currency.
+  Note over CACHE: On cohort exit → expire per policy.<br/>On revocation → per the four-case rule below.<br/>On 7-day outage → serve with age shown, never claim currency.
 ```
 
-**During a seven-day outage** the cache continues to serve, with every item's age displayed. Emergency-minimum content (allergies, active medications, critical alerts) may carry a longer TTL than the general cohort content, because the harm of a stale allergy list is asymmetric — but it is still labelled, and still expires.
+### Revocation, stated at the strength it can actually be delivered **[D — corrects v1.1]**
 
-**On cohort exit** entries expire per policy rather than being retained "in case they come back". On explicit revocation they are suppressed immediately, including offline, because revocation is carried in the revocation bundle whose hard ceiling is 24 hours.
+v1.1 claimed cached content is "suppressed immediately, including offline". **A node cannot act on a revocation it has not received.** A withdrawal made nationally on day 2 of an outage is unknown to the node until a bundle arrives — which v1.1's own reconnection test acknowledged, contradicting the claim. The honest rule has four cases:
+
+| Case | Behaviour |
+|---|---|
+| Revocation **captured locally** (patient withdraws at this facility) | **Immediate.** Local capture is locally authoritative |
+| National revocation **received before disconnection** | **Immediate**, on arrival |
+| National revocation made **during disconnection** | Applied **on the next controlled update** — and, on reconnect, **before** any queued clinical record is contributed (§20.1, A49) |
+| Authority bundle **past its hard ceiling** | The affected cache classes **fail closed**, or drop to the approved emergency-minimum set; they do not continue serving on week-old authority |
+
+### Two freshness clocks, shown separately **[D]**
+
+The consequence of the above is that a cached item has **two independent ages**, and conflating them is how a clinician is misled:
+
+- **Content freshness** — when the clinical fact itself was last updated at its origin.
+- **Authority freshness** — when the consent, revocation and policy bundles governing whether it may be shown were last refreshed.
+
+A medication list can be clinically current and governed by stale authority, or governed by fresh authority and clinically weeks old. The interface shows both, always: *"Medications — as at 2 Aug (origin: Mpilo) · authority checked 6 days ago"*.
+
+**During a seven-day outage** the cache continues to serve with both clocks displayed. Emergency-minimum content (allergies, active medications, critical alerts) may carry a longer content TTL than general cohort content, because the harm of a stale allergy list is asymmetric — but it is still labelled, still bounded by the authority ceiling, and still expires.
+
+**On cohort exit** entries expire per policy rather than being retained "in case they come back".
 
 ## 19B.7 How this avoids being bulk replication in disguise
 
@@ -2313,7 +2532,7 @@ Three visually distinct states, never blended:
 | State | Presentation |
 |---|---|
 | **Node-authored** | Normal. This facility recorded it. |
-| **Cached national** | Marked with origin facility and *"as at <timestamp>"*. Actionable, clearly not local. |
+| **Cached national** | Marked with origin facility, **content age** and **authority age** — *"as at 2 Aug (Mpilo) · authority checked 6 days ago"*. Actionable, clearly not local. |
 | **Unavailable** | Explicitly stated: *"National record unavailable since <time>"* — never an empty section that reads as "nothing to report". |
 
 ---
@@ -2659,7 +2878,7 @@ Time synchronisation is step 1 for a reason: every signature, TTL, staleness cei
 |---|---|
 | **Connected** | Agent pulls images, charts and bundles directly |
 | **Partially connected** | Manifest and certificates online; images and charts from a local mirror |
-| **Air-gapped** | A signed offline bundle carrying OCI images, charts, policy and terminology packs and trust anchors; enrolment completed by an out-of-band signed exchange. The estate already uses `docker save`/`load` transfer as a build technique — this formalises it as a distribution channel |
+| **Offline installation** | A signed offline bundle carrying OCI images, charts, policy and terminology packs and trust anchors; enrolment completed by an out-of-band signed exchange. The estate already uses `docker save`/`load` transfer as a build technique — this formalises it as a distribution channel. **This describes installation only** — see §22B.6 |
 | **Existing cluster** | Skips steps 4–5; validates the cluster meets the profile's requirements and refuses if not |
 | **Managed appliance** | Pre-built image with the agent embedded; steps 1–11 on first boot |
 | **Sovereign advanced** | The operator takes the GitOps overlay and runs their own pipeline; the agent is used only for enrolment and attestation |
@@ -2667,6 +2886,20 @@ Time synchronisation is step 1 for a reason: every signature, TTL, staleness cei
 ## 22B.5 What the agent never does
 
 It never creates clinical users, never grants clinical access, never mints a work context, never becomes a standing administrator, and never survives commissioning. **The Node Administrator who runs it holds no application role by default** — installing the system and using it are different authorities held by different people (§22A.3).
+
+## 22B.6 Offline *installation* is not offline *operation* **[D]**
+
+v1.1 offered an air-gapped install mode without saying what an air-gapped node may then do. It cannot do most of it: a permanently isolated node cannot maintain provider-revocation freshness, consent currency, federation agreements, national referrals, national record contribution, certificate rotation or terminology updates. Three categories are now distinct, and a node declares exactly one:
+
+| Category | Meaning | Federation | Bundle freshness | Permitted |
+|---|---|---|---|---|
+| **`OFFLINE_INSTALLATION`** | Installed from signed media; **operates connected thereafter** | Normal | Normal ceilings (§5.3) | **Yes — the default for constrained-bandwidth sites** |
+| **`INTERMITTENTLY_CONNECTED_OPERATION`** | Connects on a known cadence (daily, weekly); the seven-day autonomy design | Store-and-forward, replay on connect | Within the §5.3 hard ceilings | **Yes — the Hospital Node norm** |
+| **`PERMANENTLY_ISOLATED_OPERATION`** | Never network-connected to the National Core | **None** — physical-media exchange only | Cannot be met by network refresh | **By formal approval only, and it is not an ordinary federated Hospital Node** |
+
+**A permanently isolated installation is a different product commitment.** It requires, as accreditation conditions: an approved **physical-media exchange cadence** (a defined maximum interval for carrying signed bundles in and signed contributions out); operating limits proportionate to that cadence — in particular, revocation-sensitive high-authority actions (controlled-drug prescribing, break-glass approval, disclosure approval) are **denied** between exchanges unless the cadence is short enough to satisfy the revocation ceiling; a named accountable officer for each exchange; and an explicit statement to the institution that national referrals, cross-institution exchange and national contribution occur only at exchange intervals.
+
+It is recorded here so that, if a security-sector or research facility requires it, it is designed rather than improvised — and so that nobody mistakes an offline *install* for permission to run permanently disconnected.
 
 ---
 
@@ -2731,6 +2964,29 @@ It never creates clinical users, never grants clinical access, never mints a wor
 | **A48** | Cache freshness honesty | View cached national items during a seven-day outage | Every item shows origin facility and age; unavailable sections say so; **no empty section reads as "nothing to report"** |
 | **A49** | Reconnection ordering with cache | Revoke consent nationally on day 2, reconnect on day 7 | Revocation applied to the cache **before** any queued clinical record is contributed |
 
+## 23.2 v1.2 additions — infrastructure paths, locality and corrected claims
+
+Tests A50–A56 exist because §2B.3's exposure is at the **infrastructure** layer. Application-API tests would all pass while every route that matters stayed open. Each asserts the path is blocked outright, or reachable only under an approved, recorded, institution-visible session.
+
+| # | Test | Method | Pass condition |
+|---|---|---|---|
+| **A50** | Direct database administration | Platform operator connects to the node's PostgreSQL with administrative credentials | Either refused, or permitted only within an approved JIT session that is recorded and appears on the institution's dashboard within the agreed interval |
+| **A51** | Storage snapshot and volume access | Operator snapshots a PVC and attempts to mount and read it | Data at rest is unreadable without the institution-held key **(Position 1's real guarantee)**; the attempt is logged |
+| **A52** | Object-store access | Operator lists and fetches MinIO objects directly | Objects are encrypted with institution-held keys; access is logged |
+| **A53** | Backup restoration | Operator restores a backup into an environment it controls | Restore yields ciphertext without the institution's key; the attempt is recorded |
+| **A54** | `pod exec` and runtime access | Operator execs into a clinical pod and inspects process memory and environment | **Position 1: this succeeds** — the test asserts it is *detected, recorded and surfaced to the institution*, not that it fails. **Position 2: it fails**, attestation denies key release |
+| **A55** | Log and telemetry exposure | Operator reads application logs, traces and metrics | No clinical payload or PII in logs; access recorded |
+| **A56** | Secret retrieval | Operator reads Kubernetes secrets and service-account tokens | Data keys are not retrievable from the cluster alone at D1+; retrieval attempts recorded |
+| **A57** | Site-outage honesty | Sever the facility↔node link for a remotely hosted node | Clinical work stops (or falls to the declared Edge scope); **the deployment's advertised `site_continuity_profile` matches observed behaviour** |
+| **A58** | Authority vs locality labelling | Inspect every commissioned node's Fleet record against its service agreement | `clinical_authority_primacy`, `compute_locality` and `site_continuity_profile` are populated and consistent with what was sold |
+| **A59** | Concurrency policy | One provider opens two workspaces, two devices, and two nodes; then a restricted facility disables concurrency | Every live context is listed, independently revocable and audited; **no request ever carries two contexts**; the restriction is honoured where configured |
+| **A60** | Personal + work coexistence | Keep My Life open while working; attempt a cross-domain call in both directions | Both sessions live; active domain visible at all times; **cross-domain call rejected on audience, never coerced** |
+| **A61** | Brokered node SSO | National → node transition with `brokered_intent`, then with `full_local_reauthentication` | In both cases the node mints its **own** token after rechecking assignment, standing and revocation; the national token is never accepted as a work token; the intent is single-use and audience-bound |
+| **A62** | Two freshness clocks | View cached content during an outage | **Content age and authority age are shown separately** and are independently correct |
+| **A63** | Revocation reality | Revoke nationally during disconnection; revoke locally during disconnection | Local revocation is immediate; national revocation applies on the next controlled update, **not before** — and the UI never claims currency it does not have |
+| **A64** | Permanently isolated limits | Operate a `PERMANENTLY_ISOLATED_OPERATION` node past its exchange interval | Revocation-sensitive high-authority actions are **denied**; the operating limits are enforced, not advisory |
+| **A65** | Appliance topology honesty | Kill the host of a `COMPACT_MANAGED_APPLIANCE` | Recovery is restore-based and completes within the stated RTO; **nothing in the product describes this topology as highly available** |
+
 ---
 
 # 24. Prioritised engineering backlog
@@ -2785,6 +3041,16 @@ Priority reflects *what unblocks the most* and *what is riskiest to defer*. P0 i
 | 44 | Dedicated Hosted isolation tiers D1–D6 + institution-held KEK | P2 | 4 | The commercial offer for institutions without hardware |
 | 45 | JIT support access with session recording + disclosure dashboard entries | P2 | 4 | Makes §2B.3's honesty enforceable |
 | 46 | Sizing profiles + pilot instrumentation that replaces the estimates | P3 | 2→5 | Bands are unvalidated until A45 |
+| **47** | **Infrastructure-path acceptance suite (A50–A56)** — DB admin, snapshots, object store, backup restore, pod exec, logs, secrets | **P1** | 2.5 | Without it, hosted isolation is asserted rather than tested; it is the evidence base for §2B.3 |
+| **48** | `clinical_authority_primacy` + `compute_locality` + `site_continuity_profile` on `deployment_node`, enforced in the Fleet record and the service agreement | **P1** | 2 | Prevents selling authority continuity as hospital continuity |
+| 49 | Concurrency model: active-context listing, independent revocation, per-facility restriction | P1 | 2 | Required before multi-site clinicians can work safely |
+| 50 | Signed authentication intent for national→node SSO | P2 | 2 | Removes repeated prompts without weakening the boundary |
+| 51 | Two-clock freshness (content age + authority age) in the cache UI and API | P2 | 3 | A clinician cannot act correctly on one clock |
+| 52 | Four-case revocation handling + authority-ceiling fail-closed for cache classes | P2 | 3 | Corrects the v1.1 overclaim |
+| 53 | Three operation categories + permanently-isolated operating limits | P3 | 2.5 | Only if #16 is answered yes |
+| 54 | Compact Managed Appliance topology + RPO/RTO declaration | P2 | 2 | The realistic option for district and mission hospitals |
+| 55 | Marketplace three-surface refile | P2 | 2 | Currently work-zoned while presenting as personal |
+| 56 | Seven authority roles threaded through schema, PDP inputs and disclosure records | P2 | 1→2 | Underpins every controllership statement |
 
 ---
 
@@ -2807,7 +3073,7 @@ Priority reflects *what unblocks the most* and *what is riskiest to defer*. P0 i
 | **ADR-13** | Statutory public-health reporting is mandatory and never negotiable, for every trust domain | Making it agreement-dependent | Institutions cannot contract out of notifiable-disease reporting |
 | **ADR-14** | Non-MoHCC defaults are INDEX_ONLY and negotiate upward only | Contribution-by-default | Slower onboarding; defensible data protection |
 | **ADR-15** | Local enforcement fails closed (`failure_mode_allow: false`) at the node | Fail-open for availability | Local PDP availability becomes the node's hard SLO |
-| **ADR-16** | One product, profile-selected; a node-only code path is a defect | A hospital edition | Profiles and feature flags carry all variation |
+| **ADR-16** *(revised v1.2)* | One product, profile-selected. **No forked or independently maintained hospital implementation**; profile-specific behaviour is permitted where configuration-driven, declared, tested and compatibility-governed | A hospital edition; and the v1.1 wording "any node-only code path is a defect", which condemned the Bundle Agent, local identifier allocation, local work-context minting, the Shared-Care Cache, the Bootstrap Agent and the node-side gateway | Divergence is allowed but must be declared and packaged in the one artefact set |
 | **ADR-17** | Service consumption is a dimension independent of deployment profile and federation | Treating "on-premises" as a single bundled choice | Four consumption profiles crossed with node profiles; more combinations, but each is expressible |
 | **ADR-18** | A Hospital Node may be hosted nationally or institutionally; the profile describes function and authority, not location | Equating node with on-premises (v1.0's prose) | MoHCC can host a node it does not control; `hosting_model` is data |
 | **ADR-19** | Infrastructure or platform operation grants **no** application-data authority | Inferring controllership from hosting | Controls must be cryptographic, procedural and evidentiary — and the real capability is stated, not denied |
@@ -2824,6 +3090,15 @@ Priority reflects *what unblocks the most* and *what is riskiest to defer*. P0 i
 | **ADR-30** | The Shared-Care Cache is a **separate store**, not merged into Node Butano | Merging for a single unified timeline | A clinician can always tell local from cached; revocation and retention stay independent; re-contribution is structurally impossible |
 | **ADR-31** | Node sizing is expressed through profiles, capability packs and resource classes — never a separate edition or codebase | Compact/Standard/Enterprise as products | One artefact set; differences are configuration and topology |
 | **ADR-32** | MoHCC adopts hierarchical trust domains; the model supports all three options until the legal determination | Committing to a single national domain now | Implementation proceeds; the determination changes configuration, not architecture |
+| **ADR-33** *(v1.2)* | **Authority primacy, compute locality and site continuity are three independent attributes**; seven-day *hospital* continuity may be claimed only with `FULL_LOCAL` or a tested `EDGE_ASSISTED` scope | Treating "Hospital Node" as implying site continuity | A nationally hosted node must be paired with a site mechanism, or sold as authority continuity only |
+| **ADR-34** *(v1.2)* | **Legal controllership, processing, source authority, clinical authorship, custody, rightsholding and disclosure authority are seven separate roles** | Asserting a controller in the consumption matrix | The matrix defers to the trust domain and the legal determination; a facility may be source authority without being controller |
+| **ADR-35** *(v1.2)* | **Managed hosting offers contractual restraint with detection, not cryptographic impossibility.** Strong cryptographic separation is a distinct accreditable tier requiring external KMS, workload attestation, confidential computing, attested key release and an external audit sink | Claiming institution-held keys defeat a runtime operator | Honest contracts; and infrastructure-path acceptance tests (A50–A56) rather than application-API tests alone |
+| **ADR-36** *(v1.2)* | **One context per request, one active context per workspace**; concurrent contexts permitted across separated sessions and devices, all visible, revocable and audited. Personal and work sessions may coexist under stated conditions | A global one-context-per-person rule | Legitimate multi-site and multi-role practice is supported without weakening the boundary |
+| **ADR-37** *(v1.2)* | **National → node transition uses a short-lived, audience-bound, single-use signed authentication intent**; the node still mints its own token after rechecking assignment, standing and revocation | Mandatory full reauthentication at every node entry | Secure SSO without repeated prompts; institutions may still require step-up or full reauthentication |
+| **ADR-38** *(v1.2)* | **Offline installation, intermittently connected operation and permanently isolated operation are three declared categories**; permanent isolation requires formal approval, a physical-media exchange cadence and enforced operating limits | Treating an air-gapped install as licence to run disconnected indefinitely | A permanently isolated node is not an ordinary federated Hospital Node |
+| **ADR-39** *(v1.2)* | **A cache cannot suppress a revocation it has not received.** Four-case rule; content freshness and authority freshness are shown as separate clocks | Claiming immediate offline suppression | The interface tells the truth about two different ages, and fails closed past the authority ceiling |
+| **ADR-40** *(v1.2)* | **Compact has two topologies** — HA and Managed Appliance — over identical service code; the appliance is never described as highly available | One Compact profile requiring full HA everywhere | District and mission hospitals get a deployable option with a stated RPO/RTO |
+| **ADR-41** *(v1.2)* | **Marketplace is one service with three separately authorised surfaces** (personal/public, professional, institutional procurement) | Assigning Marketplace wholly to one domain | Listings, transactions, audiences and disclosures are domain-scoped |
 
 ---
 
@@ -2865,20 +3140,27 @@ Priority reflects *what unblocks the most* and *what is riskiest to defer*. P0 i
 | **13** | **Who may authorise Shared-Care Cache pre-positioning, and for how long may emergency-minimum content persist?** | Cache TTL and cohort rules (§19B) | National Clinical Governance Committee | 3 |
 | **14** | **Does an employer ever see mandatory-learning detail, or only the compliance verdict?** Design says verdict only | Professional Status scope (§11B.1, §4.4) | Regulator + MoHCC HR | 2 |
 | **15** | **Can an institution refuse a national release that carries a security fix?** Design says no — a security floor overrides the institution's window | Upgrade authority (§2B.2) | MoHCC + institutional counsel | 4 |
+| **16** | **Is `PERMANENTLY_ISOLATED_OPERATION` offered at all, and to whom?** It is designed (§22B.6) but carries real liability and cannot maintain revocation freshness | Node accreditation categories | Service owner + MoHCC Legal + security authority | 4 |
+| **17** | **Which position on hosted runtime access is contractually offered by default** — §2B.3 Position 1 (contractual restraint with detection) or Position 2 (cryptographic separation)? v1.2 makes Position 1 the default | Dedicated Hosted and Managed On-Premises contracts | MoHCC Legal + service owner + institutional counsel | 2.5 |
+| **18** | **Is a remotely hosted node ever permitted to be sold without a site-continuity mechanism** to a hospital that requires continuity? | Product catalogue and §2A.2 claims | Service owner + clinical governance | 2.5 |
 
 ## 26.3 Questions this architecture deliberately leaves open
 
 - The canonical VARAPI federated provider reference — `provider_ref` UUID or `provider_public_id` ULID. Both exist and are unique; the ruling is a doctrine call, not a technical one.
 - Whether OPA eventually replaces the Java `PolicyEngine` or remains a parity check. The current parity gate is sound; the decision can wait until parity evidence exists.
 - Whether the Facility Edge profile shares the Hospital Node chart or becomes a distinct profile. Deferred until after the first pilot, deliberately.
-- Whether a person may hold a personal and a work session simultaneously in one browser, or must switch. The architecture permits both; the choice is a usability decision with a modest security trade-off, and should be made with clinicians rather than for them.
-- Whether Marketplace is a personal domain, an organisational one, or both. Today most of it is work-zoned while presenting as personal (§4A.3); the refile in Phase 2 forces the question.
+- ~~Whether a person may hold a personal and a work session simultaneously~~ — **settled in v1.2** (§4B.5, ADR-36): permitted under four stated conditions, with facility-level restriction available.
+- ~~Whether Marketplace is personal, organisational or both~~ — **settled in v1.2** (§4A.4, ADR-41): one service, three separately authorised surfaces.
+- Whether a `PERMANENTLY_ISOLATED_OPERATION` node should be offered at all, or whether such institutions should be declined. The architecture supports it under approval; whether the platform *wants* that liability is a service decision (§26.2 #16).
+- Whether strong cryptographic separation (§2B.3 Position 2) is ever commercially justified, given that it requires confidential computing and an external audit sink. Deferred until an institution actually requires it.
 
 ---
 
 ## Document control
 
-**Supersedes:** v1.0 of this document (same path, commit `97eab3ac8`), which remains valid for every decision v1.1 does not amend. **Depends on:** the current-state recovery of 2026-08-03, which remains the factual baseline; where this document states a current-state fact, that document is the citation.
+**Supersedes:** v1.1 (commit `ae0c9a74c`) and v1.0 (commit `97eab3ac8`). Both remain valid for every decision v1.2 does not amend; where v1.2 corrects one, the correction is recorded in the v1.2 change table and in the affected ADR. **Depends on:** the current-state recovery of 2026-08-03, which remains the factual baseline; where this document states a current-state fact, that document is the citation.
+
+**On the three corrected overclaims.** v1.1 asserted that institution-held keys prevent a managed operator decrypting live data, that a cache suppresses revocations immediately even offline, and that any node-only code path is a defect. None was supportable. They are corrected in §2B.3, §19B.6 and §2 respectively, and each is recorded rather than quietly amended — because a controlling architecture that silently revises its own claims teaches the next reader to distrust the ones it keeps.
 
 **Change discipline:** an architecture decision recorded in §25 changes only by a new ADR. The data-residency matrices (§4.2, §4.4), the staleness ladder (§5.3), the prohibited inheritances (§4A.2) and the Shared-Care Cache rules (§19B) are clinical-safety and data-protection artefacts and change only with clinical-governance and data-protection sign-off. The sizing bands (§17A.2) are estimates and are expected to change — that is their purpose.
 
