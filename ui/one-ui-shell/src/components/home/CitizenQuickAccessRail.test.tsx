@@ -20,7 +20,10 @@ describe("CitizenQuickAccessRail", () => {
     expect(screen.getByRole("link", { name: /My Impilo ID/i })).toHaveAttribute("href", "/citizen/health-id/qr");
     expect(screen.getByRole("link", { name: /Medications/i })).toHaveAttribute("href", "/home/medications");
     expect(screen.getByRole("link", { name: /Care Team/i })).toHaveAttribute("href", "/home/care-team");
-    expect(screen.getByRole("link", { name: /Coverage/i })).toHaveAttribute("href", "/coverage");
+    // NOT /coverage: that is the ADMIN payer console (routes.ts guard "role"/"ADMIN"), so a
+    // citizen clicking it was bounced straight back to /home. My Ruvimbo is the person-facing
+    // coverage surface and carries guard "auth".
+    expect(screen.getByRole("link", { name: /Coverage/i })).toHaveAttribute("href", "/ruvimbo/member");
     // De-duplication: destinations that already live in the global NavRail (Marketplace,
     // Wellness, Blood donation) must NOT be repeated in the home rail — that overlap was the
     // "two side menus" redundancy.

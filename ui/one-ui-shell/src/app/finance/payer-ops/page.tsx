@@ -152,7 +152,9 @@ export default function FinancePayerOpsPage() {
           </div>
           <div className="mt-4 grid gap-3 md:grid-cols-4">
             {[
-              { href: "/coverage", label: "Coverage claims", detail: "Eligibility, claims, preauth, remittance rows" },
+              // This page admits PAYER_OPS (SYSTEM_ADMIN, FINANCE, DEVELOPER); /coverage admits
+              // only ADMIN, so a FINANCE payer operator was bounced home by their own console.
+              { href: "/ruvimbo/payer", label: "Coverage claims", detail: "Eligibility, claims, preauth, remittance rows" },
               { href: "/finance/payer-claims", label: "Payer claims", detail: "MusheX claim review and queue handoff" },
               { href: "/finance/settlements", label: "Settlements", detail: "Run periods and release payouts" },
               { href: "/finance/refunds", label: "Refunds", detail: "Refund from a loaded payment intent" },

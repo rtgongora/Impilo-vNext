@@ -49,7 +49,9 @@ function sectionsFor(hub: string): HubSection[] | null {
     case "professional-channels":
       return [
         { id: "omnichannel", title: "Omnichannel Hub", web_path: "/omnichannel", hint: "Queues, messaging, and channel routing." },
-        { id: "coverage", title: "Coverage Operations", web_path: "/coverage", hint: "Schemes, eligibility, and verification." },
+        // /coverage admits only ADMIN; this hub is handed to providers. Ruvimbo Provider is
+        // the face their roles actually open (role group CLINICAL).
+        { id: "coverage", title: "Coverage Operations", web_path: "/ruvimbo/provider", hint: "Schemes, eligibility, and verification." },
         { id: "home_credentials", title: "Credentials & CPD", web_path: "/home/credentials", hint: "Professional licenses and learning credits." },
         { id: "ph_surveillance", title: "Surveillance", web_path: "/public-health/surveillance", hint: "Signals, case lines, and indicators." },
         { id: "ph_campaigns", title: "Campaigns", web_path: "/public-health/campaigns", hint: "Immunisation and outreach waves." },
