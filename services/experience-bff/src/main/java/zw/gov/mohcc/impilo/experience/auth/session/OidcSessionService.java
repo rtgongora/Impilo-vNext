@@ -182,10 +182,41 @@ public class OidcSessionService {
         return store.findSession(sessionId);
     }
 
+    /**
+     * Serialises refreshes per session within this JVM.
+     *
+     * A page load fans out many BFF calls at once. Without this, every one of them saw the same
+     * near-expiry token and fired its own `refresh_token` grant with the same credential —
+     * observed in production as five simultaneous REFRESH_TOKEN_ERRORs in the same millisecond,
+     * each of which then deleted the session. Striped rather than per-session-keyed so the map
+     * cannot grow without bound; an incidental collision costs a little contention, nothing more.
+     */
+    private final Object[] refreshLocks = new Object[64];
+    { for (int i = 0; i < refreshLocks.length; i++) refreshLocks[i] = new Object(); }
+
+    private Object refreshLockFor(String sessionId) {
+        return refreshLocks[Math.floorMod(sessionId.hashCode(), refreshLocks.length)];
+    }
+
     public Optional<String> validAccessToken(String sessionId) {
         Optional<WebAuthSessionStore.SessionData> existing = store.findSession(sessionId);
         if (existing.isEmpty()) return Optional.empty();
-        WebAuthSessionStore.SessionData session = existing.get();
+        if (existing.get().accessTokenExpiresAt().isAfter(Instant.now().plusSeconds(60))) {
+            return Optional.of(existing.get().accessToken());
+        }
+        synchronized (refreshLockFor(sessionId)) {
+            return refreshUnderLock(sessionId);
+        }
+    }
+
+    private Optional<String> refreshUnderLock(String sessionId) {
+        // Re-read inside the lock. Whoever held it before us may already have refreshed, and the
+        // store is Redis, so this also picks up a refresh performed by the other pod. Reusing
+        // their token is the point: the old refresh token is spent, and presenting it again is
+        // what produced the errors this method used to answer by deleting the session.
+        Optional<WebAuthSessionStore.SessionData> current = store.findSession(sessionId);
+        if (current.isEmpty()) return Optional.empty();
+        WebAuthSessionStore.SessionData session = current.get();
         if (session.accessTokenExpiresAt().isAfter(Instant.now().plusSeconds(60))) {
             return Optional.of(session.accessToken());
         }
@@ -204,8 +235,24 @@ public class OidcSessionService {
                     session.recovery() || isRecoveryAmr(amr(accessJwt)), session.recoveryExpiresAt());
             store.saveSession(sessionId, refreshed);
             return Optional.of(accessToken);
+        } catch (OidcProtocolException e) {
+            // Only an explicit refusal of the grant ends the session. Anything else — Keycloak
+            // 5xx, timeout, connection refused, a malformed token response — leaves the session
+            // in place so the next request can try again. Deleting on every exception meant one
+            // unlucky moment signed the person out and dropped them back at the sign-in page
+            // with no explanation, which is indistinguishable from the login having failed.
+            if (e.grantRejected()) {
+                log.info("OIDC session ended: identity provider refused the refresh grant");
+                store.deleteSession(sessionId);
+            } else {
+                log.warn("OIDC refresh failed without refusing the grant; session preserved: {}",
+                        e.code());
+            }
+            return Optional.empty();
         } catch (Exception e) {
-            store.deleteSession(sessionId);
+            // Decode/parse faults say nothing about whether the grant is still good.
+            log.warn("OIDC refresh failed unexpectedly; session preserved: {}",
+                    e.getClass().getSimpleName());
             return Optional.empty();
         }
     }
@@ -265,6 +312,16 @@ public class OidcSessionService {
             }
             log.warn("OIDC token exchange rejected by the identity provider: status={} error={}",
                     e.getStatusCode().value(), oauthError);
+            // "The grant is dead" and "the identity provider is unwell" are different facts and
+            // the caller acts on them differently. Only the first justifies destroying a session.
+            boolean grantRejected = e.getStatusCode().is4xxClientError()
+                    && ("invalid_grant".equals(oauthError) || "invalid_token".equals(oauthError));
+            throw new OidcProtocolException("OIDC_TOKEN_EXCHANGE_FAILED", grantRejected);
+        } catch (org.springframework.web.client.RestClientException e) {
+            // No HTTP response at all — DNS, connect refused, read timeout. The grant is
+            // untested, so it must not be treated as rejected.
+            log.warn("OIDC token exchange could not reach the identity provider: {}",
+                    e.getClass().getSimpleName());
             throw new OidcProtocolException("OIDC_TOKEN_EXCHANGE_FAILED");
         }
         if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
@@ -432,7 +489,23 @@ public class OidcSessionService {
     public record EstablishedSession(String sessionId, WebAuthSessionStore.SessionData data, String returnTo) {}
     public static final class OidcProtocolException extends RuntimeException {
         private final String code;
-        public OidcProtocolException(String code) { super(code); this.code = code; }
+        /**
+         * True only when the identity provider explicitly refused the GRANT itself
+         * (`invalid_grant` / `invalid_token`) — the credential is dead and re-authentication is
+         * the only way forward. False for every other failure, including a 5xx, a timeout and a
+         * connection refusal, where the grant may well still be good.
+         *
+         * The distinction exists because {@link #validAccessToken} used to destroy the session
+         * on ANY exception, which turned a momentary Keycloak blip into a forced sign-out.
+         */
+        private final boolean grantRejected;
+        public OidcProtocolException(String code) { this(code, false); }
+        public OidcProtocolException(String code, boolean grantRejected) {
+            super(code);
+            this.code = code;
+            this.grantRejected = grantRejected;
+        }
         public String code() { return code; }
+        public boolean grantRejected() { return grantRejected; }
     }
 }
