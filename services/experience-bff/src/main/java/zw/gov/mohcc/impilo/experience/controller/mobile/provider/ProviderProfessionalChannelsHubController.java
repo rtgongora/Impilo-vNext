@@ -33,7 +33,10 @@ public class ProviderProfessionalChannelsHubController {
     ) {
         List<Map<String, Object>> stub = List.of(
                 section("omnichannel", "Omnichannel Hub", "/omnichannel", "Queues, messaging, and channel routing."),
-                section("coverage", "Coverage Operations", "/coverage", "Schemes, eligibility, and verification."),
+                // /coverage admits only ADMIN; this hub is handed to providers. Ruvimbo Provider is
+                // the face their roles actually open (role group CLINICAL). Kept in step with the
+                // one-ui-shell catalogue, which is the same list served from the live path.
+                section("coverage", "Coverage Operations", "/ruvimbo/provider", "Schemes, eligibility, and verification."),
                 section("home_credentials", "Credentials & CPD", "/home/credentials", "Professional licenses and learning credits."),
                 section("ph_surveillance", "Surveillance", "/public-health/surveillance", "Signals, case lines, and indicators."),
                 section("ph_campaigns", "Campaigns", "/public-health/campaigns", "Immunisation and outreach waves."),
