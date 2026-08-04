@@ -5,6 +5,18 @@
 @tailwind utilities;
 
 @layer base {
+  /**
+   * Gloss-pass ground (PO-approved 2026-08-04): the authenticated canvas moves from
+   * grey-sage to the calm mint of the public hero's light band, so public → auth →
+   * signed-in reads as one product breathing, not three ambiences. Shell-scoped
+   * override — shared-ui/tokens.css stays untouched (additive-only agreement); the
+   * dark theme keeps its own values.
+   */
+  :root {
+    --background: #e9f4ee;
+    --background-deep: #d9eae1;
+  }
+
   body {
     font-family: var(--font-sans);
     color: var(--text-primary);
@@ -90,13 +102,20 @@
 
   .impilo-btn-primary {
     @apply inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition;
-    background: var(--primary);
+    /* The gloss button structure — lighter-to-base gradient with an inner top
+       highlight — built from the theme token so citizen/provider/dark accents
+       each keep their own hue. Structure over hue. */
+    background: linear-gradient(
+      150deg,
+      color-mix(in srgb, var(--primary) 78%, white 22%),
+      var(--primary)
+    );
     color: var(--on-green);
-    box-shadow: var(--shadow-card);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), var(--shadow-card);
   }
 
   .impilo-btn-primary:hover {
-    background: var(--primary-hover);
+    filter: brightness(1.08);
   }
 
   .impilo-btn-secondary {
@@ -174,7 +193,11 @@
 
   .impilo-canvas {
     background-color: var(--background);
+    /* Two whisper-faint aurora blooms over the working canvas — enough that the
+       surface feels lit rather than painted, never enough to sit under data. */
     background-image:
+      radial-gradient(48% 34% at 88% -8%, rgba(45, 212, 191, 0.09), transparent 60%),
+      radial-gradient(40% 30% at -6% 108%, rgba(16, 185, 129, 0.09), transparent 60%),
       linear-gradient(
         180deg,
         color-mix(in srgb, var(--background) 97%, var(--primary-soft) 3%) 0%,
