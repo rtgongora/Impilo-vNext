@@ -90,11 +90,14 @@ exists would remove the sole 2FA path on the estate.
 2. **Re-establish what is enforced**, now that the flag has vanished estate-wide. Probe, don't read
    config. Then correct CP9's numbers — they are stale in the estate's favour, which is the worst
    direction.
-3. **The 16 services with no security chain.** Baseline:
+3. **The services with no security chain — the list says 16, the real number is 11.**
+   `abis-service`, `indawo-service`, `ndila-service` and `wellness-service` all return 401 when
+   probed; `shared-core` is a library and cannot be probed at all. `abis-service` stings, because
+   CP8 headlines it as the biometric-identity case. Baseline:
    `docs/security/trust-audit/checkpoint-8/unconditionally-open-services.txt`, frozen by
-   `scripts/guard/check-enforcement-posture.sh` in both directions. **See §6 — this list has at
-   least one false positive.** They carry no bypass flag, so nothing the fullboot did could have
-   closed them; they need chains written.
+   `scripts/guard/check-enforcement-posture.sh` in both directions — **the baseline is stale in the
+   pessimistic direction and should be re-derived by probe.** They carry no bypass flag, so nothing
+   the fullboot did could have closed them; they need chains written.
 4. **Six scripts still password-granting to `realms/master`**, which has zero users:
    `bootstrap/bootstrap-auth.sh`, `provision-workload-clients.sh`,
    `provision-preview-test-citizen.sh`, `add-mobile-roles-mapper.sh`,
@@ -106,8 +109,11 @@ exists would remove the sole 2FA path on the estate.
    and continuation plumbing exist and are tested. Blocked behind item 1.
 6. **Provisioning-time enrolment.** 35 personas were enrolled by hand; that sweep expires the
    moment someone is hired. Unowned — flag to the PO.
-7. **CP6 browser + Redroid captures.** `one-ui-shell` is built and tested (57 tests) but has never
-   been deployed, so no user has seen a trust challenge. Rides the next fullboot.
+7. **CP6 browser + Redroid captures.** ~~never deployed~~ — **CORRECTED 2026-08-04: the shell WAS
+   deployed at 23:22 on 2026-08-03**, and the CP6 challenge code is confirmed present in the running
+   bundle (`isTrustChallenge`, `trust.consent.required` both grep-hit inside the pod). So the
+   challenge path is live and unproven, which is worse than un-deployed: nobody has seen it work or
+   fail. The captures are still owed.
 8. **Smaller:** 3 accounts still pending `CONFIGURE_TOTP` with no seed password; assignment
    `15355e03` sits at `approved` needing an `opaDecisionId` (do **not** synthesise one).
 
@@ -177,6 +183,17 @@ clinical data.
   ClusterIP so nothing outside could reach it either. If a modality integration is added, add 4242
   with its caller enumerated — do not widen to all ports for one device.
   **Orthanc still has no authentication of its own**, so §4a's sequence applies here as well.
+
+## 4b. Committed but NOT yet deployed
+
+- **`6be7e9906` — the auth guard gated the app's own manifest.** `PUBLIC_FILES` exempted
+  `/manifest.json`, a file this app never served, while `layout.tsx` declares
+  `/manifest.webmanifest`. The gated manifest fetch hit the guard and was redirected to
+  `/auth/login?returnTo=/manifest.webmanifest`, so the post-login destination became a JSON
+  document. Symptom: *"signed in successfully but went nowhere, back to the login page"* — with
+  nothing in it pointing at a manifest. Found only by reading a live browser network trace.
+  **Needs a `one-ui-shell` rebuild to take effect**; the UI-design lane is carrying it.
+  Until then, navigating directly to `/home` after authenticating is the workaround.
 
 ## 5. Constraints still in force
 
