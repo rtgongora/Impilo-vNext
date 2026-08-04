@@ -43,7 +43,20 @@ export const PUBLIC_PREFIXES = [
   "/internal",
 ];
 
-const PUBLIC_FILES = ["/favicon.ico", "/robots.txt", "/manifest.json"];
+// Files the browser fetches on its own, before any session exists.
+//
+// `/manifest.webmanifest` is the one that matters and it was MISSING: this list named
+// `/manifest.json`, which this app has never served. `src/app/manifest.ts` makes Next emit
+// `/manifest.webmanifest`, and `layout.tsx` declares `manifest: "/manifest.webmanifest"`.
+//
+// The consequence was not a broken manifest -- it was a broken LOGIN. The gated manifest fetch hit
+// the guard below, which redirected it to `/auth/login?returnTo=/manifest.webmanifest`, so the
+// post-login destination became a JSON document rather than the page the user asked for. The
+// symptom reads as "signed in but went nowhere", and nothing in it points at a manifest.
+//
+// `/manifest.json` is kept because some crawlers and older PWA tooling still probe it; serving a
+// 404 unauthenticated is fine, redirecting it to login is not.
+const PUBLIC_FILES = ["/favicon.ico", "/robots.txt", "/manifest.webmanifest", "/manifest.json"];
 
 // Exact public paths under an otherwise-gated prefix (e.g. the provider-onboarding
 // explainer lives under /provider but must be viewable before sign-in; the rest of
