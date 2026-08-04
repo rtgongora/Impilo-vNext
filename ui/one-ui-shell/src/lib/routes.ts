@@ -141,6 +141,9 @@ export const ROUTES: RouteDefinition[] = [
   // Inpatient workspace (Wave 20 production readiness)
   { path: "/clinical/inpatient", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Inpatient Care", navLabel: "Inpatient", navZone: "work" },
   { path: "/clinical/inpatient/admissions", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Inpatient Admissions", navLabel: "Admissions", navZone: "work" },
+  // "…/admissions/new" (the admit form) had no entry of its own and resolved to the episode
+  // definition below. Literal above dynamic; same facility guard as the rest of the cluster.
+  { path: "/clinical/inpatient/admissions/new", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Admit a patient", navLabel: "Admit", navZone: "work" },
   { path: "/clinical/inpatient/admissions/[admissionId]", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Inpatient Episode", navLabel: "Episode", navZone: "work" },
   { path: "/clinical/inpatient/ward-board", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Ward Board", navLabel: "Ward Board", navZone: "work" },
   { path: "/clinical/inpatient/nursing", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Nursing Workbench", navLabel: "Nursing", navZone: "work" },
@@ -272,19 +275,39 @@ export const ROUTES: RouteDefinition[] = [
 
   // â”€â”€ Zone: Facility Selection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/facility", zone: "facility", layout: "app", sidebar: "facility", guard: "auth", pageTitle: "Select Facility", navLabel: "Facilities" },
-  { path: "/facility/[id]", zone: "facility", layout: "app", sidebar: "facility", guard: "auth", pageTitle: "Facility Details", navLabel: "Facility" },
-  { path: "/facility/[id]/configuration", zone: "facility", layout: "app", sidebar: "facility", guard: "role", requiredRole: "ADMIN", pageTitle: "Facility Configuration", navLabel: "Configuration" },
+  // ORDERING: "/facility/[id]" compiles to /facility/[^/]+ and therefore matches every
+  // two-segment /facility path. First match wins, so the two-segment LITERALS below must stay
+  // ABOVE it — they were registered underneath it and so resolved as "Facility Details".
   { path: "/facility/claim", zone: "facility", layout: "app", sidebar: "facility", guard: "auth", pageTitle: "Claim facility administration", navLabel: "Claim administration" },
   // FJ2/D-L4: register a facility not yet on the platform (person-assurance gated).
   { path: "/facility/register", zone: "facility", layout: "app", sidebar: "facility", guard: "auth", pageTitle: "Register a facility", navLabel: "Register facility" },
+  { path: "/facility/[id]", zone: "facility", layout: "app", sidebar: "facility", guard: "auth", pageTitle: "Facility Details", navLabel: "Facility" },
+  { path: "/facility/[id]/configuration", zone: "facility", layout: "app", sidebar: "facility", guard: "role", requiredRole: "ADMIN", pageTitle: "Facility Configuration", navLabel: "Configuration" },
   // D-L6/D-L8: facility trust dimensions + verification + governance requests.
   { path: "/facility/[id]/trust", zone: "facility", layout: "app", sidebar: "facility", guard: "auth", pageTitle: "Facility trust & governance", navLabel: "Trust & governance" },
+  // Facility Mode (T4) — the facility is identified by the PATH, not the facility store, so these
+  // take the "auth" guard rather than "facility": bouncing to /facility to pick a facility the URL
+  // already names is a loop. Administration of the facility record itself keeps the ADMIN group
+  // (SYSTEM_ADMIN · FACILITY_ADMIN · DEVELOPER) that /facility/[id]/configuration already uses;
+  // TUSO enforces facility-administrator / PIC authority fail-closed server-side either way.
+  { path: "/facility/[id]/cockpit", zone: "facility", layout: "app", sidebar: "facility", guard: "auth", pageTitle: "Facility cockpit", navLabel: "Cockpit" },
+  { path: "/facility/[id]/control-tower", zone: "facility", layout: "app", sidebar: "facility", guard: "auth", pageTitle: "Facility control tower", navLabel: "Control tower" },
+  { path: "/facility/[id]/complete-profile", zone: "facility", layout: "app", sidebar: "facility", guard: "role", requiredRole: "ADMIN", pageTitle: "Complete facility profile", navLabel: "Complete profile" },
+  { path: "/facility/[id]/departments", zone: "facility", layout: "app", sidebar: "facility", guard: "role", requiredRole: "ADMIN", pageTitle: "Departments & service points", navLabel: "Departments" },
+  { path: "/facility/[id]/regulators", zone: "facility", layout: "app", sidebar: "facility", guard: "role", requiredRole: "ADMIN", pageTitle: "Facility regulators", navLabel: "Regulators" },
+  { path: "/facility/[id]/setup", zone: "facility", layout: "app", sidebar: "facility", guard: "role", requiredRole: "ADMIN", pageTitle: "Facility setup", navLabel: "Setup" },
   // SJ2/SJ1 D-L4: Indawo site self-service — citizen-accessible (NOT the PUBLIC_HEALTH-gated site registry).
   { path: "/site/register", zone: "facility", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Register a site", navLabel: "Register site" },
   { path: "/site/operator-access", zone: "facility", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Request site operator access", navLabel: "Site operator access" },
 
   // â”€â”€ Zone: Workspace Selection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/workspace", zone: "workspace", layout: "app", sidebar: "workspace", guard: "facility", pageTitle: "Select Workspace", navLabel: "Workspaces" },
+  // ORDERING: "/workspace/aggregate" is declared further down in the Reports zone with guard
+  // "auth" — district / provincial / national aggregate oversight is deliberately NOT scoped to a
+  // facility. Registered below "/workspace/[id]" it never matched its own entry, so it silently ran
+  // the workspace-detail definition and demanded a facility context it does not need. The entry
+  // lives here so it resolves to itself; the Reports-zone comment points back at this line.
+  { path: "/workspace/aggregate", zone: "reports", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Aggregate oversight", navLabel: "Aggregate workspace", navZone: "professional" },
   { path: "/workspace/[id]", zone: "workspace", layout: "app", sidebar: "workspace", guard: "facility", pageTitle: "Workspace Details", navLabel: "Workspace" },
 
   // â”€â”€ Zone: Shift â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -456,14 +479,26 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/registry/facility-lifecycle/[facilityId]", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGULATORY_AUTHORITY", pageTitle: "Facility regulatory file", navLabel: "Facility file", navZone: "professional" },
   { path: "/registry/providers", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Provider Registry", navLabel: "Providers", navZone: "professional" },
   { path: "/registry/providers/verification", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "ADMIN", pageTitle: "Provider Verification Queue", navLabel: "Verification", navZone: "professional" },
+  // Creating and editing a national provider record is registry administration, not browsing:
+  // the ADMIN group (SYSTEM_ADMIN · FACILITY_ADMIN · DEVELOPER) matches the verification queue
+  // one line above. "new" is a literal sibling of [id] and must stay above it.
+  { path: "/registry/providers/new", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "ADMIN", pageTitle: "Create provider", navLabel: "New provider", navZone: "professional" },
   { path: "/registry/providers/[id]", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Provider Profile", navLabel: "Provider", navZone: "professional" },
+  { path: "/registry/providers/[id]/edit", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "ADMIN", pageTitle: "Edit provider", navLabel: "Edit provider", navZone: "professional" },
   { path: "/registry/provider-council/self-service", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Council self-service", navLabel: "Council self-service", navZone: "professional" },
   { path: "/registry/provider-council/council-workspace", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Council operations", navLabel: "Council ops", navZone: "professional" },
   { path: "/registry/facility-classification", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Facility classification reconciliation", navLabel: "Classification", navZone: "professional" },
   { path: "/registry/facilities", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Facility Registry", navLabel: "Facilities", navZone: "professional" },
   // HAR W6/W7 — cross-facility worklist. Static segment, so it wins over /[id] in Next routing.
   { path: "/registry/facilities/worklist", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Registry worklist", navLabel: "Worklist", navZone: "professional" },
+  // "…/facilities/new" is an APPLICANT surface — it raises a facility registration application
+  // (useCreateFacilityApplication, NEW_REGISTRATION), the same job as /facility/register. It keeps
+  // the "auth" guard that /registry/clients/new uses; the HPA registrar decides, not this page.
+  // Literal above dynamic — it previously resolved as "Facility Profile".
+  { path: "/registry/facilities/new", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Register a facility", navLabel: "New facility", navZone: "professional" },
   { path: "/registry/facilities/[id]", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Facility Profile", navLabel: "Facility", navZone: "professional" },
+  // Editing the facility master record IS administration — same ADMIN group as /facility/[id]/configuration.
+  { path: "/registry/facilities/[id]/edit", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "ADMIN", pageTitle: "Edit facility", navLabel: "Edit facility", navZone: "professional" },
   // Steward console for place self-service case types NOT owned by the Trust Console
   // (facility/site registration, site operator grants, facility verification & governance).
   { path: "/registry/place-governance", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Place governance", navLabel: "Place governance", navZone: "professional" },
@@ -569,16 +604,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/erp/assets", zone: "enterprise", layout: "app", sidebar: "queue", guard: "role", requiredRole: "FINANCE", pageTitle: "Fixed assets", navLabel: "Fixed assets", navZone: "work" },
 
   // â”€â”€ Zone: Reports â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  {
-    path: "/workspace/aggregate",
-    zone: "reports",
-    layout: "app",
-    sidebar: "admin",
-    guard: "auth",
-    pageTitle: "Aggregate oversight",
-    navLabel: "Aggregate workspace",
-    navZone: "professional",
-  },
+  // "/workspace/aggregate" is registered in the Workspace Selection block above, where it sits
+  // ABOVE "/workspace/[id]" and so matches itself. See the ORDERING note there.
   { path: "/reports", zone: "reports", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Reports", navLabel: "Reports", navZone: "professional" },
   { path: "/reports/facility", zone: "reports", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Facility Reports", navLabel: "Facility Reports", navZone: "professional" },
   { path: "/reports/clinical", zone: "reports", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Clinical Reports", navLabel: "Clinical Reports", navZone: "professional" },
@@ -742,13 +769,16 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/operations/butano", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "SHR Operations", navLabel: "SHR Ops", navZone: "professional" },
   { path: "/operations/assets", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Asset Management", navLabel: "Assets", navZone: "professional" },
   { path: "/operations/equipment", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Equipment Management", navLabel: "Equipment", navZone: "professional" },
-  { path: "/operations/equipment/[equipmentId]", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Equipment Detail", navLabel: "Equipment Detail", navZone: "professional" },
+  // ORDERING: the six literal children below were registered UNDER "/operations/equipment/[equipmentId]",
+  // which matches any single child segment — so every one of them resolved as "Equipment Detail".
+  // Same guard, wrong page identity (title, nav label, breadcrumb). Literals first.
   { path: "/operations/equipment/maintenance", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Maintenance", navLabel: "Maintenance", navZone: "professional" },
   { path: "/operations/equipment/calibration", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Calibration", navLabel: "Calibration", navZone: "professional" },
   { path: "/operations/equipment/readiness", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Service Readiness", navLabel: "Readiness", navZone: "professional" },
   { path: "/operations/equipment/iot", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "IoT & Device Status", navLabel: "IoT Status", navZone: "professional" },
   { path: "/operations/equipment/deployment", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Deployment Kits", navLabel: "Deployment Kits", navZone: "professional" },
   { path: "/operations/equipment/audit", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Asset Audit", navLabel: "Asset Audit", navZone: "professional" },
+  { path: "/operations/equipment/[equipmentId]", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Equipment Detail", navLabel: "Equipment Detail", navZone: "professional" },
 
   // â”€â”€ Zone: Support (absorbs support-console sidecar) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/support", zone: "support", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Support", navLabel: "Support", navZone: "life" },
@@ -944,8 +974,9 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/my-life", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Life", navLabel: "My Life", navZone: "life" },
   { path: "/my-life/feedback", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Feedback", navLabel: "Feedback & Safety", navZone: "life" },
   { path: "/my-life/feedback/new", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Share Feedback", navLabel: "Share Feedback", navZone: "life" },
-  { path: "/my-life/feedback/[caseId]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Track Feedback", navLabel: "Track", navZone: "life" },
+  // ORDERING: respectful-maternity is a literal sibling of [caseId] and must stay above it.
   { path: "/my-life/feedback/respectful-maternity", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Respectful Maternity Care", navLabel: "Respectful Maternity Care", navZone: "life" },
+  { path: "/my-life/feedback/[caseId]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Track Feedback", navLabel: "Track", navZone: "life" },
   { path: "/feedback/visit/[encounterRef]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Rate your visit", navLabel: "Rate your visit", navZone: "life" },
   // Work Home (Phase F1/F3) — guard is "auth", not "facility": oversight, programme,
   // regulatory and support contexts have no facility anchor and must still land here.
@@ -1006,6 +1037,168 @@ export const ROUTES: RouteDefinition[] = [
   // new surgical-episode workspace so both are guarded and navigable.
   { path: "/work/clinical/procedures", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Procedure Catalogue", navLabel: "Procedure Catalogue", navZone: "work" },
   { path: "/work/clinical/surgery", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Surgical Episodes", navLabel: "Surgical Episodes", navZone: "work" },
+
+  // ═══ Deny-by-default reachability close-out (Aug 2026) ══════════════════════════════════════
+  //
+  // Item 73 made an unregistered non-public route render the UnregisteredRouteDenied surface
+  // instead of the page. That is the right rule, and it made 69 pages that had shipped without a
+  // registry entry unreachable overnight — including /professional/request-access, which /home
+  // and the command palette both link to, so the "no work assignment yet" self-service seam was a
+  // dead end for exactly the people it exists for.
+  //
+  // Each entry below is a deliberate guard decision derived from what the page does and from the
+  // registered siblings in its zone — not a blanket grant. Where a page's own zone had a settled
+  // convention (learning, inventory, telemedicine, vashandi) the entry follows it; where the page
+  // performs administration the entry names the role group that already governs that surface.
+  // ═══════════════════════════════════════════════════════════════════════════════════════════
+
+  // Public marketing pages (server-rendered, PublicShell). middleware.ts already serves them on
+  // the anonymous lane, but the shell's guard is mounted in the ROOT layout, so unregistered they
+  // were denied to signed-in visitors and REDIRECTED TO LOGIN for anonymous ones — the one class
+  // of page that must never ask for a session. guard "none" matches /status and /download.
+  { path: "/about", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "About Impilo", navLabel: "About" },
+  { path: "/contact", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Contact and support", navLabel: "Contact" },
+
+  // Legacy share link. Renders nothing of its own — it redirects to /share/fund/[token], which is
+  // itself guard "none". A session requirement here would break already-shared card links.
+  { path: "/give/[token]", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Contribute to a bill", navLabel: "Contribute" },
+
+  // Data-access governance: policy management + the exceptional-access request/approval workflow.
+  // Same ADMIN group as its parent /access.
+  { path: "/access/governance", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Data Access Governance", navLabel: "Access Governance", navZone: "professional" },
+
+  // Event catalogue — integration-plane governance reference. Every /developer/* sibling is ADMIN.
+  { path: "/developer/event-catalogue", zone: "developer", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Event catalogue", navLabel: "Event Catalogue", navZone: "professional" },
+
+  // Intelligent Budgeting over COSTA. Budget holders are the finance/facility-admin chain, which
+  // is exactly the FINANCE group (SYSTEM_ADMIN · FACILITY_ADMIN · FINANCE) that /finance/costa uses.
+  { path: "/budgets", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Budgets", navLabel: "Budgets", navZone: "work" },
+  { path: "/budgets/[budgetId]", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Budget Detail", navLabel: "Budget", navZone: "work" },
+
+  // The person's own consent directives and record-access log. Subject is resolved server-side
+  // from the authenticated actor — a citizen surface, so "auth", never a work role.
+  { path: "/citizen/consent-center", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Consent Centre", navLabel: "Consent Centre", navZone: "life" },
+
+  // EHR children — both inherit the facility guard every /ehr/[patientId]/* sibling carries.
+  // "/encounter" is the index redirect that resolves the active encounter (QA #11).
+  { path: "/ehr/[patientId]/encounter", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Encounter", navLabel: "Encounter", navZone: "work" },
+  { path: "/ehr/[patientId]/charts/[chartId]", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Ward Chart", navLabel: "Chart", navZone: "work" },
+
+  // Social groups (operational teams, mentorship circles, cohorts). Mirrors the /social entries.
+  { path: "/groups", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Groups", navLabel: "Groups", navZone: "life" },
+  { path: "/groups/[id]", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Group", navLabel: "Group", navZone: "life" },
+
+  // Indawo place mode — outbreak declaration, surveillance signals, field-team deployment. This is
+  // public-health work, so it takes the PUBLIC_HEALTH group (PUBLIC_HEALTH_OFFICER · ENV_HEALTH ·
+  // CHW · FACILITY_ADMIN · SYSTEM_ADMIN · DEVELOPER) that /public-health/* already uses, NOT bare
+  // "auth". NOTE: experience-bff's IndawoPlaceModeController carries no method-level authorization
+  // today — this guard is the only declared gate, which is a server-side gap worth closing.
+  { path: "/indawo", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "PUBLIC_HEALTH", pageTitle: "Indawo — Place Mode", navLabel: "Indawo", navZone: "work" },
+  { path: "/indawo/outbreaks", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "PUBLIC_HEALTH", pageTitle: "Outbreaks", navLabel: "Outbreaks", navZone: "work" },
+  { path: "/indawo/surveillance", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "PUBLIC_HEALTH", pageTitle: "Surveillance signals", navLabel: "Surveillance", navZone: "work" },
+  { path: "/indawo/field-teams", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "PUBLIC_HEALTH", pageTitle: "Field teams", navLabel: "Field Teams", navZone: "work" },
+
+  // Inventory — all three read facility-scoped stock from the facility store, exactly like the
+  // five registered /inventory siblings, so they take the same facility guard.
+  { path: "/inventory/items", zone: "inventory", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Inventory Items", navLabel: "Items", navZone: "work" },
+  { path: "/inventory/stock", zone: "inventory", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Stock on Hand", navLabel: "Stock", navZone: "work" },
+  { path: "/inventory/reconciliation", zone: "inventory", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Stock Reconciliation", navLabel: "Reconciliation", navZone: "work" },
+
+  // Fundo (Impilo Learning) — the pages the learning lane recorded in
+  // docs/audits/fundo-learning-pipeline-capability-map.md §2.9 as built but unregistered,
+  // "recorded for coordinator decision". The decision, by sibling convention:
+  //   • /learning/admin/*  → ADMIN_OR_HIE, matching every registered /learning/admin/* entry
+  //   • /learning/studio/* and the teaching surfaces → LEARNING_AUTHOR (TRAINER + admin chain)
+  //   • learner-facing session surfaces → "auth", matching the catalogue/enrolment surfaces
+  { path: "/learning/admin/academic", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Academic structure", navLabel: "Academic", navZone: "professional" },
+  { path: "/learning/admin/accreditation", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Provider accreditation", navLabel: "Accreditation", navZone: "professional" },
+  { path: "/learning/admin/providers", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Learning providers", navLabel: "Learning Providers", navZone: "professional" },
+  { path: "/learning/admin/moderation", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Assessment moderation", navLabel: "Moderation", navZone: "professional" },
+  // Admissions decides applications and admits students — a registrar action, so it stays with the
+  // /learning/admin governance group rather than the authoring group.
+  { path: "/learning/admissions", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Admissions", navLabel: "Admissions", navZone: "professional" },
+  { path: "/learning/reports/dashboards", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Learning dashboards", navLabel: "Dashboards", navZone: "professional" },
+  { path: "/learning/studio/delivery", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "LEARNING_AUTHOR", pageTitle: "Delivery — facilitators & venues", navLabel: "Delivery", navZone: "professional" },
+  { path: "/learning/teach/marking", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "LEARNING_AUTHOR", pageTitle: "Marking queue", navLabel: "Marking", navZone: "professional" },
+  { path: "/learning/spaces/[spaceId]", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "LEARNING_AUTHOR", pageTitle: "Academy", navLabel: "Academy", navZone: "professional" },
+  // Academic record + clinical-placement sign-off. Preceptors are TRAINERs; the service enforces
+  // assigned-preceptor-only server-side (learning defect D5), this guard keeps the surface off
+  // the general learner's path.
+  { path: "/learning/students/[studentId]", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "LEARNING_AUTHOR", pageTitle: "Student record", navLabel: "Student", navZone: "professional" },
+  { path: "/learning/sessions", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Learning sessions", navLabel: "Sessions", navZone: "professional" },
+  { path: "/learning/sessions/[sessionId]", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Learning session", navLabel: "Session", navZone: "professional" },
+  { path: "/learning/sessions/[sessionId]/checkin", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Session check-in", navLabel: "Check-in", navZone: "professional" },
+  { path: "/learning/sessions/[sessionId]/classroom", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Classroom", navLabel: "Classroom", navZone: "professional" },
+
+  // Impilo Live producer console — the operator side of an event, alongside room/analytics.
+  { path: "/live/event/[eventId]/backstage", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Backstage", navLabel: "Backstage", navZone: "work" },
+
+  // Health OS capability marketplace. Browsing capabilities and requesting activation is open to
+  // any signed-in actor (the request is a governed ask, not a grant); DECIDING those requests and
+  // running installations/integration is platform administration.
+  // ORDERING: "integration" is a literal sibling of "[itemCode]" and must stay above it.
+  { path: "/marketplace/apps", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Apps & Capabilities", navLabel: "Apps", navZone: "work" },
+  { path: "/marketplace/apps/integration", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "ADMIN", pageTitle: "Integration operations", navLabel: "Integration Ops", navZone: "professional" },
+  { path: "/marketplace/apps/admin/activation", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "ADMIN", pageTitle: "Activation requests", navLabel: "Activation Requests", navZone: "professional" },
+  { path: "/marketplace/apps/admin/installations", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "ADMIN", pageTitle: "Installations", navLabel: "Installations", navZone: "professional" },
+  { path: "/marketplace/apps/[itemCode]", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Capability", navLabel: "Capability", navZone: "work" },
+
+  // Khuluma professional meeting rooms over Impilo Live. The invite-resolution page states its own
+  // contract: an unauthenticated guest is sent to sign-in and the link keeps working afterwards —
+  // that is the "auth" guard. ORDERING: "/meet/join" is a literal sibling of "/meet/[meetingId]".
+  { path: "/meet/join", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Join a meeting", navLabel: "Join Meeting", navZone: "work" },
+  { path: "/meet/[meetingId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Meeting", navLabel: "Meeting", navZone: "work" },
+  { path: "/meet/[meetingId]/summary", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Meeting summary", navLabel: "Meeting Summary", navZone: "work" },
+
+  // Citizen fundraisers. ORDERING: "new" is a literal sibling of "[id]".
+  { path: "/my-life/fundraisers", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Fundraisers", navLabel: "Fundraisers", navZone: "life" },
+  { path: "/my-life/fundraisers/new", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Start a fundraiser", navLabel: "Start a Fundraiser", navZone: "life" },
+  { path: "/my-life/fundraisers/[id]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Fundraiser", navLabel: "Fundraiser", navZone: "life" },
+
+  // The citizen side of a teleconsult — the person's own video visits, in plain language.
+  { path: "/my/telehealth", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My telehealth", navLabel: "My Telehealth", navZone: "life" },
+  { path: "/my/telehealth/[sessionId]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My telehealth visit", navLabel: "Telehealth Visit", navZone: "life" },
+
+  // Professional control layer. NOT the work environment — it is the overlay on the person anchor
+  // (registration, licensure, affiliations), so it takes "auth" like every /professional/* sibling.
+  { path: "/professional", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Professional Profile", navLabel: "Professional", navZone: "professional" },
+  // The self-service seam for a professional who has NO facility assignment yet — linked from
+  // /home and from the command palette. A role or facility guard here would gate the request on
+  // the very access it exists to request, so "auth" is the only correct guard.
+  { path: "/professional/request-access", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Request work access", navLabel: "Request Work Access", navZone: "professional" },
+  // Same reasoning for the provider-side facility-access request (PJ4/D-P7): guard "provider"
+  // would demand an activated provider identity at a facility to ask to work at one.
+  { path: "/provider/facility-access", zone: "auth", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Request facility access", navLabel: "Facility Access" },
+
+  // Daidzai call-taker intake → triage cockpit; sibling /work/daidzai/* surfaces are all "auth".
+  { path: "/work/daidzai/triage", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "SOS Triage", navLabel: "Triage", navZone: "work" },
+
+  // Telemedicine operating model. The four registered /work/telemedicine/* siblings (worklist,
+  // groups, virtual-hospitals) are zone queue + "auth"; these follow them.
+  { path: "/work/telemedicine", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Telemedicine", navLabel: "Telemedicine", navZone: "work" },
+  { path: "/work/telemedicine/routing", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Routing directory", navLabel: "Routing", navZone: "work" },
+  { path: "/work/telemedicine/operations", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Telemedicine operations", navLabel: "Telemedicine Ops", navZone: "work" },
+  { path: "/work/telemedicine/session-modes", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Session modes", navLabel: "Session Modes", navZone: "work" },
+  { path: "/work/telemedicine/mdt", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "MDT boards", navLabel: "MDT", navZone: "work" },
+  { path: "/work/telemedicine/mdt/[boardId]", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "MDT board", navLabel: "MDT Board", navZone: "work" },
+
+  // Vashandi workforce. The other ten /work/vashandi routes reach the registry through
+  // ADMINISTRATION_GOVERNANCE_ROUTES; these two are registered here because that file is
+  // regenerated from a fixed list in scripts/scaffold-admin-governance-pages.mjs which does not
+  // know about them. Shape matches the generated vashandi entries exactly.
+  { path: "/work/vashandi/on-call", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "On-call pools", navLabel: "On-call", navZone: "work" },
+  { path: "/work/vashandi/training-requirements", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Training requirements", navLabel: "Training Requirements", navZone: "work" },
+
+  // ── FLAGGED: authorization level genuinely unclear ─────────────────────────────────────────
+  // /tuso and /landela are single-purpose probe pages: /tuso lists the first 25 facilities and
+  // /landela renders `JSON.stringify` of the Landela template catalogue. Neither is a product
+  // surface — the facility registry proper is /registry/facilities and document templates are
+  // reached through their owning flows — and neither carries a docblock naming an audience.
+  // They are registered as ADMIN developer diagnostics so they are guarded and honest rather than
+  // silently denied. THE PRODUCT DECISION IS OPEN: build them out or delete the pages; do not
+  // read this entry as a claim that they belong in the experience.
+  { path: "/tuso", zone: "developer", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Facility registry probe (TUSO)", navLabel: "TUSO Probe", navZone: "professional" },
+  { path: "/landela", zone: "developer", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Landela template probe", navLabel: "Landela Probe", navZone: "professional" },
 ];
 
 // Total route count assertion.
@@ -1148,7 +1341,14 @@ export const ROUTES: RouteDefinition[] = [
 // Merge reconcile (31 Jul 2026): actual registry at the staging merge point was 855
 // (753 literals + 102 administration-governance), two above the stated 853 — the comment
 // chain had drifted again. Trust the extract: 855 + 1 = 856.
-export const EXPECTED_ROUTE_COUNT = 857;
+// Deny-by-default reachability close-out (Aug 2026): +72. Sixty-nine were the pages that item 73
+// made unreachable — they existed, they built, and with no registry entry the guard rendered the
+// UnregisteredRouteDenied surface instead of the page. Three more (/clinical/inpatient/admissions/new,
+// /registry/facilities/new, /registry/providers/new) had no entry either but were not denied: a
+// dynamic sibling's [^/]+ swallowed them, so they rendered under another route's title and guard.
+// Twelve already-registered entries were reordered for the same first-match-wins reason; that
+// changes no count. Extract at the time of writing: 827 literals + 102 administration-governance.
+export const EXPECTED_ROUTE_COUNT = 929;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
