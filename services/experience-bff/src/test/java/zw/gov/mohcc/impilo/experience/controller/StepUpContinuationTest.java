@@ -66,11 +66,28 @@ class StepUpContinuationTest {
     }
 
     @Test
-    @DisplayName("the shell sends the continuation it was issued")
+    @DisplayName("the shell still owns an executed proof that it sends the continuation")
     void shellForwardsContinuation() throws Exception {
-        // The BFF half is worthless if the browser never sends the parameter. beginOidcLogin
-        // accepted returnTo/loginHint/acr and silently omitted continuation, so the round trip was
-        // broken at the client end regardless of what the server accepted.
+        // The BFF half is worthless if the browser never sends the parameter — that intent is
+        // preserved. What changed is how it is proven.
+        //
+        // This assertion used to slice beginOidcLogin's body (from its `export` to the next
+        // `\nexport `) and search that slice for `query.set("continuation"`. The query
+        // construction was later extracted, deliberately, into the shared buildOidcLoginUrl so
+        // the windowed sign-in and the full-page redirect cannot drift apart on acr or the
+        // continuation id. The call moved one function past the slice boundary and this test
+        // went red while the behaviour was, and remained, correct.
+        //
+        // A Java test reading TypeScript source can only ever assert an implementation detail.
+        // The behavioural proof now lives where it can be executed —
+        // ui/one-ui-shell/src/lib/auth/__tests__/web-session-oidc-login.test.ts — which builds the
+        // authorize URL and asserts the continuation survives to the query string, for both the
+        // shared builder and the redirect path. Deleting the continuation line fails 4 of its 7
+        // tests.
+        //
+        // What remains here is the cross-language guard that survives refactoring: the shell
+        // module must still wire the continuation onto the authorize query somewhere, and the
+        // executed proof must still exist.
         Path shell = Path.of("../../ui/one-ui-shell/src/lib/auth/web-session.ts");
         assertThat(Files.isRegularFile(shell))
                 .as("shell source not found at %s — this assertion would pass vacuously",
@@ -78,15 +95,21 @@ class StepUpContinuationTest {
                 .isTrue();
         String src = Files.readString(shell);
 
-        int begin = src.indexOf("export function beginOidcLogin");
-        assertThat(begin).as("beginOidcLogin is gone or renamed").isGreaterThan(-1);
-        // Slice to the NEXT export, not the next line-leading brace: the parameter type literal
-        // closes with `}): void {` at column zero, which truncated this to the signature alone.
-        int end = src.indexOf("\nexport ", begin + 1);
-        String body = src.substring(begin, end > -1 ? end : src.length());
-
-        assertThat(body)
-                .as("beginOidcLogin must put the continuation on the authorize query string")
+        assertThat(src)
+                .as("beginOidcLogin is gone or renamed — the shell login entry point moved")
+                .contains("export function beginOidcLogin");
+        // Module-scoped, not function-scoped: which exported function performs the wiring is an
+        // implementation choice; that the module performs it at all is the contract.
+        assertThat(src)
+                .as("the shell must put the continuation on the authorize query string")
                 .contains("query.set(\"continuation\"");
+
+        Path executedProof = Path.of(
+                "../../ui/one-ui-shell/src/lib/auth/__tests__/web-session-oidc-login.test.ts");
+        assertThat(Files.isRegularFile(executedProof))
+                .as("the executed continuation proof is missing at %s — this guard is the only "
+                        + "thing standing between a silent deletion and an unnoticed regression",
+                        executedProof.toAbsolutePath())
+                .isTrue();
     }
 }
