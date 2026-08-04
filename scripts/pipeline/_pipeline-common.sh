@@ -114,7 +114,13 @@ pipeline_run_phase() {
 # so this asserts it, and its absence is a pipeline failure.
 PIPELINE_MANDATORY_GATES=(
   workspace tools security static frontend backend
-  keycloak-realm-import change-safety
+  keycloak-realm-import change-safety repo-integrity
+  # Promoted from advisory to blocking 2026-08-04, all measured passing on main.
+  # Blocking alone is not enough: a blocking gate that silently stops being invoked
+  # still reports nothing, so each is asserted present as well.
+  runtime-truth-heuristics
+  full-boot-discover full-boot-targets full-boot-doctrine
+  full-boot-runtime full-boot-waves full-boot-inventory
 )
 
 pipeline_assert_mandatory_gates_ran() {
