@@ -305,6 +305,20 @@ function getPurposeOfUse(): string {
  * Ask the BFF to resolve/refresh its opaque web session.
  * Uses a singleton promise to prevent concurrent recovery attempts.
  */
+/**
+ * Pull the BFF's session truth into the client auth store, now.
+ *
+ * Exists because the store otherwise only learns about a session at two moments: page load
+ * (StoreHydrator) and a 401 retry (attemptRefresh below). A sign-in that completes in the
+ * popup window creates a third moment neither covers — the cookie is valid, so nothing 401s,
+ * and no remount happens. The main window then navigated to the destination with a store that
+ * still said "signed out", and AuthGuardProvider bounced it straight back to /auth/login.
+ * From the person's side: OTP accepted, popup closed, sign-in form again.
+ */
+export async function restoreSessionIntoStore(): Promise<boolean> {
+  return attemptRefresh();
+}
+
 async function attemptRefresh(): Promise<boolean> {
   if (typeof window === "undefined") return false;
   // If a refresh is already in progress, wait for it

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import LoginPage from "./page";
 
@@ -46,6 +46,10 @@ vi.mock("@/lib/api-client", () => ({
   apiClient: {
     get: vi.fn().mockResolvedValue({ data: [] }),
   },
+  // SignInModal hydrates the auth store from the BFF session BEFORE navigating — without
+  // this, the destination's route guard read a stale "signed out" store and bounced the
+  // freshly signed-in person straight back to /auth/login.
+  restoreSessionIntoStore: vi.fn().mockResolvedValue(true),
 }));
 
 describe("LoginPage — Progressive Auth Scene", () => {
@@ -87,7 +91,7 @@ describe("LoginPage — Progressive Auth Scene", () => {
     vi.unstubAllGlobals();
   });
 
-  it("ignores a sign-in completion claimed by any other origin", () => {
+  it("ignores a sign-in completion claimed by any other origin", async () => {
     vi.stubGlobal("open", vi.fn(() => ({ focus: vi.fn(), close: vi.fn(), closed: false })));
     render(<LoginPage />);
 
@@ -109,7 +113,9 @@ describe("LoginPage — Progressive Auth Scene", () => {
       origin: window.location.origin,
       data: { type: "impilo:sign-in-complete", destination: "/home" },
     }));
-    expect(replace).toHaveBeenCalledWith("/home");
+    // Navigation now happens only after the session has been hydrated into the store, so the
+    // replace is one microtask away rather than synchronous.
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/home"));
 
     vi.unstubAllGlobals();
   });
