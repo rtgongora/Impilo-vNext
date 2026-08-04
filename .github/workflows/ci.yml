@@ -613,6 +613,13 @@ jobs:
         working-directory: ui/one-ui-shell
         run: npm run test:routes
 
+      # The other direction: a page that exists but has no registry entry. With deny-by-default
+      # (item 73) that page renders "This page is not available" instead of itself, so this is a
+      # reachability gate, not a nav-polish one. It had never been wired into CI.
+      - name: Orphan page check
+        working-directory: ui/one-ui-shell
+        run: npm run test:orphan-pages
+
   e2e-test:
     name: E2E Tests
     runs-on: ubuntu-latest

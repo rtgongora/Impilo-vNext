@@ -23,37 +23,13 @@ import { sessionContractAllowsRoute } from "@/lib/trust";
 import { useSessionExperienceContract } from "@/hooks/useSessionExperienceContract";
 import { buildContextGuardRedirect } from "@/lib/resolve-post-login-destination";
 import { matchRouteDefinition } from "@/lib/routes";
+import { isPublicSurface } from "@/lib/public-surface";
 import { isSchedulingClusterPath } from "@/lib/scheduling-paths";
 import { evaluateRouteTrust } from "@/lib/auth/action-trust-matrix";
 import { resolveWorkRouteVisibility } from "@/lib/auth/work-route-visibility";
 
 /** Re-export for existing imports from this module. */
 export { ROLE_GROUPS, matchesRequiredRole };
-
-/** Paths that bypass the consent gate (legal pages, consent page itself, auth). */
-const CONSENT_EXEMPT_PREFIXES = [
-  "/",
-  "/welcome",
-  "/auth",
-  "/consent",
-  "/privacy",
-  "/terms",
-  "/account-deletion",
-  "/kiosk",
-  "/verify",
-  "/share",
-  "/collaboration",
-];
-
-/**
- * Whether a pathname sits on a deliberately public surface (anonymous lane).
- * Bare "/" means the landing page exactly — never a prefix.
- */
-function isPublicSurface(pathname: string): boolean {
-  return CONSENT_EXEMPT_PREFIXES.some((p) =>
-    p === "/" ? pathname === "/" : pathname.startsWith(p),
-  );
-}
 
 /**
  * Deny-by-default for unregistered routes (Target Architecture v1.3.2 §29.2,
