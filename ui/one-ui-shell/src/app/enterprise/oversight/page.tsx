@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
 import { Globe2, ScanLine, Shield, Stethoscope } from "lucide-react";
 import { EnterpriseWorkspaceShell } from "@/components/enterprise/EnterpriseWorkspaceShell";
 import { NationalRevenueOversightPanel } from "@/components/enterprise/NationalRevenueOversightPanel";
+import { useAuthStore } from "@/hooks/useAuthStore";
+import { reachableByRole } from "@/lib/auth/route-reachability";
 
 const OVERSIGHT_LINKS = [
   {
@@ -21,7 +24,9 @@ const OVERSIGHT_LINKS = [
     tone: "border-sky-200 bg-sky-50",
   },
   {
-    href: "/coverage",
+    // This page's guard is "auth", so every signed-in person reaches it — but /coverage admits
+    // only ADMIN. /ruvimbo resolves each caller to the face they can actually open.
+    href: "/ruvimbo",
     label: "Coverage operations",
     description: "Schemes, eligibility, claims, settlement, and payer intelligence.",
     icon: Shield,
@@ -51,6 +56,12 @@ const OVERSIGHT_LINKS = [
 ];
 
 export default function EnterpriseOversightPage() {
+  // This route's own guard is "auth", so every signed-in person lands here — but several of
+  // the drill-downs below are role-guarded. Offering one to someone it refuses produces a
+  // bounce back to /home with no explanation, so only show the ones that will open.
+  const hasRole = useAuthStore((s) => s.hasRole);
+  const links = useMemo(() => reachableByRole(OVERSIGHT_LINKS, hasRole), [hasRole]);
+
   return (
     <EnterpriseWorkspaceShell
       title="National enterprise oversight"
@@ -59,8 +70,15 @@ export default function EnterpriseOversightPage() {
       <div className="mb-6">
         <NationalRevenueOversightPanel />
       </div>
+      {links.length === 0 && (
+        <p className="rounded-2xl border border-border bg-background p-5 text-sm text-muted-foreground">
+          No oversight drill-downs are available to your current roles. This is an access
+          boundary, not an empty dataset — ask your administrator for the oversight role you
+          need.
+        </p>
+      )}
       <div className="grid gap-4 md:grid-cols-2">
-        {OVERSIGHT_LINKS.map(({ href, label, description, icon: Icon, tone }) => (
+        {links.map(({ href, label, description, icon: Icon, tone }) => (
           <Link
             key={href}
             href={href}

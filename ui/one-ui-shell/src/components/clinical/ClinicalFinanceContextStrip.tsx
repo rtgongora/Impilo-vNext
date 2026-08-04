@@ -19,10 +19,16 @@ export function ClinicalFinanceContextStrip({ patientId }: { patientId: string }
       <Wallet className="h-3.5 w-3.5 shrink-0 text-primary-hover" />
       <span className="font-medium">Coverage &amp; finance</span>
       <span className="text-primary-hover/90">COSTA / MusheX consoles stay on dedicated finance routes — no simulated balances here.</span>
-      <Link href="/coverage" className="font-semibold text-primary-hover underline-offset-2 hover:underline">
+      {/* This strip renders for clinical, finance AND admin. /coverage admits only the ADMIN
+          group, so the other two were sent to a route that bounces them home. /ruvimbo is the
+          role-aware resolver and never dead-ends. */}
+      <Link href="/ruvimbo" className="font-semibold text-primary-hover underline-offset-2 hover:underline">
         Coverage workspace
       </Link>
-      {(isFinance || isAdmin) && (
+      {/* Gated on isFinance alone, not (isFinance || isAdmin): /finance/workspace requires the
+          FINANCE group, which already contains SYSTEM_ADMIN and FACILITY_ADMIN. The old
+          condition additionally showed it to DEVELOPER, whom the route then refused. */}
+      {isFinance && (
         <>
           <span className="text-primary-hover/70">·</span>
           <Link href="/finance/workspace" className="font-semibold text-primary-hover underline-offset-2 hover:underline">

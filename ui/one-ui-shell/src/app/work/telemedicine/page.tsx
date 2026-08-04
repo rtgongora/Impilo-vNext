@@ -336,7 +336,8 @@ const ENCOUNTER_CAPABILITIES: Array<{ href: string; label: string }> = [
   { href: "/lab", label: "Laboratory" },
   { href: "/pharmacy", label: "Pharmacy" },
   { href: "/consent", label: "Consent" },
-  { href: "/coverage", label: "Coverage / medical aid" },
+  // Clinicians and support agents both reach this list; /coverage admits only ADMIN.
+  { href: "/ruvimbo", label: "Coverage / medical aid" },
   { href: "/emergency", label: "Emergency" },
   { href: "/telemedicine/analytics", label: "Teleconsult analytics" },
   { href: "/telemedicine/new", label: "New teleconsult request" },
