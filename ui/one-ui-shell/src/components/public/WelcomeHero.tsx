@@ -226,7 +226,7 @@ export function WelcomeHero() {
           stopping at an arbitrary cap that let the next section jut in. The floor
           protects short laptops from crushing the panel; the map's flex-1 absorbs
           every pixel the fill recovers. */}
-      <div className="relative z-10 mx-auto grid max-w-[110rem] gap-0 px-4 py-6 sm:px-6 lg:h-[max(36rem,calc(100vh-4.6rem))] lg:grid-cols-[minmax(0,38fr)_minmax(26rem,62fr)] lg:gap-8 lg:px-8 lg:py-4">
+      <div className="relative z-10 mx-auto grid max-w-[110rem] gap-0 px-4 py-6 sm:px-6 lg:min-h-[max(36rem,calc(100vh-4.6rem))] lg:grid-cols-[minmax(0,38fr)_minmax(26rem,62fr)] lg:gap-8 lg:px-8 lg:py-4">
         {/* Left: need-first intent + inline Nompilo guidance */}
         {/* min-w-0: grid children default to min-width:auto and refuse to shrink below
             their content, which clipped the hero text on narrow screens (the section's
