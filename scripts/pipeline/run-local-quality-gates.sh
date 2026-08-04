@@ -127,6 +127,18 @@ pipeline_run_phase reference-id-classification "A5 reference id classification" 
 pipeline_run_phase policy-path-pins "policy path_contains pin semantics" 1 \
   bash scripts/guard/check-policy-path-pins.sh
 
+# 9d-5. Keycloak realm import (BLOCKING). Realm JSON Keycloak cannot parse does not
+# degrade the platform — Keycloak fails to BOOT, taking all web and mobile auth with it,
+# and `--import-realm` skips realms that already exist, so a running estate looks fine
+# until the next restart. This gate had never run anywhere: it existed only in a GitHub
+# workflow whose runner has been billing-locked since 2026-04-08, and in that window a
+# `_comment` key and a 269-character description sat unimportable in the preview realm
+# for eight days. Fail-closed by construction — missing docker, missing image, missing
+# realm, an undeclared realm, zero realms, or an unwritable log directory are all
+# failures, never skips. Governed set: deploy/keycloak/governed-realms.json.
+pipeline_run_phase keycloak-realm-import "Keycloak realm import (governed realms)" 1 \
+  bash scripts/guard/check-keycloak-realm-import.sh
+
 # 9e. Preview sandbox runtime smoke + persistence E2E (blocking when preview reachable)
 preview_blocking=1
 [[ "${PREVIEW_SMOKE_BLOCKING:-1}" != "1" ]] && preview_blocking=0

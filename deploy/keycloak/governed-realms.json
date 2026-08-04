@@ -1,0 +1,43 @@
+{
+  "$comment": [
+    "CANONICAL INVENTORY of every Keycloak realm file this estate governs.",
+    "",
+    "Single source of truth. scripts/guard/check-keycloak-realm-import.sh reads",
+    "this file and validates exactly what it lists — it holds no realm list of",
+    "its own. The same file supplies the discovery roots used to detect a realm",
+    "that exists on disk but is missing from the inventory, so a renamed or",
+    "newly added realm cannot escape validation by simply not being listed.",
+    "",
+    "Adding a realm file under a discovery root WITHOUT adding it here is a",
+    "hard failure, not a silent skip. That is the point.",
+    "",
+    "keycloak_image must track the image the estate actually runs",
+    "(deploy/helm/impilo-vnext/values-full-preview.yaml -> keycloak.image).",
+    "A realm valid for one Keycloak major can be invalid for the next, so",
+    "validating against the wrong version proves nothing."
+  ],
+  "schema_version": 1,
+  "keycloak_image": "127.0.0.1:5000/impilo/keycloak:26.7.0-shell-theme3",
+  "discovery_roots": [
+    { "dir": "deploy/helm/impilo-vnext/files", "pattern": "realm-*.json" },
+    { "dir": "infra/keycloak", "pattern": "realm-*.json" },
+    { "dir": "tools/auth", "pattern": "*realm*.json" }
+  ],
+  "realms": [
+    {
+      "path": "deploy/helm/impilo-vnext/files/realm-impilo-preview.json",
+      "purpose": "Preview estate realm, imported by the Helm chart",
+      "environment": "preview"
+    },
+    {
+      "path": "infra/keycloak/realm-impilo-production.json",
+      "purpose": "Production realm",
+      "environment": "production"
+    },
+    {
+      "path": "tools/auth/impilo-realm.json",
+      "purpose": "Local and tooling realm",
+      "environment": "tooling"
+    }
+  ]
+}
