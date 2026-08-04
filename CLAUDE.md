@@ -1,3 +1,5 @@
+@docs/architecture/CLAUDE_GOVERNANCE.md
+
 # Impilo vNext — Claude Code Project Rules
 
 ## Foundational Doctrine
