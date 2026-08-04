@@ -222,7 +222,11 @@ export function WelcomeHero() {
       {/* 38/62 split: intent and continuity left, service discovery right. Both zones start
           at the same top edge and run to the same depth — the right side must never begin
           halfway down the viewport. */}
-      <div className="relative z-10 mx-auto grid max-w-[110rem] gap-0 px-4 py-6 sm:px-6 xl:h-[min(44rem,calc(100vh-4.6rem))] lg:grid-cols-[minmax(0,38fr)_minmax(26rem,62fr)] lg:gap-8 lg:px-8 lg:py-6">
+      {/* The first viewport IS the hero: fill the screen below the header instead of
+          stopping at an arbitrary cap that let the next section jut in. The floor
+          protects short laptops from crushing the panel; the map's flex-1 absorbs
+          every pixel the fill recovers. */}
+      <div className="relative z-10 mx-auto grid max-w-[110rem] gap-0 px-4 py-6 sm:px-6 lg:h-[max(36rem,calc(100vh-4.6rem))] lg:grid-cols-[minmax(0,38fr)_minmax(26rem,62fr)] lg:gap-8 lg:px-8 lg:py-4">
         {/* Left: need-first intent + inline Nompilo guidance */}
         {/* min-w-0: grid children default to min-width:auto and refuse to shrink below
             their content, which clipped the hero text on narrow screens (the section's
@@ -386,7 +390,7 @@ export function WelcomeHero() {
             </div>
           )}
 
-          <div className="mt-7 flex flex-wrap items-center gap-2.5" aria-label="Primary Impilo actions">
+          <div className="mt-7 flex flex-wrap items-center gap-2.5 lg:mt-auto lg:pt-4" aria-label="Primary Impilo actions">
             <Link
               href="/welcome/find-care"
               className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 px-4 py-2.5 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,.35),0_10px_24px_-10px_rgba(6,95,70,.8)] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2"
@@ -408,6 +412,30 @@ export function WelcomeHero() {
               <MessageSquareHeart className="h-4 w-4" aria-hidden />
               Give feedback
             </Link>
+            {/* The hero fills the viewport, so nothing peeks in from below to hint at more
+                content — this cue does that job explicitly, folded into the action row so it
+                costs zero height. Anchor, not JS: works before hydration and lands on the
+                services section's own scroll margin. Desktop-only: the stacked mobile flow
+                scrolls naturally past the fold. */}
+            <a
+              href="#services"
+              aria-label="Scroll down to explore all of Impilo"
+              className="ml-auto hidden min-h-11 items-center gap-1.5 rounded-full px-3 py-2.5 text-[12px] font-bold uppercase tracking-[0.14em] text-emerald-50/80 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-300 lg:inline-flex"
+            >
+              Explore
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+                className="h-4 w-4 animate-bounce motion-reduce:animate-none"
+              >
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </a>
           </div>
 
         </div>
@@ -420,6 +448,7 @@ export function WelcomeHero() {
           <HeroDiscoverySurface />
         </div>
       </div>
+
     </section>
   );
 }

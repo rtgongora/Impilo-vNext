@@ -609,7 +609,7 @@ export function HeroDiscoverySurface() {
               of it — the map resolved to 28px at 390 and 105px at 768, a strip of
               nothing. The floor makes the surface grow instead of crushing the map.
             */}
-            <div className="relative min-h-[20rem] flex-1 overflow-hidden rounded-xl border border-slate-200 shadow-[inset_0_2px_10px_rgba(10,42,32,.08)] lg:min-h-[17rem] xl:min-h-[16rem]">
+            <div className="relative min-h-[20rem] flex-1 overflow-hidden rounded-xl border border-slate-200 shadow-[inset_0_2px_10px_rgba(10,42,32,.08)]">
               <FindCareMap
                 results={[]}
                 geoMarkers={geoMarkers}
