@@ -17,6 +17,10 @@ gate_run "frontend-orphan-pages" bash -c 'cd ui/one-ui-shell && npm run test:orp
 # no-stub-guard catches an EMPTY onClick; this catches a <button> with no handler at all, which is
 # the commoner shape and looks like finished markup rather than a decision someone made.
 gate_run "frontend-decorative-controls" bash -c 'cd ui/one-ui-shell && npm run test:decorative-controls' || FAIL=1
+# A route segment may export only `default` plus Next's reserved fields. Exporting
+# anything else type-checks cleanly and then fails `next build` — "tsc clean is not
+# buildable" is a distinct class from a type error, and nothing above catches it.
+gate_run "frontend-page-exports" bash -c 'cd ui/one-ui-shell && npm run test:page-exports' || FAIL=1
 gate_run "frontend-unit-tests" bash -c 'cd ui/one-ui-shell && npm test' || FAIL=1
 # next.config.mjs fails the build when the rewrite upstreams are absent under NODE_ENV=production,
 # which `next build` always sets. That guard is right — rewrites bake in at build time, and a

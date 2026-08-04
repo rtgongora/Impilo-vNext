@@ -102,6 +102,7 @@ reports/contracts/tshepo-trust-decision-v1.bundled.json
 # Pipeline run reports (generated on VM; not committed)
 reports/pipeline/*.md
 reports/pipeline/*.json
+reports/pipeline/*.jsonl
 !reports/pipeline/.gitkeep
 # Change absorption run reports (generated; templates committed)
 reports/absorption/latest-*.md

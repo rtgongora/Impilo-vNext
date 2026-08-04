@@ -29,7 +29,7 @@ pipeline_run_phase workspace "Workspace verification" 1 \
 # 2. Tools
 if [[ "${PIPELINE_SKIP_TOOLCHECK:-0}" != "1" ]]; then
   pipeline_run_phase tools "Dependency/tool verification" 1 \
-    bash scripts/pipeline/verify-tools.sh || true
+    bash scripts/pipeline/verify-tools.sh
 fi
 
 # 3. Security
@@ -40,12 +40,51 @@ pipeline_run_phase security "Secret/security checks" 1 \
 pipeline_run_phase static "Static checks" 1 \
   bash scripts/test/run-static-checks.sh
 
+# 4b. Repository integrity (blocking, always applicable, seconds to run).
+# Leftover conflict markers compile in exactly the formats where they do most
+# damage, and typescript.ignoreBuildErrors turns a red build green without
+# touching product code.
+pipeline_run_phase repo-integrity "Repository integrity" 1 \
+  bash scripts/guard/check-repo-integrity.sh
+
+# 4c. Governance pack (blocking, PATH-SELECTED). The verifier enforces seven
+# invariants — required files present, CLAUDE.md imports the rules, no frozen
+# legacy language outside archive/, the pointer names the active version, the
+# versioned architecture is complete rather than a stub, v1.3.1 is historical
+# only, and exactly one complete active architecture copy exists. It was wired
+# to nothing until now. It also runs from an unrelated cwd, because it resolves
+# its own repo root and a path-dependent verifier is a verifier that lies.
+GOV_PATHS='^(CLAUDE\.md|docs/architecture/|docs/experience/packs/|docs/standards/|scripts/architecture/)'
+if [[ "${PIPELINE_FORCE_GOVERNANCE:-0}" == "1" ]] \
+   || git diff --name-only HEAD~1...HEAD 2>/dev/null | grep -qE "$GOV_PATHS"; then
+  pipeline_run_phase governance "Governance pack (repo root)" 1 \
+    bash scripts/architecture/verify-governance-pack.sh
+  pipeline_run_phase governance-cwd "Governance pack (unrelated cwd)" 1 \
+    bash -c 'cd /tmp && bash "$OLDPWD/scripts/architecture/verify-governance-pack.sh"'
+else
+  pipeline_gate_not_applicable governance "Governance pack (repo root)" \
+    "no governance paths changed since HEAD~1"
+  pipeline_gate_not_applicable governance-cwd "Governance pack (unrelated cwd)" \
+    "no governance paths changed since HEAD~1"
+fi
+
 # 5+6. Frontend + Backend — the two dominant phases (~4 min npm, ~5 min maven).
 # They touch disjoint trees (ui/ vs services/) and distinct log files, so they
 # run concurrently by default; PIPELINE_CONCURRENT_CORE=0 restores sequential.
+# The concurrent branch hand-rolls what pipeline_run_phase does, because that helper
+# runs its command synchronously. That is fine — except it also skipped the ONE thing
+# the helper does first: pipeline_should_skip. So PIPELINE_ONLY/PIPELINE_SKIP silently
+# did not apply here, and `PIPELINE_ONLY=static` ran the full ~9-minute frontend+backend
+# suite anyway. Consult the same predicate, and hand the filtered case to the sequential
+# branch below, which already honours it via pipeline_run_phase. One source of filtering
+# truth, not two.
+_fe_filtered=0; _be_filtered=0
+pipeline_should_skip frontend && _fe_filtered=1
+pipeline_should_skip backend  && _be_filtered=1
+
 if [[ "${PIPELINE_CONCURRENT_CORE:-1}" == "1" \
-      && "${PIPELINE_SKIP_FRONTEND:-0}" != "1" \
-      && "${PIPELINE_SKIP_BACKEND:-0}" != "1" ]]; then
+      && "${PIPELINE_SKIP_FRONTEND:-0}" != "1" && "$_fe_filtered" == "0" \
+      && "${PIPELINE_SKIP_BACKEND:-0}" != "1" && "$_be_filtered" == "0" ]]; then
   echo ""
   echo "========== PHASE: Frontend + Backend checks (concurrent) =========="
   bash scripts/test/run-frontend-checks.sh >"$PIPELINE_LOG_DIR/frontend.log" 2>&1 &
@@ -183,24 +222,24 @@ if [[ "${PIPELINE_RUN_SESSION_E2E:-0}" == "1" ]]; then
   session_e2e_blocking=0
   [[ "${SESSION_E2E_STRICT:-0}" == "1" ]] && session_e2e_blocking=1
   pipeline_run_phase session-experience-e2e "Session Experience multi-persona E2E" "$session_e2e_blocking" \
-    bash scripts/test/verify-session-experience-e2e.sh --url "${SESSION_E2E_URL:-https://impilo.mohcc.gov.zw}" || true
+    bash scripts/test/verify-session-experience-e2e.sh --url "${SESSION_E2E_URL:-https://impilo.mohcc.gov.zw}"
 fi
 
 # 13. Full-boot readiness (advisory unless PIPELINE_FULL_BOOT_BLOCKING=1)
 full_boot_blocking=0
 [[ "${PIPELINE_FULL_BOOT_BLOCKING:-0}" == "1" ]] && full_boot_blocking=1
 pipeline_run_phase full-boot-discover "Full-boot artifact generation" 0 \
-  bash scripts/full-boot/generate-artifacts.sh || true
+  bash scripts/full-boot/generate-artifacts.sh
 pipeline_run_phase full-boot-targets "Full-boot build/image target discovery" 0 \
-  bash scripts/build/discover-build-targets.sh || true
+  bash scripts/build/discover-build-targets.sh
 pipeline_run_phase full-boot-doctrine "Doctrine compliance" "$full_boot_blocking" \
-  bash scripts/guard/check-doctrine-compliance.sh || true
+  bash scripts/guard/check-doctrine-compliance.sh
 pipeline_run_phase full-boot-runtime "Full-boot runtime completeness" 0 \
-  bash scripts/guard/check-full-boot-runtime-completeness.sh || true
+  bash scripts/guard/check-full-boot-runtime-completeness.sh
 pipeline_run_phase full-boot-waves "Full-boot wave coverage" 0 \
-  bash scripts/guard/check-full-boot-waves.sh || true
+  bash scripts/guard/check-full-boot-waves.sh
 pipeline_run_phase full-boot-inventory "Registry inventory contract" 0 \
-  bash scripts/guard/check-registry-inventory-contract.sh || true
+  bash scripts/guard/check-registry-inventory-contract.sh
 
 # 14. Change-safety
 pipeline_run_phase change-safety "Change-safety gates" 1 \
@@ -218,12 +257,19 @@ if [[ "${PIPELINE_SKIP_E2E:-1}" != "1" ]]; then
   e2e_blocking=0
   [[ "${PIPELINE_E2E_BLOCKING:-0}" == "1" ]] && e2e_blocking=1
   pipeline_run_phase web-e2e "Web E2E" "$e2e_blocking" \
-    bash scripts/test/run-web-e2e.sh || true
+    bash scripts/test/run-web-e2e.sh
 fi
 
 # Summary
 echo ""
 echo "========== LOCAL QUALITY PIPELINE SUMMARY =========="
+
+# A mandatory gate that produced no result at all is a failure, not a pass. Without
+# this, a gate deleted, renamed or short-circuited by an early `return` simply
+# vanishes from the summary and the run still reports PASS — which is precisely how
+# the realm guard stayed unwired while the pipeline reported green.
+pipeline_assert_mandatory_gates_ran
+
 VERDICT="PASS"
 if [[ "$PIPELINE_FAIL" -ne 0 ]]; then
   VERDICT="FAIL"
