@@ -1,6 +1,6 @@
 # Impilo vNext — Hybrid / Federated Target Architecture
 
-**Status:** Controlling architecture · **Version:** 1.3 · **Date:** 2026-08-04
+**Status:** Controlling architecture · **Version:** 1.3.1 · **Date:** 2026-08-04
 **Factual basis:** [`vnext-current-state-recovery-2026-08-03.md`](vnext-current-state-recovery-2026-08-03.md) (commit `1870cf33d`), plus targeted evidence sweeps for the v1.1 additions. Every current-state statement is a reference, not a re-derivation.
 **Scope:** Converts vNext from a single-instance national deployment into a hub-and-spoke federated national platform, consumed through four service profiles. Immediate delivery target is the **large Hospital Node**. This document does not implement; it governs implementation.
 
@@ -76,6 +76,28 @@ Two bodies of work, one document. **Part A** is the surgical consistency and sch
 **Part B — the Experience Plane (new §27–§38)**
 
 The Experience Plane, a canonical experience resolver, a UX state model, the pre-login experience, guided consumption-profile recommendation, the three national domain landings, node experience states, self-service journey families, page content contracts, Nompilo as journey orchestrator, mobile parity, and **24 end-to-end journey blueprints**.
+
+## v1.3.1 — experience-model correction (PO review, 2026-08-04)
+
+v1.3 is approved as the **Experience Architecture baseline** and is not a completed UX or journey specification. The PO review identified that the experience model itself — not merely its coverage — was wrong in seven places. v1.3.1 corrects the model. It reopens nothing in the federation design.
+
+| # | Correction | Where | Nature |
+|---|---|---|---|
+| E1 | **UX state was a single enum.** A person is not in one state; they are simultaneously in several — a verified provider, at a disconnected node, on stale authority, on a shared workstation. One field cannot express that, and §29's flat list silently made the axes mutually exclusive | §29.0, §29.1, §28.2 | **Model defect — corrected** |
+| E2 | **Entry intention and return destination were absent** from the contract, though the shell already ships a nine-pillar `GatewayIntent` primitive that v1.3 never cited | §28.5 | Omission — the primitive exists |
+| E3 | **Resolver placement was unstated.** "The resolver runs server-side" does not say *which* server, which is the only question that matters at a disconnected node | §28.4 | Genuine gap |
+| E4 | **Journey persistence was promised and never designed.** The contract emits a `journeys` block with `resumable: true` against **no persistence anywhere** — no table, no service, no schema | §39 | **Promise without substance — corrected** |
+| E5 | **Device and shared-workstation policy undesigned** — and the one control that exists has never executed | §29.3 | Genuine gap + live defect |
+| E6 | **Notifications were named, not architected.** What exists is a channel-delivery service; what the contract implies is an action centre. They are different systems | §40 | Genuine gap |
+| E7 | **Nompilo's action boundaries were prose, not a contract** — six numbered principles with no enumeration of permitted and forbidden acts | §36.3, §36.4 | Under-specification |
+| E8 | **Visual implementation detail was frozen into architecture** — §33.1 named blur tiers and gradient idioms that belong to a versioned design system with its own release cadence | §33.1, §41 | Layering defect |
+
+**What v1.3.1 adds beyond the model:** §39 journey persistence, §40 the action centre, §41 the design-system boundary, and §42 the register of **seven Experience Completion Packs** — the separate implementation artefacts this document governs but does not contain.
+
+**Two measured defects surfaced while making these corrections**, both carried into the backlog rather than described as design:
+
+- **The inactivity lock has never fired.** `InactivityLockProvider.tsx:33` exempts the prefix list `["/", "/welcome", …]` using `pathname.startsWith(p)` — and every path starts with `"/"`, so `isExempt` is unconditionally true. The five-minute privacy lock and the fifteen-minute auto-logout are dead code on every route. The identical list in `api-client.ts:348` guards against exactly this with `p !== "/"`, so the correct implementation already exists twenty lines of the codebase away (§29.3, item 82).
+- **Notification scope is client-asserted.** `AssistantNotificationsController` scopes the tray by `work_mode`, `facility_id` and `shift_id` taken from **query parameters**, not from the session audience — the same browser-authoritative-context defect §12.4 eliminates for trust headers (§40, item 83).
 
 ---
 
@@ -3214,6 +3236,18 @@ Tests A50–A56 exist because §2B.3's exposure is at the **infrastructure** lay
 | **A85** | Professional alerts fail loudly | Take the licence service down for a provider with an expired licence | Section reports `DEGRADED`, **not** "Nothing here right now" |
 | **A86** | Mode/family completeness | Enter every mobile app mode | Each resolves to a work-home family, or the mode is not offered |
 
+## 23.4 v1.3.1 additions — the corrected experience model
+
+| # | Test | Method | Pass condition |
+|---|---|---|---|
+| **A87** | State is a vector, not an enum | Drive a session into three simultaneous conditions (multiple contexts + node disconnected + stale authority, on a `MANAGED_SHARED` device) | The contract carries **every** axis; the precedence-derived landing is correct; the surfaces render all applicable facts, not only the ranked-first one |
+| **A88** | The inactivity lock actually fires | On an authenticated non-exempt route, idle past the lock and logout thresholds; **then delete the exemption guard and re-run** | Lock at the posture's threshold, logout after; and the test **goes red when the guard is removed** — a check is proven only by observing its failure |
+| **A89** | A node contract never widens | Diff a node-resolved contract against the national contract for the same identity across the staleness ladder | At every rung, the node offer is a subset; growing staleness only narrows; nothing appears at the node that national would refuse |
+| **A90** | The assistant cannot transact | From the assistant surface, attempt each §36.4 forbidden act, including via prompt injection | No transactional endpoint is reachable from the assistant's BFF surface at all; prefill hands off a draft marked `assistant_prefilled`, editable and unsubmitted |
+| **A91** | Notification scope is server-derived | Request the tray asserting a different `facility_id`/`work_mode` than the session holds | The asserted parameters are ignored; scope comes from the session audience; cross-domain notifications never appear |
+| **A92** | Journeys survive the device | Start a journey on a shared workstation, switch user (§29.3), sign in on a personal phone | The journey resumes from the server store with step, next actor and waiting-since intact; nothing depended on the workstation's storage, which was cleared |
+| **A93** | Entry intent survives and degrades honestly | Capture an intent anonymously, sign in, land; repeat with a destination the resolved session may not use | Permitted: the person resumes the intended step. Not permitted: the landing states what was attempted and why it cannot continue — never a silent discard |
+
 ---
 
 # 24. Prioritised engineering backlog
@@ -3303,6 +3337,13 @@ Priority reflects *what unblocks the most* and *what is riskiest to defer*. P0 i
 | 79 | Add work-home families for `COMMUNITY_OUTREACH` and `SPECIMEN_TRANSPORT`, or remove the mobile modes | P2 | 2 | Both modes currently lead to `work_mode_unavailable` |
 | 80 | Facility claim status page + the eleven-state submission model surfaced | P1 | 2.5 | The facility claimant is the worst-served person on the platform (§35.2) |
 | 81 | Fix the facility-claim lane contradiction, the org-onboarding `orgType` default, and the bootstrap status-literal mismatch | P1 | 2.5 | Three shipped defects that block their own journeys (§35.3) |
+| **82** | **Fix the inactivity-lock exemption so the lock can fire at all** (§29.3), then bind thresholds to device posture | **P0** | 0 | `startsWith("/")` exempts every route; the privacy lock and auto-logout have never executed. The correct guard already exists in `api-client.ts:355` |
+| **83** | **Notification scope from the session audience, server-side** (§40.1) | P1 | 2 | `work_mode`/`facility_id`/`shift_id` are client query parameters today — the §12.4 defect class at the notification seam |
+| 84 | One shared `returnTo`/destination validator; the find-care envelope's TTL + data-minimisation + fencing as the standard for every client draft store (§28.5, §39.3) | P2 | 2 | `returnTo` crosses ~25 files; full validation exists in one |
+| 85 | `journey_instance` + `journey_step_event` store; the contract's `journeys` block reads from it (§39) | P1 | 2 | The contract currently promises `resumable: true` against no persistence anywhere |
+| 86 | The action centre: four notification classes, server-side read state, `ACTION_REQUIRED` as a §39 projection (§40.2) | P2 | 2→3 | Today's tray is computed-on-request and evaporates on navigation |
+| **87** | **Map the care-setting vocabularies so encounter forms can resolve** | **P1** | 2 | PCT stores `facility\|community\|home\|mobile_outreach\|virtual`; all 22 seeded forms declare `OUTPATIENT\|EMERGENCY\|INPATIENT\|…`; no layer translates — so an ordinary OPD or casualty encounter resolves to **zero** structured forms, and the correctly age/sex/pregnancy-scoped IMNCI, ANC and partograph forms never surface (§42.1) |
+| 88 | Clinical worklist items deep-link to the patient; retire the dead `/ehr` href | P1 | 2 | Four of six worklist families carry `patient_id` and none links to `/ehr/{patient_id}`; the ORDER family links to a route with no page (§42.1) |
 
 ---
 
@@ -3491,9 +3532,30 @@ An extension of the existing `SessionExperienceContract`, generalising the work-
 
 ```jsonc
 {
-  "contract_version": "1.3",
+  "contract_version": "1.3.1",
   "resolved_at": "2026-08-04T09:14:07Z",
-  "ux_state": "PROVIDER_MULTIPLE_WORK_CONTEXTS",       // §29
+  "resolver_origin": "NODE",                            // §28.4 — NATIONAL | NODE
+  "expires_at": "2026-08-04T09:29:07Z",                 // bounded by bundle ceilings at a node
+  "source_snapshot": { "policy_bundle_age_s": 720, "standing_bundle_age_s": 3400 },  // node-resolved only
+
+  "state": {                                            // §29.0 — the vector, never one enum
+    "identity_assurance": "AAL2",
+    "professional_standing": "VERIFIED",
+    "work_assignment": "MULTIPLE",
+    "active_domain": "WORK",
+    "deployment_context": "NODE_DISCONNECTED",
+    "authority_freshness": "AGEING",
+    "site_link": "AVAILABLE",
+    "device_posture": "MANAGED_SHARED",                 // §29.3 — server-declared, never client-asserted
+    "session_lifecycle": "ACTIVE",
+    "journey_obligations": 2
+  },
+  "derived_landing": "/auth/context-chooser",           // the precedence function's output (§29.0)
+
+  "entry": { "intent": { "pillar": "get-care", "goal": "book-appointment" },   // §28.5
+             "requested_destination": null, "return_to": "/work/queue",
+             "last_safe_surface": "/home", "launch_source": "NOTIFICATION" },
+
   "active_domain": { "audience": "impilo-work:NODE-PARI-01",
                      "label": "Work", "display_context": "Parirenyatwa · Casualty · Medical Officer" },
 
@@ -3546,11 +3608,105 @@ An extension of the existing `SessionExperienceContract`, generalising the work-
 
 **The work-home adapter pattern is the model to generalise**, not replace: Spring list injection keyed on family, one adapter per family, parallel fan-out with a per-task timeout and a total budget, in-band `DEGRADED` rather than a 5xx, and a service that enumerates no families so adding one is genuinely additive. Five weaknesses to fix while generalising: items are untyped `Map<String,Object>` re-implemented by hand in eight adapters; a degraded card **loses its human title** and renders the raw section id as its heading; a fan-out error surfaces a **raw downstream exception message** as user-facing copy; "today" is computed in UTC rather than Africa/Harare; and the professional-alerts composer swallows all three of its lookups, so **a clinician whose licence has expired sees "Nothing here right now" when the licence service is down**.
 
+## 28.4 Where the resolver runs — local and national are different resolvers of one model **[T — corrects v1.3]**
+
+v1.3 said "the resolver runs server-side" and stopped. At a Hospital Node that sentence is ambiguous in exactly the way that matters: *which* server, and with *which* inputs, when the national platform is dark?
+
+**There are two placements of one resolver implementation, and the contract always says which produced it.**
+
+| | National resolver | Node resolver |
+|---|---|---|
+| Runs in | National experience-bff | The node's experience-bff instance |
+| Serves | `impilo-personal`, `impilo-professional`, national Work, org-admin, regulatory, platform-admin audiences | The node's `impilo-work:NODE-*` audience, Professional Status, node-ops |
+| Identity input | Live national session | Node-issued work token (§11.3) |
+| Authority input | Live services | **Signed bundles at their current ages** (§12.1) |
+| Journey input | National journey store (§39) | Local journey store; national journeys **listed as stale references**, never re-resolved locally |
+| Personal/professional domains | Fully resolved | **Named as unavailable-here with the national route** — never locally substituted (§11B) |
+| Degraded mode | Per-section `DEGRADED` | Its defining condition, not its failure mode |
+
+Three rules bind them:
+
+1. **One implementation, two deployments [D].** The node resolver is the same artefact configured with bundle-backed providers — not a fork (ADR-16 rule: no independently maintained implementation). Where a provider cannot exist offline (marketplace, PHR, national journeys), the node configuration declares the element `nationally_resolved`, and the resolver emits it as unavailable-with-reason rather than omitting it. A tab that vanishes when the link drops is the §33.3 defect reintroduced at the contract layer.
+2. **The contract declares its origin.** Every contract carries `resolver_origin: NATIONAL | NODE`, `source_snapshot` (the bundle set and ages it was computed from, when node-resolved), and `expires_at`. A client holding an expired contract re-requests; it never extends one locally.
+3. **A node contract never grants what a national contract would not [D].** The node resolver works from bundles that are a subset of national truth; staleness can only *narrow* what is offered (per the §5.3 ladder), never widen it. Test A89.
+
+**Cache posture:** contracts are short-lived state, not content. The client may hold the current contract in memory and re-render from it; it must not persist a contract across sessions, and `expires_at` at a node is bounded by the shortest remaining bundle ceiling among its inputs — a contract must never outlive the authority it was computed from.
+
+## 28.5 Entry intention and return destination **[T — corrects v1.3]**
+
+v1.3's resolver had no notion of *why the person arrived*, which made its landing rules a function of who someone is rather than what they came to do. The shell is ahead of the architecture here — three primitives already ship and v1.3 failed to cite them:
+
+- **`GatewayIntent`** (`lib/gateway-intent.ts`): a nine-pillar semantic intent — *what the person is trying to do, not a URL* — captured on public surfaces, carried across the auth boundary in sessionStorage **plus** a `gwi` query token so it survives storage loss, expiring at 60 minutes, consumed once, with size caps and a destination validator that rejects non-relative paths and the auth/consent prefixes.
+- **`returnTo`** with `isSafeReturnTo` (`lib/resolve-post-login-destination.ts:50`): relative-only, no protocol-relative, never back into auth/consent.
+- **The arbitration already implemented** at `app/auth/resolving/page.tsx:62-90`: *a valid intent destination outranks `returnTo`*, both are checked against the session contract before use, and a `returnTo` into `/work/*` is suppressed when resolution concluded `no_work`.
+
+**v1.3.1 canonises these as contract fields** rather than client conventions:
+
+```jsonc
+"entry": {
+  "intent":              { "pillar": "get-care", "goal": "book-appointment",
+                           "captured_at": "…", "source": "PUBLIC_FRONT_DOOR" } | null,
+  "requested_destination": "/work/queue" | null,     // the returnTo, post-validation
+  "return_to":             "/work/queue" | null,     // where cancel/complete goes back to
+  "last_safe_surface":     "/home",                  // fallback when neither survives validation
+  "launch_source":         "DIRECT | PUBLIC_FRONT_DOOR | NOTIFICATION | DEEP_LINK | QR | HANDOFF"
+}
+```
+
+Five rules, four of which the code already enforces and the contract now guarantees uniformly:
+
+1. **Intent outranks raw destination** — a person who said *"book an appointment"* and was bounced through login resumes booking, even if the literal URL they first hit is no longer permitted.
+2. **Both are validated against the resolved contract, server-side.** Today `sessionContractAllowsRoute` runs in the client; the decision moves into the resolver with the rest of §28.1 (the client copy remains as defence in depth).
+3. **Neither ever points into auth or consent flows**, and both are relative-only — the existing validators become the single shared implementation. Measured: `returnTo` appears across ~25 files with validation applied in **one** of them (`useFindCareJourneyStore` validates on write *and* read; the auth lane validates centrally; the rest pass it through raw). One validator, imported everywhere, is item 84.
+4. **Unsatisfiable intent degrades to explanation, not silence.** If the destination is not permitted after resolution, the landing states what was being attempted and why it cannot continue, with the §29.2 distinction: *not permitted* routes to the authority journey; *unavailable* offers retry. A silently discarded intent is the §29.2 failure at the front door.
+5. **Intent is journey seed [D].** Where an intent maps to a journey family (§35.4), consuming it creates or resumes a `journey_instance` (§39) — so *"I want to register my practice"* typed before sign-in is the same journey afterwards, not a fresh start.
+
 ---
 
 # 29. The UX state model **[T]**
 
 The shell must recognise the person's actual state, not merely whether they are signed in. Each state has a defined landing, navigation, explanation, next action, help route, unavailability set, resolution path, progress preservation and **named next actor**.
+
+## 29.0 State is compositional, not singular **[D — corrects v1.3]**
+
+v1.3 carried `"ux_state": "PROVIDER_MULTIPLE_WORK_CONTEXTS"` — one field, one value — and listed eighteen states in a flat table. That is wrong, and the table itself proves it: `PROVIDER_MULTIPLE_WORK_CONTEXTS`, `LOCAL_NODE_DISCONNECTED` and `AUTHORITY_BUNDLE_STALE` are all in the same column, yet a provider can obviously be **all three at once**, at a shared ward workstation, with a facility claim awaiting a registrar. A single enum forces the resolver to pick one truth and discard the rest, and every discarded axis becomes a screen that cannot explain itself.
+
+**A person's experience state is a vector of independent axes.** Each axis is resolved separately, each carries its own availability pair (§29.2), and each is independently renderable.
+
+| Axis | Values | Resolved from |
+|---|---|---|
+| `identity_assurance` | `ANONYMOUS` · `IDENTIFIED` · `AAL2` · `AAL3` | Session (§4B) |
+| `personal_standing` | `NONE` · `HEALTH_ID_PENDING` · `ACTIVE` | Registry (VITO) |
+| `professional_standing` | `NONE` · `UNCLAIMED_MATCH` · `VERIFICATION_PENDING` · `VERIFIED` · `RESTRICTED` · `EXPIRED` | VARAPI standing bundle |
+| `work_assignment` | `NONE` · `SINGLE` · `MULTIPLE` · `SUSPENDED` | Work-context resolution |
+| `active_domain` | `PUBLIC` · `PERSONAL` · `PROFESSIONAL` · `WORK` · `ORG_ADMIN` · `REGULATORY` · `NODE_OPS` · `PLATFORM_ADMIN` | Session audience (§4B) |
+| `deployment_context` | `NATIONAL` · `NODE_CONNECTED` · `NODE_DISCONNECTED` · `NODE_COMMISSIONING` | Node state (§33.4) |
+| `authority_freshness` | `CURRENT` · `AGEING` · `STALE` · `PAST_CEILING` | Per bundle, staleness ladder (§5.3) |
+| `site_link` | `AVAILABLE` · `UNAVAILABLE` | Outage B (§2A.2) |
+| `device_posture` | `PERSONAL` · `MANAGED_SHARED` · `KIOSK` · `UNKNOWN` | Device policy (§29.3) |
+| `journey_obligations` | count + next actor per open journey | Journey store (§39) |
+| `session_lifecycle` | `ACTIVE` · `EXPIRING` · `EXPIRED` · `STEP_UP_REQUIRED` | Token state |
+
+**Landing is derived, not stored.** The resolver still has to choose one place to put the person, so it applies a **deterministic precedence function** over the vector. Precedence is fixed, published and testable, in this order — safety first, then authority, then continuity, then preference:
+
+```
+1. session_lifecycle = EXPIRED | STEP_UP_REQUIRED     → re-authentication, carrying entry intent (§28.5)
+2. site_link = UNAVAILABLE                            → SITE_LINK_UNAVAILABLE surface (Outage B)
+3. authority_freshness = PAST_CEILING                 → fail-closed surface stating which authority and its age
+4. device_posture = KIOSK                             → kiosk-scoped surface only
+5. active_domain explicitly requested and permitted   → that domain's landing
+6. entry_intent resolvable and permitted (§28.5)      → the intent's destination
+7. work_assignment = SINGLE and domain = WORK         → straight into Work
+8. work_assignment = MULTIPLE and domain = WORK       → workplace chooser (§32.3)
+9. professional/personal standing default             → §32 domain landing
+10. otherwise                                         → public front door
+```
+
+**The rule [D]:** the contract carries **the whole vector plus the derived landing**, never the landing alone. Every axis not selected by precedence remains renderable — that is what allows a provider entering Work on stale authority at a shared workstation to see all three facts, rather than the one the resolver happened to rank first. Test A87.
+
+## 29.1 Derived presentation states
+
+The eighteen states below are **named points in the vector space** — shorthand for common combinations, retained because they are how the product talks about itself. They are outputs of the precedence function, not fields.
 
 | State | Landing | What the person is told | Next actor |
 |---|---|---|---|
@@ -3573,7 +3729,7 @@ The shell must recognise the person's actual state, not merely whether they are 
 | `AUTHORITY_BUNDLE_STALE` | Work, with a banner | Which authority is stale, how stale, what it restricts | Node operator |
 | `SITE_LINK_UNAVAILABLE` | **Cannot reach the node** — the Outage B case (§2A.2) | Whether an Edge scope is available, and what is not | Node operator / ICT |
 
-## 29.1 The state that matters most today
+### The state that matters most today
 
 `PROVIDER_VERIFIED_NO_WORK_ASSIGNMENT` is the current shell's sharpest failure: a verified provider with no assignment gets an **empty Work page**. The contract must produce this instead:
 
@@ -3616,6 +3772,52 @@ Measured today, and each one is silence or misattribution rather than a wrong an
 | **Work session expires mid-use** | Nothing. There is no expiry check anywhere — no timer, no comparison, no interceptor — while one screen displays *"Session reissues automatically"*, which is not implemented. The expired token is refused downstream and the failure is swallowed into an empty section | Detect, re-mint or return to the picker, and say which |
 
 Three surfaces already do this well and are the pattern to copy: the not-found page (*"Nothing is wrong with your account — here are the quickest ways back"*), the provider-status page (five branches, each with distinct copy and three capability flags), and the chooser branch above.
+
+## 29.3 Device posture and the shared workstation **[D]**
+
+A ward computer used by eleven clinicians across three shifts is the **normal** clinical device in a Zimbabwean hospital, not an edge case. v1.3 listed `device class` as a resolver input and then never used it. This section makes it a policy axis.
+
+### The four postures
+
+| Posture | Meaning | How it is established |
+|---|---|---|
+| `PERSONAL` | One identified person; the device is theirs | Default for mobile apps and enrolled personal browsers |
+| `MANAGED_SHARED` | Institution-managed, many users, clinical areas | **Declared by the node or facility**, per device registration — never self-asserted by the browser |
+| `KIOSK` | Public-facing, no personal session, task-scoped | Declared; already has a route (`/kiosk`) |
+| `UNKNOWN` | Not established | Treated as `MANAGED_SHARED` for every restriction — fail safe, not fail convenient |
+
+**Posture is server-declared [D].** A browser claiming to be a personal device is the same class of assertion as a browser claiming a facility id, and §12.4 already eliminates that class. A device registers with the node during commissioning (§22B) or with the facility console, and the posture arrives on the experience contract; the client renders it and never sets it.
+
+### What changes by posture
+
+| Behaviour | `PERSONAL` | `MANAGED_SHARED` | `KIOSK` |
+|---|---|---|---|
+| Idle lock | 15 min | **5 min** | 90 s |
+| Full sign-out after lock | 8 h | **15 min** | immediate |
+| "Remember me" / persistent credential | Permitted | **Never** | Never |
+| Passkey enrolment | Permitted | **Never** — a resident passkey on a ward machine is a shared credential | Never |
+| Personal domain (My Life) | Available | Available, **not defaulted**, and cleared on switch | Unavailable |
+| Draft and journey residue (§39) | Retained per person | **Cleared on user switch**, server-side resume only | Not written |
+| Patient context on switch | Retained | **Cleared** — the next clinician never inherits an open record | n/a |
+| Fast user switch | n/a | **Required** — sign-out must not mean losing the queue view | n/a |
+| Print / export / download | Permitted | Recorded as a disclosure with the device id | Blocked |
+
+**Fast user switching is the load-bearing requirement.** If leaving a shared workstation is expensive, clinicians share a session, and every audit record after the first names the wrong person. The switch must be one action, must clear patient and personal context, and must return to the same operational surface — the queue, not the front door.
+
+### The control that exists and has never executed **[measured 2026-08-04]**
+
+`ui/one-ui-shell/src/providers/InactivityLockProvider.tsx` implements exactly the right idea — activity monitoring, a PII-hiding lock screen at five minutes, full logout at fifteen, with a doctrine citation in its header comment. It has never fired on any route:
+
+```ts
+// line 33
+const EXEMPT_PREFIXES = ["/", "/welcome", "/auth", "/privacy", "/terms", "/consent", "/account-deletion", "/kiosk"];
+// line 48
+const isExempt = EXEMPT_PREFIXES.some((p) => pathname.startsWith(p));
+```
+
+Every pathname begins with `"/"`, so `isExempt` is unconditionally `true` and both effects return early at lines 52 and 72. **The positive control is twenty lines away in the same codebase**: `lib/api-client.ts:348` declares an almost identical list and defends against precisely this with `pathname === "/" || AUTH_BYPASS_PREFIXES.some((p) => p !== "/" && pathname.startsWith(p))`. The idiom is not the defect; the missing guard is. There is no test file for the provider.
+
+This is a **patient-confidentiality control that the architecture has been silently assuming**, and it is backlog item 82 at P0 — a safety fix, not experience work, in the same class as item 73. Test A88 fixes it by breaking it: the test must fail when the guard is removed (per the standing rule that a check is only proven by observing it go red).
 
 ---
 
@@ -3768,7 +3970,9 @@ Inside Work, the landing is the existing work-home composition: one of eight fam
 
 ## 33.1 It must feel like Impilo
 
-Same visual language, same components, same interaction patterns — including the gloss direction now implemented on the public surfaces (the px-anchored hero canvas and its load-bearing light band, the glass-card idiom, gradient primaries, the teal band, and the `tier-*`/`low-blur` degradation path). A node is not a stripped-down technical edition; it is Impilo, at a place. Identity is explicit: **Impilo at Parirenyatwa Group of Hospitals**.
+Same visual language, same components, same interaction patterns — the **Impilo Design System** (§41), at whatever version the node's release pins. A node is not a stripped-down technical edition; it is Impilo, at a place. Identity is explicit: **Impilo at Parirenyatwa Group of Hospitals**.
+
+*(v1.3 froze specific visual implementation detail — blur tiers, gradient idioms, px-anchored canvas geometry — into this section. That detail is real and approved, but it versions on the design system's cadence, not the architecture's; it now lives in §41's governed artefact, and this document constrains only what §41 must guarantee.)*
 
 ## 33.2 The persistent status header
 
@@ -3926,6 +4130,34 @@ Two further facts shape the design. The public front door **already asks the rig
 5. **Escalation-aware** — produces a support route with the right context attached, and never invents a contact.
 6. **Never diagnostic.** Triage guides and escalates; it does not diagnose. The deterministic emergency protocol stays deterministic.
 
+## 36.4 The action-safety contract **[D — corrects v1.3]**
+
+§36.3's principles said what Nompilo *is*; they did not enumerate what it may *do*, which left every integration to decide for itself whether "the assistant books it for you" is in bounds. It is not. The boundary is an enumerated contract, enforced at the BFF — not a prompt instruction:
+
+**Nompilo may, without confirmation:**
+
+| Act | Meaning |
+|---|---|
+| **Explain** | State what a surface, status, refusal or record means — including the locked-state explainer, which never reveals the protected content itself |
+| **Recommend** | Propose a next action, with its *why*, drawn from the experience contract |
+| **Navigate** | Take the person to a permitted surface — never around a refusal (§36.3.2) |
+| **Prefill** | Populate a form the person is already authorised to submit, **visibly marked as assistant-prefilled**, every field editable, nothing submitted |
+| **Summarise status** | Report journey progress, notification context, freshness and provenance, with both clocks (§36.3.3) |
+
+**Nompilo must never, with or without confirmation phrasing inside the conversation:**
+
+| Forbidden act | Why the line is here |
+|---|---|
+| **Submit** any transaction — orders, bookings, registrations, queue entries | A conversational "yes" is not a reviewed submission; the person must see the composed artefact on its owning surface and act there |
+| **Grant, modify or revoke consent** | Consent is a first-class legal act with its own surface, preview and audit chain (§35.5.1) |
+| **Disclose** to any third party, or widen any audience | Disclosure requires the recorded basis of §4A; an assistant cannot mint one |
+| **Prescribe, dispense or clinically order** | Provider judgement is never delegated (CLAUDE.md doctrine: Nompilo never overrides provider judgement) |
+| **Approve, countersign or advance another actor's step** | Journey steps have named actors (§38); the assistant is never one |
+| **Change authority** — roles, work contexts, appointments, device posture | Authority transitions are §4B/§22A acts with their own ceremonies |
+| **Assert success it did not observe** | The existing disclaimer ("never confirms a transaction succeeded") is already right and becomes contract, not copy |
+
+**The mechanism [T]:** the permitted set is what the assistant's BFF surface can physically reach. The assistant endpoint family exposes read-composition and prefill-token minting only; it holds **no route** to any transactional endpoint, so a jailbroken prompt has nothing to call — the same fail-closed posture as §12's enforcement, applied to the assistant. Prefill hands the person a token referencing the composed draft; the owning surface renders it marked, editable and unsubmitted. Every handoff records `assistant_prefilled: true` in the eventual submission's audit trail, so a disputed entry can always be traced to its composition path. Test A90.
+
 ---
 
 # 37. Mobile parity **[D]**
@@ -3973,6 +4205,148 @@ Twenty-four journeys. Each is specified with actor · entry point · preconditio
 
 ---
 
+# 39. Journey persistence **[T — corrects v1.3]**
+
+## 39.1 The promise v1.3 made without substance
+
+The v1.3 contract emits a `journeys` block with `progress`, `next_actor` and `resumable: true`. **Measured: nothing implements it.** No `journey_instance`, `journey_progress` or `journey_state` table exists in any service migration. What does exist is instructive and insufficient:
+
+- **Server-side, per-domain**: the provider claim and access-request lanes hold real state machines in their own services (twelve statuses, six next-actor roles) — but each is its own vocabulary, queryable only through its own endpoints; nothing composes "your open journeys" across them.
+- **Client-side, per-surface**: `useFindCareJourneyStore` (the strongest — versioned envelope, 30-minute TTL, coordinate coarsening, `returnTo` fencing), `useFormDraftStore`, `useDurableDraft`, and a walk-in queue "journey" whose three-step rail lives in `useState` and dies on reload.
+
+A journey that exists only in one browser's storage is not resumable — not from the person's phone, not after a shared-workstation switch (§29.3 *requires* clearing that storage), and not by the *next actor*, who was never on that device at all.
+
+## 39.2 The schema
+
+Owned by the experience plane (experience-bff's datasource — noting the measured fact that experience-bff currently has **no** datasource; this is its first), national and node-local per §28.4, federated as ordinary origin-stamped records (§13.1):
+
+```sql
+CREATE TABLE journey_instance (
+  journey_id        UUID PRIMARY KEY,
+  journey_family    TEXT NOT NULL,        -- closed vocabulary: the §38 spines
+  blueprint_version TEXT NOT NULL,        -- which blueprint this instance follows
+  subject_type      TEXT NOT NULL,        -- PERSON | ORGANISATION | FACILITY | NODE
+  subject_id        UUID NOT NULL,
+  initiated_by      UUID NOT NULL,        -- actor, never inferred from subject
+  origin_node_id    TEXT NOT NULL,        -- §13.1 — where it was started
+  entry_intent      JSONB,                -- §28.5 — the intent that seeded it, if any
+  current_step      TEXT NOT NULL,
+  step_state        TEXT NOT NULL,        -- IN_PROGRESS | WAITING_ON_ACTOR | BLOCKED | COMPLETED | ABANDONED | EXPIRED
+  next_actor_role   TEXT,                 -- named role, NULL only when COMPLETED/ABANDONED/EXPIRED
+  next_actor_ref    UUID,                 -- the specific actor where known
+  waiting_since     TIMESTAMPTZ,          -- powers "with the registrar for six days"
+  authority_domain  TEXT NOT NULL,        -- §4A domain whose session may read it
+  source_of_truth   TEXT NOT NULL,        -- EXPERIENCE | DOMAIN_SERVICE (see 39.3)
+  domain_ref        TEXT,                 -- the owning record when DOMAIN_SERVICE
+  expires_at        TIMESTAMPTZ NOT NULL, -- every journey ends; abandoned ≠ immortal
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE journey_step_event (        -- append-only; the resume and audit spine
+  event_id     UUID PRIMARY KEY,
+  journey_id   UUID NOT NULL REFERENCES journey_instance,
+  step         TEXT NOT NULL,
+  transition   TEXT NOT NULL,            -- ENTERED | COMPLETED | RETURNED | BLOCKED | REASSIGNED
+  actor_id     UUID NOT NULL,
+  actor_role   TEXT NOT NULL,
+  note_key     TEXT,                     -- i18n key, never free text with PII
+  occurred_at  TIMESTAMPTZ NOT NULL
+);
+```
+
+## 39.3 Four rules
+
+1. **The journey record is an index, not a second truth [D].** Where a domain service already owns the state machine (provider claims, facility submissions, commissioning cases), `source_of_truth = DOMAIN_SERVICE` and the instance stores only the pointer plus the *rendering* facts (step, next actor, waiting-since), refreshed from the owner. The experience plane never advances a domain machine by writing this table — that would be the composition layer becoming a source of truth, which §Core doctrine forbids. Purely experiential journeys (find-care, guided setup progress) may be `EXPERIENCE`-owned outright.
+2. **Resume is server-first, device-second.** The contract's `journeys` block is read from this store, so a journey started on a ward workstation resumes on the person's phone. Client envelopes remain as *drafts* layered on top — and adopt the find-care envelope's three properties as the standard for all of them (TTL, data minimisation on write, validated `returnTo`), which is item 84.
+3. **Reading is domain-bound.** `authority_domain` gates which session audience may see an instance (§4B); a facility admin sees the facility's journeys, not the personal journeys of the person who happens to hold both roles.
+4. **Every journey expires.** `expires_at` is mandatory, family-specific, and expiry is a rendered state with a restart route — not a silent disappearance (§29.2).
+
+---
+
+# 40. Notifications and the action centre **[T — corrects v1.3]**
+
+## 40.1 What exists is delivery, not a centre — measured
+
+v1.3 named "Notifications and communications" as an experience lane and never architected it. What ships today:
+
+- **notification-service**: a real channel-delivery engine — templates (19 migrations' worth), scheduled sends, delivery receipts, channel status. It answers *"send this message through that channel"*. It holds no concept of a person's inbox.
+- **The shell tray** (`ShellNotificationTray`): renders `useAssistantNotifications` — signals **computed on request** by `AssistantNotificationsController` — merged with an ephemeral in-memory `shellFeed`, plus an optional WebSocket nobody configures. Nothing persists; nothing is markable read; nothing survives navigation, let alone a device change.
+- **The scoping defect**: that controller takes `work_mode`, `facility_id` and `shift_id` from **query parameters**. The client asserts its own notification scope — the same browser-authoritative-context class §12.4 eliminates, here reintroduced at the notification seam (item 83).
+
+So the platform can *deliver* messages and can *compute* contextual nudges, but there is no **action centre**: no durable, per-person, cross-device record of *what needs your attention and what happened while you were away*.
+
+## 40.2 The contract
+
+Four classes, each with different lifecycle and different rights:
+
+| Class | Meaning | Dismissable? | Lifecycle |
+|---|---|---|---|
+| `ACTION_REQUIRED` | A journey or obligation waits on **you** (§39's `next_actor`) | **No** — it clears only when the underlying obligation does | Derived: lives exactly as long as the obligation |
+| `STATUS_CHANGE` | Something you initiated moved (claim approved, results ready, referral accepted) | Yes, after read | Stored until read + retention window |
+| `SAFETY` | Danger-sign escalation, recall, licence expiry | No; acknowledgement is recorded | Stored; acknowledgement audited |
+| `INFORMATION` | Campaigns, releases, general notices | Yes | Stored, expiring |
+
+Rules:
+
+1. **Audience-bound like everything else [D].** A notification is minted into exactly one §4A domain, and appears only in that domain's surfaces. A professional licence warning does not surface inside a Work session at an employer's node — it surfaces in My Professional, and Work sees only what Work's audience may see (§36.3.1 applied to notifications). Scope comes from the **session audience server-side**, never from query parameters.
+2. **`ACTION_REQUIRED` is a projection of §39, not a parallel list.** The action centre's top section *is* the journey store filtered to `next_actor = you` — one truth, two renderings (work-home sections being the third). Nothing can be "notified done" while the obligation remains, or vice versa.
+3. **Tapping is entry intent.** A notification's action carries a `GatewayIntent` (§28.5), not a bare URL — so it survives the sign-in it may trigger, lands with *why you came* intact, and `launch_source: NOTIFICATION` is on the contract for the landing to use.
+4. **Read state is server-side and per-person** — cross-device by construction, cleared correctly on shared-workstation switch because it was never device state at all.
+5. **Delivery remains notification-service's job.** The action centre decides *what stands in the record*; notification-service decides *how a channel copy reaches a phone or SMS*. A delivered SMS does not mark the record read; reading the record may suppress a pending push. The two systems converse; they do not merge.
+6. **Degraded honestly.** When the store is unreachable the tray says so (§29.2) — it does not render an empty bell, because an empty bell is a claim that nothing needs you.
+
+---
+
+# 41. The design-system boundary **[T — corrects v1.3]**
+
+Architecture froze visual implementation detail (v1.3 §33.1 named blur tiers and gradient idioms); that is a layering defect. The split:
+
+**The architecture owns invariants** — what any visual implementation must guarantee:
+
+- Every component state in §29.2's vocabulary is *designable and distinct*: `EMPTY`, `UNAVAILABLE`, `DEGRADED`, `LOADING`, `DENIED` must not be visually collapsible into each other or into success.
+- Provenance (§19A.3, §34) and both freshness clocks (§19B.6) have first-class visual treatments, not footnotes.
+- Accessibility is a floor, not a theme: contrast, focus visibility, target size, screen-reader semantics survive every visual direction.
+- Degradation is graceful *by tier* on low-capability devices — the guarantee that a ward terminal renders the same truth, not the same gloss.
+- Theme identity: a node surface is recognisably Impilo (§33.1), with place identity explicit.
+
+**The Impilo Design System owns implementation** — tokens, components, the gloss direction (PO-approved 2026-08-04: the hero canvas, glass-card idiom, gradient primaries, the mobile `experiencePalettes` with its citizen/provider variants, the tier-based degradation path), component anatomy and their state renderings. It is a **versioned artefact with its own release cadence** (Pack 6 in §42); shell and mobile pin a version; changing a token is a design-system release, not an architecture change.
+
+**The interface between them is the component-state specification**: for every component, the design system documents each §29.2/§34 state it renders and the architecture's conformance tests check only *that the states are present and distinct* — never what they look like.
+
+---
+
+# 42. The Experience Completion Packs — the register **[O]**
+
+This document is the Experience Architecture **baseline**: it governs models, contracts and invariants. It does not contain journey-level UX specification, and (per the PO ruling that created v1.3.1) that work now proceeds as **seven separate implementation artefacts** under `docs/experience/packs/`, each governed by this document and each grounded in measured code before it prescribes anything.
+
+| # | Pack | Scope | Primary seams it must ground in |
+|---|---|---|---|
+| P1 | **Public, My Life and My Professional Journey Pack** | Front door, discovery, sign-up, personal timeline, PHR, consent centre, professional standing, CPD, regulatory self-service | §30–§32; `GatewayIntent`; the mobile timeline contract (provenance/visibility/sensitivity/actions) that already ships; journeys 1–5, 19 |
+| P2 | **Provider, Organisation, Facility and Node Self-Service Pack** | Claims, onboarding, facility setup, commissioning consoles | §35's measured rails — the twelve-status provider lane, the eleven-state facility submission model that reaches no user, the missing `/facility/claim/status`; journeys 10–14, 21, 23–24 |
+| P3 | **Clinical Work Experience Pack** | **The largest substantive gap.** Arrival, queue, triage, casualty, OPD, pathway activation, orders, results, prescribing, dispensing, admission, ward rounds, transfers, discharge, theatre, maternity, paediatrics, adult medicine, lab, radiology, pharmacy, telemedicine, outreach, courier, facility clinical governance — and the controlling question: **how the paediatric, emergency, medicine, surgery and RMNP domain packs surface when a provider opens casualty, OPD or a patient record**, rather than living as destination routes | §29.0 vector in a clinical shift; §33's node states at the bedside; the work-home families; the walk-in receipt pattern; journeys 6–9, 15–18 |
+| P4 | **Regulatory and Oversight Experience Pack** | Regulator workspaces, casework, register operations, jurisdictional views | §35.2's steward-only vocabularies; journey 20; the ROM/NCZ config-pack platform |
+| P5 | **Accessibility, Localisation and Content Standard** | WCAG floor, Shona/Ndebele localisation, plain-language register, reading-level rules, terminology governance | The shipped `lib/i18n` and accessibility-preferences infrastructure — extend, not invent; §41's floor |
+| P6 | **Impilo Design System and Component-State Specification** | Tokens, components, each component's §29.2/§34 state renderings, the ratified gloss direction, mobile `experiencePalettes` | §41; the merged `codex/harmonious-experience` refinements |
+| P7 | **Human Usability and Field-Validation Plan** | Usability protocols per cadre and per posture (§29.3 — shared ward workstation explicitly), field validation at pilot sites, the instrument that replaces assumption with observation | §17A.7's measurement discipline applied to experience; A75/A78's failure catalogue as the test seed |
+
+**Three rules bind every pack [D]:** each grounds its claims in measured code with paths, exactly as this document does; each conforms to the §28 contract, the §29.0 vector and the §36.4 action-safety contract without extending them (a pack that needs a model change raises it here first); and no journey is built before its blueprint is complete (§38) — the packs *are* those blueprints, at full depth.
+
+## 42.1 P3's controlling question — answered by measurement, 2026-08-04
+
+*How do the paediatric, emergency, medicine, surgery and RMNP packs surface when a provider opens casualty, OPD or a patient record?* **Today, with one partial exception, they do not.** The full sweep belongs to P3; the six facts that shape its design belong here, because they change what P3 is:
+
+1. **The adaptive mechanism exists and is disconnected at one seam.** The ordinary encounter page renders `EncounterFormsPanel`, which resolves forms per patient (age, sex, pregnancy, programmes) through PCT's `FormScopeEngine` — and the 22 seeded forms (IMNCI child and young-infant, ANC first contact, partograph, Bishop score…) are correctly scoped. But PCT stores care settings as `facility|community|home|mobile_outreach|virtual` while every seeded form declares `OUTPATIENT|EMERGENCY|INPATIENT|MATERNITY|THEATRE|…`, and no layer maps between them — so an ordinary encounter (`care_setting: "facility"`) resolves to **zero forms**. Item 87 is the single highest-leverage change in the clinical experience: it makes the packs surface *inside* the encounter rather than behind dedicated routes.
+2. **The cadre cockpit is mounted on mobile and not on web.** `AdaptiveEncounterCockpit` + `useCadreDecision` + PCT's `CadreEngine` form a complete chain; on web the component is imported only by its own test, while the mobile provider app mounts it. Web adaptivity is instead a role-keyed hardcoded menu in which **nothing about the patient changes a single step** — the midwife flow does not include maternity; no flow includes paediatrics.
+3. **Triage is adult-only everywhere it is reachable.** The same ten hardcoded adult danger signs appear byte-identical in `/queue/triage` and the encounter page; the paediatric danger-sign engine is called only from the dedicated `/ehr/[id]/imnci` route, and the ED discriminator only from `/clinical/emergency/[visitId]` — which itself contains no link to the patient chart.
+4. **The worklist reaches pages, never patients** (item 88), and the deepest pack surfaces — maternity, paediatrics — are reachable in-app only through a page whose own banner says it is *"a design template… not wired to production APIs"*.
+5. **The sorting desk — the arrival surface — has no arrivals list**; it requires a typed journey ID, and the sort it records feeds the Cadre Engine, which drives no web surface (fact 2).
+6. **Navigation omits the packs**: neither the sidebar work zone, nor the `/clinical` hub's thirteen tiles, nor the chart's thirteen sections, nor any encounter-menu flow names theatre, surgery, maternity, paediatrics or the sorting desk.
+
+**The consequence for P3's shape [D]:** P3 is not a screen-drawing exercise. The engines, forms, scoping rules and even the routes exist; what is missing is **composition** — mounting the cockpit the mobile app already mounts, mapping one vocabulary, seeding age-appropriate triage where triage already runs, and linking worklists to the patients they already know. P3 specifies those joins first, new surfaces second.
+
+---
+
 **Supersedes:** v1.1 (commit `ae0c9a74c`) and v1.0 (commit `97eab3ac8`). Both remain valid for every decision v1.2 does not amend; where v1.2 corrects one, the correction is recorded in the v1.2 change table and in the affected ADR. **Depends on:** the current-state recovery of 2026-08-03, which remains the factual baseline; where this document states a current-state fact, that document is the citation.
 
 **On the three corrected overclaims.** v1.1 asserted that institution-held keys prevent a managed operator decrypting live data, that a cache suppresses revocations immediately even offline, and that any node-only code path is a defect. None was supportable. They are corrected in §2B.3, §19B.6 and §2 respectively, and each is recorded rather than quietly amended — because a controlling architecture that silently revises its own claims teaches the next reader to distrust the ones it keeps.
@@ -3986,4 +4360,4 @@ Twenty-four journeys. Each is specified with actor · entry point · preconditio
 - The **experience seams** (§27–§38) — the session experience contract, the eight-family work-home composition with in-band degradation, the public front door whose H1 already asks *"How can Impilo help you today?"*, the deterministic emergency triage protocol, the Nompilo guidance catalogue, and the provider claim lane's twelve differentiated statuses.
 - The **honesty markers** the recovery and these sweeps identified — the labelled Harare fallback, the refusing provider directory, the never-strand chooser copy, the attestation-versus-real-truth split in facility setup, `answerSource: none`. §30.2, §34 and §35.1 preserve these deliberately; they are product commitments, not placeholder copy.
 
-**Four things this document asserts that the shell currently contradicts**, all carried in the backlog as fixes rather than as new features: unregistered routes are reachable with no guard (item 73, a Phase 0 safety fix); a 502 on `/work` is rendered as a false explanation (item 72); work-session expiry is unhandled while a screen claims automatic reissue (item 74); and a clinician with an expired licence sees "Nothing here right now" when the licence service is down (item 77).
+**Six things this document asserts that the shell currently contradicts**, all carried in the backlog as fixes rather than as new features: unregistered routes are reachable with no guard (item 73, a Phase 0 safety fix); a 502 on `/work` is rendered as a false explanation (item 72); work-session expiry is unhandled while a screen claims automatic reissue (item 74); a clinician with an expired licence sees "Nothing here right now" when the licence service is down (item 77); the inactivity privacy lock has never fired on any route (item 82, Phase 0); and an ordinary OPD or casualty encounter resolves to zero structured forms because two care-setting vocabularies never meet (item 87).
