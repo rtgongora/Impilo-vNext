@@ -191,9 +191,14 @@ else
     bash scripts/test/run-preview-sandbox-persistence-e2e.sh
 fi
 
-# 9f. Runtime truth heuristics (advisory by default)
-runtime_truth_blocking=0
-[[ "${RUNTIME_TRUTH_GATE_BLOCKING:-0}" == "1" ]] && runtime_truth_blocking=1
+# 9f. Runtime truth heuristics — BLOCKING (was advisory).
+# Measured 2026-08-04: passes on main, and mutates nothing. Named "heuristics" for a
+# reason — it infers decorative handlers, fixture dashboards and mock clients
+# statically, so a future false positive is plausible. RUNTIME_TRUTH_GATE_BLOCKING=0
+# demotes it for the run that hits one; reaching for that should come with a fix
+# rather than become the default again.
+runtime_truth_blocking=1
+[[ "${RUNTIME_TRUTH_GATE_BLOCKING:-1}" == "0" ]] && runtime_truth_blocking=0
 pipeline_run_phase runtime-truth-heuristics "Runtime truth heuristics" "$runtime_truth_blocking" \
   bash scripts/guard/check-runtime-truth-heuristics.sh
 
@@ -225,20 +230,31 @@ if [[ "${PIPELINE_RUN_SESSION_E2E:-0}" == "1" ]]; then
     bash scripts/test/verify-session-experience-e2e.sh --url "${SESSION_E2E_URL:-https://impilo.mohcc.gov.zw}"
 fi
 
-# 13. Full-boot readiness (advisory unless PIPELINE_FULL_BOOT_BLOCKING=1)
-full_boot_blocking=0
-[[ "${PIPELINE_FULL_BOOT_BLOCKING:-0}" == "1" ]] && full_boot_blocking=1
-pipeline_run_phase full-boot-discover "Full-boot artifact generation" 0 \
+# 13. Full-boot readiness — BLOCKING (was advisory). All six measured passing on main,
+# 2026-08-04. An advisory failure here was never harmless: require-fresh-gates.sh accepts
+# "PASS WITH ADVISORY WARNINGS", so a failing doctrine-compliance or registry-inventory
+# check still authorised a deploy. PIPELINE_FULL_BOOT_BLOCKING=0 demotes the set.
+#
+# KNOWN DEFECT this change deliberately does not mask: five of these six MUTATE the working
+# tree as they run - generate-artifacts (10 files), discover-build-targets (3),
+# check-full-boot-runtime-completeness (4), check-full-boot-waves (10) and
+# check-registry-inventory-contract (10). A check that rewrites what it inspects cannot
+# report drift honestly, and since preview_preflight_common hard-fails on a dirty tree,
+# running the gates is itself what blocks the following deploy. Repairing that means making
+# them check-only and is a separate change: blocking neither causes nor cures it.
+full_boot_blocking=1
+[[ "${PIPELINE_FULL_BOOT_BLOCKING:-1}" == "0" ]] && full_boot_blocking=0
+pipeline_run_phase full-boot-discover "Full-boot artifact generation" "$full_boot_blocking" \
   bash scripts/full-boot/generate-artifacts.sh
-pipeline_run_phase full-boot-targets "Full-boot build/image target discovery" 0 \
+pipeline_run_phase full-boot-targets "Full-boot build/image target discovery" "$full_boot_blocking" \
   bash scripts/build/discover-build-targets.sh
 pipeline_run_phase full-boot-doctrine "Doctrine compliance" "$full_boot_blocking" \
   bash scripts/guard/check-doctrine-compliance.sh
-pipeline_run_phase full-boot-runtime "Full-boot runtime completeness" 0 \
+pipeline_run_phase full-boot-runtime "Full-boot runtime completeness" "$full_boot_blocking" \
   bash scripts/guard/check-full-boot-runtime-completeness.sh
-pipeline_run_phase full-boot-waves "Full-boot wave coverage" 0 \
+pipeline_run_phase full-boot-waves "Full-boot wave coverage" "$full_boot_blocking" \
   bash scripts/guard/check-full-boot-waves.sh
-pipeline_run_phase full-boot-inventory "Registry inventory contract" 0 \
+pipeline_run_phase full-boot-inventory "Registry inventory contract" "$full_boot_blocking" \
   bash scripts/guard/check-registry-inventory-contract.sh
 
 # 14. Change-safety
