@@ -1,6 +1,6 @@
 # Impilo vNext — Hybrid / Federated Target Architecture
 
-**Status:** Controlling architecture · **Version:** 1.2 (correction pass on v1.1) · **Date:** 2026-08-04
+**Status:** Controlling architecture · **Version:** 1.3 · **Date:** 2026-08-04
 **Factual basis:** [`vnext-current-state-recovery-2026-08-03.md`](vnext-current-state-recovery-2026-08-03.md) (commit `1870cf33d`), plus targeted evidence sweeps for the v1.1 additions. Every current-state statement is a reference, not a re-derivation.
 **Scope:** Converts vNext from a single-instance national deployment into a hub-and-spoke federated national platform, consumed through four service profiles. Immediate delivery target is the **large Hospital Node**. This document does not implement; it governs implementation.
 
@@ -54,6 +54,29 @@ Ten corrections and two settled decisions. Three of the ten are **claims v1.1 ma
 | **D1** | Marketplace is **multi-domain**: one service, three separately authorised surfaces | §4A.4 | PO decision, was open |
 | **D2** | Personal and work sessions **may coexist** under stated conditions | §4B.5 | PO decision, was open |
 
+## v1.3 — consistency, schema and the Experience Plane
+
+Two bodies of work, one document. **Part A** is the surgical consistency and schema patch from PO review of v1.2. **Part B** adds the Experience Plane, which v1.2 lacked entirely: the architecture began after identity, authority, deployment profile and work context had already been resolved, and described authenticated navigation rather than how a person discovers Impilo, understands what it offers, completes a journey, and gets help when something goes wrong.
+
+**Part A — consistency and schema (blocking Phase 1 schema implementation)**
+
+| # | Patch | Where |
+|---|---|---|
+| A1 | Trust domain is a **data-control and disclosure boundary**, not itself a controller | §1.1, §3.1, ADR-03 |
+| A2 | **Per-domain `processing_role_assignment`** replaces single-field controllership | §3A.4 |
+| A3 | **`data_encryption_profile`** — the tests A51–A56 assumed an unspecified design | §2B.5 |
+| A4 | **Independent audit sink** given a component, contract, schema and test | §2B.6 |
+| A5 | Compact sizing table reconciled with the two-topology correction | §17A.2 |
+| A6 | Concurrency restriction **scopes** — offline enforceability | §4B.6 |
+| A7 | Shared-hosted support access split: platform operations vs data-bearing | §2B.2, §2B.3 |
+| A8 | **Product × consumption-profile compatibility matrix** — "any profile" was overbroad | §2.1 |
+| A9 | Ambiguous "data authority" wording removed throughout | §4A, §10, §19A |
+| A10 | Hospital Node is **federation-autonomous**, site-autonomous only where declared | §2, §2A.2 |
+
+**Part B — the Experience Plane (new §27–§38)**
+
+The Experience Plane, a canonical experience resolver, a UX state model, the pre-login experience, guided consumption-profile recommendation, the three national domain landings, node experience states, self-service journey families, page content contracts, Nompilo as journey orchestrator, mobile parity, and **24 end-to-end journey blueprints**.
+
 ---
 
 # 1. Target-state architecture doctrine
@@ -64,7 +87,7 @@ Ten corrections and two settled decisions. Three of the ten are **claims v1.1 ma
 
 > **Authority line.** The node that creates a clinical fact is authoritative for that fact; the National Core holds projections, and a projection never overwrites its source.
 
-> **Boundary line.** A trust domain is a data controller, an organisation is an operator, a facility is a place, a node is a machine. Four different things, four different identifiers, never interchangeable.
+> **Boundary line.** A trust domain is the **governed data-control and disclosure boundary** — it identifies the applicable controller or controller arrangement, and is not itself necessarily a legal person or a controller. An organisation is an operator, a facility is a place, a node is a machine. Four different things, four different identifiers, never interchangeable.
 
 > **Continuity line.** Local care never waits on the national platform. Seven days of autonomy is a functional requirement of the Hospital Node, not a degraded mode.
 
@@ -128,7 +151,7 @@ These are testable statements. The acceptance plan in §19 proves each one.
 | Product | What it is | Ships as | First delivery |
 |---|---|---|---|
 | **Impilo National Core** | The federation hub and the national systems of record for identity, provider standing, facility registry, terminology, policy, national longitudinal record and national reporting | The existing estate, re-profiled: `values-national-core.yaml` | Phase 2 (re-profile of the current estate) |
-| **Impilo Hospital Node** | A self-sufficient clinical instance for one institution and one or more facilities, authoritative for the care it delivers. **A profile, not a location** (§2A) | `values-hospital-node.yaml` + node config package | **Phase 2 — the immediate target** |
+| **Impilo Hospital Node** | A **federation-autonomous** clinical instance for one institution and one or more facilities, authoritative for the care it delivers — and a **site-autonomous** instance only where its declared `site_continuity_profile` provides that capability (§2A.2). **A profile, not a location** | `values-hospital-node.yaml` + node config package | **Phase 2 — the immediate target** |
 | **Impilo Federation Gateway** | The only sanctioned cross-site path. A Spring Boot service deployed at both ends; signed envelopes over mTLS, durable queues both sides | New service `services/federation-gateway` | Phase 3 |
 | **Tshepo Local Enforcement Node** | The node-local trust plane: Envoy PEP + local PDP + local OPA + bundle agent + local audit chain | Composition of existing `tshepo-*` services + new `bundle-agent` sidecar | Phase 2 |
 | **Impilo Fleet & Release Service** | National registry of nodes, releases, certificates, capabilities, health and upgrade rings | New service `services/fleet-service` (National Core only) | Phase 2 (registry) → Phase 5 (rings) |
@@ -143,7 +166,21 @@ These are testable statements. The acceptance plan in §19 proves each one.
 
 Practically: a node-only *component* (Bundle Agent) is fine; a node-only *fork of PCT* is not. The test is whether the divergence is declared, packaged and versioned as part of the one artefact set.
 
-**Consumption is orthogonal to all of the above.** Each product may be consumed under any of the four service profiles in §2B — which is the distinction v1.0 did not draw.
+## 2.1 Product × consumption-profile compatibility **[T — patch A8]**
+
+v1.2 said "each product may be consumed under any of the four service profiles". That is overbroad: the Bootstrap Agent exists for on-premises and sovereign installation, Fleet Service is National Core only, Facility Edge is itself a deployment arrangement, and National Shared Hosted has no Hospital Node by definition. The matrix, not the blanket statement:
+
+| Product | National Shared Hosted | Dedicated Hosted | Managed On-Prem | Sovereign On-Prem |
+|---|---|---|---|---|
+| **National Core services** | Yes — this *is* the profile | Yes | Federated consumption | Federated consumption |
+| **Hospital Node** | **No** | **D5 / D6 only** (and see §2A.2 — remote hosting is not site continuity) | Yes | Yes |
+| **Federation Gateway** | n/a (the organisation is inside the Core) | Yes, both ends | Yes, both ends | Yes, both ends |
+| **Tshepo Local Enforcement** | n/a — the Core's own enforcement applies | With D5/D6 | Yes | Yes |
+| **Fleet & Release Service** | **National Core only** — consumed as a service, never deployed by an institution | National Core only | National Core only | National Core only |
+| **Node Bootstrap Agent** | **No** | Internal provisioning only (the platform provisions; the customer never runs it) | **Yes** | **Yes** |
+| **Facility Edge** | Optional | Optional — **and the recommended pairing for D5 where site continuity is required** | Optional | Optional |
+
+**Consumption remains an orthogonal dimension** (§2A) — but orthogonal does not mean unconstrained, and the constraints above are product facts rather than commercial preferences.
 
 ---
 
@@ -262,7 +299,8 @@ A later, reduced profile for small facilities: local gateway, cache, device inte
 | **Backup operator** | Impilo/MoHCC | Impilo/MoHCC | Operator, institution-verified | Institution | Managed |
 | **Release approver** | Impilo/MoHCC | Institution-controlled window | Institution-controlled window | **Institution**, subject to the security floor | Impilo/MoHCC |
 | **Security monitoring** | Impilo/MoHCC | Impilo/MoHCC, institution-visible | Operator, institution-visible | Institution, with national conformance reporting | Impilo/MoHCC |
-| **Support access** | Standing, audited | **JIT, institution-approved, recorded** | JIT, institution-approved, recorded | Institution-internal | Standing, audited |
+| **Platform operations access** (cannot reach identifiable data) | Standing, logged | Standing, logged | Standing, logged | Institution-internal | Standing, logged |
+| **Data-bearing support access** (§2B.5) | **Case-bound, time-boxed, purpose-bound, recorded, independently audited** | **JIT, institution-approved, recorded** | JIT, institution-approved, recorded | Institution-internal | Case-bound, recorded |
 | **Clinical governance** | **The organisation** | **The organisation** | **The institution** | **The institution** | The organisation |
 | **Upgrade authority** | Platform | Institution window, platform floor | Institution window, platform floor | **Institution**, platform compatibility floor | Platform |
 | **Federation obligations** | Full national participation | Per agreement | Per agreement | Per agreement + accreditation | Full (via its parent) |
@@ -310,6 +348,38 @@ Where an institution requires that the operator's runtime capability be *technic
 
 Because the exposure is at the infrastructure layer, the acceptance tests must exercise the infrastructure layer. Application-API tests would pass while every real route remained open. See A50–A56 (§23.2), which probe database administration, storage snapshots, object-store access, backup restoration, `pod exec`, log/memory exposure and secret retrieval — each asserting that the path is either blocked, or permitted only under an approved, recorded, institution-visible session.
 
+**What each test asserts depends on the `data_encryption_profile` in force** (§3A.5). The profile is the specification those tests were implicitly presuming; without it they test an unarchitected promise.
+
+## 2B.5 Support access has two kinds, and they must not be conflated **[T — patch A7]**
+
+v1.2's matrix gave National Shared Hosted "standing, audited" support access while dedicated and on-premises profiles got just-in-time institution-approved access. That gave the **weakest** rights separation to organisations using the shared national service — the very organisations least able to negotiate for themselves. Support access is therefore split in two, for every profile:
+
+| Kind | Definition | Shared hosted | Dedicated | Managed on-prem | Sovereign |
+|---|---|---|---|---|---|
+| **`standing_platform_operations`** | Actions on infrastructure that **cannot reach a named person's or organisation's data**: node health, capacity, certificate rotation, release deployment, cluster maintenance | Standing, logged | Standing, logged | Standing, logged | Institution-internal |
+| **`data_bearing_support_access`** | **Any** action capable of reaching identifiable data — database queries, restores, exec into a workload holding data, log inspection where payloads may appear, object-store reads | **Case-bound · time-boxed · purpose-bound · recorded · independently audited** | Institution-approved | Institution-approved | Institution-internal |
+
+> **[D] Data-bearing support access is never standing, in any consumption profile.** The distinction is not who the customer is; it is whether the action can reach a person's record. A shared-hosting customer's records are protected by the same rule as a private hospital's.
+
+The classification is enforced, not declared: the support tooling requires a case reference and a purpose before granting any capability marked data-bearing, and the grant expires. Where an action's classification is ambiguous, it is treated as data-bearing.
+
+## 2B.6 The independent audit sink **[T — patch A4]**
+
+v1.2 required support access to be written "to a sink the platform operator cannot silently alter" and then left it as prose. Prose is not a control. It is specified here as a capability of **`tshepo-audit-service`** rather than a new service — the chain, the append-only triggers, the signing and the export machinery already exist there, and a second audit product would fragment the evidence.
+
+| Aspect | Specification |
+|---|---|
+| **Owning component** | `tshepo-audit-service`, new **Assurance Sink** capability. Not a standalone service |
+| **Event contract** | `SUPPORT_SESSION_RECORD` — `{session_id, node_id, trust_domain_id, operator_party_id, case_reference, purpose, access_class (standing_platform_operations \| data_bearing_support_access), capabilities_granted[], scope_reached, started_at, ended_at, recording_ref, approver_party_id, approval_at}` |
+| **Storage** | Append-only, chained per (trust domain, node) using the existing hash-chain mechanism; **written to two sinks**: the node's own chain and an institution-nominated external sink |
+| **Institutional verification** | The institution may verify any segment independently: it holds the chain-head attestations and the signing public key, and can verify without the platform operator's cooperation |
+| **Delivery acknowledgement** | The external sink returns a signed receipt; the receipt id is written back into the local chain, so a missing receipt is itself detectable |
+| **When the sink is unavailable** | The support session **does not proceed** for `data_bearing_support_access`. For `standing_platform_operations` it proceeds and the record queues, with the gap visible on the institution's dashboard. **A data-bearing action that cannot be recorded does not happen** — the same rule as offline break-glass (§11.4) |
+| **Tamper evidence** | Hash chaining plus the external receipt; altering a local record without the corresponding external record produces a detectable divergence at verification |
+| **Retention** | The longer of the institution's policy and the statutory audit floor; never shorter than the retention of the data the session could reach |
+| **Backlog** | Item 57 (§24) |
+| **Acceptance test** | A66 (§23.2) — including the negative case: attempt a data-bearing session with the sink unreachable and confirm it is refused |
+
 ---
 
 # 3. Trust-domain and node model
@@ -318,7 +388,7 @@ Because the exposure is at the infrastructure layer, the acceptance tests must e
 
 | Identifier | Answers | Authority | Example | Never |
 |---|---|---|---|---|
-| `trust_domain_id` | *Under whose legal control does this data sit?* | National Core (issued at accreditation) | `MoHCC-ZW`, `TD-CIMAS`, `TD-MISSION-KAROI` | …a deployment. One trust domain may span many nodes |
+| `trust_domain_id` | *Within which governed data-control and disclosure boundary does this sit — and therefore which controller arrangement applies?* | National Core (issued at accreditation) | `MoHCC-ZW`, `TD-CIMAS`, `TD-MISSION-KAROI` | …a deployment; …**a legal person or a controller in itself** (§3A.4). One trust domain may span many nodes, and may resolve to several controllers by data domain |
 | `organisation_id` | *Who operates or governs this?* | org-registry (existing) | Ministry, a mission board, a private group | …a legal controller by itself. Many organisations may sit in one trust domain |
 | `facility_id` | *Where does care happen?* | TUSO (existing, unchanged) | Parirenyatwa, a virtual service point | …changed when a facility moves onto a node |
 | `node_id` | *Which deployment instance?* | Fleet Service (new) | `NODE-PARI-01`, `NODE-NATIONAL-CORE` | …a tenant, an organisation, or a facility |
@@ -641,6 +711,113 @@ Enforcement: the PDP receives the responsibility profile as policy input; **no r
 | DR node operated by a different accredited provider | production node uses the agreement default; DR node carries a **per-node `responsibility_profile_id` override** naming the other infrastructure and backup operator |
 | Different assignments for production, DR and backup | three profiles, one agreement, two node overrides |
 
+## 3A.4 Controllership is per data domain, not per deployment **[T — patch A2]**
+
+v1.2 carried a single mandatory `data_controller_id` and a single `clinical_governance_authority_id` on the responsibility profile, as though one party occupies each role across an entire deployment. That is too crude, and it contradicts §4A.0's own seven-role split. One institution may simultaneously be:
+
+- controller for its clinical operational record;
+- **joint** controller for a shared programme;
+- **processor** for a national service it merely hosts;
+- controller for its HR data;
+- subject to a **separate statutory disclosure authority** for notifiable conditions;
+- and using a third party as controller for a specialised service (a reference laboratory, a teleradiology provider).
+
+None of that is expressible in one field. The responsibility profile therefore keeps its fields **as defaults**, and the legal authority model becomes an effective-dated assignment table:
+
+```sql
+processing_role_assignment (
+  assignment_id        UUID PRIMARY KEY,
+  scope_type           VARCHAR(24) NOT NULL,   -- TRUST_DOMAIN | ORGANISATION | FACILITY |
+                                               -- NODE | SERVICE_AGREEMENT | PROGRAMME
+  scope_id             UUID NOT NULL,
+  data_domain          VARCHAR(64) NOT NULL,   -- the §4.2 / §4.4 domain vocabulary
+                                               -- ('encounters', 'phr', 'organisational_hr', …)
+  purpose              VARCHAR(64) NOT NULL,   -- TREATMENT | PAYMENT | OPERATIONS |
+                                               -- PUBLIC_HEALTH | RESEARCH | EMPLOYMENT | …
+  legal_basis          VARCHAR(48) NOT NULL,   -- CONSENT | LEGAL_OBLIGATION | VITAL_INTEREST |
+                                               -- PUBLIC_TASK | CONTRACT | LEGITIMATE_INTEREST
+  role_type            VARCHAR(32) NOT NULL,   -- LEGAL_CONTROLLER | JOINT_CONTROLLER |
+                                               -- PROCESSOR | SUB_PROCESSOR | SOURCE_AUTHORITY |
+                                               -- CUSTODIAN | RIGHTSHOLDER |
+                                               -- DISCLOSURE_AUTHORITY | CLINICAL_GOVERNANCE
+  party_id             UUID NOT NULL,          -- organisation, regulator, or person
+  joint_arrangement_id UUID NULL,              -- groups joint controllers + their agreed split
+  instrument_reference TEXT NULL,              -- the statute, contract or determination relied on
+  effective_from       TIMESTAMPTZ NOT NULL,
+  effective_to         TIMESTAMPTZ NULL,
+  status               VARCHAR(16) NOT NULL,   -- DRAFT | ACTIVE | SUPERSEDED | WITHDRAWN
+  recorded_by, recorded_at,
+  EXCLUDE USING gist (scope_id WITH =, data_domain WITH =, purpose WITH =, role_type WITH =,
+                      tstzrange(effective_from, effective_to) WITH &&)
+      WHERE (status = 'ACTIVE' AND role_type = 'LEGAL_CONTROLLER')
+);
+
+joint_controller_arrangement (
+  joint_arrangement_id UUID PRIMARY KEY,
+  description          TEXT NOT NULL,
+  responsibility_split JSONB NOT NULL,   -- who answers for which obligation
+  contact_point_party_id UUID NOT NULL,  -- the single point of contact for data subjects
+  instrument_reference TEXT NOT NULL
+);
+```
+
+The `EXCLUDE` constraint enforces the one rule that must never bend: **at most one active legal controller per (scope, data domain, purpose) at any instant.** Joint control is expressed by `JOINT_CONTROLLER` rows sharing a `joint_arrangement_id`, not by two competing controllers.
+
+**Resolution order** for any given fact: the most specific active assignment matching (scope, data domain, purpose) wins; failing that, the parent scope's assignment; failing that, the responsibility profile's default; failing that, **the request is refused and flagged for governance** — an unresolvable controller is a data-protection defect, not a value to guess.
+
+**Sequencing.** This must land **before Phase 1 schemas are implemented** (§22, Phase 1), because retrofitting a role model onto rows already written under a single-field assumption means re-deriving controllership for every historical record.
+
+## 3A.5 Encryption profile — what the acceptance tests actually presume **[T — patch A3]**
+
+§2B.3 correctly says a Position 1 operator can inspect live runtime memory. But tests A51–A53 and A56 assert that PVC snapshots are unreadable, object storage is unreadable, backups restore only ciphertext, and data keys cannot be obtained from the cluster alone. **None of those follows automatically from "institution-held keys."** They require a specific encryption architecture, which v1.2 did not specify — so the tests were testing a promise whose implementation had not been designed.
+
+```sql
+data_encryption_profile (
+  encryption_profile_id UUID PRIMARY KEY,
+  profile_code         VARCHAR(64) NOT NULL,
+  version              INT NOT NULL,
+  position_tier        VARCHAR(16) NOT NULL,  -- POSITION_1 | POSITION_2  (§2B.3)
+
+  encryption_layers    JSONB NOT NULL,        -- per data class, one or more of:
+                                              -- VOLUME | DATABASE_TDE | FIELD_LEVEL |
+                                              -- OBJECT_SSE | APPLICATION_ENVELOPE
+  kek_owner_party_id   UUID NOT NULL,
+  dek_owner_party_id   UUID NOT NULL,
+  kms_location         VARCHAR(32) NOT NULL,  -- NATIONAL_KMS | INSTITUTION_KMS |
+                                              -- INSTITUTION_HSM | EXTERNAL_HSM
+  keys_exportable      BOOLEAN NOT NULL,
+  key_release_mechanism VARCHAR(32) NOT NULL, -- STATIC_SECRET | KMS_API |
+                                              -- ATTESTED_RELEASE (Position 2 only)
+  rotation_policy      JSONB NOT NULL,        -- interval, overlap, forced-rotation triggers
+  backup_encryption    JSONB NOT NULL,        -- layer, key owner, whether restore needs the
+                                              -- institution's key
+  restore_authorisation VARCHAR(32) NOT NULL, -- OPERATOR | INSTITUTION_APPROVAL | DUAL_CONTROL
+  revocation_behaviour JSONB NOT NULL,        -- what becomes unreadable, how fast, and what
+                                              -- happens to in-flight sessions
+  operator_residual_capability TEXT NOT NULL, -- PLAIN LANGUAGE: what a cluster operator can
+                                              -- STILL do under this profile
+  guarantees           JSONB NOT NULL,        -- the specific claims this profile supports,
+                                              -- mapped to acceptance tests A51–A56
+  status               VARCHAR(16) NOT NULL,
+  UNIQUE (profile_code, version)
+);
+```
+
+**`operator_residual_capability` is a required free-text field on purpose.** Every profile must state, in language an institution's counsel can read, what the platform operator can still do. A profile that leaves it blank cannot be approved. This is the field that would have prevented v1.1's overclaim from being written.
+
+**Two reference profiles ship with the platform:**
+
+| | `MANAGED_STANDARD` (Position 1) | `SOVEREIGN_ATTESTED` (Position 2) |
+|---|---|---|
+| Layers | Volume + object SSE + field-level for identifiers and sensitive categories | + application envelope for all clinical payloads |
+| KEK owner | Institution (D1+) or national | **Institution, external HSM** |
+| Key release | KMS API to the running workload | **Attested release to a measured workload only** |
+| Restore authorisation | Institution approval | Dual control |
+| **Operator residual capability** | *"Can exec into pods, read process memory and logs, and observe plaintext in a running workload. Cannot read detached volumes, object storage, or backups without the institution's key."* | *"Cannot obtain keys for an unattested workload. Altering the image or pod spec denies key release."* |
+| Supports tests | A51, A52, A53, A56 | + A54 |
+
+**A54 is the discriminator.** Under `MANAGED_STANDARD` the `pod exec` test *succeeds* and asserts detection; under `SOVEREIGN_ATTESTED` it *fails* because attestation denies key release. The profile in force determines which assertion the test makes — which is why the profile is a first-class, versioned object rather than a deployment detail.
+
 ---
 
 # 4. Data-residency and disclosure matrix
@@ -744,7 +921,8 @@ Two consequences that v1.1 got wrong by conflation. **A facility may be the sour
 Health identity, My Life, the Personal Health Record, citizen authentication, personal consent, guardianship and delegation, wellness tracking, personal device data, personal uploads, Marketplace, personal coverage and payment views, personal preferences.
 
 **Authoritative services:** vito (person identity), wellness-service / simba-service (`wellness_connected_sources`, personal data), mvumo (consent and delegation), mushe-wallet + coverage (personal money views), msika (Marketplace), community-service (social).
-**Data authority:** the individual. **User rights:** access, explanation, correction pathway, consent management, delegation, export.
+**Roles:** *rightsholder* — the individual. *Source authority* — the individual for what they author; the originating facility for projected clinical content. *Legal controller* — **[L]** the PHR service's controller, resolved via `processing_role_assignment`; **not automatically the individual**. *Custodian* — the National Core. *Disclosure authority* — the individual, item-scoped. *Authoritative registry service* — vito (identity), wellness/simba (personal data), mvumo (consent and delegation).
+**User rights:** access, explanation, correction pathway, consent management, delegation, export.
 **Permitted disclosures:** item-scoped, person-authorised, provenance-labelled, to a named recipient for a stated purpose.
 **Administrative roles:** none institutional. Platform support only under an approved support case with the person's knowledge.
 
@@ -752,7 +930,7 @@ Health identity, My Life, the Personal Health Record, citizen authentication, pe
 Provider ID, qualifications, registration, licence, scope and restrictions, CPD, professional portfolio, regulatory applications and correspondence, career history, personal professional learning.
 
 **Authoritative services:** varapi (registration, licence, scope — the regulator's truth), the nine council organisations via org-registry, learning-service (CPD evidence), and the existing self-service lane `/internal/v1/me/regulatory` (whose controller javadoc already states the caller's Health ID resolves *their own* records and never another person's — the correct doctrine, already shipped).
-**Data authority:** the regulator for registration and standing; the individual for portfolio, planning and correspondence.
+**Roles:** *rightsholder* — the individual. *Source authority* — the **regulator** for registration, licence, scope and restrictions; the **individual** for portfolio, planning and correspondence they author. *Legal controller* — **[L]** the regulator for register data, resolved per domain. *Custodian* — the National Core. *Disclosure authority* — the regulator for standing; the individual for portfolio. *Authoritative registry service* — varapi (registration and standing), the nine council organisations via org-registry, learning-service (CPD evidence).
 **Institutional rights:** **only the work-relevant subset** — active registration, permitted scope, restrictions relevant to work, expiry dates, required organisational credentials, mandatory local learning status. Nothing else.
 
 ### C. Organisation domain
@@ -764,12 +942,12 @@ Governance, participation, contracts and subscriptions, institutional policy, em
 Departments, wards, service points, queues, appointments, local workforce assignments, encounters, orders and results, admissions and discharge, theatre, local pharmacy and stock, local billing, devices, printers, LIMS and PACS connections, downtime procedures, facility reporting.
 
 **Authoritative services:** tuso (operational shape), vashandi (local assignment), pct, oros, inpatient, pharmacy, costa, document-service.
-**Data authority:** **the facility is the operational source authority for the events it creates** — the v1.0 origin-authority rule, restated in domain terms.
+**Roles:** *source authority* — **the facility, for every event it creates** (the v1.0 origin-authority rule, restated in domain terms). *Clinical author* — the named provider. *Rightsholder* — the patient. *Legal controller* — **[L]** per `processing_role_assignment`; the facility may be source authority **without** being the controller of the record estate. *Custodian* — the node's infrastructure operator. *Disclosure authority* — trust-domain governance, or the patient, per basis. *Authoritative registry service* — pct, oros, inpatient, pharmacy, costa, document-service; tuso for operational shape.
 
 ### E. National health OS / platform domain
 National identity frameworks, trust anchors, national registries, federation, interoperability contracts, national terminology, national clinical-content packages, national longitudinal projections, cross-institution referrals, statutory and public-health coordination, fleet and release governance, national audit and conformance.
 
-**Data authority:** national for the registries it owns; **projection only** for everything a node created.
+**Roles:** *source authority* — **national for the registries it owns** (identity, provider standing, facility identity, terminology, policy); **projection only** for everything a node created. *Legal controller* — **[L]** MoHCC for national registries, per determination. *Custodian* — the National Core operator. *Disclosure authority* — trust-domain governance and statute. *Authoritative registry service* — vito, varapi, tuso, org-registry, wgv, zibo, CKP, tshepo-*.
 
 ## 4A.2 Prohibited inheritances **[D]**
 
@@ -876,6 +1054,26 @@ v1.1 said switching work contexts revokes the previous `jti` and "two work conte
 **Personal and work sessions may coexist [O — PO decision, 2026-08-04].** A provider may keep My Life or My Professional open while working, subject to four conditions, all testable: the tokens carry different audiences; cookie and storage scopes are isolated so neither can read the other; the active domain is **prominently displayed** in the interface at all times; and **a personal request can never silently become a work request** — a cross-domain call is rejected on audience, never coerced. Workstation policy may disable personal sessions on shared clinical devices, which is the right place for that decision to live.
 
 This is more usable than forced global switching and no weaker, because the boundary is enforced by audience validation rather than by the absence of a second tab.
+
+## 4B.6 Concurrency restrictions have a scope — because some cannot be enforced offline **[T — patch A6]**
+
+§4B.5 lets a facility restrict concurrency. But a restriction is only as good as the authority that can see the contexts it governs, and **during disconnection Node A cannot know that Node B already holds an active context.** v1.2's test A59 expected a restriction honoured across two nodes, which is not achievable offline. Restrictions therefore carry an explicit scope:
+
+| Scope | Meaning | Enforceable offline? | Mechanism |
+|---|---|---|---|
+| **`WORKSPACE_LOCAL`** | One active context per UI workspace | **Yes** | Local session state |
+| **`NODE_LOCAL`** | One active context per person per node | **Yes** | The node's own `scoped_token` table |
+| **`TRUST_DOMAIN_GLOBAL`** | One active context per person across the whole trust domain | **No, not without coordination** | See below |
+
+`TRUST_DOMAIN_GLOBAL` requires one of three mechanisms, declared per trust domain:
+
+1. **Live central lease** — the context mint takes a lease from the National Core; unavailable Core ⇒ no new global-scoped context.
+2. **Pre-allocated exclusive-duty lease** — the person holds a time-boxed exclusive duty allocation issued while connected, which the node can verify offline from its bundle. This is the only option that both enforces globally *and* survives disconnection, and it is the recommended one for roles where global exclusivity genuinely matters.
+3. **Fail-closed** — when the coordinating authority is unreachable, global-scoped contexts cannot be minted at all.
+
+> **[D] A trust domain that selects `TRUST_DOMAIN_GLOBAL` without selecting one of the three mechanisms has selected nothing.** The default is `NODE_LOCAL`, which is enforceable everywhere and covers the real clinical hazard — one duty with two answers at one place.
+
+**The "active contexts" surface is honest about its own limits.** While federated it lists every live context across the trust domain. Offline it lists local contexts as current and marks remote ones explicitly: *"Contexts at other nodes — last confirmed 4 hours ago, may be out of date."* It never presents a stale remote list as complete, which is the same two-clock discipline the Shared-Care Cache uses (§19B.6).
 
 ---
 
@@ -1192,7 +1390,7 @@ flowchart LR
 
 Legend for **Placement**: `NAT` national only · `LOC` hospital local · `BOTH` deployed both places · `CACHE` locally cached national authority · `PACK` optional hospital pack · `RETIRE` retired/consolidated · `REDESIGN` not suitable for federation without redesign.
 
-| Component | Placement | Target role | Data authority | Local dependency behaviour | Federation behaviour | Code changes | Deployment changes | Reuse verdict |
+| Component | Placement | Target role | **Source authority** (legal controllership resolves via §3A.4, never from this column) | Local dependency behaviour | Federation behaviour | Code changes | Deployment changes | Reuse verdict |
 |---|---|---|---|---|---|---|---|---|
 | **Envoy** | BOTH | PEP at both edges; **ext_authz unconditionally on** | none | Node Envoy calls the local PDP only | none | Render ext_authz + header-strip outside the `if` guard; add node-identity header injection | New `envoy-node.yaml` template; `extAuthz.enabled` removed as a switch (becomes always-true) | **Repair** |
 | **experience-bff** | BOTH | Composition layer; node profile has a reduced downstream set | none (no datasource) | Node BFF composes only node services + caches | Never calls the peer directly | Remove client-header trust (I1); derive context server-side; profile-driven client set; delete the 45 dead migrations | `values-hospital-node` env subset; Redis becomes persistent | **Repair** |
@@ -2162,28 +2360,31 @@ HOSTED_FACILITY  ·  FACILITY_EDGE  ·  HOSPITAL_COMPACT  ·  HOSPITAL_STANDARD 
 
 > ⚠️ **Read this caption before using any number below.** The recovery established that the repository contains **no sizing or capacity guidance and no load baselines beyond a narrow read/write ring**. The bands below are *derived from Zimbabwean facility-type norms* — bed complements, typical OPD attendance and staffing patterns by facility tier — and are published so procurement and infrastructure conversations can start. **They are estimates. No figure here has been measured against a running Impilo deployment.** Each is replaced by measurement per §17A.5.
 
-| | HOSTED_FACILITY | FACILITY_EDGE | HOSPITAL_COMPACT | HOSPITAL_STANDARD | HOSPITAL_ENTERPRISE |
-|---|---|---|---|---|---|
-| **Typical facility** | Clinic, RHC, small private practice | Clinic/RHC with intermittent connectivity | District, mission, small private hospital | Provincial, large private hospital, hospital group | Central, teaching, specialist, multi-campus |
-| Indicative beds | 0–20 | 0–20 | 60–200 | 200–500 | 500–2,000 |
-| Concurrent users (peak) | 2–15 | 2–15 | 20–80 | 80–250 | 250–1,500 |
-| Daily encounters | 20–80 | 20–80 | 150–500 | 400–1,200 | 1,000–3,000 |
-| Daily orders + results | 10–60 | 10–60 | 150–600 | 500–2,000 | 2,000–8,000 |
-| Daily imaging studies | 0–5 (referred out) | 0–5 | 10–60 | 60–250 | 250–1,000+ |
-| **Continuity requirement** | None (central-primary) | Hours–days, defined scope | **7 days** | **7 days** | **7 days, plus DR** |
-| Minimum cluster nodes | n/a | 1 (appliance) | 3 | 3 | **3+, multi-failure-domain** |
-| PostgreSQL | National | Local cache only | Primary + sync replica, PITR | Primary + replica(s), PITR | HA cluster, separate failure domains, PITR |
-| Kafka | National | **None** (store-and-forward queue instead) | 3 brokers RF=3 | 3 brokers RF=3 | 3+ brokers RF=3, tiered storage |
-| Redis | National | Local, persistent | Persistent + replica | Persistent + replica/Sentinel | HA, separate domain |
-| Object storage | National | Local disk + off-box copy | MinIO, replicated | MinIO distributed | MinIO distributed, separate domain |
-| PACS | National / none | None | Optional local Orthanc | **Local Orthanc** | **Enterprise PACS**, local archive |
-| Backup | National | Nightly off-box | PITR + nightly, **off-node and off-site** | + tested restore drills | + DR node, RPO/RTO contractual |
-| DR expectation | National | Rebuild from bundle | Restore within contracted RTO | Restore + optional DR node | **DR node, exercised** |
-| Local Keycloak | No | No | **Yes** or institution IdP | Yes or institution IdP | Yes or institution IdP |
-| Local VITO registration | No | Provisional capture only | **Yes** (allocation block) | Yes | Yes |
-| Local Butano projection | No | No | **Yes** | Yes | Yes |
-| Local analytics | No | No | No | Institutional reporting | **Local warehouse permitted** |
-| Local ICT capacity | None | Site champion | 1–2 ICT staff | Small ICT team | **24/7 ICT + on-call** |
+Compact appears as **two columns**, because it has two topologies over identical service code (§17A.5). Quoting a single "Compact" infrastructure specification is a procurement error.
+
+| | HOSTED_FACILITY | FACILITY_EDGE | COMPACT_MANAGED_APPLIANCE | COMPACT_HA | HOSPITAL_STANDARD | HOSPITAL_ENTERPRISE |
+|---|---|---|---|---|---|---|
+| **Typical facility** | Clinic, RHC, small private practice | Clinic/RHC with intermittent connectivity | District or mission hospital **without platform capability** | District, mission or small private hospital **with ICT capacity** | Provincial, large private hospital, hospital group | Central, teaching, specialist, multi-campus |
+| Indicative beds | 0–20 | 0–20 | 60–200 | 60–200 | 200–500 | 500–2,000 |
+| Concurrent users (peak) | 2–15 | 2–15 | 20–80 | 20–80 | 80–250 | 250–1,500 |
+| Daily encounters | 20–80 | 20–80 | 150–500 | 150–500 | 400–1,200 | 1,000–3,000 |
+| Daily orders + results | 10–60 | 10–60 | 150–600 | 150–600 | 500–2,000 | 2,000–8,000 |
+| Daily imaging studies | 0–5 (referred out) | 0–5 | 10–60 | 10–60 | 60–250 | 250–1,000+ |
+| **Continuity requirement** | None (central-primary) | Hours–days, defined scope | **7 days**, restore-bounded on host loss | **7 days** | **7 days** | **7 days, plus DR** |
+| Minimum cluster nodes | n/a | 1 (appliance) | **1–2** | 3 | 3 | **3+, multi-failure-domain** |
+| PostgreSQL | National | Local cache only | **Single primary + PITR + frequent off-box snapshots** | Primary + sync replica, PITR | Primary + replica(s), PITR | HA cluster, separate failure domains, PITR |
+| Kafka | National | **None** (store-and-forward queue instead) | **Single broker**, or the store-and-forward queue | 3 brokers RF=3 | 3 brokers RF=3 | 3+ brokers RF=3, tiered storage |
+| Redis | National | Local, persistent | **Single, persistent, backed up off-box** | Persistent + replica | Persistent + replica/Sentinel | HA, separate domain |
+| Object storage | National | Local disk + off-box copy | **Single MinIO + off-box copy** | MinIO, replicated | MinIO distributed | MinIO distributed, separate domain |
+| PACS | National / none | None | Optional local Orthanc | Optional local Orthanc | **Local Orthanc** | **Enterprise PACS**, local archive |
+| Backup | National | Nightly off-box | PITR + frequent snapshots, off-node and off-site | PITR + nightly, **off-node and off-site** | + tested restore drills | + DR node, RPO/RTO contractual |
+| DR expectation | National | Rebuild from bundle | **Restore-based, explicit RPO/RTO — not local HA** | Restore within contracted RTO | Restore + optional DR node | **DR node, exercised** |
+| Local Keycloak | No | No | Yes, remotely managed | **Yes** or institution IdP | Yes or institution IdP | Yes or institution IdP |
+| Local VITO registration | No | Provisional capture only | **Yes** (allocation block) | **Yes** (allocation block) | Yes | Yes |
+| Local Butano projection | No | No | **Yes** | **Yes** | Yes | Yes |
+| Local analytics | No | No | No | No | Institutional reporting | **Local warehouse permitted** |
+| **Platform operated by** | Impilo | Managed | **Impilo or accredited operator, remotely** | Institution or operator | Institution or operator | Institution or operator |
+| Local ICT capacity | None | Site champion | **None on site** | 1–2 ICT staff | Small ICT team | **24/7 ICT + on-call** |
 
 ## 17A.3 Capability packs
 
@@ -2987,6 +3188,32 @@ Tests A50–A56 exist because §2B.3's exposure is at the **infrastructure** lay
 | **A64** | Permanently isolated limits | Operate a `PERMANENTLY_ISOLATED_OPERATION` node past its exchange interval | Revocation-sensitive high-authority actions are **denied**; the operating limits are enforced, not advisory |
 | **A65** | Appliance topology honesty | Kill the host of a `COMPACT_MANAGED_APPLIANCE` | Recovery is restore-based and completes within the stated RTO; **nothing in the product describes this topology as highly available** |
 
+## 23.3 v1.3 additions — consistency, schema and experience
+
+| # | Test | Method | Pass condition |
+|---|---|---|---|
+| **A66** | Independent audit sink | Attempt a data-bearing support session with the external sink unreachable; then with it reachable | **Refused** when unreachable; when reachable, a signed receipt is returned and its id is written into the local chain; the institution verifies the segment **without the operator's cooperation** |
+| **A67** | Controller resolution | Resolve the legal controller for a clinical fact, an HR record, a shared-programme record and a PHR item | Each resolves to exactly one active controller (or a declared joint arrangement); an unresolvable combination is **refused and flagged**, never defaulted |
+| **A68** | Encryption profile fidelity | For each `data_encryption_profile`, run A51–A56 | Results match the profile's declared `guarantees` exactly; **a profile whose declared guarantees exceed observed behaviour fails the gate** |
+| **A69** | Support-access classification | Attempt each support capability under shared hosting | Every data-bearing capability requires a case, purpose and expiry; ambiguous capabilities are treated as data-bearing |
+| **A70** | Concurrency scope enforceability | Configure `TRUST_DOMAIN_GLOBAL` without a mechanism; then with each of the three | Unmechanised configuration is **rejected at accreditation**; each mechanism behaves as specified offline |
+| **A71** | Stale remote context honesty | View "active contexts" while disconnected | Local contexts current; remote contexts marked with their last-confirmed time, never presented as complete |
+| **A72** | Product/profile compatibility | Attempt to provision each product under each profile | Only matrix-permitted combinations succeed; refusals state why |
+| **A73** | Experience contract drives navigation | Remove a domain entitlement server-side | Web **and** mobile navigation change identically without a client release; no client-side array grants access |
+| **A74** | Unregistered surface denies | Add a route with no experience-contract entry | Reachable by nobody; the deny is the default, not the exception |
+| **A75** | Every UX state has a landing | Drive a session into each of the §29 states | Each yields a real landing page with an explanation, a next action and a named actor — **never an empty page or a generic "Pending"** |
+| **A76** | Guided profile recommendation | Run the setup assistant for a clinic, a district hospital needing continuity, and a hospital with no infrastructure | Each receives a correct recommendation with reasons and a stated alternative; **no architecture vocabulary appears in the questions** |
+| **A77** | Page content contract | Audit every clinically significant surface against §34 | Purpose, audience, primary action, status, provenance, visibility, freshness, unavailable states, help and escalation all present |
+| **A78** | Journey resumption | Abandon each self-service journey mid-way and return, on a different device | Progress preserved and shown; the next actor is named; nothing must be re-entered that was already accepted |
+| **A79** | Nompilo domain boundary | Ask Nompilo a personal-domain question while in a Work session | It refuses to surface personal content in the employer's context and offers the correct national route instead |
+| **A80** | Web/mobile journey parity | Run the 24 §38 journeys on web and on mobile | Same states, same next actions, same refusals; presentation may differ, decisions may not |
+| **A81** | **`UNAVAILABLE` ≠ `EMPTY`** | For each domain read, force (a) a genuine zero result and (b) an upstream 502 | The two render **differently**; the outage case never says "you have none" and never says "request access"; a retry is offered |
+| **A82** | Citizen block is explained | Citizen-only session requests a work and a professional route | Refused **with a stated reason**, not a silent redirect; where authority is obtainable, the route to obtain it is offered |
+| **A83** | Session expiry is handled | Let a work session pass its TTL mid-use | Detected and either re-minted or returned to the picker **with an explanation** — never a silently empty section, and no screen claims automatic reissue unless it happens |
+| **A84** | Degradation keeps its meaning | Force a work-home section to time out and to error | Card keeps its human title; **no raw exception text reaches the user**; retry offered; "today" boundaries computed in Africa/Harare |
+| **A85** | Professional alerts fail loudly | Take the licence service down for a provider with an expired licence | Section reports `DEGRADED`, **not** "Nothing here right now" |
+| **A86** | Mode/family completeness | Enter every mobile app mode | Each resolves to a work-home family, or the mode is not offered |
+
 ---
 
 # 24. Prioritised engineering backlog
@@ -3051,6 +3278,31 @@ Priority reflects *what unblocks the most* and *what is riskiest to defer*. P0 i
 | 54 | Compact Managed Appliance topology + RPO/RTO declaration | P2 | 2 | The realistic option for district and mission hospitals |
 | 55 | Marketplace three-surface refile | P2 | 2 | Currently work-zoned while presenting as personal |
 | 56 | Seven authority roles threaded through schema, PDP inputs and disclosure records | P2 | 1→2 | Underpins every controllership statement |
+| **57** | **`processing_role_assignment` + joint-controller arrangements** | **P0 for Phase 1** | 1 | **Blocks Phase 1 schemas** — retrofitting controllership onto written rows means re-deriving it for every historical record |
+| **58** | **`data_encryption_profile` + the two reference profiles** | **P0 for Phase 2.5** | 2 | A51–A56 test an unarchitected promise without it |
+| **59** | **Independent audit sink in `tshepo-audit-service`** (dual write, receipts, refuse-when-unavailable) | **P1** | 2.5 | Makes §2B.3's honesty enforceable rather than rhetorical |
+| 60 | Support-access classification + enforcement in the support tooling | P1 | 2.5 | Shared hosting currently gets the weakest protection |
+| 61 | Concurrency scopes + exclusive-duty lease | P2 | 2 | `TRUST_DOMAIN_GLOBAL` is unenforceable without it |
+| **62** | **Experience contract service** — server-resolved navigation, landing, next-best-action, unavailability (§28) | **P1** | 2 | Every experience item below depends on it; replaces the client-side arrays |
+| **63** | **UX state model** (§29) with a real landing for each state | **P1** | 2 | Today a provider with no assignment gets an empty Work page |
+| 64 | Public landing intent router + Nompilo intent interpretation (§30) | P2 | 2→3 | The front door for every journey family |
+| 65 | Guided consumption-profile recommendation assistant (§31) | P2 | 2.5 | Removes architecture vocabulary from onboarding |
+| 66 | Three national domain landings, provenance-labelled (§32) | P2 | 2→3 | My Life, My Professional, Work |
+| 67 | Node experience states + persistent status header (§33) | P1 | 2 | Disconnection must read as a product state, not a technical alarm |
+| 68 | Page content contracts applied to clinically significant surfaces (§34) | P2 | 2→3 | Provenance and freshness are patient-safety surface requirements |
+| 69 | Self-service journey families with differentiated status vocabularies (§35) | P2 | 2.5 | Replaces generic "Pending" badges |
+| 70 | Nompilo as journey orchestrator, domain-bounded (§36) | P3 | 3 | Guidance that respects the domain model |
+| 71 | Mobile experience parity on the shared contract (§37) | P2 | 2→3 | Retires the mobile-only mode router in favour of the shared model |
+| **72** | **`UNAVAILABLE` ≠ `EMPTY` axis on every state and section** (§29.2) | **P1** | 2 | The codebase already states this law in one file and disobeys it in twenty; on `/work` a 502 currently renders as a false explanation |
+| **73** | **Deny-by-default for unregistered routes** | **P0** | 0 | The guard returns early today — three emergency routes once ran with **no guard at all**. This is a Phase 0 safety fix, not experience work |
+| 74 | Work-session expiry: detect, re-mint or return to picker | P1 | 2 | Nothing checks expiry today, while a screen claims sessions reissue automatically |
+| 75 | Converge the three landing resolvers into one | P1 | 2 | Parity is maintained by test, not construction |
+| **76** | **Carry `shift`, department label, ward, service point and role label into the contract** | **P1** | 2 | A one-method fix: the resolver has 23 fields and the contract copies 14; the chooser cannot show duty status because of the nine dropped |
+| 77 | Fix work-home degradation: keep section titles, never surface raw exception text, use Africa/Harare for "today", stop swallowing professional-alert failures | P1 | 2 | A clinician with an expired licence currently sees "Nothing here right now" when the licence service is down |
+| 78 | Route-registry hygiene: reconcile the count, zone the 95 unzoned routes, remove or implement the two unused guard types | P2 | 2 | The registry has already drifted from itself |
+| 79 | Add work-home families for `COMMUNITY_OUTREACH` and `SPECIMEN_TRANSPORT`, or remove the mobile modes | P2 | 2 | Both modes currently lead to `work_mode_unavailable` |
+| 80 | Facility claim status page + the eleven-state submission model surfaced | P1 | 2.5 | The facility claimant is the worst-served person on the platform (§35.2) |
+| 81 | Fix the facility-claim lane contradiction, the org-onboarding `orgType` default, and the bootstrap status-literal mismatch | P1 | 2.5 | Three shipped defects that block their own journeys (§35.3) |
 
 ---
 
@@ -3060,7 +3312,7 @@ Priority reflects *what unblocks the most* and *what is riskiest to defer*. P0 i
 |---|---|---|---|
 | **ADR-01** | Hub-and-spoke federation; all cross-site exchange traverses the Federation Gateway | Peer-to-peer mesh; database replication; cross-site Kafka | The Core is a governance chokepoint by design; peer-to-peer needs a national route |
 | **ADR-02** | The node that creates a clinical fact is authoritative for it; the Core holds projections | Central authority with local caches | The Core cannot correct a hospital's record; corrections are amendments at origin |
-| **ADR-03** | `trust_domain_id` is the data-controller boundary; `node_id` never appears in a business predicate | Reusing `tenant_id`; treating a node as a tenant | Migrating `tenant_id` is unavoidable work |
+| **ADR-03** *(revised v1.3)* | `trust_domain_id` is the **data-control and disclosure boundary** — it identifies the applicable controller arrangement rather than being a controller; `node_id` never appears in a business predicate | Reusing `tenant_id`; treating a node as a tenant; **treating the trust domain as itself the legal controller** | Migrating `tenant_id` is unavoidable work; controllership resolves through `processing_role_assignment` (§3A.4) |
 | **ADR-04** | Signed, versioned, node-scoped bundles carry policy, standing, consent, relationship, revocation and terminology | Synchronous PDP calls to the Core; Keycloak database replication | Bundle freshness becomes a first-class clinical-safety property |
 | **ADR-05** | Many trusted issuers, one claim-binding contract; **an IdP may assert who logged in, never professional standing** | Federating Keycloak realms; syncing user databases | Institutions keep their IdP; standing stays national |
 | **ADR-06** | `butano-service` is the only FHIR store, instantiated as a local projection and a national projection | Keeping `butano-fhir`; keeping stock HAPI; a single central store | Two retirements and a data migration |
@@ -3099,6 +3351,15 @@ Priority reflects *what unblocks the most* and *what is riskiest to defer*. P0 i
 | **ADR-39** *(v1.2)* | **A cache cannot suppress a revocation it has not received.** Four-case rule; content freshness and authority freshness are shown as separate clocks | Claiming immediate offline suppression | The interface tells the truth about two different ages, and fails closed past the authority ceiling |
 | **ADR-40** *(v1.2)* | **Compact has two topologies** — HA and Managed Appliance — over identical service code; the appliance is never described as highly available | One Compact profile requiring full HA everywhere | District and mission hospitals get a deployable option with a stated RPO/RTO |
 | **ADR-41** *(v1.2)* | **Marketplace is one service with three separately authorised surfaces** (personal/public, professional, institutional procurement) | Assigning Marketplace wholly to one domain | Listings, transactions, audiences and disclosures are domain-scoped |
+| **ADR-42** *(v1.3)* | **Controllership is assigned per (scope, data domain, purpose) and effective-dated**, with at most one active legal controller per combination; joint control is explicit | A single `data_controller_id` per deployment | Must land **before Phase 1 schemas**; an unresolvable controller refuses the request rather than guessing |
+| **ADR-43** *(v1.3)* | **`data_encryption_profile` is a versioned first-class object**, and must state in plain language what a cluster operator can still do | Leaving encryption implicit behind "institution-held keys" | Acceptance tests assert against a named profile; a profile with a blank residual-capability field cannot be approved |
+| **ADR-44** *(v1.3)* | **The independent audit sink is a capability of `tshepo-audit-service`**, dual-written with external receipts; a data-bearing support action that cannot be recorded does not proceed | A separate audit product; prose-only assurance | Evidence stays in one chain; the sink's availability becomes a precondition for data-bearing access |
+| **ADR-45** *(v1.3)* | **Data-bearing support access is never standing, in any consumption profile**; only non-data-bearing platform operations may be standing | Standing support access for shared hosting | Shared-hosting customers get the same protection as private nodes |
+| **ADR-46** *(v1.3)* | **Concurrency restrictions carry a scope**; `TRUST_DOMAIN_GLOBAL` requires a live lease, a pre-allocated exclusive-duty lease, or fail-closed | Assuming global exclusivity is enforceable offline | Default is `NODE_LOCAL`; the active-contexts surface marks remote entries as possibly stale |
+| **ADR-47** *(v1.3)* | **Product × consumption-profile compatibility is a matrix, not a universal permission** | "Any product under any profile" | Fleet Service stays national; the Bootstrap Agent is never customer-run in hosted profiles |
+| **ADR-48** *(v1.3)* | **The Experience Plane is architecture, not presentation.** Navigation, landing content, next-best-action and unavailability are resolved server-side into an experience contract that web and mobile render | Client-side hardcoded menu arrays; a UI appendix to a backend architecture | One resolver, two renderers; a person's route is decided where their authority is known |
+| **ADR-49** *(v1.3)* | **Consumption and deployment profiles are never presented as user-facing choices.** The onboarding journey asks operational questions and recommends a profile | Product cards asking users to pick IaaS/PaaS/SaaS or D5 | Architecture vocabulary stays out of the buying journey |
+| **ADR-50** *(v1.3)* | **Every clinically significant surface states provenance, freshness, visibility and what is unavailable** | Rendering all data identically | The page content contract (§34) is a build requirement, not a design nicety |
 
 ---
 
@@ -3156,7 +3417,561 @@ Priority reflects *what unblocks the most* and *what is riskiest to defer*. P0 i
 
 ---
 
-## Document control
+# 27. The Experience Plane **[D]**
+
+## 27.1 Why this is architecture, not presentation
+
+Everything before this section describes what is true after identity, authority, deployment profile and work context have been resolved. That is where v1.2 began — and it is too late in a person's life to begin. It said *"these are the domains and tokens a person may have"*. It did not say:
+
+> **How does a person discover the right domain, understand where they are, complete the journey, know what happens next, and get help — without learning the underlying architecture?**
+
+The Experience Plane answers that. It is architecture rather than presentation for one reason: **the decisions it makes are authority decisions.** What a person may see, what they may do next, what is unavailable and why, and who must act before they can proceed are all determined by trust domain, session audience, work context, node state, bundle freshness and journey progress. Those facts live on the server. A client-side menu array cannot know them, and today's shell has several — which is why unregistered routes are currently reachable by anyone.
+
+## 27.2 The plane, alongside the canonical seven
+
+```
+IMPILO EXPERIENCE PLANE
+  ├── Public experience                    (anonymous — discovery, care-finding, emergency, verification)
+  ├── Citizen / My Life                    (personal domain, national)
+  ├── Professional / My Professional       (professional domain, national)
+  ├── Work                                 (facility- and node-scoped operational domain)
+  ├── Organisation and facility administration
+  ├── Regulatory experience
+  ├── Commissioning and node operations
+  ├── Nompilo guidance
+  ├── Notifications and communications
+  └── Help, support and escalation
+```
+
+Each experience lane maps to a session audience from §4B and to one or more of the five rights domains from §4A. **No lane spans two audiences**; a surface that needs data from two domains obtains it through an explicit cross-domain API with a recorded disclosure, never by holding two authorities at once.
+
+## 27.3 What exists today, and the three structural problems
+
+The shell is not starting from nothing. `SessionExperienceService` already computes a three-tab model (`personal` / `professional` / `work`) with a `defaultTab` rule; the work-home composition service already resolves one of eight families to a section list server-side, with honest `degraded` and `unavailable` states; `routes.ts` carries 756 route definitions with zones and guards; and Nompilo already provides context-keyed guidance, locked-state explanation and handoffs.
+
+Three structural problems make that insufficient:
+
+1. **Two independent hand-maintained enumerations of the same three domains** — the server tab model and the client `navZone` table — which disagree in places (`/home/credentials` is professional inside the personal landing; most of `/marketplace` is work-zoned while presenting as personal).
+2. **Unregistered routes have no zone at all**, so they fall through the citizen block and are reachable by anyone. Deny is not the default.
+3. **The contract stops at tabs.** It says which domains are visible; it does not say what the landing should contain, what the next best action is, what is unavailable, or who must act next — so every page invents its own empty state, and several invent nothing.
+
+§28 replaces all three with one server-resolved contract.
+
+---
+
+# 28. The experience resolver and the experience contract **[T]**
+
+## 28.1 The resolver
+
+```
+Identity
+  + eligible domains                (§4A — which of the five the person has any standing in)
+  + session audience                (§4B — which domain this request is actually in)
+  + work contexts                   (resolved and re-proved, or bundle-derived offline)
+  + organisation authority          (local_authority, authorised representative, appointments)
+  + facility capabilities           (tuso operational shape + capability packs)
+  + node state                      (connected · degraded · disconnected · commissioning)
+  + connectivity + bundle freshness (§5.3 ladder — per bundle, with ages)
+  + journey progress                (open self-service journeys and their next actor)
+  + device class                    (workstation · personal desktop · tablet · handset · kiosk)
+  ────────────────────────────────────────────────────────────────────────────
+  = visible navigation
+  + landing content
+  + available actions
+  + next best action
+  + warnings and unavailability, each with a reason
+  + help and escalation route
+```
+
+**The resolver runs server-side and returns a contract.** Web and mobile render it. Neither decides it.
+
+## 28.2 The experience contract
+
+An extension of the existing `SessionExperienceContract`, generalising the work-home section pattern to every lane:
+
+```jsonc
+{
+  "contract_version": "1.3",
+  "resolved_at": "2026-08-04T09:14:07Z",
+  "ux_state": "PROVIDER_MULTIPLE_WORK_CONTEXTS",       // §29
+  "active_domain": { "audience": "impilo-work:NODE-PARI-01",
+                     "label": "Work", "display_context": "Parirenyatwa · Casualty · Medical Officer" },
+
+  "domains": [                                          // replaces the three-tab model
+    { "key": "life",         "label": "My Life",           "available": true,
+      "href": "/home",       "reason": null },
+    { "key": "professional", "label": "My Professional",   "available": true,
+      "href": "/professional", "reason": null },
+    { "key": "work",         "label": "Work",              "available": true,
+      "href": "/work",       "reason": null, "active": true }
+  ],
+
+  "navigation": [ /* server-resolved; the client renders, never filters */ ],
+
+  "landing": {
+    "sections": [ { "id": "clinical-worklist", "title": "…", "source": "pct",
+                    "items": [ … ], "state": "OK|DEGRADED|UNAVAILABLE",
+                    "freshness": { "content_as_at": "…", "authority_checked_at": "…" } } ]
+  },
+
+  "next_best_action": { "id": "…", "label": "Confirm your ward assignment",
+                        "href": "…", "why": "…", "actor": "SELF|FACILITY_ADMIN|REGULATOR|…" },
+
+  "unavailable": [ { "what": "My Life", "reason": "NATIONAL_SERVICES_UNREACHABLE",
+                     "since": "2026-08-04T02:14:00Z",
+                     "explanation": "Personal services are provided nationally and cannot be reached from this node right now.",
+                     "remedy": "They will be available again when the national connection is restored." } ],
+
+  "journeys": [ { "id": "facility-claim-…", "label": "Claim Chitungwiza Practice",
+                  "progress": { "completed": 3, "total": 8 },
+                  "next_step": "…", "next_actor": "REGULATOR", "resumable": true } ],
+
+  "guidance": { "nompilo_context": "…", "suggested_prompts": [ … ] },
+  "help": { "route": "…", "escalation": { "channel": "…", "context_attached": [ … ] } }
+}
+```
+
+**Four rules govern it.** The client renders and never filters — a domain absent from the contract is absent from the interface, and a route with no contract entry is denied (A74). Every unavailability carries a **reason, a time and a remedy**, never a blank space. Every section carries **two freshness clocks** where it can be stale (§19B.6). And the contract is **identical for web and mobile** — presentation may differ, decisions may not (A80).
+
+## 28.3 What this replaces — measured
+
+| Fact | Consequence |
+|---|---|
+| **Three landing resolvers already exist** — one in Java (`resolveDefaultRoute`), two in TypeScript (`identity-context`'s `defaultLandingPath`, and `resolvePostLoginDestination` which wraps it). Parity is maintained **by test, not by construction** | The canonical resolver has three implementations to absorb, not one. Until then, a landing rule changed in one place is a silent divergence in two |
+| **The contract governs 9 route prefixes out of 855** — six "work" prefixes and three "professional" prefixes, hard-coded; everything outside them returns `true` | Extending the contract means **moving the decision**, not adding fields |
+| 855 routes in a hand-maintained registry, matched by **linear scan, first match wins**; `EXPECTED_ROUTE_COUNT` is 2 above the real count; **95 routes carry no `navZone` at all**; `guard: "provider"` and `guard: "shift"` are declared and used by **zero** routes | The registry has already drifted from itself. Three ED routes once shipped unregistered and therefore ran **with no guard at all** — the matcher returned null and the guard returned early |
+| The sidebar is a hard-coded array of 3 zones and 68 items; `/home` tiles are a hard-coded tree of 11 categories and ~55 tiles gated on four booleans; mobile provider tabs are **15 hard-coded entries with exactly one conditional**; citizen tabs are 10 with none | These are the arrays the contract displaces. The tile file's own header already says a capability list "would be the more architecturally clean version of this file" |
+| **The picker cannot show shift or duty status because the BFF drops it in transit** — the resolved context carries 23 fields, the contract copies 14, and `shift` is among the nine dropped, along with department label, ward, service point and role label | Everything a provider could use to tell two workplaces apart is packed into one `label` string. **This is a one-method fix** that unblocks a whole class of chooser UX (§32.3) |
+| Two mode vocabularies coexist on mobile — canonical `WorkMode` names and lowercase Keycloak role strings — and **two mobile modes (`COMMUNITY_OUTREACH`, `SPECIMEN_TRANSPORT`) have no work-home family at all** | A provider can enter Outreach or Courier mode and land on `work_mode_unavailable` |
+
+**The work-home adapter pattern is the model to generalise**, not replace: Spring list injection keyed on family, one adapter per family, parallel fan-out with a per-task timeout and a total budget, in-band `DEGRADED` rather than a 5xx, and a service that enumerates no families so adding one is genuinely additive. Five weaknesses to fix while generalising: items are untyped `Map<String,Object>` re-implemented by hand in eight adapters; a degraded card **loses its human title** and renders the raw section id as its heading; a fan-out error surfaces a **raw downstream exception message** as user-facing copy; "today" is computed in UTC rather than Africa/Harare; and the professional-alerts composer swallows all three of its lookups, so **a clinician whose licence has expired sees "Nothing here right now" when the licence service is down**.
+
+---
+
+# 29. The UX state model **[T]**
+
+The shell must recognise the person's actual state, not merely whether they are signed in. Each state has a defined landing, navigation, explanation, next action, help route, unavailability set, resolution path, progress preservation and **named next actor**.
+
+| State | Landing | What the person is told | Next actor |
+|---|---|---|---|
+| `ANONYMOUS` | Public front door (§30) | What Impilo offers, by intention | Self |
+| `PERSON_AUTHENTICATED` | `/home` (My Life) | Their personal domain, with any pending journeys | Self |
+| `HEALTH_ID_PENDING` | `/home` limited | Identity verification is in progress; what is usable meanwhile | Registry steward |
+| `PROVIDER_ID_UNCLAIMED` | My Life + a professional prompt | "We found a professional record that may be yours" or "we found none" | Self |
+| `PROVIDER_VERIFICATION_PENDING` | My Professional, status-first | Exactly which check is outstanding, with whom, and since when | Regulator / council |
+| `PROVIDER_VERIFIED_NO_WORK_ASSIGNMENT` | **My Professional** (not an empty Work page) | Verified, but no workplace — with three concrete routes forward | Self or facility admin |
+| `PROVIDER_SINGLE_WORK_CONTEXT` | Straight into Work | Where they are working today | Self |
+| `PROVIDER_MULTIPLE_WORK_CONTEXTS` | Workplace chooser (§32.3) | Their contexts grouped by organisation, with duty status | Self |
+| `ORGANISATION_REPRESENTATIVE` | Organisation console | Setup checklist with what is outstanding | Self / national verifier |
+| `FACILITY_CLAIM_PENDING` | Claim status page | Which lane, which evidence, who is reviewing, since when | Facility admin / steward |
+| `FACILITY_ADMINISTRATOR` | Facility console | Setup and operational state | Self |
+| `NODE_ADMINISTRATOR` | Node operations only — **no clinical surfaces** | Infrastructure, commissioning and health | Self / Authorised Officer |
+| `REGULATOR` | Regulatory workspace | Register, casework, jurisdiction | Self |
+| `COMMISSIONING_IN_PROGRESS` | Commissioning workspace | Both tracks, sync points, who is blocking | Named per step |
+| `LOCAL_NODE_CONNECTED` | Work, full | Local and national both available | Self |
+| `LOCAL_NODE_DISCONNECTED` | Work, local | What still works, what queues, what stopped, since when | Self; node operator notified |
+| `AUTHORITY_BUNDLE_STALE` | Work, with a banner | Which authority is stale, how stale, what it restricts | Node operator |
+| `SITE_LINK_UNAVAILABLE` | **Cannot reach the node** — the Outage B case (§2A.2) | Whether an Edge scope is available, and what is not | Node operator / ICT |
+
+## 29.1 The state that matters most today
+
+`PROVIDER_VERIFIED_NO_WORK_ASSIGNMENT` is the current shell's sharpest failure: a verified provider with no assignment gets an **empty Work page**. The contract must produce this instead:
+
+> **You do not currently have an active workplace assignment on Impilo.**
+> You can still use My Life and My Professional.
+> To start working through Impilo:
+> **· Request access to a facility** · **Ask your employer to confirm your assignment** · **Claim an existing professional record**
+
+Three concrete routes, a named next actor for each, and no empty page. Every state in the table above gets the same treatment, and A75 tests all of them.
+
+## 29.2 `UNAVAILABLE` is not `EMPTY` — a doctrine the codebase already states **[D]**
+
+The shell contains one file that states the law exactly right, and twenty that disobey it. The identity hook's own comment says that *a surface presenting an absence as fact must first consult whether the read succeeded* — and exactly one screen does: the context chooser, which distinguishes
+
+> *"Your work contexts could not be loaded. **This is not a record that you have none** — try again before requesting access."*
+
+from
+
+> *"No work contexts are assigned to you yet — you can request access from your profile."*
+
+with a source comment explaining why: telling a provider whose affiliations merely could not be read that they should "request access" sends them to ask for authority they already hold.
+
+**Every state in §29 therefore carries an explicit availability axis**, and the contract makes it structural rather than a per-screen choice:
+
+```
+state = { present: true | false,  read_succeeded: true | false }
+  present=false, read_succeeded=true   → EMPTY      "You have none"       (actionable)
+  present=?,     read_succeeded=false  → UNAVAILABLE "We could not check"  (retry, never "request access")
+```
+
+### The four cross-cutting failures this closes
+
+Measured today, and each one is silence or misattribution rather than a wrong answer:
+
+| Case | What happens now | Required |
+|---|---|---|
+| **Citizen hits a work or professional route** | Silent `router.replace("/home")` — no message, no toast, no reason. An outage and a genuine lack of authority are experientially identical | A stated reason and, where applicable, the route to obtain the authority |
+| **BFF returns 502** | Swallowed by every hook into a synthetic empty. On `/work` it is **actively misleading**: a 502 renders as *"the assignment could not be re-proven from its source"*, which is a false explanation of an upstream outage. There is **no `error.tsx` or `global-error.tsx` anywhere** in the shell | `UNAVAILABLE` with a retry, distinct from `EMPTY` |
+| **Unregistered route** | The guard **returns early — no auth, facility, role or citizen check at all**. This is not hypothetical: three emergency routes once shipped unregistered and ran with no guard | **Deny by default** (A74) |
+| **Work session expires mid-use** | Nothing. There is no expiry check anywhere — no timer, no comparison, no interceptor — while one screen displays *"Session reissues automatically"*, which is not implemented. The expired token is refused downstream and the failure is swallowed into an empty section | Detect, re-mint or return to the picker, and say which |
+
+Three surfaces already do this well and are the pattern to copy: the not-found page (*"Nothing is wrong with your account — here are the quickest ways back"*), the provider-status page (five branches, each with distinct copy and three capability flags), and the chooser branch above.
+
+---
+
+# 30. The pre-login experience **[T]**
+
+## 30.1 Intention, not role
+
+The front door does not ask who the visitor is. It asks what they are trying to do — because most visitors cannot classify themselves in the platform's vocabulary, and a role question at the door turns a health service into a form.
+
+| Intention | Primary landing action |
+|---|---|
+| I need healthcare | **Find care or get help** |
+| I want to manage my health | **Open My Life** |
+| I am a health professional | **Open My Professional or Work** |
+| I represent an organisation or facility | **Bring my organisation or facility to Impilo** |
+
+```
+IMPILO
+How can Impilo help you today?
+
+[ Describe what you need…                              Ask Nompilo ]
+
+[ Find care near me ]   [ Emergency help ]   [ My health ]
+[ I am a provider ]     [ My organisation ] [ Explore services ]
+
+                    [ Interactive care map ]
+```
+
+Below the fold, **progressive disclosure rather than service lists**: continue where you left off · recommended services · what is available near you · important health updates · services for providers and organisations · learning and support · marketplace highlights.
+
+The established visual direction is preserved unchanged — Impilo wordmark top-left, the teal-to-near-white gradient, the care map, emergency prominence, and authentication available without turning the site into a sign-in wall.
+
+## 30.2 Most of this already exists — and is better than the brief assumed
+
+The public front door **already asks the right question**: the hero H1 is literally *"How can Impilo help you today?"*, sitting above an "Ask Nompilo" search form, with a live discovery map beside it. `/` and `/welcome` render the identical component, so a change to one lands on both.
+
+Already right, and to be preserved rather than redesigned:
+
+- **Emergency intent short-circuits the network call entirely** — a safety path is never delayed behind an advisory request.
+- **Location is never assumed.** The near-you section requires an explicit tap; the discovery panel falls back to a city and **labels it** *"Showing Harare"* rather than implying the user's position.
+- **The provider directory refuses honestly** — *"Public provider directory isn't open"*, routing to credential verification instead of returning a partial list.
+- **Continuity renders nothing rather than an empty shell.** The "continue your journey" section returns null when there is neither a return hint nor a find-care journey, with a source comment explaining that rendering headings for appointments and results a signed-out visitor cannot have would promise a feed that cannot be filled.
+- **Map sovereignty is enforced in code** — public OSM tile templates are actively rejected, glyphs are self-hosted, and a dead street stack degrades to a bundled boundary map rather than a blank one.
+- The disclaimer on every anonymous answer, and `answerSource: none` surfaced as an honest "I don't know".
+
+**These honesty markers are load-bearing product commitments, not placeholder copy, and they survive every change in this section.**
+
+## 30.3 What changes
+
+**Intent interpretation moves server-side.** Today it is a hard-coded regex table of eight branches living inside a React component, with unmatched input producing no suggestion at all. That is a reasonable first cut and the wrong long-term home: web, mobile and the anonymous lane should share one intent model, and improving it should not require a front-end release. The emergency branch stays client-side, because a safety path must not depend on a network call.
+
+**Intent coverage extends to the journey families**, which the current table does not reach: *"I want to register my practice"* · *"I have been assigned to Sally Mugabe"* · *"our hospital wants to run Impilo locally"* · *"I cannot see the facility where I work"* · *"the internet is down"* · *"I need to refer this patient"*.
+
+**Two constraints [D].** Anonymous intent handling **discloses nothing** — it names services and journeys, never records. And where a request maps to a journey requiring identity, the response says so **before** asking for it: *"You can start this now; you will need to sign in at step 3 to confirm your professional record."*
+
+**Two gates must move together.** Public reachability is decided in two independent places — the middleware prefix list and the route registry's guard — and they are **already out of sync** for three routes. The experience contract makes reachability one decision (§28.2, A74).
+
+## 30.3 Public services that must work before authentication
+
+Care discovery and the facility map, emergency and urgent-care routing, credential and facility verification, share-slip claim, public health information, get-involved, download and status. These already exist as an anonymous lane with its own trust-header stripping (§F.1) — the contract makes them a coherent front door rather than a set of routes.
+
+---
+
+# 31. Guided consumption — the profile is recommended, never asked **[D]**
+
+## 31.1 The rule
+
+> **No user is ever asked to choose IaaS, PaaS, SaaS, an isolation tier, or a node profile.** Those are operating-model decisions the platform makes from operational answers. Architecture vocabulary does not appear in an onboarding journey (A76).
+
+User-facing language is what a hospital administrator would actually say: *Use Impilo online* · *Set up Impilo for my facility* · *Connect an existing hospital system* · *Run Impilo at my hospital* · *Continue working during internet outages* · *Bring my organisation onto Impilo* · *Manage my professional registration* · *Find or receive healthcare*.
+
+## 31.2 The decision assistant
+
+```
+How should your organisation use Impilo?
+
+Can clinical work stop when your internet connection is unavailable?
+[ Yes ]  [ No ]
+
+Do you have suitable servers at the hospital?
+[ Yes ]  [ No ]  [ Not sure ]
+
+Who should operate the platform?
+[ Impilo ]  [ Our ICT team ]  [ A service provider ]
+
+Do you require a dedicated environment?
+[ Yes ]  [ No ]  [ Help me decide ]
+```
+
+Plus, drawn from answers the registry already holds where possible: organisation type, facilities operated, whether they appear in the Facility Registry, connectivity reliability, who manages ICT, and whether an institutional identity provider exists.
+
+## 31.3 The recommendation
+
+```
+Recommended: Managed On-Premises Hospital Node
+
+Why:
+ • You require clinical work to continue during internet outages.
+ • You have suitable on-site infrastructure.
+ • You prefer Impilo to operate the platform.
+ • Your hospital requires inpatient, theatre, laboratory and imaging services.
+
+Alternative: Dedicated Hosted Node + Facility Edge
+ Lower local infrastructure requirement, but reduced continuity if your link
+ to the hosting site is lost.
+```
+
+**This is where §2A.2's Outage A / Outage B distinction becomes visible and useful** rather than buried in an architecture table. The alternative is stated honestly: a hosted node is not site continuity, and the person choosing must be told that in one sentence they can act on.
+
+The recommendation records its inputs and reasons on the commissioning case, so a later dispute about what was promised has evidence.
+
+---
+
+# 32. The three national domain landings **[T]**
+
+## 32.1 My Life — *what is happening with my health, and what can I do next?*
+
+Health timeline · upcoming appointments · current medicines · results needing attention · care plans · referrals · consents and delegated access · personal records and uploads · wellness and device data · coverage and payments · marketplace · recommended health actions · Nompilo guidance.
+
+**Every item carries its provenance class** (§19A.3), visibly. A person reading their own medication list must be able to tell what a clinician recorded from what they typed themselves.
+
+`/my-life` is a redirect shim to `/home`, the canonical personal landing; the shim stays so existing links survive. Two leaks close in Phase 2 (§4A.5): `/home/credentials` is zoned professional inside the personal landing, and personal documents are served off the clinical-tools endpoint family.
+
+## 32.2 My Professional — *am I professionally ready, compliant and able to practise?*
+
+Provider ID · registration and licence · scope and restrictions · expiry warnings · qualifications · CPD · professional learning · regulatory applications and messages · employment and facility invitations · provider-access applications · professional services · career and portfolio.
+
+The self-service regulatory lane already exists as `/internal/v1/me/regulatory` — summary, renewal eligibility, applications, complaints, correspondence, RFI responses, practice establishments — and its controller already enforces the right rule: the caller's Health ID resolves **their own** records and never another person's. **This is the provider's private professional domain, not an employer dashboard** (§4A.2 P2).
+
+## 32.3 Work — *where am I working, what needs my attention, and what can I do here?*
+
+```
+Where are you working?
+
+PARIRENYATWA GROUP OF HOSPITALS
+  Casualty · Medical Officer · Shift active until 19:00          [ Enter Work ]
+  Ward 3B  · Clinical Reviewer · No active shift                 [ Enter Work ]
+
+NATIONAL VIRTUAL SPECIALIST SERVICE
+  Internal Medicine Consultant · 3 consultations waiting         [ Enter Work ]
+```
+
+The provider never sees `work_context_id`. They see **organisation · facility · department or service · role · shift or duty status · and what authority they are about to use**.
+
+Inside Work, the landing is the existing work-home composition: one of eight families, section list resolved server-side, the professional-standing section always appended, per-section degradation rather than a failed page. That pattern is sound and v1.3 generalises it rather than replacing it (§28.2).
+
+---
+
+# 33. Hospital Node experience **[T]**
+
+## 33.1 It must feel like Impilo
+
+Same visual language, same components, same interaction patterns — including the gloss direction now implemented on the public surfaces (the px-anchored hero canvas and its load-bearing light band, the glass-card idiom, gradient primaries, the teal band, and the `tier-*`/`low-blur` degradation path). A node is not a stripped-down technical edition; it is Impilo, at a place. Identity is explicit: **Impilo at Parirenyatwa Group of Hospitals**.
+
+## 33.2 The persistent status header
+
+```
+Connected                                  Disconnected
+─────────────────────────────────────────  ─────────────────────────────────────────
+Parirenyatwa Group of Hospitals            Parirenyatwa Group of Hospitals
+Casualty · Medical Officer · Clinical Care Casualty · Medical Officer · Clinical Care
+● Local services available                 ● Working locally
+● National connection available            National services unavailable since 02:14
+Authority updated 12 minutes ago           Authority last updated 6 hours ago
+```
+
+**A product state, not a technical alarm.** It answers without being asked: can I continue working · which functions still work · what information may be outdated · what will be sent when connectivity returns · which actions have stopped · who has been notified.
+
+## 33.3 Unavailability is shown, not hidden
+
+```
+Connected:     WORK | PROFESSIONAL STATUS | FULL IMPILO ↗
+Disconnected:  WORK | PROFESSIONAL STATUS | FULL IMPILO — currently unavailable
+```
+
+Tabs do not vanish. A disappearing menu item is indistinguishable from a bug and teaches clinicians the system is unreliable rather than that the link is down. Selecting the unavailable option explains why, since when, what remains, and what resumes.
+
+## 33.4 The node's own states
+
+`LOCAL_NODE_CONNECTED` · `LOCAL_NODE_DISCONNECTED` · `AUTHORITY_BUNDLE_STALE` · `SITE_LINK_UNAVAILABLE` · `COMMISSIONING_IN_PROGRESS` — each with its landing, banner, permitted actions and named notified party (§29). `SITE_LINK_UNAVAILABLE` is the Outage B case: the interface must say the **hospital's link** is down rather than that Impilo is down, and show whatever Edge scope remains.
+
+---
+
+# 34. The page content contract **[T]**
+
+Every significant surface documents ten things. A page that cannot answer them is not finished.
+
+| Element | Question |
+|---|---|
+| **Purpose** | What is this page helping the person achieve? |
+| **Audience** | Which session audience and authority can see it? |
+| **Primary action** | What is the most likely next action? |
+| **Status** | What has happened, what is pending, **who acts next**? |
+| **Data provenance** | Where did each item come from? |
+| **Visibility** | Who else can see this? |
+| **Freshness** | Content age **and** authority age (§19B.6) |
+| **Unavailable states** | Offline · stale authority · unreachable service |
+| **Help** | How does Nompilo explain or resolve this? |
+| **Escalation** | Who can be contacted, and what context travels with the request? |
+
+**For clinically significant pages**, the surface must distinguish, visually and unambiguously: *this facility recorded it* · *another institution recorded it* · *patient reported* · *cached from the national record* · *national record currently unavailable* · *information withheld by policy* · *information may be stale*.
+
+The last two matter most. A record withheld by policy must **say so** — the federation envelope already carries `withheld_categories` precisely so the receiving surface can (§14.2). A silently shortened list is a patient-safety hazard.
+
+**An existing honesty problem this contract fixes.** The BFF's Nompilo controller returns HTTP 200 with `{guidance: [], degraded: true}` on every failure path — so a blank guidance area is today indistinguishable from a dead guidance service. The same is true of the shell search palette, which swallows errors, and of a search index that holds zero rows: **empty and broken render identically.** The contract requires `degraded: true` to be *shown*, not merely returned.
+
+---
+
+# 35. Self-service journey families **[T]**
+
+## 35.1 What already works — and must not be "fixed"
+
+The premise that the platform shows one generic "Pending" is **not true of the provider lane**, and the design must build on what is there rather than replace it. Provider access requests already carry **twelve** statuses (`SUBMITTED`, `PENDING_COUNCIL_REVIEW`, `PENDING_EMPLOYER_REVIEW`, `PENDING_ORGANIZATION_REVIEW`, `PENDING_NATIONAL_REVIEW`, `PENDING_FACILITY_REVIEW`, `NEEDS_MORE_INFORMATION`, `NEEDS_ADJUDICATION`, `DUPLICATE_SUSPECTED`, `APPROVED`, `REJECTED`, `WITHDRAWN`), **six** next-actor roles, and a bespoke reason string per request type — all rendered to the applicant. The provider claim journey has seven lanes, and its employment-match lane alone distinguishes four end states including an honest *"registry unreachable — nothing matched or fabricated"*.
+
+Equally, two collapses are **deliberate and must be preserved**: facility and site registration outcomes are reduced to one generic receipt so that `DUPLICATE_REVIEW` and `PROVISIONAL_CREATED` are indistinguishable to the registrant. That is anti-enumeration, not poor UX, and §35.4's differentiation requirement explicitly exempts it.
+
+## 35.2 The real gaps — rich vocabularies that never reach a person
+
+| Vocabulary | Values | Reaches a user? |
+|---|---|---|
+| `facility_profile_submission.state` | **11** (`DRAFT`…`SUPERSEDED`, incl. `CORRECTION_REQUIRED` with a mandatory note) | **No — zero UI references, zero BFF routes** |
+| `facility_verification_case.status` | 5 | No — steward-only |
+| `facility_governance_case.status` | 5 | No — steward-only |
+| `facility_legitimacy_decision.verdict` + `disposition` | 8 + 2 | No — the claimant sees a boolean `claimable` |
+| Org claim `UNDER_REVIEW` with vs without a workflow instance | a real semantic distinction | No rendering |
+
+**The facility claimant is the worst-served person on the platform.** They submit into an eleven-state model, an eight-verdict legitimacy rail and a five-state verification case, and receive a boolean. There is also **no `/facility/claim/status` page** at all, though the provider equivalent exists. Closing this is the highest-value experience work in Phase 2.5.
+
+## 35.3 Defects to fix while composing these journeys
+
+- **Facility claim lanes contradict themselves**: the BFF declares `DOCUMENT` and `ORG_INVITATION` as `available: false`, and the UI renders all three lanes unconditionally because it never reads the `paths` payload. Either the lanes are available or they are not — the contract must decide and the UI must obey.
+- **Organisation onboarding cannot succeed as shipped**: the wizard defaults `orgType: "PROVIDER"`, which is not among the seventeen values the CHECK constraint permits.
+- **Bootstrap status literals disagree**: the wizard switches on lowercase `pending`/`completed`; the only server writer sets uppercase `ACTIVE`.
+- **A status endpoint with no consumer**: provider `GET /status/{publicId}` is exposed by the BFF and the hook, and no UI route uses it.
+- **Unconstrained vocabularies**: several workforce-governance status columns are `VARCHAR` with no CHECK, so their values are whatever a writer last chose.
+
+## 35.4 The four journey families
+
+**Provider** — sign in or establish a Health ID → find the professional record → claim or link the Provider ID (seven lanes) → correct details → submit evidence → track review → see standing → request facility access → accept an invitation → enter Work. Status differentiation already exists; what is added is a **named next actor and time-in-state on every screen**, and a resumable progress record.
+
+**Organisation** — *Bring your organisation to Impilo*: search → claim or register → prove authority → identify and claim facilities → add missing ones → confirm the Practitioner-in-Charge → appoint officers → **select how the organisation will consume Impilo (§31)** → complete agreements → configure services → hosted provisioning or node commissioning.
+
+```
+Your Impilo setup
+  ✓ Organisation confirmed
+  ✓ Your authority verified
+  ✓ Two facilities claimed
+  ! Practitioner-in-Charge required for Chitungwiza Practice
+  ○ Select service setup
+  ○ Approve agreements
+  ○ Configure facility services
+  ○ Go-live readiness
+```
+
+**Facility** — a guided setup workspace over the existing nine-step model (departments · service points · queues · workflows · workforce · OROS routing · Khuluma channels · Fundo readiness · go-live), which already distinguishes **steps backed by real truth** from **operator attestations**, under an explicit banner saying so. That honesty is preserved.
+
+> **The wizard must adapt to facility scale [D].** It does not today — a rural health post and a central hospital are driven through the identical nine steps, including OROS routing and Khuluma channels, because the setup service reads no facility type, level or size. A small clinic is not walked through theatre, ICU, PACS and multi-campus configuration; a central hospital does not get a six-field clinic form. The adaptation keys on facility type, capability packs and sizing profile (§17A) — data the platform already holds and does not use.
+
+**Node** — two separate experiences that share only a commissioning case:
+
+| Organisation Authorised Officer | Node Administrator |
+|---|---|
+| Institutional approval · service profile · agreements · facility scope · appointed Node Administrator · readiness results · **go-live countersignature** | Infrastructure requirements · bootstrap package · manifest status · install mode · host checks · certificates · service health · backup/restore tests · disconnection test · signed commissioning report |
+
+> **The Node Administrator must never see patient or clinical-work screens because they installed the system** (§22A.3, A39).
+
+## 35.5 Five patterns to codify across every self-service journey **[D]**
+
+Drawn from what the shipped rails already do well, and made uniform:
+
+1. **Preview → consent → submit.** A masked preview, an explicit consent act, then the write. Already true of the provider token lane and both facility evidence lanes.
+2. **Recover, never reissue.** Recovery preserves the same Provider ID, the same facility appointment identity, the same site grant — `claim_type NEW | RECOVERY` throughout.
+3. **Silent duplicate block.** Duplicates route to a steward with a generic registrant receipt; match context is never serialised to the applicant.
+4. **Nothing activates on submit.** Every lane lands `PENDING`, with one justified exception: accepting an organisation invitation activates immediately, because the inviting organisation is the authority.
+5. **Evidence requirements are explicit and consistent.** Today evidence is mandatory on the site rail and optional on the facility rail with no stated reason; the journey blueprint must state the requirement per lane and enforce it.
+
+---
+
+# 36. Nompilo as journey orchestrator **[T]**
+
+## 36.1 What Nompilo is today — five mechanisms sharing one name
+
+This matters because "make Nompilo the orchestrator" is otherwise an instruction with no object:
+
+| Mechanism | What it actually is |
+|---|---|
+| **Context guidance** | A SQL catalogue (`guidance_item`) filtered by user type, role, **route prefix**, minimum LoA and a **string-set membership test** on signals, sorted by a static priority. **No intent interpretation, no NLU, no ranking model.** ~9 seeded items plus eleven domain packs |
+| **Locked-state explainer** | A three-branch reason→key switch with a safe default, always appending a boundary sentence: *"Nompilo explains why this is restricted and what you can do next. It does not reveal the protected information itself."* |
+| **Public ask** | Grounded retrieval with optional LLM synthesis behind an honesty gate — `answerSource ∈ {llm, retrieval, none}`, and `none` is surfaced as an honest "I don't know" |
+| **Public intent routing** | A **hard-coded regex table inside a React component**: eight branches, emergency first, unmatched → no suggestion |
+| **The docked assistant** | Real conversational surface — **authenticated-only**; it does not exist for an anonymous visitor |
+
+Two further facts shape the design. The public front door **already asks the right question** — the hero H1 is literally *"How can Impilo help you today?"* above an "Ask Nompilo" search form, with emergency intent short-circuiting the network call so safety is never delayed behind an advisory request. And emergency triage is **deliberately not an LLM**: thirteen deterministic steps whose category values map one-to-one onto the emergency service's enum, with any danger sign escalating immediately.
+
+## 36.2 What v1.3 changes
+
+1. **Intent routing moves server-side.** The regex table becomes a service that the resolver owns, so web, mobile and the anonymous lane share one intent model — and so improving it does not require a front-end release. The emergency short-circuit stays client-side, because a safety path must not depend on a network call.
+2. **Nompilo becomes journey-aware.** It reads the experience contract's `journeys` block, so it can say *"your facility claim is waiting on the registrar, submitted six days ago"* rather than only *"here is guidance for this route"*.
+3. **Guidance degradation becomes visible.** `degraded: true` is rendered, not swallowed (§34).
+4. **The orphaned global command bar** is either wired to the resolver or deleted; a defined, exported component with zero call sites is dead weight that will be mistaken for a capability.
+
+## 36.3 The boundaries **[D]**
+
+1. **Domain-bounded.** In a Work context it never surfaces personal-domain content; it offers the national route instead (A79).
+2. **Authority-honest.** It explains why something is unavailable; it never routes around a refusal. The existing locked-state boundary sentence is exactly right and becomes the general rule.
+3. **Provenance-honest.** When reporting clinical information it states origin and both freshness clocks: *"You are viewing a cached allergy record from Mpilo, last updated two days ago. Authority to display it was last confirmed six hours ago."*
+4. **Continuous across web and mobile.**
+5. **Escalation-aware** — produces a support route with the right context attached, and never invents a contact.
+6. **Never diagnostic.** Triage guides and escalates; it does not diagnose. The deterministic emergency protocol stays deterministic.
+
+---
+
+# 37. Mobile parity **[D]**
+
+The same journey model and the same experience contract drive the citizen app, the provider app, responsive web, workstations, tablets and kiosks. **Presentation may differ; decisions may not** (A80).
+
+This retires a real divergence: the provider app carries its own mode router (`provider` · `outreach` · `supervisor` · `offline` · `courier`) while web uses the work-context resolver. The modes are a good *presentation* of work context on a small screen and are kept as such — but they stop being an independent authority model and become a rendering of the shared contract, which the governed mode-mint fence already half-requires.
+
+Mobile-specific adaptations, all inside the shared contract: fast context switching · shift and assignment awareness · offline-state banner · patient and facility QR scanning · evidence capture during onboarding · notifications and outstanding actions · node enrolment by signed QR · citizen health timeline · emergency actions · Nompilo by voice or text.
+
+---
+
+# 38. End-to-end journey blueprints **[T]**
+
+Twenty-four journeys. Each is specified with actor · entry point · preconditions · screens · decisions · data used · authority transitions · success state · failure and recovery · offline behaviour · notifications · audit events · Nompilo guidance · web/mobile parity · acceptance test. The table gives each spine; the full per-journey specification is the implementation artefact for backlog items 62–71, and **no journey is built before its blueprint is complete**.
+
+| # | Journey | Actor | Entry | Authority transition | Key failure state | Offline behaviour | Test |
+|---|---|---|---|---|---|---|---|
+| 1 | Anonymous citizen finds care | Public | Public front door | none | No result in range → widen or emergency route; *"N of M results have map coordinates"* preserved | Boundary map still renders when the street stack is down | A76 |
+| 2 | Citizen signs up and enters My Life | Citizen | Front door → sign-up | → `impilo-personal` | Proofing incomplete → `HEALTH_ID_PENDING` with what is usable meanwhile | n/a | A75 |
+| 3 | Citizen receives care and later sees the encounter | Citizen | My Life timeline | none | Not yet contributed → stated, not blank | n/a | A44 |
+| 4 | Provider claims their Provider ID | Provider | My Life prompt or front door | → `impilo-professional` | No record → registration route, not a dead end; seven lanes each with their own end state | n/a | A75 |
+| 5 | Provider requests facility access | Provider | My Professional | none (request only) | Declined → reason + re-request path; next actor named | Queued | A78 |
+| 6 | Provider enters national Work | Provider | Domain switch | → `impilo-work` | No assignment → §29.1 landing, never an empty page | n/a | A75 |
+| 7 | Provider enters a Hospital Node | Provider | Node URL | node-issued work token | Standing bundle stale → refusal stating its age | Works offline | A31 |
+| 8 | Provider moves between local Work and Full Impilo | Provider | Node header | **new** national session; work token not exchanged | Node offline → stated unavailable, no local substitute | My Life unavailable and says so | A30 |
+| 9 | Provider works at multiple institutions | Provider | Either node | two audiences, no mixing | Cross-node token reuse → rejected on audience | Per-node contexts persist; remote list marked stale | A33, A59, A71 |
+| 10 | Practice owner registers an organisation | Officer | *Bring your organisation* | → `impilo-org-admin` | Duplicate → claim route, not a second row | n/a | A78 |
+| 11 | Existing facility is claimed | Officer / admin | Facility search | facility-admin appointment | **Today: a boolean. Target: the eleven-state submission model with a named reviewer and time in state** | n/a | A38 |
+| 12 | New facility is registered | Officer | Facility register | pending legitimacy | Silent duplicate → steward review, generic receipt **preserved by design** | n/a | A38 |
+| 13 | Organisation chooses hosted service | Officer | Setup assistant (§31) | service agreement ACTIVE | No profile fits → assisted review, not a forced choice | n/a | A76 |
+| 14 | Organisation commissions an on-premises node | Officer + Node Admin | Commissioning case | node ACTIVE on countersignature | Readiness fails → the specific test named; node stays `AWAITING_COMMISSIONING` | Install may be offline | A38–A43 |
+| 15 | Node operates during national disconnection | Provider | Work | unchanged (local) | Bundle ceilings → fail closed per class | **This is the journey** | A5, A6 |
+| 16 | Facility loses connectivity to a remotely hosted node | Provider | Work | none | `SITE_LINK_UNAVAILABLE` — Edge scope or stop, and it says which | Edge scope only | A57 |
+| 17 | Patient is referred between nodes | Provider | Referral | disclosure basis recorded | Receiver offline → queued with visible status | Queues at sender | A12 |
+| 18 | Clinician views a Shared-Care Cache | Provider | Patient record | cohort + consent | Authority stale → emergency-only or fail closed | Serves with **both clocks** | A46–A48, A62 |
+| 19 | Patient shares selected PHR content with a facility | Citizen | My Life consent centre | item-scoped disclosure | Facility not permitted → refusal with reason | n/a | A44 |
+| 20 | Regulator onboards and operates its workspace | Regulator | Regulator bootstrap | → `impilo-regulatory` | Zero appointments → the founding-request route, which already closes this dead end | n/a | A26 |
+| 21 | Facility administrator configures services and workforce | Facility admin | Facility console | facility-admin scope | Missing PIC named as the blocking item; **steps adapt to facility scale** | n/a | A42 |
+| 22 | Support engineer enters through approved JIT access | Support | Support case | data-bearing access grant | **Audit sink unavailable → session refused** | n/a | A66, A69 |
+| 23 | Organisation changes service-consumption profile | Officer | Organisation console | new agreement version | Migration needed → planned, never implicit | n/a | A72 |
+| 24 | Node is upgraded, suspended or decommissioned | Node Admin + Officer | Fleet console | release / lifecycle state | Below compatibility floor → quarantined with a remedy | Local care continues | A20, A15 |
+
+**The rule that binds them.** Every journey has a defined state at every step, a named next actor, a resumable progress record, and an honest failure mode. A journey that can reach a state with no landing, no explanation and no next actor is not finished — A75 and A78 exist to catch exactly that.
+
+---
 
 **Supersedes:** v1.1 (commit `ae0c9a74c`) and v1.0 (commit `97eab3ac8`). Both remain valid for every decision v1.2 does not amend; where v1.2 corrects one, the correction is recorded in the v1.2 change table and in the affected ADR. **Depends on:** the current-state recovery of 2026-08-03, which remains the factual baseline; where this document states a current-state fact, that document is the citation.
 
@@ -3164,4 +3979,11 @@ Priority reflects *what unblocks the most* and *what is riskiest to defer*. P0 i
 
 **Change discipline:** an architecture decision recorded in §25 changes only by a new ADR. The data-residency matrices (§4.2, §4.4), the staleness ladder (§5.3), the prohibited inheritances (§4A.2) and the Shared-Care Cache rules (§19B) are clinical-safety and data-protection artefacts and change only with clinical-governance and data-protection sign-off. The sizing bands (§17A.2) are estimates and are expected to change — that is their purpose.
 
-**Implementation status:** nothing in this document is implemented. §22 defines the sequence; §23 defines the gates; no phase begins before its predecessor's gate is green. Two things in v1.1 are exceptions worth naming: the organisational commissioning rails of §22A **already ship** and are being extended rather than built, and Bootstrap Mode ships **without a design document**, which §22A supplies retrospectively.
+**Implementation status:** nothing in the federation design is implemented. §22 defines the sequence; §23 defines the gates; no phase begins before its predecessor's gate is green.
+
+**Three parts of this document describe things that already ship**, and are being extended rather than built — naming them prevents the next reader mistaking design for greenfield:
+- The **organisational commissioning rails** (§22A) — Bootstrap Mode with a 24-hour role TTL, two-person approval, authorised representatives, facility-admin appointments, PIC, signed invitations, regulator bootstrap and thirteen onboarding routes. Bootstrap Mode ships **without a design document**, which §22A supplies retrospectively.
+- The **experience seams** (§27–§38) — the session experience contract, the eight-family work-home composition with in-band degradation, the public front door whose H1 already asks *"How can Impilo help you today?"*, the deterministic emergency triage protocol, the Nompilo guidance catalogue, and the provider claim lane's twelve differentiated statuses.
+- The **honesty markers** the recovery and these sweeps identified — the labelled Harare fallback, the refusing provider directory, the never-strand chooser copy, the attestation-versus-real-truth split in facility setup, `answerSource: none`. §30.2, §34 and §35.1 preserve these deliberately; they are product commitments, not placeholder copy.
+
+**Four things this document asserts that the shell currently contradicts**, all carried in the backlog as fixes rather than as new features: unregistered routes are reachable with no guard (item 73, a Phase 0 safety fix); a 502 on `/work` is rendered as a false explanation (item 72); work-session expiry is unhandled while a screen claims automatic reissue (item 74); and a clinician with an expired licence sees "Nothing here right now" when the licence service is down (item 77).
