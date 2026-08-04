@@ -96,7 +96,7 @@ export default function GetInvolvedPage() {
             <Link
               key={p.title}
               href={p.href}
-              className="group rounded-xl border border-slate-200 bg-white p-5 transition hover:border-emerald-300 hover:bg-emerald-50/40"
+              className="group rounded-xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-5 transition hover:border-emerald-300 hover:bg-emerald-50/40"
             >
               <div className="flex items-start justify-between gap-2">
                 <h3 className="font-semibold text-slate-900 group-hover:text-emerald-800">{p.title}</h3>

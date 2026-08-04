@@ -145,7 +145,7 @@ export function FindCareAccessActions({
         onBeforeSignIn={rememberSelection}
       />
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6">
+      <section className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-6">
         <h2 className="flex items-center gap-2 font-semibold text-slate-900">
           <ClipboardList className="h-4 w-4 text-slate-400" aria-hidden />
           Referral status
@@ -212,7 +212,7 @@ function AppointmentAction({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6">
+    <section className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-6">
       <h2 className="flex items-center gap-2 font-semibold text-slate-900">
         <CalendarPlus className="h-4 w-4 text-slate-400" aria-hidden />
         Request an appointment
@@ -358,7 +358,7 @@ function TransportAction({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6">
+    <section className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-6">
       <h2 className="flex items-center gap-2 font-semibold text-slate-900">
         <Ambulance className="h-4 w-4 text-slate-400" aria-hidden />
         Request patient transport

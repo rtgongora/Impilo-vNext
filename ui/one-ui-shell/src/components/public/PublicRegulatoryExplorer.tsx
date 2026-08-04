@@ -138,7 +138,7 @@ export function PublicRegulatoryExplorer() {
         </h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {(req?.applicationTypes ?? []).map((a) => (
-            <div key={a.code} className="rounded-xl border border-slate-200 bg-white p-4">
+            <div key={a.code} className="rounded-xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-4">
               <p className="font-semibold text-slate-900">{a.displayName}</p>
               {a.manualRouteSummary && (
                 <p className="mt-1 text-[13px] leading-relaxed text-slate-600">{a.manualRouteSummary}</p>
@@ -212,7 +212,7 @@ export function PublicRegulatoryExplorer() {
           {(councils ?? []).map((c) => {
             const registers = c.councilCode ? registersByCouncil[c.councilCode] ?? [] : [];
             return (
-              <div key={c.councilCode} className="rounded-xl border border-slate-200 bg-white p-4">
+              <div key={c.councilCode} className="rounded-xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-4">
                 <p className="font-semibold text-slate-900">{c.name}</p>
                 {c.councilType && <p className="text-xs text-slate-500">{c.councilType}</p>}
                 {c.description && <p className="mt-1 text-[13px] leading-relaxed text-slate-600">{c.description}</p>}

@@ -35,7 +35,7 @@ export function ReportIncidentTriage() {
       <Link
         href="/welcome/report/anonymous"
         data-testid="report-branch-anonymous"
-        className="group rounded-xl border border-slate-200 bg-white p-6 transition hover:border-emerald-300 hover:bg-emerald-50/40"
+        className="group rounded-xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-6 transition hover:border-emerald-300 hover:bg-emerald-50/40"
       >
         <h3 className="text-lg font-semibold text-slate-900 group-hover:text-emerald-800">
           Unsafe care, a safety concern, or a complaint
@@ -55,7 +55,7 @@ export function ReportIncidentTriage() {
         dest={FEEDBACK_DEST}
         from="/welcome/report"
         href={`/auth/login?returnTo=${encodeURIComponent(FEEDBACK_DEST)}`}
-        className="group rounded-xl border border-slate-200 bg-white p-6 transition hover:border-emerald-300 hover:bg-emerald-50/40"
+        className="group rounded-xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-6 transition hover:border-emerald-300 hover:bg-emerald-50/40"
       >
         <h3 className="text-lg font-semibold text-slate-900 group-hover:text-emerald-800">
           Report from your account
@@ -72,7 +72,7 @@ export function ReportIncidentTriage() {
       <Link
         href="/welcome/report/status"
         data-testid="report-branch-status"
-        className="group rounded-xl border border-slate-200 bg-white p-6 transition hover:border-emerald-300 hover:bg-emerald-50/40 sm:col-span-2"
+        className="group rounded-xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-6 transition hover:border-emerald-300 hover:bg-emerald-50/40 sm:col-span-2"
       >
         <h3 className="font-semibold text-slate-900 group-hover:text-emerald-800">
           Already reported? Check the outcome

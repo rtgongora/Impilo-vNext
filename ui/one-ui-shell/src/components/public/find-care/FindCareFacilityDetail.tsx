@@ -147,7 +147,7 @@ export function FindCareFacilityDetail({ facilityId }: FindCareFacilityDetailPro
 
   if (notFound || !profile) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white p-8 text-center">
+      <div className="rounded-xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-8 text-center">
         <p className="font-medium text-slate-900">
           {notFound ? "We couldn't find that facility." : "This facility profile is temporarily unavailable."}
         </p>
@@ -187,7 +187,7 @@ export function FindCareFacilityDetail({ facilityId }: FindCareFacilityDetailPro
       </Link>
 
       {/* Header */}
-      <header className="rounded-2xl border border-slate-200 bg-white p-6">
+      <header className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-6">
         <div className="flex items-start gap-3">
           <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700">
             <Building2 className="h-6 w-6" aria-hidden />
@@ -233,7 +233,7 @@ export function FindCareFacilityDetail({ facilityId }: FindCareFacilityDetailPro
       <FacilityExperienceCard profile={profile} />
 
       {/* Services offered (registry truth) */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-6">
+      <section className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-6">
         <h2 className="flex items-center gap-2 font-semibold text-slate-900">
           <Stethoscope className="h-4 w-4 text-slate-400" aria-hidden />
           Services offered
@@ -296,7 +296,7 @@ export function FindCareFacilityDetail({ facilityId }: FindCareFacilityDetailPro
           whether it was open. Facility-scope numbers only: tuso filters on role == FACILITY and
           strips the contact person's name, so nobody's personal mobile can surface here. */}
       {profile.contacts && profile.contacts.length > 0 ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-6">
+        <section className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-6">
           <h2 className="text-sm font-semibold text-slate-900">How to reach this facility</h2>
           <ul className="mt-3 space-y-2">
             {profile.contacts.map((contact, index) => (
@@ -344,7 +344,7 @@ export function FindCareFacilityDetail({ facilityId }: FindCareFacilityDetailPro
 
       {/* Verified-provider layer — Varapi register truth. Only fully confirmed professionals; no
           availability/slots are ever shown, and the verify link stays regardless of the roster. */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-6">
+      <section className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-6">
         <h2 className="flex items-center gap-2 font-semibold text-slate-900">
           <ShieldCheck className="h-4 w-4 text-slate-400" aria-hidden />
           Health professionals

@@ -127,7 +127,7 @@ export function EmergencyAssistanceForm() {
   }
 
   return (
-    <section className="mt-6 rounded-xl border border-slate-200 bg-white p-6">
+    <section className="mt-6 rounded-xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-6">
       <h2 className="font-semibold text-slate-900">Request emergency assistance</h2>
       <p className="mt-1 text-sm text-slate-600">
         No account needed. A responder will call you back on the number you give to confirm before

@@ -138,7 +138,7 @@ export function PublicNoticesBoard() {
             return (
               <li
                 key={n.id}
-                className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5"
+                className="rounded-xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-4 sm:p-5"
                 data-testid="notice-card"
               >
                 <div className="flex flex-wrap items-center gap-2">

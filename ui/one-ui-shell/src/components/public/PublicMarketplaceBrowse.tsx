@@ -131,7 +131,7 @@ export function PublicMarketplaceBrowse() {
               {listings.map((l) => {
                 const price = priceOf(l);
                 return (
-                  <div key={l.id} className="flex flex-col rounded-xl border border-slate-200 bg-white p-4">
+                  <div key={l.id} className="flex flex-col rounded-xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-4">
                     <div className="flex items-start justify-between gap-2">
                       <p className="font-semibold text-slate-900">{l.title}</p>
                       {l.riskClassification && (
@@ -165,7 +165,7 @@ export function PublicMarketplaceBrowse() {
           </h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {vendors.map((v) => (
-              <div key={v.id} className="rounded-xl border border-slate-200 bg-white p-4">
+              <div key={v.id} className="rounded-xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-4">
                 <div className="flex items-center gap-2">
                   <p className="font-semibold text-slate-900">{v.name}</p>
                   {v.status === "ACTIVE" && (

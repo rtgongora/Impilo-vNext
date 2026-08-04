@@ -121,7 +121,7 @@ function EmergencyTrackInner() {
       {status && (
         <section
           data-testid="track-status"
-          className="mt-6 rounded-xl border border-slate-200 bg-white p-6"
+          className="mt-6 rounded-xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-6"
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="font-mono text-sm text-slate-500">{status.requestReference}</span>

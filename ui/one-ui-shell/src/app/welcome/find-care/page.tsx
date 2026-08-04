@@ -73,7 +73,7 @@ export default function FindCarePage() {
         <FindCareExperience />
       </div>
 
-      <section className="mt-8 rounded-xl border border-slate-200 bg-white p-6">
+      <section className="mt-8 rounded-xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-6">
         <h2 className="font-semibold text-slate-900">Visiting a facility</h2>
         <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
           <li>Bring an identity document if you have one — it helps verify your Impilo ID faster.</li>

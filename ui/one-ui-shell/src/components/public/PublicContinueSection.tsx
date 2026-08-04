@@ -51,7 +51,7 @@ export function PublicContinueSection() {
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         {hasJourney && (
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+          <div className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-5">
             <ResumeJourneyCard tone="light" />
           </div>
         )}

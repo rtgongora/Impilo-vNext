@@ -56,7 +56,7 @@ export function PublicCoverageCompare() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-testid="coverage-plans">
           {plans.map((p) => (
-            <div key={p.planCode} className="rounded-xl border border-slate-200 bg-white p-4">
+            <div key={p.planCode} className="rounded-xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-4">
               <div className="flex items-start justify-between gap-2">
                 <p className="font-semibold text-slate-900">{p.planName}</p>
                 <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />

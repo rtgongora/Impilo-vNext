@@ -141,7 +141,7 @@ export function PublicHealthInfo() {
   // ── Article read view ─────────────────────────────────────────────────────
   if (article) {
     return (
-      <article className="rounded-xl border border-slate-200 bg-white p-6">
+      <article className="rounded-xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-6">
         <button
           type="button"
           onClick={() => {
@@ -178,7 +178,7 @@ export function PublicHealthInfo() {
 
   // ── Category + list view ──────────────────────────────────────────────────
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-6">
+    <section className="rounded-xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-6">
       <h2 className="font-semibold text-slate-900">Browse health topics</h2>
       <p className="mt-1 text-sm text-slate-600">
         Trusted, plain-language health information from the Ministry of Health &amp; Child Care. No

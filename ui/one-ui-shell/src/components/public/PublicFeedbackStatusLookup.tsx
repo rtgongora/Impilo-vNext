@@ -81,7 +81,7 @@ export function PublicFeedbackStatusLookup() {
       )}
 
       {status && (
-        <dl className="mt-4 rounded-xl border border-slate-200 bg-white p-5" data-testid="feedback-status-result">
+        <dl className="mt-4 rounded-xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-5" data-testid="feedback-status-result">
           <div className="flex items-baseline justify-between">
             <dt className="text-xs uppercase tracking-wide text-slate-500">Reference</dt>
             <dd className="font-mono text-sm font-semibold text-slate-900">{status.caseReference}</dd>

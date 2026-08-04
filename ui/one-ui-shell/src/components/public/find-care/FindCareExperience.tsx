@@ -254,7 +254,7 @@ export function FindCareExperience() {
   return (
     <div className="space-y-6">
       {/* ── Need-first search ─────────────────────────────────────────── */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6" aria-labelledby="find-care-heading">
+      <section className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-5 sm:p-6" aria-labelledby="find-care-heading">
         <h2 id="find-care-heading" className="text-lg font-semibold text-slate-900">
           {t("public.findCare.title")}
         </h2>

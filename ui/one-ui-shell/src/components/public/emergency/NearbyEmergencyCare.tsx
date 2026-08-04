@@ -86,7 +86,7 @@ export function NearbyEmergencyCare({
   if (!haveLocation) return null;
 
   return (
-    <div data-testid="nearby-emergency-care" className="mt-3 rounded-xl border border-slate-200 bg-white p-4">
+    <div data-testid="nearby-emergency-care" className="mt-3 rounded-xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-4">
       <h3 className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
         <MapPin className="h-4 w-4 text-emerald-600" aria-hidden />
         Nearest care with emergency services

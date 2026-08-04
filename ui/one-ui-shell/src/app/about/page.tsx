@@ -93,7 +93,7 @@ export default function AboutPage() {
         </h2>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {OBJECTIVES.map(({ title, body, icon: Icon }) => (
-            <article key={title} className="rounded-2xl border border-slate-200 bg-white p-5">
+            <article key={title} className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-5">
               <span className="grid h-11 w-11 place-items-center rounded-xl bg-emerald-50 text-emerald-700">
                 <Icon className="h-5 w-5" aria-hidden />
               </span>

@@ -18,7 +18,7 @@ export default function AnonymousReportPage() {
         / Anonymous report
       </nav>
 
-      <section className="mt-3 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+      <section className="mt-3 rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-8 shadow-sm">
         <h1 className="text-2xl font-bold text-slate-900">Report without an account</h1>
         <p className="mt-2 max-w-2xl text-slate-600">
           Your identity is not recorded. When you submit, you get a one-time claim code —

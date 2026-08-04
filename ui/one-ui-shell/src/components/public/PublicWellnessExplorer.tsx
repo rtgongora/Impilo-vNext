@@ -117,7 +117,7 @@ export function PublicWellnessExplorer() {
           ))}
         </div>
 
-        <div className="mt-3 max-w-md rounded-xl border border-slate-200 bg-white p-4">
+        <div className="mt-3 max-w-md rounded-xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-4">
           {tab === "bmi" ? (
             <div className="grid grid-cols-2 gap-3">
               <label className="text-sm">
@@ -212,7 +212,7 @@ export function PublicWellnessExplorer() {
               const ages =
                 p.ageMin !== undefined && p.ageMax !== undefined ? `Ages ${p.ageMin}–${p.ageMax}` : null;
               return (
-                <div key={p.programmeCode} className="rounded-xl border border-slate-200 bg-white p-4">
+                <div key={p.programmeCode} className="rounded-xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-4">
                   <p className="font-semibold text-slate-900">{p.title}</p>
                   {p.description && <p className="mt-1 text-[13px] leading-relaxed text-slate-600">{p.description}</p>}
                   <p className="mt-2 text-xs text-slate-500">{[ages, cadence].filter(Boolean).join(" · ")}</p>

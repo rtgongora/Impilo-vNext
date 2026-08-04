@@ -23,7 +23,7 @@ export default function AccessibilityPage() {
       </p>
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2">
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
+        <div className="rounded-xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-5">
           <h2 className="font-semibold text-slate-900">Designed for access</h2>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
             <li>High-contrast and larger-text display options in your account settings</li>
@@ -31,7 +31,7 @@ export default function AccessibilityPage() {
             <li>Works on low-cost devices and slower connections</li>
           </ul>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
+        <div className="rounded-xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-5">
           <h2 className="font-semibold text-slate-900">Help to get started</h2>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
             <li>No smartphone? A health worker can register you at a facility.</li>
@@ -41,7 +41,7 @@ export default function AccessibilityPage() {
         </div>
       </section>
 
-      <section className="mt-6 rounded-xl border border-slate-200 bg-white p-6">
+      <section className="mt-6 rounded-xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-6">
         <h2 className="font-semibold text-slate-900">Languages</h2>
         <p className="mt-1 text-sm text-slate-600">
           Impilo is currently available in English, with Shona and Ndebele support being introduced.

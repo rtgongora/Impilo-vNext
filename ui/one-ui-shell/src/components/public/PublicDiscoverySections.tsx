@@ -30,7 +30,7 @@ async function searchDiscovery(params: Record<string, string>): Promise<Discover
 
 function DiscoveryRow({ result }: { result: DiscoveryResult }) {
   return (
-    <li className="rounded-xl border border-slate-200 bg-white p-4">
+    <li className="rounded-xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-4">
       <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
         {result.type}
       </p>
@@ -109,7 +109,7 @@ export function PublicNearYouSection() {
   return (
     <div>
       {state === "idle" && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6">
+        <div className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-6">
           <p className="text-base text-slate-700">
             Share your location once and Impilo will show the facilities, clinics and pharmacies
             closest to you, with distance and travel time where the register holds them.
@@ -126,14 +126,14 @@ export function PublicNearYouSection() {
       )}
 
       {(state === "locating" || state === "loading") && (
-        <p className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
+        <p className="flex items-center gap-2 rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-6 text-sm text-slate-600">
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
           {state === "locating" ? "Waiting for your location…" : "Finding care near you…"}
         </p>
       )}
 
       {state === "blocked" && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6">
+        <div className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-6">
           <p className="text-base text-slate-700">
             Location isn&apos;t available on this device or is blocked for this site. Searching by
             name works just as well.
@@ -165,7 +165,7 @@ export function PublicNearYouSection() {
               ))}
             </ul>
           ) : (
-            <div className="rounded-2xl border border-slate-200 bg-white p-6">
+            <div className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-6">
               <p className="text-base text-slate-700">
                 {notes[0] ?? "No facilities were returned for your area."}
               </p>
@@ -213,7 +213,7 @@ export function PublicVirtualCareSection() {
 
   if (state === "loading") {
     return (
-      <p className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
+      <p className="flex items-center gap-2 rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-6 text-sm text-slate-600">
         <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
         Checking which virtual services are live…
       </p>
@@ -233,7 +233,7 @@ export function PublicVirtualCareSection() {
 
   if (results.length === 0) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-6">
+      <div className="rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-6">
         <p className="text-base text-slate-700">
           {notes[0] ??
             "No virtual services are published yet. When a virtual clinic goes live it will appear here."}

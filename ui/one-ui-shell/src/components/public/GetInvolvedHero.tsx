@@ -11,7 +11,7 @@ export function GetInvolvedHero() {
   const { t } = useI18n();
 
   return (
-    <section className="mt-3 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+    <section className="mt-3 rounded-2xl border border-white/60 bg-white/70 backdrop-blur-sm [.low-blur_&]:bg-white p-8 shadow-sm">
       <p className="text-sm font-medium uppercase tracking-wide text-emerald-700">
         {t("public.getInvolved.eyebrow")}
       </p>
