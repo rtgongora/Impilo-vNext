@@ -91,9 +91,12 @@ describe("/work/telemedicine hub", () => {
       "href",
       "/imaging/worklist",
     );
+    // "Real existing route" is necessary but not sufficient — it also has to open for the
+    // people offered it. /coverage exists and admits only ADMIN, so clinicians and support
+    // agents on this hub were bounced home; /ruvimbo resolves each caller to a face they hold.
     expect(screen.getByRole("link", { name: "Coverage / medical aid" })).toHaveAttribute(
       "href",
-      "/coverage",
+      "/ruvimbo",
     );
     // The orders/prescribing-from-session gap is stated, not faked
     expect(

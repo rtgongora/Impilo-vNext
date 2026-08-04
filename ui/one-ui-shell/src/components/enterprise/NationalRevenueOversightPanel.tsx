@@ -9,6 +9,13 @@ import {
   useRevenueSummary,
 } from "@/hooks/queries/useFinancialReports";
 import { extractCount, useMushexPlatformRemittanceTransfers } from "@/hooks/queries/useMushexPlatformAdmin";
+import { useAuthStore } from "@/hooks/useAuthStore";
+import { reachableByRole } from "@/lib/auth/route-reachability";
+
+const FINANCE_LINKS = [
+  { href: "/finance/reports", label: "Institutional financial reports" },
+  { href: "/finance/settlements", label: "Settlements" },
+];
 
 const money = (n: unknown) => {
   const v = typeof n === "number" ? n : Number(n);
@@ -37,6 +44,9 @@ export function NationalRevenueOversightPanel() {
   const claimsQ = useClaimsExpenditure(undefined, year, month);
   const remittancesQ = useMushexPlatformRemittanceTransfers();
   const debtQ = useDebtAging(undefined);
+
+  const hasRole = useAuthStore((s) => s.hasRole);
+  const financeLinks = useMemo(() => reachableByRole(FINANCE_LINKS, hasRole), [hasRole]);
 
   const revenue = revenueQ.data;
   const byPayer = useMemo(() => asList(revenue?.byPayerType), [revenue]);
@@ -207,14 +217,18 @@ export function NationalRevenueOversightPanel() {
         </div>
       ) : null}
 
+      {/* This panel sits on /enterprise/oversight, whose guard is "auth" — so a citizen or a
+          clinician sees it too. The finance routes below are role-guarded and would bounce
+          them back to /home without a word, so they are shown only when they will open.
+          "Coverage operations" was /coverage (ADMIN only) for the same reason; /ruvimbo is
+          the role-aware resolver and admits everyone. */}
       <div className="mt-4 flex flex-wrap gap-3 text-xs">
-        <Link href="/finance/reports" className="font-medium text-violet-700 hover:underline">
-          Institutional financial reports
-        </Link>
-        <Link href="/finance/settlements" className="font-medium text-violet-700 hover:underline">
-          Settlements
-        </Link>
-        <Link href="/coverage" className="font-medium text-violet-700 hover:underline">
+        {financeLinks.map(({ href, label }) => (
+          <Link key={href} href={href} className="font-medium text-violet-700 hover:underline">
+            {label}
+          </Link>
+        ))}
+        <Link href="/ruvimbo" className="font-medium text-violet-700 hover:underline">
           Coverage operations
         </Link>
       </div>

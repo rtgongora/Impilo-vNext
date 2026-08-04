@@ -41,7 +41,10 @@ const MY_HEALTH_LINKS: QuickAccessItem[] = [
 
 const MY_CARE_LINKS: QuickAccessItem[] = [
   { href: "/home/care-team", label: "Care Team", icon: Users },
-  { href: "/coverage", label: "Coverage", icon: Shield },
+  // /coverage is the ADMIN payer console (routes.ts: guard "role", requiredRole "ADMIN"). A
+  // citizen clicking it was bounced straight back to /home by AuthGuardProvider — the link
+  // rendered, flashed, and vanished. The person-facing coverage surface is My Ruvimbo.
+  { href: "/ruvimbo/member", label: "Coverage", icon: Shield },
   { href: "/home/referrals", label: "Referrals", icon: ArrowRight },
 ];
 
