@@ -26,6 +26,7 @@ import { matchRouteDefinition } from "@/lib/routes";
 import { isSchedulingClusterPath } from "@/lib/scheduling-paths";
 import { evaluateRouteTrust } from "@/lib/auth/action-trust-matrix";
 import { resolveWorkRouteVisibility } from "@/lib/auth/work-route-visibility";
+import { evaluateRoleDenial } from "@/lib/auth/role-denial";
 
 /** Re-export for existing imports from this module. */
 export { ROLE_GROUPS, matchesRequiredRole };
@@ -88,6 +89,40 @@ function UnregisteredRouteDenied({ pathname }: { pathname: string }) {
             Public services
           </a>
         </div>
+      </div>
+    </main>
+  );
+}
+
+/**
+ * DENIED for a failed role guard (CLAUDE_GOVERNANCE.md #19).
+ *
+ * The counterpart to `UnregisteredRouteDenied` for the role dimension. The
+ * decision — and the reasoning behind what this copy does and does not offer —
+ * lives in `lib/auth/role-denial.ts`.
+ */
+function RoleDenied({ pathname, pageTitle }: { pathname: string; pageTitle: string }) {
+  return (
+    <main
+      data-testid="role-denied"
+      className="min-h-screen flex items-center justify-center p-6"
+    >
+      <div className="max-w-md text-center space-y-4">
+        <h1 className="text-xl font-semibold">You do not have access to this page</h1>
+        <p className="text-sm text-muted-foreground">
+          This is a permissions decision, not a fault. The page loaded and your
+          account is working normally — {pageTitle} is only opened for accounts
+          that hold the role it requires.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Signing in again, or verifying your identity, will not change this.
+          Access here comes from a role assignment. If you believe you should
+          have it, ask your facility administrator.
+        </p>
+        <p className="text-xs text-muted-foreground break-all">{pathname}</p>
+        <a href="/home" className="inline-block text-sm font-medium underline underline-offset-4">
+          Go to your home
+        </a>
       </div>
     </main>
   );
@@ -250,7 +285,10 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
         break;
       case "role":
         if (!isAuthenticated) { router.replace("/auth/login"); return; }
-        if (requiredRole && !matchesRequiredRole(hasRole, requiredRole)) { router.replace("/home"); return; }
+        // A failed role check no longer redirects. Bouncing to /home rendered
+        // DENIED as a flash-then-home with no message, so a mis-targeted link
+        // read as a broken page. The refusal is now stated at render, below.
+        if (requiredRole && !matchesRequiredRole(hasRole, requiredRole)) return;
         break;
     }
   }, [pathname, sessionRestoreAttempted, isAuthenticated, hasConsented, consentHydrated, hasFacility, hasWorkspace, hasShift, hasRole, hasActiveProvider, user, identity, contract, contractLoading, router]);
@@ -260,6 +298,42 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
   // frame. Registered and public routes render as before.
   if (!matchRouteDefinition(pathname) && !isPublicSurface(pathname)) {
     return <UnregisteredRouteDenied pathname={pathname} />;
+  }
+
+  // Role denial is enforced at render for the same reason: the person's
+  // complaint was the flash, and only a render-time gate stops the page from
+  // mounting at all. It is deliberately here rather than in 207 per-route
+  // boundaries — one missed route would reintroduce the silent bounce.
+  //
+  // The earlier gates are re-evaluated (they are pure) so this cannot fire
+  // ahead of a redirect that should have won. See `evaluateRoleDenial`.
+  const renderTrust = evaluateRouteTrust(pathname, user?.assuranceLevel);
+  const renderBoundary = evaluateClinicalWorkAccess(pathname, {
+    healthId: user?.healthId ?? user?.id ?? null,
+    providerActivated: user?.providerActivated ?? false,
+  });
+  const roleDenial = evaluateRoleDenial({
+    pathname,
+    sessionRestoreAttempted,
+    isAuthenticated,
+    consentHydrated,
+    hasConsented,
+    assuranceAllows: !(renderTrust && !renderTrust.allowed && renderTrust.upgradePath),
+    boundaryAllows: renderBoundary.allowed,
+    visibility: resolveWorkRouteVisibility({
+      isCitizenOnly: identity.isCitizenOnly,
+      identityLoading: identity.isLoading,
+      routeBlockedForCitizen: isRouteBlockedForCitizen(pathname, identity),
+      hasContract: !!contract,
+      contractLoading,
+      contractGrantsRoute:
+        (!!contract && sessionContractAllowsRoute(contract, pathname)) ||
+        isGovernanceWorkPathGrantedBySession(contract, pathname),
+    }),
+    hasRole,
+  });
+  if (roleDenial.denied) {
+    return <RoleDenied pathname={roleDenial.pathname} pageTitle={roleDenial.pageTitle} />;
   }
 
   return <>{children}</>;

@@ -1,12 +1,13 @@
 /**
  * Would this route's role guard let the caller in?
  *
- * `AuthGuardProvider` answers a failed `role` guard with `router.replace("/home")`. There is
- * no DENIED screen and no message — the page mounts, the guard fires, and the person is back
- * where they started. A link they cannot open therefore does not read as "not for you"; it
- * reads as "this is broken".
+ * `AuthGuardProvider` now answers a failed `role` guard with an explicit DENIED surface
+ * (`lib/auth/role-denial.ts`) rather than the silent `router.replace("/home")` bounce that
+ * made a refused link read as "this is broken". That makes the refusal honest when it is
+ * reached — but being told "not for you" is still a worse outcome than never being offered
+ * the link, and deep links, bookmarks and role changes reach it regardless.
  *
- * So any surface that composes its own list of destinations must filter that list, the way
+ * So any surface that composes its own list of destinations must still filter that list, the way
  * `/ruvimbo` already does ("we only ever surface workspaces the caller can access, so a
  * selection never dead-ends"). This reads the requirement off the route registry rather than
  * taking a hand-copied role list, so a guard change in `routes.ts` cannot silently leave a
