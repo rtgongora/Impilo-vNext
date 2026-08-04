@@ -211,3 +211,42 @@ TUSO holds **21 virtual services, all `CONFIGURED`, none `ACTIVE`**. The public 
 lane and any citizen virtual-care surface will correctly show nothing until someone with
 registry authority activates them. This is a data/governance gap, not a UI defect — do
 not work around it by seeding or by relaxing the `ACTIVE` filter.
+
+---
+
+## Addendum 2026-08-04 — the approved "gloss" direction (PO-approved, apply to mobile)
+
+The PO approved a v2 visual direction for the web first viewport on 2026-08-04
+("Finally, someone gets it right") and asked for the same language across the rest of
+the product **including both mobile apps**. Web Wave A landed as `ae31c9eb2` on
+`claude/staging-ux-orchestration-remediation-Yypyl`; the direction artifact (mock +
+per-component spec) is titled "Impilo — Wave-3 first viewport, gloss pass".
+
+What the language is, in mobile terms:
+
+- **The colourful brand mark on its natural ground.** `logo-rgb` (green wordmark +
+  red/yellow/green/black pinwheel) at generous scale on a near-white mint top band —
+  never the white knockout on dark where the brand can lead a screen. Splash, sign-in
+  and citizen home headers are the candidates.
+- **One vertical light-to-deep teal ramp** per hero surface: near-white `#F7FCFA` top
+  → living teal mid (`#2A8B84`) → deep calm floor (`#031F27`). Ink flips with the
+  ground: dark forest ink on the light band, white below. Never let a text block sit
+  on the transition zone — on web, a label that must live there carries its own pill
+  ground (`bg-emerald-950/35` + blur). Anchor ramps to fixed dp from the top, not
+  percentages, so content growth extends the floor rather than sliding the ramp.
+- **One gradient button language**: primary actions use emerald `#10B981 → #059669`
+  (150deg) with a 1px inner top highlight; selected chips use the same; unselected
+  chips go quiet (translucent white + hairline). Provider app keeps its deep-teal
+  accent — apply the same *structure* (gradient + inner highlight) in its own hue.
+- **Glass panels over the ramp**: content panels at ~94% white with blur + top sheen +
+  deep soft shadow. Keep the existing `GlassSurface` fallbacks; glass stays decoration,
+  never information.
+- **Map-dominant discovery**: where a screen has a map, flatten the chrome around it
+  (single-row headers, merged chip rows) and give the height to the map.
+- **Grain** (~5% monochrome turbulence tile) over any large gradient area to stop
+  banding on low-end panels.
+- **All honesty rules above still bind**: zero counts stay zero, empty states stay
+  honest, fallback-locality labels stay labelled.
+
+This supersedes the "deep-screen polish out of scope" line at the top of this doc for
+the *next* mobile pass: the PO has now explicitly asked for the gloss pass on mobile.
