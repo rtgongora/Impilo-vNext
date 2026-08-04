@@ -38,15 +38,27 @@ bash scripts/guard/check-keycloak-realm-import.sh
 
 ### `impilo-backend` → protocol mapper `realm roles`
 
-Preserved from the `_comment` removed on 2026-08-04, because the reasoning is
-worth keeping:
+The `_comment` removed on 2026-08-04 is preserved here **verbatim**, on one
+line, exactly as it appeared in the realm file — the reasoning is worth keeping
+and this is the only remaining copy:
 
-> Without this mapper the realm roles granted to the service account never
-> reach the token. This realm has no built-in `roles` client scope, so nothing
-> emits `realm_access.roles`. Services that authorise on realm roles — Ndila's
-> `SecurityConfig` reads `realm_access.roles` — would see an empty authority
-> set and deny every service-originated call: a grant that looks applied but is
-> inert. It mirrors the `client roles` mapper immediately above it, which was
-> added for the identical reason (`resource_access` was empty).
+```text
+Without this the realm roles granted above never reach the token: this realm has no built-in 'roles' client scope, so nothing emits realm_access.roles. Services that authorize on realm roles (ndila's SecurityConfig reads realm_access.roles) would see an empty authority set and deny every service-originated call — a grant that looks applied but is inert. Mirrors the 'client roles' mapper above, which was added for the identical reason (resource_access was empty).
+```
 
 The mapper itself is unchanged; only the unsupported `_comment` key was removed.
+
+### `NDILA_VIEWER` realm role → `description`
+
+The description was 269 characters, exceeding Keycloak's
+`DESCRIPTION VARCHAR(255)` column, which fails the import batch. It was
+shortened to 245 characters on 2026-08-04 with the meaning intact. The original
+is preserved here **verbatim**, on one line:
+
+```text
+Read-only geospatial access to ndila-service (geocode, search, routes, distance-matrix, ETA). Scoped service grant held by service-account-impilo-backend so the BFF can compose the public find-care lane; not a person role and deliberately not a member of any composite.
+```
+
+The shipped 245-character version drops only the words "Scoped", "not a person
+role and deliberately not a member of any" in favour of "Not a person role;
+deliberately in no composite" — no grant, holder or scope changed.
