@@ -252,6 +252,14 @@ journey reports.
   Sessions with different-looking cwds share one tree. **Announce any deliberate breakage, or use a
   private worktree.** A negative control run by you appears to every other session as a real defect;
   this cost two sessions several hours.
+- **Before replacing a Deployment's image, confirm the image you are replacing is an ANCESTOR of
+  yours.** Read the running image's `IMPILO_GIT_COMMIT` / OCI `revision` label and check
+  `git merge-base --is-ancestor <running> <yours>`. Multiple sessions deploy `one-ui-shell`; the
+  UI-design lane found the digest it was replacing was *not* the one it had deployed 40 minutes
+  earlier — someone had rolled in between. That check is the single step that turns a silent revert
+  into a stop. Rolling without it discards another lane's work and nothing reports it.
+- **Prefer one batched deploy over two sessions racing on the same Deployment.** Ask who else has
+  un-deployed commits on the branch first.
 - **Never run `kc.sh` inside the live Keycloak pod** — OOM, exit 137. Use an isolated Job with its
   own memory limit.
 - **`wget` prints `Username/Password Authentication Failed.` on any 401.** That is *wget's* text,
