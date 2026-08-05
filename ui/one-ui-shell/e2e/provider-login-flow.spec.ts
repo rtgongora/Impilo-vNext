@@ -123,7 +123,7 @@ test.describe("Provider login resolving destinations", () => {
     await expect(page).toHaveURL(/\/provider-workspace/, { timeout: 12_000 });
   });
 
-  test("activated provider without facility lands on facility picker with returnTo", async ({ page }) => {
+  test("activated provider without facility lands on the work resume surface with returnTo", async ({ page }) => {
     await seedAuthSession(page, {
       id: "prov-no-fac",
       email: "nofac@impilo.zw",
@@ -137,7 +137,10 @@ test.describe("Provider login resolving destinations", () => {
     await mockLinkedIdsRoute(page);
 
     await page.goto("/auth/resolving");
-    await expect(page).toHaveURL(/\/facility\?returnTo=%2Fprovider-workspace/, { timeout: 12_000 });
+    // /work/resume, not /facility. This assertion is what caught the fix being half-done:
+    // buildContextGuardRedirect had been repointed, but the POST-LOGIN resolver — the path
+    // taken on every sign-in — still sent providers to the national facility registry.
+    await expect(page).toHaveURL(/\/work\/resume\?returnTo=%2Fprovider-workspace/, { timeout: 12_000 });
   });
 
   test("citizen without linked provider lands on home with my_life mode after resolving", async ({ page }) => {

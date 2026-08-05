@@ -19,6 +19,18 @@
 import type { ResolvedWorkContextView, WorkContextSourceStatusView } from "@/lib/trust";
 
 /**
+ * The one place someone is sent to establish work context.
+ *
+ * Lives here rather than in `resolve-post-login-destination.ts` because that module imports
+ * `identity-context.ts`, which also needs this constant — putting it there would cycle.
+ *
+ * Every reference to `/facility` as a *destination* belongs here instead. `/facility` is the
+ * national facility registry: correct as a manual fallback for someone with no resolved
+ * posting, wrong as the default answer for someone whose workplace the BFF already ranked.
+ */
+export const WORK_CONTEXT_ENTRY = "/work/resume";
+
+/**
  * The five product states this surface must tell apart. Collapsing DEGRADED into EMPTY would
  * claim "you have no workplaces" when the truth is "we could not reach the system that knows"
  * — the exact class of lie the shell has been burned by before.
