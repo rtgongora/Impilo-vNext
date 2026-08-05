@@ -1,5 +1,17 @@
 # Impilo vNext — Hybrid / Federated Target Architecture
 
+> # ⛔ SUPERSEDED — ARCHIVED WORKING DRAFT, NEVER FROZEN
+>
+> **This file is not the architecture.** v1.3.7's freeze review (2026-08-05) **refused freeze** on one stop condition. It was never approved and never architecture-frozen, and is superseded by **v1.3.8**.
+>
+> **STOP** — v1.3.7 made every individual guard assert it had examined something, and left the aggregate case open: **deleting an entire check block from the verifier exited 0**, the only signal being an absent OK line that nothing counted. *"All checks passed"* and *"that check no longer exists"* produced the same output.
+>
+> **Active document:** [`../../hybrid-federated-target-architecture-v1.3.8.md`](../../hybrid-federated-target-architecture-v1.3.8.md) · entry point: [`../../ARCHITECTURE_PRECEDENCE.md`](../../ARCHITECTURE_PRECEDENCE.md)
+>
+> Kept for provenance only. *(Banner added by v1.3.8.)*
+
+---
+
 **Status:** Working draft — **NOT architecture-frozen**; freeze requires PO sign-off of this version · **Version:** 1.3.7 · **Date:** 2026-08-05
 
 > **Status discipline.** "Approved, but with corrections required" is not a status. A version is either frozen or it is not. v1.3.1 was **directionally accepted, not approved**: its settled decisions are preserved and its remaining defects were upstream model issues that could not be left to the Experience Completion Packs to resolve divergently. v1.3.2 was the integrity correction the PO required before freeze; its freeze review found stop conditions, so **v1.3.2 was never frozen**. v1.3.3 corrected those; **its own freeze review then refused freeze on two further stop conditions**, so v1.3.3 was never frozen either. v1.3.4 corrected those and added the assurance model (§38A); **its own freeze review then refused freeze on three further stop conditions**, so v1.3.4 was never frozen either. v1.3.5 corrected those and added the entailment register (§38C); **its own freeze review then refused freeze on two further stop conditions**, so v1.3.5 was never frozen either. v1.3.6 corrected those by hardening §38C's checker; **its own freeze review then refused freeze on one further stop condition**, so v1.3.6 was never frozen either. v1.3.7 corrects it and adds §38C.4, the rules the checker itself must obey. Until freeze, the §Implementation-gate table below states exactly what may and may not be built.

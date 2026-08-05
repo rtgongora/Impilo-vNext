@@ -16,7 +16,7 @@ else
   root="$(cd "$script_dir/../.." && pwd)"
 fi
 
-versioned_rel="docs/architecture/hybrid-federated-target-architecture-v1.3.7.md"
+versioned_rel="docs/architecture/hybrid-federated-target-architecture-v1.3.8.md"
 pointer_rel="docs/architecture/vnext-hybrid-federation-target-architecture.md"
 # The versioned file is the complete document (~4,600 lines). Anything shorter
 # than this floor is a pointer or a truncation masquerading as the architecture.
@@ -39,9 +39,34 @@ required=(
 failed=0
 fail() { echo "FAIL: $*" >&2; failed=1; }
 
+# §38C.4 rule 3 (v1.3.8): the suite asserts its own completeness. v1.3.7 made every
+# individual guard prove it examined something, and left the aggregate case open:
+# deleting a whole check block exited 0, the only signal being an absent OK line that
+# nothing counted. "All checks passed" and "that check no longer exists" produced the
+# same output — the defect this file has now produced six times, one level up.
+#
+# Each check calls record_check with its id exactly once. At the end the recorded set is
+# compared against EXPECTED_CHECKS by NAME, so a deleted check is reported as missing
+# rather than merely absent from a total. Adding a check means adding its id here — that
+# edit is the point: a new guard must be declared to count.
+EXPECTED_CHECKS=(
+  required-files claude-import legacy-language pointer versioned-complete
+  superseded-versions archive-banners active-copy-count
+  frozen-status contract-version outcome-landing-rule withdrawn-citations
+  assurance-rows no-false-passing implementation-gate acceptance-ids
+  assurance-totals entailment-register register-coverage positive-controls
+)
+CHECKS_SEEN=""
+record_check() {
+  case " ${EXPECTED_CHECKS[*]} " in
+    *" $1 "*) CHECKS_SEEN="$CHECKS_SEEN $1" ;;
+    *) fail "record_check called with an undeclared id: $1" ;;
+  esac
+}
+
 # Patterns whose expected result is EMPTY. A search meant to find nothing behaves
 # identically when its pattern is broken, so each is defined ONCE here and used by both
-# the real check and its positive control (§38C.4 rule 2). v1.3.7's first attempt gave
+# the real check and its positive control (§38C.4 rule 2). v1.3.8's first attempt gave
 # the probe its own copy of the pattern, which proved only that a hardcoded string
 # matches a hardcoded regex — the instrument supplying its own answer. Breaking the real
 # pattern left the probe passing, so the control controlled nothing.
@@ -58,11 +83,13 @@ for path in "${required[@]}"; do
     echo "OK: $path"
   fi
 done
+record_check required-files
 
 # 2. Root CLAUDE.md imports the governance rules.
 if [[ -s "$root/CLAUDE.md" ]] && ! grep -Fq '@docs/architecture/CLAUDE_GOVERNANCE.md' "$root/CLAUDE.md"; then
   fail "root CLAUDE.md does not import the governance rules"
 fi
+record_check claude-import
 
 # 3. No controlling/frozen legacy language outside the archive (hard failure).
 if legacy_hits="$(grep -RIn --exclude-dir=archive --exclude-dir=prompts \
@@ -72,20 +99,22 @@ if legacy_hits="$(grep -RIn --exclude-dir=archive --exclude-dir=prompts \
   echo "$legacy_hits" >&2
   fail "legacy controlling language remains outside the archive (matches above)"
 fi
+record_check legacy-language
 
-# 4. The unversioned pointer names v1.3.7 and links the versioned file.
+# 4. The unversioned pointer names v1.3.8 and links the versioned file.
 if [[ -s "$root/$pointer_rel" ]]; then
-  if ! grep -Fq 'hybrid-federated-target-architecture-v1.3.7.md' "$root/$pointer_rel" \
+  if ! grep -Fq 'hybrid-federated-target-architecture-v1.3.8.md' "$root/$pointer_rel" \
      || ! grep -Eq 'v1\.3\.3' "$root/$pointer_rel"; then
-    fail "unversioned pointer does not point to v1.3.7: $pointer_rel"
+    fail "unversioned pointer does not point to v1.3.8: $pointer_rel"
   else
-    echo "OK: pointer names v1.3.7"
+    echo "OK: pointer names v1.3.8"
   fi
 else
   fail "missing unversioned pointer: $pointer_rel"
 fi
+record_check pointer
 
-# 5. The versioned v1.3.7 file is the complete document, not a pointer/stub.
+# 5. The versioned v1.3.8 file is the complete document, not a pointer/stub.
 if [[ -s "$root/$versioned_rel" ]]; then
   lines="$(wc -l < "$root/$versioned_rel")"
   if (( lines < min_versioned_lines )); then
@@ -94,14 +123,16 @@ if [[ -s "$root/$versioned_rel" ]]; then
     echo "OK: versioned architecture is complete ($lines lines)"
   fi
 fi
+  record_check positive-controls
+record_check versioned-complete
 
 # 6. No superseded version is referenced as active outside the archive.
 #    Historical references ("supersedes v1.3.1", "corrects v1.3.2", archive paths)
 #    are legitimate; active-status phrasing and non-archive paths are not.
 #    Add each newly superseded version here when the active version moves on —
-#    v1.3.2 was added by v1.3.7, which found it cited as the controlling document
+#    v1.3.2 was added by v1.3.8, which found it cited as the controlling document
 #    in four governance files after it had already been archived.
-superseded=(1.3.1 1.3.2 1.3.3 1.3.4 1.3.5 1.3.6)
+superseded=(1.3.1 1.3.2 1.3.3 1.3.4 1.3.5 1.3.6 1.3.7)
 for v in "${superseded[@]}"; do
   ve="${v//./\\.}"
   if active_hits="$(grep -RIn --exclude-dir=archive --exclude-dir=prompts \
@@ -113,6 +144,7 @@ for v in "${superseded[@]}"; do
     echo "OK: v$v only historical outside archive"
   fi
 done
+record_check superseded-versions
 
 # 6b. Every archived architecture draft carries a supersession banner in its first
 #     20 lines. Without it the file reads as live architecture to anyone who opens
@@ -139,6 +171,7 @@ else
     fail "archive exists but no archived architecture draft was examined for a supersession banner"
   fi
 fi
+record_check archive-banners
 
 # 7. Exactly one complete active architecture copy exists outside the archive.
 copies=()
@@ -153,12 +186,16 @@ if (( ${#copies[@]} != 1 )); then
 else
   echo "OK: exactly one complete active architecture copy (${copies[0]#"$root"/})"
 fi
+record_check active-copy-count
 
-# 8. v1.3.7-specific content invariants. The architecture is a governance artefact,
+# 8. v1.3.8-specific content invariants. The architecture is a governance artefact,
 #    so these check the document says what the governed decisions require it to say.
 #    They are deliberately content checks, not style checks: each one failed at least
 #    once in a real review before it was written here.
 A="$root/$versioned_rel"
+if [[ ! -s "$A" ]]; then
+  fail "versioned architecture missing or empty — the twelve content checks cannot run"
+fi
 if [[ -s "$A" ]]; then
   content_check() {  # name, grep-mode, pattern
     local name="$1" mode="$2" pat="$3"
@@ -169,18 +206,20 @@ if [[ -s "$A" ]]; then
     fi
   }
 
-  # 8a. Still a working draft. v1.3.7 is NOT frozen; freeze is a separate PO act.
+  # 8a. Still a working draft. v1.3.8 is NOT frozen; freeze is a separate PO act.
   grep -Fq 'NOT architecture-frozen' "$A" \
-    && echo "OK: v1.3.7 still marked NOT architecture-frozen" \
-    || fail "v1.3.7 no longer states NOT architecture-frozen"
+    && echo "OK: v1.3.8 still marked NOT architecture-frozen" \
+    || fail "v1.3.8 no longer states NOT architecture-frozen"
   grep -Eq 'ARCHITECTURE-FROZEN by Product Owner' "$A" \
-    && fail "v1.3.7 claims frozen status; freeze is not authorised in this version" \
+    && fail "v1.3.8 claims frozen status; freeze is not authorised in this version" \
     || echo "OK: no premature freeze claim"
+  record_check frozen-status
 
   # 8b. The contract version tracks the document version.
-  grep -Fq '"contract_version": "1.3.7"' "$A" \
-    && echo "OK: contract_version is 1.3.7" \
-    || fail "contract_version is not 1.3.7"
+  grep -Fq '"contract_version": "1.3.8"' "$A" \
+    && echo "OK: contract_version is 1.3.8" \
+    || fail "contract_version is not 1.3.8"
+  record_check contract-version
 
   # 8c. C1 — the personal-domain block must be enforced on the OUTCOME. A guard on
   #     the input is what v1.3.3 had, and step 10 walked past it.
@@ -190,22 +229,25 @@ if [[ -s "$A" ]]; then
   grep -Fq 'stage 2: constrain the outcome' "$A" \
     && echo "OK: precedence function is two-stage" \
     || fail "C1 regression: precedence function is no longer two-stage"
+  record_check outcome-landing-rule
 
   # 8d. C2/C3 — the three withdrawn citations must not return. Anchored to the
   #     journey row so an unrelated mention of the test elsewhere does not trip it.
   for pair in "10:A78" "12:A38" "19:A44"; do
     j="${pair%%:*}"; t="${pair##*:}"
     if grep -Eq "^\| *$j \|.*\| *$t *\|" "$A"; then
-      fail "journey $j cites $t again — withdrawn in v1.3.7 as an unrelated citation"
+      fail "journey $j cites $t again — withdrawn in v1.3.8 as an unrelated citation"
     else
       echo "OK: journey $j does not cite $t"
     fi
   done
+  record_check withdrawn-citations
 
   # 8e. All 24 journeys carry an assurance entry with a phase and a criterion.
   rows="$(awk '/^## 38A\.2/{f=1;next} /^## 38A\.3/{f=0} f && /^\| *[0-9]+ *\|/' "$A" | wc -l)"
   if (( rows == 24 )); then echo "OK: 24 journey assurance entries"; else
     fail "journey assurance matrix has $rows entries, expected 24"; fi
+  record_check assurance-rows
 
   # 8f. Nothing unimplemented may be labelled PASSING. The whole point of §38A is
   #     that a written criterion is not evidence.
@@ -218,6 +260,7 @@ if [[ -s "$A" ]]; then
   else
     echo "OK: no journey falsely labelled PASSING ($matrix_scan lines scanned)"
   fi
+  record_check no-false-passing
   if grep -E '^\| \*\*A1(0[9]|1[0-7])\*\*' "$A" | grep -q 'Executable test: \*\*yes\*\*\|PASSING'; then
     fail "a specified-only criterion (A109-A117) claims executable evidence"
   else
@@ -228,9 +271,10 @@ if [[ -s "$A" ]]; then
   grep -Fq 'Implementation gate' "$A" \
     && echo "OK: pre-freeze implementation gate present" \
     || fail "the pre-freeze implementation gate has been removed"
+  record_check implementation-gate
 
   # 8h. Every acceptance id that is CITED must be DEFINED, and the defined set must be
-  #     contiguous. Citing-vs-defining is the distinction that matters: v1.3.7's first
+  #     contiguous. Citing-vs-defining is the distinction that matters: v1.3.8's first
   #     draft of this check only asked whether an id appeared somewhere, so deleting a
   #     criterion's definition still passed because the journey table still cited it.
   #     A criterion cited by a journey but defined nowhere is precisely the defect
@@ -246,7 +290,7 @@ if [[ -s "$A" ]]; then
   gaps="$(echo "$defined" | awk 'NR>1{while(++p<$1) printf "%d ",p} {p=$1}')"
   if [[ -n "${gaps// /}" ]]; then fail "acceptance numbering has gaps: $gaps"; else
     echo "OK: defined acceptance criteria contiguous"; fi
-fi
+  record_check acceptance-ids
 
   # 8i. The §38A totals must be DERIVED from the matrix rows, not asserted beside them.
   #     v1.3.4 published 16/5/3 against rows holding 17/4/3. Both sum to 24, so every
@@ -264,6 +308,7 @@ fi
     fi
   done
   (( totals_ok )) && echo "OK: §38A totals derived from the rows agree"
+  record_check assurance-totals
 
   # 8j. THE ENTAILMENT REGISTER (§38C). A citation is not a number: the register records
   #     the phrase from the cited criterion that entails the claim, and this check proves
@@ -313,6 +358,7 @@ fi
   done < <(awk '/^# 38C\./{f=1} /^# 39\./{f=0} f && /^\| §38[AB]-/' "$A")
   if (( ent_n == 0 )); then fail "entailment register is empty or missing (§38C)"
   elif (( ent_ok )); then echo "OK: entailment register verified ($ent_n citations, all unique)"; fi
+  record_check entailment-register
 
   # 8k. Every criterion cited by §38B must appear in the register. v1.3.5 left seven
   #     unregistered; all seven happened to be sound, which is not the same as checked.
@@ -341,6 +387,7 @@ fi
       else echo "OK: every §38B citation is registered ($n_cited criteria over $outcome_rows outcomes)"; fi
     fi
   fi
+  record_check register-coverage
 
   # 8l. §38C.4 rule 2: the two checks whose expected result is EMPTY cannot assert
   #     non-emptiness, so they carry a positive control. A broken pattern and a clean
@@ -355,6 +402,18 @@ fi
   else
     fail "positive control FAILED: SUPERSEDED_BODY no longer matches its own example — check 6 is silently disarmed"
   fi
+fi
+
+missing_checks=""
+for c in "${EXPECTED_CHECKS[@]}"; do
+  case " $CHECKS_SEEN " in *" $c "*) ;; *) missing_checks="$missing_checks $c" ;; esac
+done
+n_seen="$(printf '%s\n' $CHECKS_SEEN | grep -c . || true)"
+if [[ -n "${missing_checks// /}" ]]; then
+  fail "check suite incomplete — these declared checks did not run:$missing_checks"
+else
+  echo "OK: all ${#EXPECTED_CHECKS[@]} declared checks ran ($n_seen/${#EXPECTED_CHECKS[@]})"
+fi
 
 if (( failed )); then
   echo "GOVERNANCE PACK: FAILED" >&2
