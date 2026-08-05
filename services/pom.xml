@@ -45,7 +45,8 @@
         <!-- Biometric matching engine (matcher-engine core-infra component) -->
         <sourceafis.version>3.18.1</sourceafis.version>
         <onnxruntime.version>1.17.0</onnxruntime.version>
-    </properties>
+            <testcontainers.version>1.21.4</testcontainers.version>
+</properties>
 
     <modules>
         <!-- Build order: libs first, then shared-core, then services -->
@@ -236,6 +237,25 @@
     <dependencyManagement>
         <dependencies>
             <!-- Spring Boot BOM (imported from parent, listed here for clarity) -->
+
+            <!-- Testcontainers BOM.
+                 Spring Boot's BOM manages org.testcontainers:testcontainers at 1.19.8, which
+                 brings docker-java 3.3.6. That client negotiates Docker API 1.32, and a daemon
+                 at 1.40+ refuses it: "client version 1.32 is too old". Testcontainers then
+                 reports no valid Docker environment and every @Testcontainers test SKIPS —
+                 silently, with a green build. Integration coverage looked fine while nothing ran.
+                 Declaring a version on the leaf artifacts does not fix it: the CORE artifact is
+                 what Spring manages, and it wins. Measured with `mvn dependency:tree`, which
+                 showed testcontainers:jar:1.19.8 nested under junit-jupiter:jar:1.21.4.
+                 Importing the BOM aligns every Testcontainers artifact and brings docker-java
+                 3.4.2, which negotiates correctly. -->
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>${testcontainers.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
 
             <!-- Biometric matching engine deps (matcher-engine) -->
             <dependency>

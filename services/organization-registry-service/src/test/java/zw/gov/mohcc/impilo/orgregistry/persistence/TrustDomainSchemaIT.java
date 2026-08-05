@@ -37,10 +37,19 @@ class TrustDomainSchemaIT {
 
     @DynamicPropertySource
     static void datasourceProps(DynamicPropertyRegistry registry) {
+        // The shared `test` profile pins H2 and disables Flyway. Overriding the URL alone
+        // leaves the H2 driver claiming a postgres URL it cannot accept, so the driver,
+        // dialect and schema ownership all have to move together.
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
+        registry.add("spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.PostgreSQLDialect");
+        // Flyway owns the schema here — that is the whole point of this test.
         registry.add("spring.flyway.enabled", () -> "true");
+        registry.add("spring.flyway.schemas", () -> "org_registry");
+        registry.add("spring.flyway.default-schema", () -> "org_registry");
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "none");
     }
 
     @Autowired
@@ -70,7 +79,7 @@ class TrustDomainSchemaIT {
                 "responsibility_audit_event");
 
         Integer applied = jdbc.queryForObject(
-                "SELECT count(*) FROM flyway_schema_history WHERE version='016' AND success",
+                "SELECT count(*) FROM org_registry.flyway_schema_history WHERE version='016' AND success",
                 Integer.class);
         assertThat(applied).isEqualTo(1);
     }
@@ -243,13 +252,18 @@ class TrustDomainSchemaIT {
         assertThat(mapped).as("no organisation may be assigned a trust domain by migration").isZero();
 
         Integer memberships = jdbc.queryForObject(
-                "SELECT count(*) FROM org_registry.trust_domain_membership", Integer.class);
+                "SELECT count(*) FROM org_registry.trust_domain_membership WHERE created_by <> 'test'",
+                Integer.class);
         assertThat(memberships).as("membership is an evidenced act, never a migration side effect").isZero();
 
+        // Scoped to rows the MIGRATION could have created. Sibling tests in this class
+        // insert controller assignments deliberately and share the container, so an
+        // unscoped count here would fail on their data and prove nothing about seeding.
         Integer controllers = jdbc.queryForObject(
-                "SELECT count(*) FROM org_registry.processing_role_assignment WHERE role_type='LEGAL_CONTROLLER'",
+                "SELECT count(*) FROM org_registry.processing_role_assignment "
+                        + "WHERE role_type='LEGAL_CONTROLLER' AND recorded_by <> 'test'",
                 Integer.class);
-        assertThat(controllers).as("§26.2 #1 is open; no controller may be seeded").isZero();
+        assertThat(controllers).as("§26.2 #1 is open; no controller may be seeded by migration").isZero();
 
         Integer domains = jdbc.queryForObject(
                 "SELECT count(*) FROM org_registry.trust_domain WHERE code='MOHCC-ZW'", Integer.class);
