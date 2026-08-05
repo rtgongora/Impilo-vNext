@@ -195,6 +195,22 @@ clinical data.
   **Needs a `one-ui-shell` rebuild to take effect**; the UI-design lane is carrying it.
   Until then, navigating directly to `/home` after authenticating is the workaround.
 
+### A feed that says `live` while monitoring nothing
+
+`GET /internal/v1/public/gateway/service-status` answers **`live: true` with all six groups
+`monitored: false`** (verified 2026-08-05). Raised by the UI-design lane.
+
+This matters to the trust plane, not just to the UI. `live: true` is the field a consumer reaches
+for, and rendering it as green would assert that six groups are healthy when not one of them is
+being watched. That is the estate's recurring failure mode — a control that reads as present and
+reports nothing — expressed as a status feed rather than a guard.
+
+`UNAVAILABLE` and `UNMONITORED` are not `HEALTHY`. Anything summarising this feed must say so; the
+UI lane's status strip renders it as "Live monitoring not reporting yet" and carries a negative
+control for exactly that case. Either the field should stop claiming `live` while no group is
+monitored, or every consumer has to know the trap — the first is one change, the second is
+unbounded.
+
 ## 5. Constraints still in force
 
 Withheld: production deployment · destructive fullboot · namespace/PVC/database/queue/user/audit
