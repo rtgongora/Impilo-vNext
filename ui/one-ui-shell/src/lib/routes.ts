@@ -1183,9 +1183,11 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/work/telemedicine/mdt/[boardId]", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "MDT board", navLabel: "MDT Board", navZone: "work" },
 
   // Vashandi workforce. The other ten /work/vashandi routes reach the registry through
-  // ADMINISTRATION_GOVERNANCE_ROUTES; these two are registered here because that file is
-  // regenerated from a fixed list in scripts/scaffold-admin-governance-pages.mjs which does not
-  // know about them. Shape matches the generated vashandi entries exactly.
+  // ADMINISTRATION_GOVERNANCE_ROUTES, where they were hand-added to a generated file. The
+  // scaffold script still does not derive them, but it no longer drops them either: entries
+  // present in the generated file that it cannot derive are now carried forward verbatim on
+  // regeneration. These two stay here because routes.ts is the right home for a hand-authored
+  // entry. Shape matches the generated vashandi entries exactly.
   { path: "/work/vashandi/on-call", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "On-call pools", navLabel: "On-call", navZone: "work" },
   { path: "/work/vashandi/training-requirements", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Training requirements", navLabel: "Training Requirements", navZone: "work" },
 

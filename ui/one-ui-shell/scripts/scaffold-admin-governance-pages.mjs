@@ -223,25 +223,71 @@ function compareRoutes(a, b) {
 
 const uniqueRoutes = [...new Set(allRoutes)].sort(compareRoutes);
 
-const registryLines = uniqueRoutes.map((route) => {
+/**
+ * Regeneration must be lossless.
+ *
+ * This file is spread into `ROUTES` (`lib/routes.ts`), and `AuthGuardProvider` denies any
+ * pathname the registry does not resolve — so a route dropped from here stops rendering and
+ * shows "This page is not available". Twelve entries had been hand-added to the generated
+ * file (the ten `/work/vashandi/*` routes, `…/gdhcn-readiness` and
+ * `…/organisations/[orgId]/data-uploads`) and were NOT derivable from the lists above, so
+ * running the documented regenerate command deleted them.
+ *
+ * That deletion was never silent — `app-router-route-coverage` and the `EXPECTED_ROUTE_COUNT`
+ * assertion both go red, and CI runs them. But a generator whose own documented command
+ * produces a state the test suite rejects is a trap: the person who runs it gets a red build
+ * and no explanation. So entries that exist in the current file but are not generated are
+ * carried forward verbatim and reported, rather than dropped.
+ */
+function readExistingEntries() {
+  if (!fs.existsSync(ROUTE_REGISTRY)) return new Map();
+  const src = fs.readFileSync(ROUTE_REGISTRY, "utf8");
+  const entries = new Map();
+  for (const line of src.split("\n")) {
+    const match = line.match(/^\s*\{ path: "([^"]+)".*\},\s*$/);
+    if (match) entries.set(match[1], line.trimEnd());
+  }
+  return entries;
+}
+
+const existingEntries = readExistingEntries();
+const generated = new Set(uniqueRoutes);
+const preserved = [...existingEntries.keys()].filter((p) => !generated.has(p));
+
+const lineFor = (route) => {
   const title = routeTitle(route);
   return `  { path: "${route}", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "${title}", navLabel: "${title}", navZone: "work" },`;
-});
+};
+
+// Preserved entries keep their hand-written guard, title and nav label — re-emitting them from
+// `routeTitle` would silently rewrite an authored `guard` back to "auth".
+const allEmitted = [...uniqueRoutes, ...preserved].sort(compareRoutes);
+const registryLines = allEmitted.map((route) =>
+  generated.has(route) ? lineFor(route) : existingEntries.get(route),
+);
 
 fs.writeFileSync(
   ROUTE_REGISTRY,
   `/**
  * Auto-generated Administration & Governance route registry.
  * Regenerate: node scripts/scaffold-admin-governance-pages.mjs
+ *
+ * Entries not derivable from the scaffold lists are preserved verbatim on regeneration
+ * (see "Regeneration must be lossless" in the script). Removing a route means removing it
+ * from this file AND from the scaffold source, not just re-running the generator.
  */
 
 export const ADMINISTRATION_GOVERNANCE_ROUTES = [
 ${registryLines.join("\n")}
 ] as const;
 
-export const ADMINISTRATION_GOVERNANCE_ROUTE_COUNT = ${uniqueRoutes.length};
+export const ADMINISTRATION_GOVERNANCE_ROUTE_COUNT = ${allEmitted.length};
 `,
 );
 
-console.log(`Route registry: ${uniqueRoutes.length} routes → ${ROUTE_REGISTRY}`);
+console.log(`Route registry: ${allEmitted.length} routes → ${ROUTE_REGISTRY}`);
+if (preserved.length) {
+  console.log(`  preserved ${preserved.length} hand-added route(s) not in the scaffold lists:`);
+  for (const p of preserved) console.log(`    ${p}`);
+}
 console.log("Scaffold complete.");

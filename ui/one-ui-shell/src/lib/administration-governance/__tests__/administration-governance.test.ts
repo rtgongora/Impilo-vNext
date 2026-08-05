@@ -9,7 +9,7 @@ import {
 } from "../access";
 import { MANAGEMENT_TILES, QUICK_ACTION_TILES } from "../tiles";
 import { ONBOARD_ACTOR_OPTIONS, ONBOARD_FLOW_STEPS } from "../onboard-options";
-import { ADMINISTRATION_GOVERNANCE_ROUTE_COUNT } from "../route-registry";
+import { ADMINISTRATION_GOVERNANCE_ROUTES, ADMINISTRATION_GOVERNANCE_ROUTE_COUNT } from "../route-registry";
 
 describe("Administration & Governance entry", () => {
   it("citizen without management workspaces does not see Administration & Governance", () => {
@@ -287,7 +287,13 @@ describe("Management tiles", () => {
     expect(tileEnabled(hsc, QUICK_ACTION_TILES[0].requiredWorkspaces)).toBe(true);
   });
 
-  it("registers ninety administration-governance routes for parity", () => {
-    expect(ADMINISTRATION_GOVERNANCE_ROUTE_COUNT).toBe(100);
+  it("registers every administration-governance route for parity", () => {
+    // The constant is generated alongside the array, so the load-bearing assertion is that it
+    // matches what the array actually holds. It had drifted to 100 against 102 real entries:
+    // twelve routes were hand-added to the generated file, and the scaffold script recomputed
+    // the count from its own lists only. A pinned number alone cannot catch that — it pins the
+    // wrong answer just as happily as the right one.
+    expect(ADMINISTRATION_GOVERNANCE_ROUTE_COUNT).toBe(ADMINISTRATION_GOVERNANCE_ROUTES.length);
+    expect(ADMINISTRATION_GOVERNANCE_ROUTE_COUNT).toBe(102);
   });
 });
