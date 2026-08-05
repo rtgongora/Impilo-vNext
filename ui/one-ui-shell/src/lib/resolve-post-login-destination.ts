@@ -193,15 +193,29 @@ export function buildPostLoginResolvingPath(returnTo?: string | null): string {
   return "/auth/resolving";
 }
 
-/** Redirect target when a route guard blocks navigation (facility / workspace / shift). */
+/**
+ * Redirect target when a route guard blocks navigation (facility / workspace / shift).
+ *
+ * `/facility` is deliberately rewritten to `/work/resume`. 148 routes carry `guard: "facility"`
+ * and every one of them used to land on the national facility registry, where a clinician had
+ * to find their own hospital in a list of thousands — on every sign-in, despite the BFF already
+ * having resolved and ranked their real postings. `/work/resume` offers that resolved answer as
+ * one tap, mints a proper duty token, and returns them to what they were doing. It falls back
+ * to `/facility` itself when someone genuinely holds no resolved work context, so the manual
+ * chooser stays reachable rather than being deleted.
+ *
+ * `/workspace` and `/shift` are unchanged: workspace and shift are not carried on a resolved
+ * work context, so there is nothing remembered to offer back yet.
+ */
 export function buildContextGuardRedirect(
   guardTarget: "/facility" | "/workspace" | "/shift",
   attemptedPath: string,
 ): string {
-  if (isSafeReturnTo(attemptedPath) && attemptedPath !== guardTarget) {
-    return withReturnTo(guardTarget, attemptedPath);
+  const target = guardTarget === "/facility" ? "/work/resume" : guardTarget;
+  if (isSafeReturnTo(attemptedPath) && attemptedPath !== target) {
+    return withReturnTo(target, attemptedPath);
   }
-  return guardTarget;
+  return target;
 }
 
 /** After facility pick, continue to returnTo when it only needs facility context. */

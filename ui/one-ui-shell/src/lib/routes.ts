@@ -950,6 +950,9 @@ export const ROUTES: RouteDefinition[] = [
   // Work Home (Phase F1/F3) — guard is "auth", not "facility": oversight, programme,
   // regulatory and support contexts have no facility anchor and must still land here.
   { path: "/work", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Work", navLabel: "Work", navZone: "work" },
+  // Destination of the facility guard. MUST stay guard:"auth" — a facility guard here would
+  // redirect to itself forever, since this is the page that resolves facility context.
+  { path: "/work/resume", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Start work", navLabel: "Start work" },
   { path: "/programme/[programmeId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Programme profile", navLabel: "Programme", navZone: "work" },
   { path: "/work/rito/my-reputation", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Reputation", navLabel: "My Reputation", navZone: "professional" },
   { path: "/work/facility/rito/reputation", zone: "facility", layout: "app", sidebar: "facility", guard: "facility", pageTitle: "Reputation & Moderation", navLabel: "Reputation", navZone: "work" },
@@ -1148,7 +1151,7 @@ export const ROUTES: RouteDefinition[] = [
 // Merge reconcile (31 Jul 2026): actual registry at the staging merge point was 855
 // (753 literals + 102 administration-governance), two above the stated 853 — the comment
 // chain had drifted again. Trust the extract: 855 + 1 = 856.
-export const EXPECTED_ROUTE_COUNT = 857;
+export const EXPECTED_ROUTE_COUNT = 858;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
