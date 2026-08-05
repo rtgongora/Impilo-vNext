@@ -24,7 +24,10 @@ CREATE TABLE org_registry.trust_domain (
     trust_domain_id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     code                        VARCHAR(48)  NOT NULL UNIQUE,
     display_name                TEXT         NOT NULL,
-    controller_type             VARCHAR(32)  NOT NULL,
+    -- ADR-0055 d1: all three descriptive controller fields are nullable and
+    -- NON-AUTHORITATIVE. No service may read them as a fallback when controller
+    -- resolution fails; §3A.4 is the only authority.
+    controller_type             VARCHAR(32)  NULL,
     -- The legal person named as the domain's declared controlling party, where one is
     -- known. NULLABLE, deliberately, and this DEVIATES from §3.2's NOT NULL: for a
     -- domain whose controlling party is an open [L] determination, NOT NULL could only
@@ -331,20 +334,61 @@ CREATE TRIGGER trg_rae_no_delete BEFORE DELETE ON org_registry.responsibility_au
 --   includes PRIVATE_PROVIDER_GROUP and LOCAL_AUTHORITY, which are NOT in the MoHCC
 --   trust domain. Backfilling them would write a false membership and then enforce it
 --   with NOT NULL.
---   Membership is therefore NULLABLE with an explicit UNMAPPED state. Assignment is a
---   governance act performed per organisation with evidence, in a later wave.
+--   ADR-0055 formalised this: membership is an explicit, evidenced, effective-dated
+--   relationship (trust_domain_membership below), with UNMAPPED as a real state rather
+--   than a blank. The denormalised column is a projection only.
 --   Membership is NOT controllership either way (§3A.2).
 -- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE org_registry.trust_domain_membership (
+    membership_id        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    trust_domain_id      UUID NOT NULL REFERENCES org_registry.trust_domain(trust_domain_id),
+    subject_type         VARCHAR(16) NOT NULL,
+    subject_id           UUID NOT NULL,
+    status               VARCHAR(16) NOT NULL DEFAULT 'UNMAPPED',
+    effective_from       TIMESTAMPTZ NULL,       -- NULL until ACTIVE
+    effective_to         TIMESTAMPTZ NULL,
+    -- What made this membership true. ADR-0055 d4: an organisation joins the MoHCC
+    -- family on evidence, never on its type, its name, who hosts it or who owns it.
+    source_authority     VARCHAR(64) NOT NULL,
+    provenance           JSONB NOT NULL,
+    created_by           VARCHAR(128) NOT NULL,
+    created_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    reviewed_by          VARCHAR(128) NULL,
+    reviewed_at          TIMESTAMPTZ NULL,
+    supersedes_membership_id UUID NULL REFERENCES org_registry.trust_domain_membership(membership_id),
+
+    CONSTRAINT chk_tdm_subject_type CHECK (subject_type IN ('ORGANISATION', 'FACILITY')),
+    CONSTRAINT chk_tdm_status CHECK (status IN (
+        'UNMAPPED', 'PENDING_REVIEW', 'ACTIVE', 'SUSPENDED', 'ENDED')),
+    CONSTRAINT chk_tdm_source_authority CHECK (source_authority IN (
+        'MOHCC_REGISTRY', 'GOVERNED_HIERARCHY', 'ACCREDITATION_DECISION', 'ONBOARDING_DECISION')),
+    -- ACTIVE means the determination was made and dated. Nothing else may carry a period.
+    CONSTRAINT chk_tdm_active_dated CHECK (
+        (status = 'ACTIVE' AND effective_from IS NOT NULL)
+        OR (status <> 'ACTIVE' AND effective_from IS NULL)),
+    CONSTRAINT chk_tdm_period CHECK (effective_to IS NULL OR effective_to > effective_from),
+    CONSTRAINT chk_tdm_no_self_supersede CHECK (
+        supersedes_membership_id IS NULL OR supersedes_membership_id <> membership_id)
+);
+-- One ACTIVE membership per subject at any instant. A subject in two trust domains at
+-- once is a governance contradiction, not a merge to resolve later.
+ALTER TABLE org_registry.trust_domain_membership
+    ADD CONSTRAINT ex_tdm_one_active_per_subject
+    EXCLUDE USING gist (
+        subject_id WITH =, tstzrange(effective_from, effective_to) WITH &&
+    ) WHERE (status = 'ACTIVE');
+CREATE INDEX ix_tdm_subject ON org_registry.trust_domain_membership (subject_type, subject_id, status);
+CREATE INDEX ix_tdm_domain ON org_registry.trust_domain_membership (trust_domain_id, status);
+
+-- ADR-0055 d5: a QUERY PROJECTION, never the source of truth. Populated only from an
+-- ACTIVE membership, never by backfill. Absent means unmapped, and unmapped is a real
+-- fail-closed state rather than a blank.
 ALTER TABLE org_registry.org_registry_organization
-    ADD COLUMN trust_domain_id UUID NULL REFERENCES org_registry.trust_domain(trust_domain_id),
-    ADD COLUMN trust_domain_membership_state VARCHAR(32) NOT NULL DEFAULT 'UNMAPPED',
-    ADD COLUMN trust_domain_assigned_at TIMESTAMPTZ NULL,
-    ADD COLUMN trust_domain_assigned_by VARCHAR(128) NULL,
-    ADD CONSTRAINT chk_org_td_membership_state CHECK (trust_domain_membership_state IN (
-        'UNMAPPED', 'PENDING_GOVERNANCE_REVIEW', 'ASSIGNED')),
-    ADD CONSTRAINT chk_org_td_membership_consistent CHECK (
-        (trust_domain_membership_state = 'ASSIGNED' AND trust_domain_id IS NOT NULL)
-        OR (trust_domain_membership_state <> 'ASSIGNED' AND trust_domain_id IS NULL));
+    ADD COLUMN trust_domain_id UUID NULL REFERENCES org_registry.trust_domain(trust_domain_id);
+
+COMMENT ON COLUMN org_registry.org_registry_organization.trust_domain_id IS
+    'PROJECTION of an ACTIVE trust_domain_membership row. Never authoritative, never '
+    'backfilled. Read membership for the governed answer (ADR-0055 d5).';
 
 CREATE INDEX ix_org_trust_domain ON org_registry.org_registry_organization (trust_domain_id)
     WHERE trust_domain_id IS NOT NULL;
