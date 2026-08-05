@@ -23,6 +23,7 @@ export type { Experience } from "./theme/experience";
 // Future-Realism primitives
 export { GlassSurface, resolveGlassStyle } from "./components/GlassSurface";
 export type { GlassSurfaceProps, GlassTone, GlassGlow, GlassTier } from "./components/GlassSurface";
+export { GlossCanvas } from "./components/GlossCanvas";
 export { useTier, resolveMobileTier } from "./hooks/useTier";
 export type { Tier, TierSignals } from "./hooks/useTier";
 
