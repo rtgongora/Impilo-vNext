@@ -2,9 +2,9 @@
 
 **This is a convenience pointer, not the architecture.**
 
-- **Active version:** **v1.3.10**
+- **Active version:** **v1.3.11**
 - **Status:** Working draft — **NOT architecture-frozen**; freeze requires Product Owner sign-off
-- **Complete document:** [`hybrid-federated-target-architecture-v1.3.10.md`](./hybrid-federated-target-architecture-v1.3.10.md)
+- **Complete document:** [`hybrid-federated-target-architecture-v1.3.11.md`](./hybrid-federated-target-architecture-v1.3.11.md)
 
 The versioned file is the complete, self-contained, historically durable document. There is exactly **one** complete active copy, and it is the versioned file. When a new version is cut, the new versioned file becomes active, the previous one moves to [`archive/working-drafts/`](./archive/working-drafts/) with a supersession banner, and this pointer's version, status and path are updated in the same change.
 

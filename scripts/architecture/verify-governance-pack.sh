@@ -16,7 +16,7 @@ else
   root="$(cd "$script_dir/../.." && pwd)"
 fi
 
-versioned_rel="docs/architecture/hybrid-federated-target-architecture-v1.3.10.md"
+versioned_rel="docs/architecture/hybrid-federated-target-architecture-v1.3.11.md"
 pointer_rel="docs/architecture/vnext-hybrid-federation-target-architecture.md"
 # The versioned file is the complete document (~4,600 lines). Anything shorter
 # than this floor is a pointer or a truncation masquerading as the architecture.
@@ -39,7 +39,43 @@ required=(
 failed=0
 fail() { echo "FAIL: $*" >&2; failed=1; }
 
-# §38C.4 rule 3 (v1.3.10): the suite asserts its own completeness. v1.3.7 made every
+# ── Block-scoped content assertions (v1.3.11, L1/L2) ────────────────────────
+# A content guard must read the place it protects. Grepping the whole document
+# looks equivalent and is not: the phrase survives in a change-log row describing
+# the very correction the guard exists to defend, and the guard stays green while
+# the rule is deleted. That was proven three times against v1.3.10 — including on
+# §29.0's outcome-level landing rule, the most safety-critical control here.
+#
+# extract_block START END  — prints the block between the anchors. It performs NO
+# validation and never calls fail(), because it runs inside a command substitution:
+# a fail() there would set failed=1 in a SUBSHELL, print FAIL, and let the run exit 0.
+# The first version of this helper did exactly that, and two red proofs reported a
+# failure the exit code did not carry. Size validation therefore happens in the caller,
+# in the parent shell, via assert_block_size.
+extract_block() {
+  local start="$1" end="$2"
+  awk -v s="$start" -v e="$end" '
+      index($0,s){f=1} f{print} f && NR>1 && index($0,e) && !index($0,s){exit}' "$A"
+}
+
+# assert_block_size BLOCK MIN MAX NAME — runs in the parent shell, so fail() counts.
+assert_block_size() {
+  local blk="$1" min="$2" max="$3" name="$4" n
+  n="$(printf '%s\n' "$blk" | grep -c . || true)"
+  if (( n < min || n > max )); then
+    fail "block '$name' is $n lines, expected ${min}-${max} — its anchors have moved, so anything checked inside it was checked nowhere"
+    return 1
+  fi
+  return 0
+}
+
+# assert_in_block BLOCK PHRASE MESSAGE — the phrase must appear in THAT block.
+assert_in_block() {
+  local blk="$1" phrase="$2" msg="$3"
+  printf '%s' "$blk" | grep -Fq -- "$phrase" || { fail "$msg"; return 1; }
+}
+
+# §38C.4 rule 3 (v1.3.11): the suite asserts its own completeness. v1.3.7 made every
 # individual guard prove it examined something, and left the aggregate case open:
 # deleting a whole check block exited 0, the only signal being an absent OK line that
 # nothing counted. "All checks passed" and "that check no longer exists" produced the
@@ -67,7 +103,7 @@ record_check() {
 
 # Patterns whose expected result is EMPTY. A search meant to find nothing behaves
 # identically when its pattern is broken, so each is defined ONCE here and used by both
-# the real check and its positive control (§38C.4 rule 2). v1.3.10's first attempt gave
+# the real check and its positive control (§38C.4 rule 2). v1.3.11's first attempt gave
 # the probe its own copy of the pattern, which proved only that a hardcoded string
 # matches a hardcoded regex — the instrument supplying its own answer. Breaking the real
 # pattern left the probe passing, so the control controlled nothing.
@@ -102,20 +138,20 @@ if legacy_hits="$(grep -RIn --exclude-dir=archive --exclude-dir=prompts \
 fi
 record_check legacy-language
 
-# 4. The unversioned pointer names v1.3.10 and links the versioned file.
+# 4. The unversioned pointer names v1.3.11 and links the versioned file.
 if [[ -s "$root/$pointer_rel" ]]; then
-  if ! grep -Fq 'hybrid-federated-target-architecture-v1.3.10.md' "$root/$pointer_rel" \
+  if ! grep -Fq 'hybrid-federated-target-architecture-v1.3.11.md' "$root/$pointer_rel" \
      || ! grep -Eq 'v1\.3\.3' "$root/$pointer_rel"; then
-    fail "unversioned pointer does not point to v1.3.10: $pointer_rel"
+    fail "unversioned pointer does not point to v1.3.11: $pointer_rel"
   else
-    echo "OK: pointer names v1.3.10"
+    echo "OK: pointer names v1.3.11"
   fi
 else
   fail "missing unversioned pointer: $pointer_rel"
 fi
 record_check pointer
 
-# 5. The versioned v1.3.10 file is the complete document, not a pointer/stub.
+# 5. The versioned v1.3.11 file is the complete document, not a pointer/stub.
 if [[ -s "$root/$versioned_rel" ]]; then
   lines="$(wc -l < "$root/$versioned_rel")"
   if (( lines < min_versioned_lines )); then
@@ -130,9 +166,9 @@ record_check versioned-complete
 #    Historical references ("supersedes v1.3.1", "corrects v1.3.2", archive paths)
 #    are legitimate; active-status phrasing and non-archive paths are not.
 #    Add each newly superseded version here when the active version moves on —
-#    v1.3.2 was added by v1.3.10, which found it cited as the controlling document
+#    v1.3.2 was added by v1.3.11, which found it cited as the controlling document
 #    in four governance files after it had already been archived.
-superseded=(1.3.1 1.3.2 1.3.3 1.3.4 1.3.5 1.3.6 1.3.7 1.3.8 1.3.9)
+superseded=(1.3.1 1.3.2 1.3.3 1.3.4 1.3.5 1.3.6 1.3.7 1.3.8 1.3.9 1.3.10)
 for v in "${superseded[@]}"; do
   ve="${v//./\\.}"
   if active_hits="$(grep -RIn --exclude-dir=archive --exclude-dir=prompts \
@@ -189,7 +225,7 @@ else
 fi
 record_check active-copy-count
 
-# 8. v1.3.10-specific content invariants. The architecture is a governance artefact,
+# 8. v1.3.11-specific content invariants. The architecture is a governance artefact,
 #    so these check the document says what the governed decisions require it to say.
 #    They are deliberately content checks, not style checks: each one failed at least
 #    once in a real review before it was written here.
@@ -213,9 +249,9 @@ if [[ -s "$A" ]]; then
   #     freeze-is-not-implementation distinction, and that no earlier version is
   #     described as frozen. An architecture that quietly loses its own freeze record is
   #     indistinguishable from one that was never frozen.
-  grep -Fq 'Status: APPROVED — ARCHITECTURE-FROZEN by Product Owner on 2026-08-05 · Version: 1.3.10' "$A" \
-    && echo "OK: v1.3.10 carries the approved/frozen status line" \
-    || fail "v1.3.10 has lost its APPROVED/ARCHITECTURE-FROZEN status line"
+  grep -Fq 'Status: APPROVED — ARCHITECTURE-FROZEN by Product Owner on 2026-08-05 · Version: 1.3.11' "$A" \
+    && echo "OK: v1.3.11 carries the approved/frozen status line" \
+    || fail "v1.3.11 has lost its APPROVED/ARCHITECTURE-FROZEN status line"
   grep -Fq 'ADR-0054-architecture-freeze-v1.3.8.md' "$A" \
     && echo "OK: freeze ADR referenced" \
     || fail "the freeze ADR reference (ADR-0054) has disappeared from the architecture"
@@ -239,7 +275,7 @@ if [[ -s "$A" ]]; then
   # v1.3.8 is deliberately absent from this list: it WAS genuinely frozen under ADR-0054,
   # and saying so is accurate rather than a defect. v1.3.1-v1.3.7 were each refused, so
   # describing any of them as frozen would be false.
-  for v in 1.3.1 1.3.2 1.3.3 1.3.4 1.3.5 1.3.6 1.3.7 1.3.9; do
+  for v in 1.3.1 1.3.2 1.3.3 1.3.4 1.3.5 1.3.6 1.3.7 1.3.9 1.3.10; do
     for form in "v$v is frozen" "v$v was frozen" "v$v remains frozen" "v$v is architecture-frozen" "v$v was architecture-frozen"; do
       if grep -Fq -- "$form" "$A"; then
         fail "an earlier version is described as frozen (\"$form\"); v1.3.1-v1.3.7 were never frozen"
@@ -267,16 +303,21 @@ if [[ -s "$A" ]]; then
 
 
   # 8b. The contract version tracks the document version.
-  grep -Fq '"contract_version": "1.3.10"' "$A" \
-    && echo "OK: contract_version is 1.3.10" \
-    || fail "contract_version is not 1.3.10"
+  grep -Fq '"contract_version": "1.3.11"' "$A" \
+    && echo "OK: contract_version is 1.3.11" \
+    || fail "contract_version is not 1.3.11"
   record_check contract-version
 
   # 8c. C1 — the personal-domain block must be enforced on the OUTCOME. A guard on
   #     the input is what v1.3.3 had, and step 10 walked past it.
-  grep -Fq 'assert_landing_permitted' "$A" \
-    && echo "OK: outcome-level personal-domain assertion present" \
-    || fail "C1 regression: no outcome-level landing assertion (assert_landing_permitted)"
+  # Scoped to the precedence function itself. v1.3.10 grepped the whole file, so
+  # renaming the assertion away still passed on the strength of a change-log row.
+  c1_blk="$(extract_block 'resolve_landing(vector, requested):' 'return the candidate only if')"
+  if assert_block_size "$c1_blk" 20 80 'precedence function'; then
+    assert_in_block "$c1_blk" 'assert_landing_permitted' \
+      "C1 regression: the precedence function no longer calls assert_landing_permitted" \
+      && echo "OK: outcome-level personal-domain assertion present in the precedence function"
+  fi
   grep -Fq 'stage 2: constrain the outcome' "$A" \
     && echo "OK: precedence function is two-stage" \
     || fail "C1 regression: precedence function is no longer two-stage"
@@ -287,7 +328,7 @@ if [[ -s "$A" ]]; then
   for pair in "10:A78" "12:A38" "19:A44"; do
     j="${pair%%:*}"; t="${pair##*:}"
     if grep -Eq "^\| *$j \|.*\| *$t *\|" "$A"; then
-      fail "journey $j cites $t again — withdrawn in v1.3.10 as an unrelated citation"
+      fail "journey $j cites $t again — withdrawn in v1.3.11 as an unrelated citation"
     else
       echo "OK: journey $j does not cite $t"
     fi
@@ -325,7 +366,7 @@ if [[ -s "$A" ]]; then
   record_check implementation-gate
 
   # 8h. Every acceptance id that is CITED must be DEFINED, and the defined set must be
-  #     contiguous. Citing-vs-defining is the distinction that matters: v1.3.10's first
+  #     contiguous. Citing-vs-defining is the distinction that matters: v1.3.11's first
   #     draft of this check only asked whether an id appeared somewhere, so deleting a
   #     criterion's definition still passed because the journey table still cited it.
   #     A criterion cited by a journey but defined nowhere is precisely the defect
@@ -470,7 +511,7 @@ if [[ -s "$A" ]]; then
     if [[ -z "$recorded" ]]; then
       fail "frozen-content manifest contains no digest"
     elif [[ "$recorded" != "$actual" ]]; then
-      fail "FROZEN CONTENT CHANGED — v1.3.10 no longer matches its manifest digest (recorded ${recorded:0:12}…, actual ${actual:0:12}…). A substantive change requires a new version; a governed erratum must update the manifest in the same commit."
+      fail "FROZEN CONTENT CHANGED — v1.3.11 no longer matches its manifest digest (recorded ${recorded:0:12}…, actual ${actual:0:12}…). A substantive change requires a new version; a governed erratum must update the manifest in the same commit."
     else
       echo "OK: frozen baseline matches its manifest digest (${actual:0:12}…)"
     fi
@@ -490,7 +531,7 @@ if [[ -s "$A" ]]; then
   fi
   record_check no-blanket-backfill
 
-  # 8p. ADR-0055 decisions 1, 3, 5 and 6, made mechanical (v1.3.10, K2).
+  # 8p. ADR-0055 decisions 1, 3, 5 and 6, made mechanical (v1.3.11, K2).
   #     v1.3.9 stated all four and guarded none: every one of the four mutations below
   #     passed the verifier green. A decision with no guard is a sentence.
   adr55_ok=1
@@ -501,8 +542,19 @@ if [[ -s "$A" ]]; then
     fail "ADR-0055 d1 regression: descriptive trust-domain metadata is described as a controller-resolution fallback"
     adr55_ok=0
   fi
-  grep -Fq 'never load-bearing' "$A" \
-    || { fail "ADR-0055 d1 regression: the non-authoritative marking on descriptive controller metadata is gone"; adr55_ok=0; }
+  # Scoped to trust_domain's own definition. 'never load-bearing' also appears at A116
+  # and in the §38C register, so a whole-file grep stayed green with all three markings
+  # deleted — proven against v1.3.10.
+  td_blk="$(extract_block 'trust_domain (' 'created_by_actor, version INT NOT NULL')"
+  if assert_block_size "$td_blk" 15 45 'trust_domain definition'; then
+    n_marked="$(printf '%s' "$td_blk" | grep -c 'never load-bearing' || true)"
+    if (( n_marked < 3 )); then
+      fail "ADR-0055 d1 regression: only $n_marked of 3 descriptive controller fields are marked non-authoritative"
+      adr55_ok=0
+    fi
+  else
+    adr55_ok=0
+  fi
   if grep -Eq '^  controller_type +VARCHAR\(32\) NOT NULL' "$A"; then
     fail "ADR-0055 d1 regression: controller_type is NOT NULL again; all three descriptive fields must be nullable"
     adr55_ok=0
@@ -518,9 +570,8 @@ if [[ -s "$A" ]]; then
   # Scope the check to the prohibition block itself. The first version grepped the whole
   # file, so deleting a source from the list still passed while the phrase survived in
   # prose elsewhere — the guard was reading a different place from the one it protects.
-  inference_block="$(awk '/MEMBERSHIP MAY NEVER BE INFERRED/{f=1} f{print} /provenance\./{if(f) exit}' "$A")"
-  if [[ -z "$inference_block" ]]; then
-    fail "ADR-0055 d3 regression: the inference-prohibition block could not be located"
+  inference_block="$(extract_block 'MEMBERSHIP MAY NEVER BE INFERRED' 'recorded in provenance.')"
+  if ! assert_block_size "$inference_block" 8 20 'inference-prohibition block'; then
     adr55_ok=0
   else
     for src in 'organisation type' 'facility type' 'hosting location' 'platform operator' \
@@ -534,10 +585,15 @@ if [[ -s "$A" ]]; then
   # (3) UNMAPPED is fail-closed and visible — never blank, never read as MoHCC.
   grep -Fq 'UNMAPPED IS FAIL-CLOSED AND VISIBLE' "$A" \
     || { fail "ADR-0055 d6 regression: the fail-closed UNMAPPED rule has been removed"; adr55_ok=0; }
-  for code in TRUST_DOMAIN_UNMAPPED TRUST_DOMAIN_MEMBERSHIP_PENDING TRUST_DOMAIN_MEMBERSHIP_INACTIVE; do
-    grep -Fq "$code" "$A" \
-      || { fail "ADR-0055 d6 regression: refusal code $code is missing from the controlling document"; adr55_ok=0; }
-  done
+  fc_blk="$(extract_block 'UNMAPPED IS FAIL-CLOSED AND VISIBLE' 'silently read as MoHCC membership')"
+  if assert_block_size "$fc_blk" 6 20 'fail-closed block'; then
+    for code in TRUST_DOMAIN_UNMAPPED TRUST_DOMAIN_MEMBERSHIP_PENDING TRUST_DOMAIN_MEMBERSHIP_INACTIVE; do
+      assert_in_block "$fc_blk" "$code" \
+        "ADR-0055 d6 regression: refusal code $code is missing from the fail-closed rule" || adr55_ok=0
+    done
+  else
+    adr55_ok=0
+  fi
   if grep -Eqi 'blank means (MOHCC|MoHCC)|UNMAPPED (means|is read as) .*MOHCC' "$A"; then
     fail "ADR-0055 d6 regression: UNMAPPED is treated as blank or as MoHCC membership"
     adr55_ok=0
@@ -548,8 +604,15 @@ if [[ -s "$A" ]]; then
   fi
 
   # (4) The denormalised trust_domain_id is a projection, never authority.
-  grep -Fq 'never the source' "$A" \
-    || { fail "ADR-0055 d5 regression: the projection is no longer marked as not the source of truth"; adr55_ok=0; }
+  # Scoped to the projection note. 'never the source' also appears in the change log
+  # describing this very correction — a whole-file grep read that instead of the rule.
+  proj_blk="$(extract_block 'MAY carry a denormalised trust_domain_id as a QUERY' 'never populated by backfill')"
+  if assert_block_size "$proj_blk" 2 8 'projection note'; then
+    assert_in_block "$proj_blk" 'never the source' \
+      "ADR-0055 d5 regression: the projection is no longer marked as not the source of truth" || adr55_ok=0
+  else
+    adr55_ok=0
+  fi
   if grep -Eqi 'trust_domain_id[^.]{0,60}(is|as) the authoritative source|authoritative source of trust-domain membership' "$A"; then
     fail "ADR-0055 d5 regression: the projection trust_domain_id is described as authoritative"
     adr55_ok=0

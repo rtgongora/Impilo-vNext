@@ -1,5 +1,17 @@
 # Impilo vNext — Hybrid / Federated Target Architecture
 
+> # ⛔ SUPERSEDED — REVIEWED AND REFUSED FREEZE, NEVER FROZEN
+>
+> **v1.3.10 was reviewed on 2026-08-05 and freeze was refused.** Its content corrections were all correct; their *enforcement* was not. Superseded by **v1.3.11**.
+>
+> **STOP — a guard could pass while the rule it protects was deleted.** Several content guards grepped the whole document, so a phrase surviving anywhere kept the guard green. Proven three times: deleting all three §3.2 non-authoritative markings (`never load-bearing` survives at A116 and in the §38C register), deleting the §3.2 projection marking (`never the source` survives in the change log), and renaming away §29.0's `assert_landing_permitted` — **the outcome-level landing safety rule** — which the C1 change-log row kept alive. All three returned exit 0 with zero failures.
+>
+> **Active document:** [`../../hybrid-federated-target-architecture-v1.3.11.md`](../../hybrid-federated-target-architecture-v1.3.11.md)
+>
+> Kept for provenance only. Do not copy its verifier's whole-file content guards. *(Banner added by v1.3.11.)*
+
+---
+
 **Status: APPROVED — ARCHITECTURE-FROZEN by Product Owner on 2026-08-05 · Version: 1.3.10**
 
 **Freeze ADR:** [`adr/ADR-0054-architecture-freeze-v1.3.8.md`](adr/ADR-0054-architecture-freeze-v1.3.8.md) · **Amendment ADR:** [`adr/ADR-0055-trust-domain-membership-bootstrap.md`](adr/ADR-0055-trust-domain-membership-bootstrap.md) · **Date:** 2026-08-05
