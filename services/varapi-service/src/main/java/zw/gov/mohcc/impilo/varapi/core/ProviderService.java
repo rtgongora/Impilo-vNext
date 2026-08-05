@@ -218,11 +218,44 @@ public class ProviderService {
      */
     @Transactional(readOnly = true)
     public ProviderDetail getProviderByImpiloHealthId(String healthId) {
-        TrustContext ctx = TrustContextHolder.require();
-        UUID hid = UUID.fromString(healthId.trim());
-        ProviderEntity provider = providerRepository.findByTenantIdAndImpiloHealthId(ctx.tenantId(), hid)
+        return findProviderByImpiloHealthId(healthId)
                 .orElseThrow(() -> new IllegalArgumentException("Provider not found for Impilo ID: " + healthId));
-        return getProvider(provider.getProviderPublicId());
+    }
+
+    /**
+     * The same lookup, reporting "no such provider" as an ABSENCE rather than as a fault.
+     *
+     * <p>VARAPI is the system of record for professional regulation truth, so "this person holds no
+     * Provider ID" is one of its ordinary, correct answers — not an error. Throwing turned it into
+     * an HTTP 500, which made an absence indistinguishable from an outage to every caller.</p>
+     *
+     * <p>That mattered the moment anything began to enforce on the answer. Measured across the 20
+     * accounts in this realm carrying a clinician, nurse, facility-admin or regulator role label,
+     * <strong>every one returned 500</strong> — so a consumer that fails closed on "unavailable"
+     * would tell twenty people to try again later, permanently, for a condition that will never
+     * resolve on its own. A caller cannot distinguish "you have no Provider ID, here is how to
+     * obtain one" from "the registry is down" unless this layer distinguishes them first.</p>
+     *
+     * <p>The throwing form above is retained for callers that genuinely require a provider to
+     * proceed; it now delegates here, so there is one lookup and one definition of absence.</p>
+     */
+    @Transactional(readOnly = true)
+    public Optional<ProviderDetail> findProviderByImpiloHealthId(String healthId) {
+        if (healthId == null || healthId.isBlank()) {
+            return Optional.empty();
+        }
+        TrustContext ctx = TrustContextHolder.require();
+        UUID hid;
+        try {
+            hid = UUID.fromString(healthId.trim());
+        } catch (IllegalArgumentException e) {
+            // A malformed identifier is a bad request, not a missing provider. Reporting it as an
+            // absence would tell the caller the person has no Provider ID, which is a claim this
+            // method has not established.
+            throw new IllegalArgumentException("Malformed Impilo Health ID: " + healthId, e);
+        }
+        return providerRepository.findByTenantIdAndImpiloHealthId(ctx.tenantId(), hid)
+                .map(provider -> getProvider(provider.getProviderPublicId()));
     }
 
     /**

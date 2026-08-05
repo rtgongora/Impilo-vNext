@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.varapi.api.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -45,13 +46,25 @@ public class ProviderByHealthIdController {
         this.recognitionService = recognitionService;
     }
 
+    /**
+     * Resolves a Health ID to its provider record.
+     *
+     * <p><strong>404 means "this Health ID carries no Provider ID" — a real answer, not a fault.</strong>
+     * This used to throw, surfacing as a 500, which made an absence indistinguishable from VARAPI
+     * being down. Consumers that fail closed on "unavailable" would then tell a person to try again
+     * later for a condition that never resolves; and consumers that fail closed on "not a provider"
+     * would strip professional capacity from every clinician during a blip. Both readings were
+     * available from the same response, which is what made it unsafe to enforce on.</p>
+     */
     @GetMapping("/{healthId}")
     public ResponseEntity<ApiResponse<ProviderResponse>> getByHealthId(@PathVariable String healthId) {
         TrustContext ctx = TrustContextHolder.require();
         log.debug("Provider lookup by Impilo Health ID healthId={}", healthId);
-        ProviderService.ProviderDetail detail = providerService.getProviderByImpiloHealthId(healthId);
-        ProviderResponse body = providerControllerDelegate.toProviderDetailResponse(detail);
-        return ResponseEntity.ok(ApiResponse.ok(body, ctx.correlationId().toString()));
+        return providerService.findProviderByImpiloHealthId(healthId)
+                .map(detail -> ResponseEntity.ok(ApiResponse.ok(
+                        providerControllerDelegate.toProviderDetailResponse(detail),
+                        ctx.correlationId().toString())))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
     @GetMapping("/{healthId}/affiliations")
