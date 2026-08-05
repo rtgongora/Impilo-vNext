@@ -11,6 +11,7 @@ import { useAuth } from "@impilo/mobile-auth";
 import { Button, colors } from "@impilo/mobile-design-system";
 import { useAppStore } from "../stores/appStore";
 import { deriveAvailableAppModes } from "./modeAvailability";
+import { getAvailableModes } from "./modeRoles";
 import { useSwitchAppMode } from "../hooks/useSwitchAppMode";
 import type { AppMode } from "../types";
 
@@ -21,27 +22,6 @@ const MODE_LABELS: Record<AppMode, string> = {
   offline: "Offline Edge",
   courier: "Courier (Nhume)",
 };
-
-const MODE_ROLES: Record<AppMode, string[]> = {
-  provider: ["provider", "clinician"],
-  outreach: ["provider", "clinician", "community_health_worker"],
-  supervisor: ["supervisor", "facility_manager", "admin"],
-  offline: ["provider", "clinician", "community_health_worker"],
-  // Couriers, CHW delivery agents, facility runners, drone/robot operators
-  // all unlock the Nhume courier mode. Trust-Layer policies further restrict
-  // which deliveries each can act on.
-  courier: ["courier", "driver", "facility_runner", "community_health_worker", "drone_operator", "robot_operator", "provider"],
-};
-
-function getAvailableModes(roles: string[]): AppMode[] {
-  const modes: AppMode[] = [];
-  for (const [mode, requiredRoles] of Object.entries(MODE_ROLES)) {
-    if (requiredRoles.some((r) => roles.includes(r))) {
-      modes.push(mode as AppMode);
-    }
-  }
-  return modes.length > 0 ? modes : ["provider"];
-}
 
 export function ModeSwitcher() {
   const auth = useAuth();

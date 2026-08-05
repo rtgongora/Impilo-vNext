@@ -62,7 +62,9 @@ vi.mock("../../navigation/ModeSwitcher", () => ({
 }));
 
 vi.mock("@impilo/mobile-auth", () => ({
-  useAuth: () => ({ user: { sub: "user-1", realm_access: { roles: ["provider"] } } }),
+  // Realm roles are UPPERCASE — see src/lib/roleGroups.ts. "provider" is not a
+  // realm role and never was.
+  useAuth: () => ({ user: { sub: "user-1", realm_access: { roles: ["CLINICIAN"] } } }),
 }));
 
 vi.mock("@impilo/mobile-design-system", async (importOriginal) => {
