@@ -779,6 +779,13 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: false
     timeout-minutes: 45
+    # `secrets` is not a valid context in an `if:` expression — only env/github/job/needs/
+    # runner/steps/vars/matrix/inputs are. The credential-gated step below tested
+    # `secrets.MAESTRO_PREVIEW_CREDENTIALS` directly, which made the WHOLE FILE invalid, so
+    # GitHub refused to schedule a single job in this workflow on any branch. Bind the secret
+    # to job-level env once and let the step test `env.` instead.
+    env:
+      MAESTRO_PREVIEW_CREDENTIALS: ${{ secrets.MAESTRO_PREVIEW_CREDENTIALS }}
     steps:
       - uses: actions/checkout@v4
 
@@ -891,10 +898,8 @@ jobs:
       # is ever echoed or committed. Requires the preview stack
       # (impilo.mohcc.gov.zw) to be reachable from the runner.
       - name: Run Maestro login/journey flows (preview credentials)
-        if: ${{ secrets.MAESTRO_PREVIEW_CREDENTIALS != '' }}
+        if: ${{ env.MAESTRO_PREVIEW_CREDENTIALS != '' }}
         uses: reactivecircus/android-emulator-runner@v2
-        env:
-          MAESTRO_PREVIEW_CREDENTIALS: ${{ secrets.MAESTRO_PREVIEW_CREDENTIALS }}
         with:
           api-level: 35
           target: google_apis
