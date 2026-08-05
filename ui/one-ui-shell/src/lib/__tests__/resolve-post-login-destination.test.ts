@@ -243,10 +243,15 @@ describe("resolvePostLoginDestination", () => {
   });
 
   it("buildContextGuardRedirect preserves attempted path as returnTo", () => {
+    // The facility guard now resolves to /work/resume, which offers the work context the BFF
+    // already resolved instead of the national facility registry. See resume-context.test.ts.
     expect(buildContextGuardRedirect("/facility", "/clinical")).toBe(
-      "/facility?returnTo=%2Fclinical",
+      "/work/resume?returnTo=%2Fclinical",
     );
-    expect(buildContextGuardRedirect("/facility", "/facility")).toBe("/facility");
+    expect(buildContextGuardRedirect("/facility", "/work/resume")).toBe("/work/resume");
+    expect(buildContextGuardRedirect("/workspace", "/clinical")).toBe(
+      "/workspace?returnTo=%2Fclinical",
+    );
   });
 
   it("resolvePostFacilitySelectionPath returns clinical hub when only facility guard applies", () => {

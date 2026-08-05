@@ -80,6 +80,11 @@ const SURFACES: Surface[] = [
     because: "/finance/payer-ops requires role group PAYER_OPS",
     audience: ["FINANCE"],
   },
+  {
+    file: "app/work/resume/page.tsx",
+    because: "the facility guard's destination — any worker without a duty session lands here",
+    audience: ["CLINICIAN", "NURSE", "PHARMACIST", "SUPPORT_AGENT"],
+  },
   // Deliberately NOT covered here: app/api/mobile/provider/hubs/[hub]/route.ts. It is a
   // multi-hub catalogue whose hubs have different audiences, and its GET applies no role
   // filter and no auth check at all — so "which audience is offered this link" has no single
