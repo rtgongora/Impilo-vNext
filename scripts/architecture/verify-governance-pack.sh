@@ -16,7 +16,7 @@ else
   root="$(cd "$script_dir/../.." && pwd)"
 fi
 
-versioned_rel="docs/architecture/hybrid-federated-target-architecture-v1.3.8.md"
+versioned_rel="docs/architecture/hybrid-federated-target-architecture-v1.3.9.md"
 pointer_rel="docs/architecture/vnext-hybrid-federation-target-architecture.md"
 # The versioned file is the complete document (~4,600 lines). Anything shorter
 # than this floor is a pointer or a truncation masquerading as the architecture.
@@ -39,7 +39,7 @@ required=(
 failed=0
 fail() { echo "FAIL: $*" >&2; failed=1; }
 
-# §38C.4 rule 3 (v1.3.8): the suite asserts its own completeness. v1.3.7 made every
+# §38C.4 rule 3 (v1.3.9): the suite asserts its own completeness. v1.3.7 made every
 # individual guard prove it examined something, and left the aggregate case open:
 # deleting a whole check block exited 0, the only signal being an absent OK line that
 # nothing counted. "All checks passed" and "that check no longer exists" produced the
@@ -55,7 +55,7 @@ EXPECTED_CHECKS=(
   contract-version outcome-landing-rule withdrawn-citations
   assurance-rows no-false-passing implementation-gate acceptance-ids
   assurance-totals entailment-register register-coverage positive-controls
-  frozen-baseline frozen-digest stale-acceptance-range
+  frozen-baseline frozen-digest stale-acceptance-range no-blanket-backfill
 )
 CHECKS_SEEN=""
 record_check() {
@@ -67,7 +67,7 @@ record_check() {
 
 # Patterns whose expected result is EMPTY. A search meant to find nothing behaves
 # identically when its pattern is broken, so each is defined ONCE here and used by both
-# the real check and its positive control (§38C.4 rule 2). v1.3.8's first attempt gave
+# the real check and its positive control (§38C.4 rule 2). v1.3.9's first attempt gave
 # the probe its own copy of the pattern, which proved only that a hardcoded string
 # matches a hardcoded regex — the instrument supplying its own answer. Breaking the real
 # pattern left the probe passing, so the control controlled nothing.
@@ -102,20 +102,20 @@ if legacy_hits="$(grep -RIn --exclude-dir=archive --exclude-dir=prompts \
 fi
 record_check legacy-language
 
-# 4. The unversioned pointer names v1.3.8 and links the versioned file.
+# 4. The unversioned pointer names v1.3.9 and links the versioned file.
 if [[ -s "$root/$pointer_rel" ]]; then
-  if ! grep -Fq 'hybrid-federated-target-architecture-v1.3.8.md' "$root/$pointer_rel" \
+  if ! grep -Fq 'hybrid-federated-target-architecture-v1.3.9.md' "$root/$pointer_rel" \
      || ! grep -Eq 'v1\.3\.3' "$root/$pointer_rel"; then
-    fail "unversioned pointer does not point to v1.3.8: $pointer_rel"
+    fail "unversioned pointer does not point to v1.3.9: $pointer_rel"
   else
-    echo "OK: pointer names v1.3.8"
+    echo "OK: pointer names v1.3.9"
   fi
 else
   fail "missing unversioned pointer: $pointer_rel"
 fi
 record_check pointer
 
-# 5. The versioned v1.3.8 file is the complete document, not a pointer/stub.
+# 5. The versioned v1.3.9 file is the complete document, not a pointer/stub.
 if [[ -s "$root/$versioned_rel" ]]; then
   lines="$(wc -l < "$root/$versioned_rel")"
   if (( lines < min_versioned_lines )); then
@@ -130,12 +130,13 @@ record_check versioned-complete
 #    Historical references ("supersedes v1.3.1", "corrects v1.3.2", archive paths)
 #    are legitimate; active-status phrasing and non-archive paths are not.
 #    Add each newly superseded version here when the active version moves on —
-#    v1.3.2 was added by v1.3.8, which found it cited as the controlling document
+#    v1.3.2 was added by v1.3.9, which found it cited as the controlling document
 #    in four governance files after it had already been archived.
-superseded=(1.3.1 1.3.2 1.3.3 1.3.4 1.3.5 1.3.6 1.3.7)
+superseded=(1.3.1 1.3.2 1.3.3 1.3.4 1.3.5 1.3.6 1.3.7 1.3.8)
 for v in "${superseded[@]}"; do
   ve="${v//./\\.}"
   if active_hits="$(grep -RIn --exclude-dir=archive --exclude-dir=prompts \
+      --exclude-dir=adr \
       -E "v${ve}${SUPERSEDED_BODY}|hybrid-federated-target-architecture-v${ve}\.md" \
       "$root/docs" 2>/dev/null | grep -v 'archive/')"; then
     echo "$active_hits" >&2
@@ -188,7 +189,7 @@ else
 fi
 record_check active-copy-count
 
-# 8. v1.3.8-specific content invariants. The architecture is a governance artefact,
+# 8. v1.3.9-specific content invariants. The architecture is a governance artefact,
 #    so these check the document says what the governed decisions require it to say.
 #    They are deliberately content checks, not style checks: each one failed at least
 #    once in a real review before it was written here.
@@ -212,15 +213,20 @@ if [[ -s "$A" ]]; then
   #     freeze-is-not-implementation distinction, and that no earlier version is
   #     described as frozen. An architecture that quietly loses its own freeze record is
   #     indistinguishable from one that was never frozen.
-  grep -Fq 'Status: APPROVED — ARCHITECTURE-FROZEN by Product Owner on 2026-08-05 · Version: 1.3.8' "$A" \
-    && echo "OK: v1.3.8 carries the approved/frozen status line" \
-    || fail "v1.3.8 has lost its APPROVED/ARCHITECTURE-FROZEN status line"
+  grep -Fq 'Status: APPROVED — ARCHITECTURE-FROZEN by Product Owner on 2026-08-05 · Version: 1.3.9' "$A" \
+    && echo "OK: v1.3.9 carries the approved/frozen status line" \
+    || fail "v1.3.9 has lost its APPROVED/ARCHITECTURE-FROZEN status line"
   grep -Fq 'ADR-0054-architecture-freeze-v1.3.8.md' "$A" \
     && echo "OK: freeze ADR referenced" \
     || fail "the freeze ADR reference (ADR-0054) has disappeared from the architecture"
-  [[ -s "$root/docs/architecture/adr/ADR-0054-architecture-freeze-v1.3.8.md" ]] \
-    && echo "OK: freeze ADR present" \
-    || fail "docs/architecture/adr/ADR-0054-architecture-freeze-v1.3.8.md is missing or empty"
+  grep -Fq 'ADR-0055-trust-domain-membership-bootstrap.md' "$A" \
+    && echo "OK: amendment ADR referenced" \
+    || fail "the amendment ADR reference (ADR-0055) has disappeared from the architecture"
+  for adr in ADR-0054-architecture-freeze-v1.3.8 ADR-0055-trust-domain-membership-bootstrap; do
+    [[ -s "$root/docs/architecture/adr/${adr}.md" ]] \
+      && echo "OK: ${adr} present" \
+      || fail "docs/architecture/adr/${adr}.md is missing or empty"
+  done
   grep -Fq 'It does not constitute implementation, runtime acceptance, production readiness or deployment authorisation' "$A" \
     && echo "OK: freeze-is-not-implementation distinction present" \
     || fail "the freeze-versus-implementation distinction has been removed"
@@ -230,6 +236,9 @@ if [[ -s "$A" ]]; then
   #     removed. Three fixed forms cover the assertion; "never frozen" is the correct
   #     phrasing everywhere and is not matched by any of them.
   earlier_frozen=0
+  # v1.3.8 is deliberately absent from this list: it WAS genuinely frozen under ADR-0054,
+  # and saying so is accurate rather than a defect. v1.3.1-v1.3.7 were each refused, so
+  # describing any of them as frozen would be false.
   for v in 1.3.1 1.3.2 1.3.3 1.3.4 1.3.5 1.3.6 1.3.7; do
     for form in "v$v is frozen" "v$v was frozen" "v$v remains frozen" "v$v is architecture-frozen" "v$v was architecture-frozen"; do
       if grep -Fq -- "$form" "$A"; then
@@ -258,9 +267,9 @@ if [[ -s "$A" ]]; then
 
 
   # 8b. The contract version tracks the document version.
-  grep -Fq '"contract_version": "1.3.8"' "$A" \
-    && echo "OK: contract_version is 1.3.8" \
-    || fail "contract_version is not 1.3.8"
+  grep -Fq '"contract_version": "1.3.9"' "$A" \
+    && echo "OK: contract_version is 1.3.9" \
+    || fail "contract_version is not 1.3.9"
   record_check contract-version
 
   # 8c. C1 — the personal-domain block must be enforced on the OUTCOME. A guard on
@@ -278,7 +287,7 @@ if [[ -s "$A" ]]; then
   for pair in "10:A78" "12:A38" "19:A44"; do
     j="${pair%%:*}"; t="${pair##*:}"
     if grep -Eq "^\| *$j \|.*\| *$t *\|" "$A"; then
-      fail "journey $j cites $t again — withdrawn in v1.3.8 as an unrelated citation"
+      fail "journey $j cites $t again — withdrawn in v1.3.9 as an unrelated citation"
     else
       echo "OK: journey $j does not cite $t"
     fi
@@ -316,7 +325,7 @@ if [[ -s "$A" ]]; then
   record_check implementation-gate
 
   # 8h. Every acceptance id that is CITED must be DEFINED, and the defined set must be
-  #     contiguous. Citing-vs-defining is the distinction that matters: v1.3.8's first
+  #     contiguous. Citing-vs-defining is the distinction that matters: v1.3.9's first
   #     draft of this check only asked whether an id appeared somewhere, so deleting a
   #     criterion's definition still passed because the journey table still cited it.
   #     A criterion cited by a journey but defined nowhere is precisely the defect
@@ -461,12 +470,25 @@ if [[ -s "$A" ]]; then
     if [[ -z "$recorded" ]]; then
       fail "frozen-content manifest contains no digest"
     elif [[ "$recorded" != "$actual" ]]; then
-      fail "FROZEN CONTENT CHANGED — v1.3.8 no longer matches its manifest digest (recorded ${recorded:0:12}…, actual ${actual:0:12}…). A substantive change requires a new version; a governed erratum must update the manifest in the same commit."
+      fail "FROZEN CONTENT CHANGED — v1.3.9 no longer matches its manifest digest (recorded ${recorded:0:12}…, actual ${actual:0:12}…). A substantive change requires a new version; a governed erratum must update the manifest in the same commit."
     else
       echo "OK: frozen baseline matches its manifest digest (${actual:0:12}…)"
     fi
   fi
   record_check frozen-digest
+
+  # 8o. ADR-0055: the rejected blanket backfill must not return to the architecture.
+  #     "backfill every existing organisation -> the MoHCC trust domain" is the exact
+  #     instruction that would fabricate membership for private-provider and
+  #     local-authority organisations before anyone determined it.
+  if grep -E '^organisation ADD COLUMN trust_domain_id UUID NOT NULL' "$A" | grep -qv '^--'; then
+    fail "ADR-0055 regression: organisation.trust_domain_id is NOT NULL again; membership must stay evidenced"
+  elif grep -E '^-- Backfill: every existing organisation' "$A" >/dev/null 2>&1; then
+    fail "ADR-0055 regression: the blanket MoHCC backfill instruction has returned"
+  else
+    echo "OK: no blanket trust-domain backfill; membership stays evidenced"
+  fi
+  record_check no-blanket-backfill
 
   # 8n. The superseded acceptance range A87-A108 must not reappear in an ACTIVE
   #     governing statement. §23.7 added A109-A117, and two live statements still used

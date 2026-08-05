@@ -1,8 +1,8 @@
 # Impilo vNext — Hybrid / Federated Target Architecture
 
-**Status: APPROVED — ARCHITECTURE-FROZEN by Product Owner on 2026-08-05 · Version: 1.3.8**
+**Status: APPROVED — ARCHITECTURE-FROZEN by Product Owner on 2026-08-05 · Version: 1.3.9**
 
-**Freeze ADR:** [`adr/ADR-0054-architecture-freeze-v1.3.8.md`](adr/ADR-0054-architecture-freeze-v1.3.8.md) · **Date:** 2026-08-05
+**Freeze ADR:** [`adr/ADR-0054-architecture-freeze-v1.3.8.md`](adr/ADR-0054-architecture-freeze-v1.3.8.md) · **Amendment ADR:** [`adr/ADR-0055-trust-domain-membership-bootstrap.md`](adr/ADR-0055-trust-domain-membership-bootstrap.md) · **Date:** 2026-08-05
 
 > **Status discipline.** "Approved, but with corrections required" is not a status. A version is either frozen or it is not. v1.3.1 was **directionally accepted, not approved**: its settled decisions are preserved and its remaining defects were upstream model issues that could not be left to the Experience Completion Packs to resolve divergently. v1.3.2 was the integrity correction the PO required before freeze; its freeze review found stop conditions, so **v1.3.2 was never frozen**. v1.3.3 corrected those; **its own freeze review then refused freeze on two further stop conditions**, so v1.3.3 was never frozen either. v1.3.4 corrected those and added the assurance model (§38A); **its own freeze review then refused freeze on three further stop conditions**, so v1.3.4 was never frozen either. v1.3.5 corrected those and added the entailment register (§38C); **its own freeze review then refused freeze on two further stop conditions**, so v1.3.5 was never frozen either. v1.3.6 corrected those by hardening §38C's checker; **its own freeze review then refused freeze on one further stop condition**, so v1.3.6 was never frozen either. v1.3.7 corrected it and added §38C.4; **its own freeze review then refused freeze on one further stop**, so v1.3.7 was never frozen either. v1.3.8 closes the aggregate case: a suite of checks must assert its own completeness by name. **Its freeze review found no stop condition, and the Product Owner approved and froze it on 2026-08-05 under ADR-0054.** What that does and does not authorise is stated in §Post-freeze implementation control below.
 **Factual basis:** [`vnext-current-state-recovery-2026-08-03.md`](vnext-current-state-recovery-2026-08-03.md) (commit `1870cf33d`), plus targeted evidence sweeps for the v1.1 additions. Every current-state statement is a reference, not a re-derivation.
@@ -235,6 +235,26 @@ v1.3.7's freeze review refused freeze on one stop — the same shape as v1.3.6's
 | **H3** | **§38C.4 gains rule 3**: a suite of checks must assert its own completeness by name. Adding a guard means declaring it, and that edit is deliberate — **a control nobody declared cannot be relied upon, and a control silently removed is worse than one never written, because the record still claims it** | §38C.4 | **New — suite discipline** |
 
 **No settled `[D]`/`[T]`/`[O]` decision is reopened.** The architecture text is unchanged apart from §38C.4 rule 3; every other correction is in the verifier. No application functionality was implemented.
+
+## v1.3.9 — trust-domain membership bootstrap correction (2026-08-05)
+
+A **narrowly scoped technical correction** to frozen v1.3.8, recorded in **ADR-0055**. Nothing else is reopened.
+
+v1.3.8 held three positions that could not all be true: §3.1 said a trust domain is not a controller; §3A said controllership resolves through `processing_role_assignment` and an unresolved controller must be refused; and §3.2 nevertheless demanded mandatory controller identity on `trust_domain`, `organisation.trust_domain_id NOT NULL`, and a **blanket backfill of every existing organisation to `MOHCC-ZW`**.
+
+The third manufactures governance facts before determination. The closed `org_type` vocabulary already contains `PRIVATE_PROVIDER_GROUP` and `LOCAL_AUTHORITY` — the backfill would have recorded them as MoHCC and enforced it. **Organisation type is not evidence of membership.**
+
+| # | Correction | Where |
+|---|---|---|
+| **J1** | Controller identity on `trust_domain` is **nullable and non-authoritative**; no service may use it as a fallback when controller resolution fails | §3.2 |
+| **J2** | `trust_domain_membership` replaces implied membership — evidenced, effective-dated, with `UNMAPPED` · `PENDING_REVIEW` · `ACTIVE` · `SUSPENDED` · `ENDED` | §3.2 |
+| **J3** | **No blanket backfill.** Membership is never inferred from type, hosting, operator, name, tenant default, `national-spine`, ownership or regulator status | §3.2 |
+| **J4** | Organisation and facility `trust_domain_id` become **query projections**, populated only after an ACTIVE membership exists, never the source of truth | §3.2 |
+| **J5** | `UNMAPPED` is fail-closed and visible: trust-domain-dependent operations refuse with a named governance action, while **draft and review work stays possible** | §3.2, ADR-0055 §6 |
+
+**This decides no `[L]` matter.** It corrects how an undetermined fact is represented, which is the opposite of deciding it. The 18 §26.2 determinations remain open, and no controller is inferred from membership at any status.
+
+**Why a version and not an erratum:** ADR-0054 names schema and technical-design changes substantive and requires a new version for them. An additive ADR alone would have breached it.
 
 ### Post-freeze implementation control **[O]**
 
@@ -597,8 +617,12 @@ trust_domain (
   controller_type        VARCHAR(32) NOT NULL,            -- MINISTRY | PRIVATE_GROUP | MISSION |
                                                           -- LOCAL_AUTHORITY | SECURITY_SECTOR |
                                                           -- UNIVERSITY | REGULATOR | PARTNER
-  data_controller_legal_name TEXT NOT NULL,
-  data_controller_contact    JSONB NOT NULL,
+  -- CORRECTED BY v1.3.9 / ADR-0055: nullable and NON-AUTHORITATIVE. A trust domain
+  -- identifies a boundary; it is not a controller (§3.1). Requiring a legal name in
+  -- order to create one would fabricate a determination. No service may read these as
+  -- a fallback when controller resolution fails — §3A.4 is the only authority.
+  data_controller_legal_name TEXT NULL,          -- descriptive only, never load-bearing
+  data_controller_contact    JSONB NULL,         -- descriptive only, never load-bearing
   jurisdiction_id        UUID NULL REFERENCES jurisdiction,
   accreditation_status   VARCHAR(24) NOT NULL,            -- see lifecycle below
   accredited_at          TIMESTAMPTZ, suspended_at TIMESTAMPTZ, withdrawn_at TIMESTAMPTZ,
@@ -607,12 +631,40 @@ trust_domain (
   created_at, updated_at, created_by_actor, version INT NOT NULL
 );
 
-organisation ADD COLUMN trust_domain_id UUID NOT NULL REFERENCES trust_domain;
--- Backfill: every existing organisation → the MoHCC trust domain (§3.4).
+-- ── CORRECTED BY v1.3.9 / ADR-0055 ──────────────────────────────────────────
+-- v1.3.8 said: `organisation ADD COLUMN trust_domain_id UUID NOT NULL` with "backfill
+-- every existing organisation → the MoHCC trust domain", and the same NOT NULL on
+-- tuso.facility. That contradicted §3.1 and §3A: it manufactures membership facts
+-- before anyone determines them. The org_type vocabulary already contains
+-- PRIVATE_PROVIDER_GROUP and LOCAL_AUTHORITY, which are not MoHCC.
+-- Organisation type is not evidence of trust-domain membership.
+--
+-- Membership is now an explicit, evidenced, effective-dated relationship:
+trust_domain_membership (
+  membership_id        UUID PRIMARY KEY,
+  trust_domain_id      UUID NOT NULL REFERENCES trust_domain,
+  subject_type         VARCHAR(16) NOT NULL,   -- ORGANISATION | FACILITY
+  subject_id           UUID NOT NULL,
+  status               VARCHAR(16) NOT NULL,   -- UNMAPPED | PENDING_REVIEW | ACTIVE |
+                                               -- SUSPENDED | ENDED
+  effective_from       TIMESTAMPTZ NULL,       -- NULL until ACTIVE
+  effective_to         TIMESTAMPTZ NULL,
+  source_authority     VARCHAR(64) NOT NULL,   -- MOHCC_REGISTRY | GOVERNED_HIERARCHY |
+                                               -- ACCREDITATION_DECISION | ONBOARDING_DECISION
+  provenance           JSONB NOT NULL,         -- the evidence relied on
+  created_by, created_at, reviewed_by, reviewed_at,
+  supersedes_membership_id UUID NULL,
+  EXCLUDE USING gist (subject_id WITH =, tstzrange(effective_from, effective_to) WITH &&)
+      WHERE (status = 'ACTIVE')
+);
+-- organisation and tuso.facility MAY carry a denormalised trust_domain_id as a QUERY
+-- PROJECTION, populated only once an ACTIVE membership exists. It is never the source
+-- of truth, and it is never populated by backfill.
+organisation ADD COLUMN trust_domain_id UUID NULL REFERENCES trust_domain;  -- projection
 
 facility  -- stays in TUSO; TUSO gains:
   ALTER TABLE tuso.facility
-    ADD COLUMN trust_domain_id UUID NOT NULL,        -- denormalised for query scoping
+    ADD COLUMN trust_domain_id UUID NULL,            -- projection, never authority
     ADD COLUMN governing_organisation_id UUID NULL;  -- closes the "facility has no org column" gap
 
 federation_agreement (
@@ -3763,7 +3815,7 @@ An extension of the existing `SessionExperienceContract`, generalising the work-
 
 ```jsonc
 {
-  "contract_version": "1.3.8",   // tracks the architecture version defining this schema
+  "contract_version": "1.3.9",   // tracks the architecture version defining this schema
   "resolved_at": "2026-08-04T09:14:07Z",
   "resolver_origin": "NODE",                            // §28.4 — NATIONAL | NODE
   "expires_at": "2026-08-04T09:29:07Z",                 // bounded by bundle ceilings at a node

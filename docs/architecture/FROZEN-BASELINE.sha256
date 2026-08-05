@@ -26,4 +26,4 @@
 # The digest is a tripwire, not a lock: it cannot stop an edit, it can only ensure the
 # edit is deliberate and declared.
 #
-5434e980f3e953d33f7edef82b63234e05de118b57881d88a7b085e74b6a8b0a  docs/architecture/hybrid-federated-target-architecture-v1.3.8.md
+e32412d02574aa364fa7f5f2e09b65de6c4e6a4dc6833650827a066f3f1f33ee  docs/architecture/hybrid-federated-target-architecture-v1.3.9.md
