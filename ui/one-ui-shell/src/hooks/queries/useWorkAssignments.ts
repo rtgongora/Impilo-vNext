@@ -23,6 +23,9 @@ function normalizeAssignments(payload: AssignmentsResponse["data"]): WorkAssignm
 
 export function useWorkAssignments() {
   const { user, isAuthenticated } = useAuthStore();
+  // `linkedIds.providerId` is populated by useLinkedIds' queryFn via setLinkedIds, so this
+  // resolves as soon as that query lands — the Provider ID being an attached identifier of the
+  // signed-in person rather than a separate login.
   const providerId = user?.providerId ?? user?.linkedIds?.providerId;
 
   return useQuery<WorkAssignment[]>({
