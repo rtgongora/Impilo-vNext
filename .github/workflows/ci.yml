@@ -620,6 +620,20 @@ jobs:
         working-directory: ui/one-ui-shell
         run: npm run test:route-guard-export
 
+      # A catch-all proxy rewrite in `afterFiles` beats every dynamic route below it, so a
+      # handler can compile, ship in the image and never execute. That is not a visible
+      # failure — requests go to the proxy target instead.
+      - name: No route handler shadowed by a rewrite
+        working-directory: ui/one-ui-shell
+        run: npm run test:api-route-shadowing
+
+      # The provider hub catalogue exists in the shell handler and again as each BFF
+      # controller's stub. Whichever answers is what a mobile user sees, so a difference
+      # between them is two different products depending on a downstream call succeeding.
+      - name: Provider hub catalogue copies agree
+        working-directory: ui/one-ui-shell
+        run: npm run test:hub-catalogue-parity
+
   e2e-test:
     name: E2E Tests
     runs-on: ubuntu-latest

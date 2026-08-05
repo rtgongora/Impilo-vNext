@@ -2,8 +2,9 @@
 #
 # Terminates TLS using the impilo-mohcc-gov-zw-tls secret (populated from the
 # host-side certbot cert by scripts/tls/sync-mohcc-gov-tls.sh) and routes:
-#   - UI  -> one-ui-shell:3000   (everything except BFF surfaces)
+#   - UI  -> one-ui-shell:3000   (everything except BFF surfaces and /api/mobile)
 #   - BFF -> experience-bff:8160 (/internal, /actuator, /health)
+#   - /api/mobile is served by the shell but only in-cluster; see the note on the UI rule.
 #
 # Mirror of the (manually-applied) impilo-mohcc-https-{ui,bff} IngressRoutes that
 # were created for impilo.mohcc.org.zw. Envoy is intentionally NOT in this path:
@@ -18,7 +19,14 @@ spec:
     - websecure
   routes:
     - kind: Rule
-      match: Host(`impilo.mohcc.gov.zw`) && PathPrefix(`/`) && !PathPrefix(`/internal`) && !PathPrefix(`/actuator`) && !PathPrefix(`/health`)
+      # /api/mobile is excluded deliberately. It serves the mobile provider hub catalogue and is
+      # consumed ONLY by experience-bff, server-side, over the cluster Service
+      # (ONE_UI_SHELL_BASE_URL=http://one-ui-shell:3000) — which does not traverse Traefik. No
+      # browser or mobile client calls it; the apps reach hubs through the BFF's /internal/v1
+      # surface. The shell has no token validation of its own, so leaving it on the public host
+      # would publish an ungated endpoint for no consumer. Excluded here it matches no route and
+      # Traefik answers 404, while the in-cluster call is unaffected.
+      match: Host(`impilo.mohcc.gov.zw`) && PathPrefix(`/`) && !PathPrefix(`/internal`) && !PathPrefix(`/actuator`) && !PathPrefix(`/health`) && !PathPrefix(`/api/mobile`)
       priority: 1
       services:
         - name: one-ui-shell

@@ -57,6 +57,17 @@ function sectionsFor(hub: string): HubSection[] | null {
         { id: "ph_campaigns", title: "Campaigns", web_path: "/public-health/campaigns", hint: "Immunisation and outreach waves." },
         { id: "ph_site_registry", title: "Site Registry", web_path: "/public-health/site-registry", hint: "Community sites and outreach anchors." },
         { id: "ph_site_profile", title: "Site Profile", web_path: "/public-health/site-registry/[siteId]", hint: "Single-site programme detail." },
+        // Present so that this handler — newly reachable, see next.config.mjs — serves exactly what
+        // the BFF stub has always served. Without it, fixing the shadowing would have silently
+        // dropped a section from the hub.
+        //
+        // It is carried forward as-is, NOT endorsed: /tools/ph-field is in no web route registry
+        // (there are no /tools routes at all), and ProfessionalHubBody opens web_path in a browser,
+        // so this resolves to nothing. The real screen is native — PublicHealthFieldTasksScreen,
+        // already reachable in-app via the Outreach tabs and Clinical Tools. Fixing that means
+        // letting a section target a native destination instead of a web_path, which is a contract
+        // change, not a link correction; tracked separately.
+        { id: "ph_field_tasks", title: "Field Tasks (native)", web_path: "/tools/ph-field", hint: "Mobile task board with lifecycle transitions." },
       ];
     default:
       return null;

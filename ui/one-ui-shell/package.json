@@ -16,6 +16,8 @@
     "test:routes": "node scripts/route-parity-check.mjs",
     "generate:route-guards": "node scripts/generate-route-guard-export.mjs",
     "test:route-guard-export": "node scripts/generate-route-guard-export.mjs --check",
+    "test:api-route-shadowing": "node scripts/api-route-shadowing-check.mjs",
+    "test:hub-catalogue-parity": "node scripts/hub-catalogue-parity-check.mjs",
     "test:orphan-pages": "node scripts/orphan-page-check.mjs",
     "test:decorative-controls": "node scripts/decorative-control-check.mjs",
     "test:launchers": "node ../../scripts/frontend/check-launcher-dead-ends.mjs",

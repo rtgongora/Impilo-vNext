@@ -73,16 +73,42 @@ const nextConfig = {
       ["BFF_URL", "NEXT_PUBLIC_BFF_URL"],
       "http://localhost:8160",
     );
-    return [
-      {
-        source: "/internal/:path*",
-        destination: `${gateway}/internal/:path*`,
-      },
-      {
-        source: "/api/:path*",
-        destination: `${gateway}/api/:path*`,
-      },
-    ];
+    /**
+     * `/api/:path*` is a FALLBACK rewrite, not an afterFiles one, and that distinction is
+     * load-bearing. Next resolves in this order:
+     *
+     *   headers -> redirects -> beforeFiles -> filesystem routes -> afterFiles
+     *     -> DYNAMIC routes -> fallback
+     *
+     * Returning a bare array puts every rewrite in `afterFiles`, which runs BEFORE dynamic
+     * routes. That silently shadowed `app/api/mobile/provider/hubs/[hub]/route.ts`: the handler
+     * compiled, shipped in the image, and never executed once. Requests to it were proxied to the
+     * experience BFF, which has no controller on that path and answered 401 — so the BFF's own
+     * `live` mode called this shell, this shell proxied straight back to the BFF, and the
+     * resulting failure was swallowed by `stub_fallback`. Mobile silently got the BFF's stub
+     * copy of the catalogue for months, which is why a fix applied here reached nobody.
+     *
+     * `/api/health/version` never showed the problem because a STATIC route resolves at the
+     * filesystem step, before afterFiles. Only dynamic routes were affected.
+     *
+     * `fallback` runs after dynamic routes, so real handlers win and everything else still
+     * proxies to the gateway exactly as before. `npm run test:api-route-shadowing` fails if this
+     * moves back.
+     */
+    return {
+      afterFiles: [
+        {
+          source: "/internal/:path*",
+          destination: `${gateway}/internal/:path*`,
+        },
+      ],
+      fallback: [
+        {
+          source: "/api/:path*",
+          destination: `${gateway}/api/:path*`,
+        },
+      ],
+    };
   },
   async redirects() {
     return [
