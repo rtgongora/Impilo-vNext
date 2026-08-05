@@ -27,12 +27,22 @@
  * It asserts self-reach: finding zero pages, or zero registered routes, means the path assumptions
  * have drifted and the check has inspected nothing. That fails rather than passing quietly — a
  * check that matches nothing reports the same "no findings" as a clean tree.
+ *
+ * BASELINE RETIRED (Aug 2026). This check shipped with a list of 88 known-unregistered pages,
+ * because registering a page is a product decision the check's author could not make. Item 73 then
+ * made an unregistered non-public route render a denial panel instead of the page, so the whole
+ * baseline became 69 unreachable pages. Every entry has now been registered with a deliberate
+ * guard and the list is gone — there is nothing left to grandfather, and re-introducing one would
+ * mean re-introducing dead pages.
+ *
+ * The decisive assertion now lives in src/lib/__tests__/app-router-route-coverage.test.ts, which
+ * runs under `npm test` (this script is a faster standalone echo of it, and additionally catches
+ * pages that are public-by-middleware but absent from the registry).
  */
 
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { ORPHAN_PAGE_BASELINE } from "./orphan-page-baseline.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const APP_DIR = path.resolve(__dirname, "../src/app");
@@ -121,30 +131,20 @@ if (PUBLIC.length === 0) {
 }
 const isPublic = (route) => PUBLIC.some((p) => route === p || route.startsWith(p + "/"));
 
-const baseline = new Set(ORPHAN_PAGE_BASELINE);
 const orphans = [];
-const known = [];
 for (let i = 0; i < pages.length; i++) {
   const route = pageRoutes[i];
   if (registered.has(route) || allowedPaths.has(route) || isPublic(route)) continue;
-  if (baseline.has(route)) { known.push(route); continue; }
   orphans.push({ route, file: path.relative(path.resolve(__dirname, ".."), pages[i]) });
-}
-
-// A baseline entry that is no longer an orphan has been fixed — drop it, so the list can only
-// shrink and cannot quietly start covering something new.
-const stale = ORPHAN_PAGE_BASELINE.filter((r) => !known.includes(r));
-if (stale.length > 0) {
-  console.log(`ORPHAN-PAGE CHECK: ${stale.length} baseline entr(ies) now registered — remove from`);
-  console.log(`  scripts/orphan-page-baseline.mjs: ${stale.join(", ")}`);
 }
 
 if (orphans.length > 0) {
   console.error(
     `ORPHAN-PAGE CHECK FAILED: ${orphans.length} page(s) exist but are not in the route registry.`,
   );
-  console.error("They build, they type-check, and visiting the URL directly works —");
-  console.error("but nothing links to them, so no user can navigate there.\n");
+  console.error("They build and they type-check, but AuthGuardProvider denies by default:");
+  console.error("outside the public surface an unregistered route renders");
+  console.error('"This page is not available" instead of the page.\n');
   for (const o of orphans.slice(0, 40)) {
     console.error(`  ${o.route}`);
     console.error(`      ${o.file}`);
@@ -155,7 +155,4 @@ if (orphans.length > 0) {
   process.exit(1);
 }
 
-console.log(
-  `ORPHAN-PAGE CHECK PASSED (${pages.length} pages; ${known.length} known-unregistered in the ` +
-    `2026-07-28 baseline, 0 new)`,
-);
+console.log(`ORPHAN-PAGE CHECK PASSED (${pages.length} pages; 0 unregistered, no baseline)`);

@@ -1,6 +1,10 @@
 /**
  * Auto-generated Administration & Governance route registry.
  * Regenerate: node scripts/scaffold-admin-governance-pages.mjs
+ *
+ * Entries not derivable from the scaffold lists are preserved verbatim on regeneration
+ * (see "Regeneration must be lossless" in the script). Removing a route means removing it
+ * from this file AND from the scaffold source, not just re-running the generator.
  */
 
 export const ADMINISTRATION_GOVERNANCE_ROUTES = [
@@ -26,6 +30,7 @@ export const ADMINISTRATION_GOVERNANCE_ROUTES = [
   { path: "/work/administration-governance/onboard/system-admin", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Onboard System Admin", navLabel: "Onboard System Admin", navZone: "work" },
   { path: "/work/administration-governance/onboard/training-user", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Onboard Training User", navLabel: "Onboard Training User", navZone: "work" },
   { path: "/work/administration-governance/organisations", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Organisations", navLabel: "Organisations", navZone: "work" },
+  { path: "/work/administration-governance/organisations/new", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "New", navLabel: "New", navZone: "work" },
   { path: "/work/administration-governance/organisations/[orgId]", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Organisations", navLabel: "Organisations", navZone: "work" },
   { path: "/work/administration-governance/organisations/[orgId]/api-access", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Api Access", navLabel: "Api Access", navZone: "work" },
   { path: "/work/administration-governance/organisations/[orgId]/audit", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Audit", navLabel: "Audit", navZone: "work" },
@@ -34,14 +39,13 @@ export const ADMINISTRATION_GOVERNANCE_ROUTES = [
   { path: "/work/administration-governance/organisations/[orgId]/data-uploads", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Data Uploads", navLabel: "Data Uploads", navZone: "work" },
   { path: "/work/administration-governance/organisations/[orgId]/users", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Users", navLabel: "Users", navZone: "work" },
   { path: "/work/administration-governance/organisations/[orgId]/verification", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Verification", navLabel: "Verification", navZone: "work" },
-  { path: "/work/administration-governance/organisations/new", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "New", navLabel: "New", navZone: "work" },
   { path: "/work/administration-governance/private-facility", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Private Facility", navLabel: "Private Facility", navZone: "work" },
+  { path: "/work/facility/staff-access", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Staff Access", navLabel: "Staff Access", navZone: "work" },
   { path: "/work/facility/[facilityId]/audit/access", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Access", navLabel: "Access", navZone: "work" },
   { path: "/work/facility/[facilityId]/departments/[departmentId]/staff", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Staff", navLabel: "Staff", navZone: "work" },
   { path: "/work/facility/[facilityId]/staff-access", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Staff Access", navLabel: "Staff Access", navZone: "work" },
-  { path: "/work/facility/[facilityId]/staff-access/[assignmentId]", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Staff Access", navLabel: "Staff Access", navZone: "work" },
   { path: "/work/facility/[facilityId]/staff-access/add", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Add", navLabel: "Add", navZone: "work" },
-  { path: "/work/facility/staff-access", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Staff Access", navLabel: "Staff Access", navZone: "work" },
+  { path: "/work/facility/[facilityId]/staff-access/[assignmentId]", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Staff Access", navLabel: "Staff Access", navZone: "work" },
   { path: "/work/fundo/admin/accreditation", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Accreditation", navLabel: "Accreditation", navZone: "work" },
   { path: "/work/fundo/admin/courses", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Courses", navLabel: "Courses", navZone: "work" },
   { path: "/work/fundo/admin/partners", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Partners", navLabel: "Partners", navZone: "work" },
@@ -97,15 +101,15 @@ export const ADMINISTRATION_GOVERNANCE_ROUTES = [
   { path: "/work/system-admin/tshepo", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Tshepo", navLabel: "Tshepo", navZone: "work" },
   { path: "/work/system-admin/users", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Users", navLabel: "Users", navZone: "work" },
   { path: "/work/vashandi", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Vashandi Workforce", navLabel: "Vashandi", navZone: "work" },
-  { path: "/work/vashandi/workforce", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Workforce Registry", navLabel: "Workforce", navZone: "work" },
-  { path: "/work/vashandi/workforce/[id]", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Workforce Profile", navLabel: "Workforce", navZone: "work" },
-  { path: "/work/vashandi/assignments", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Assignments", navLabel: "Assignments", navZone: "work" },
-  { path: "/work/vashandi/rosters", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Rosters", navLabel: "Rosters", navZone: "work" },
-  { path: "/work/vashandi/attendance", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Attendance", navLabel: "Attendance", navZone: "work" },
-  { path: "/work/vashandi/leave-availability", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Leave Availability", navLabel: "Leave", navZone: "work" },
-  { path: "/work/vashandi/imports", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Imports", navLabel: "Imports", navZone: "work" },
   { path: "/work/vashandi/access-review", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Access Review", navLabel: "Access Review", navZone: "work" },
   { path: "/work/vashandi/analytics", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Analytics", navLabel: "Analytics", navZone: "work" },
+  { path: "/work/vashandi/assignments", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Assignments", navLabel: "Assignments", navZone: "work" },
+  { path: "/work/vashandi/attendance", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Attendance", navLabel: "Attendance", navZone: "work" },
+  { path: "/work/vashandi/imports", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Imports", navLabel: "Imports", navZone: "work" },
+  { path: "/work/vashandi/leave-availability", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Leave Availability", navLabel: "Leave", navZone: "work" },
+  { path: "/work/vashandi/rosters", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Rosters", navLabel: "Rosters", navZone: "work" },
+  { path: "/work/vashandi/workforce", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Workforce Registry", navLabel: "Workforce", navZone: "work" },
+  { path: "/work/vashandi/workforce/[id]", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Workforce Profile", navLabel: "Workforce", navZone: "work" },
 ] as const;
 
-export const ADMINISTRATION_GOVERNANCE_ROUTE_COUNT = 100;
+export const ADMINISTRATION_GOVERNANCE_ROUTE_COUNT = 102;
