@@ -7,8 +7,8 @@
 
 When two documents disagree, the higher layer prevails:
 
-1. **Hybrid / Federated Target Architecture v1.3.2**
-   Complete active document: `docs/architecture/hybrid-federated-target-architecture-v1.3.2.md` — the versioned file is the self-contained, historically durable architecture; there is exactly **one** complete active copy.
+1. **Hybrid / Federated Target Architecture v1.3.4**
+   Complete active document: `docs/architecture/hybrid-federated-target-architecture-v1.3.4.md` — the versioned file is the self-contained, historically durable architecture; there is exactly **one** complete active copy.
    Convenience pointer: `docs/architecture/vnext-hybrid-federation-target-architecture.md` — a short pointer naming the active version, status and path; never a second copy.
    Highest-precedence working architecture. It is **not architecture-frozen**; freeze requires Product Owner sign-off. Its explicit implementation gate governs what may and may not be built before freeze.
 2. **Product, Capability and Plane Architecture**
@@ -35,7 +35,7 @@ Claude, developers and CI rules must preserve these distinctions. Repository evi
 
 ## 3. Immediate supersession rule
 
-Files under `docs/architecture/archive/` are retained for lineage only. They are not controlling architecture. v1.3.1 is a superseded working draft; v1.3.2 preserves its settled decisions and replaces it as the active working architecture.
+Files under `docs/architecture/archive/` are retained for lineage only. They are not controlling architecture, they carry a supersession banner, and nothing may be implemented from them. **v1.3.1**, **v1.3.2** and **v1.3.3** are all superseded working drafts, and **none of them was ever frozen**: v1.3.2 corrected v1.3.1 and was stopped at freeze review; v1.3.3 corrected v1.3.2 and was stopped at its own freeze review on two further stop conditions. **v1.3.4** preserves every settled decision from all three and is the active working architecture candidate. It is **not frozen**.
 
 The following legacy assumptions remain withdrawn:
 
@@ -49,7 +49,7 @@ The following legacy assumptions remain withdrawn:
 
 See `docs/architecture/supersession-notice-v1.0.md`.
 
-## 4. v1.3.2 implementation gate
+## 4. v1.3.4 implementation gate
 
 ### May proceed before freeze
 
@@ -77,10 +77,10 @@ Analysis, repository-truth recovery and non-controlling pack drafting are permit
 
 | Change area | Required source |
 |---|---|
-| Federation, trust domains, hosting, nodes, continuity, record authority | Target Architecture v1.3.2 |
+| Federation, trust domains, hosting, nodes, continuity, record authority | Target Architecture v1.3.4 |
 | Product ownership, planes, rings, capability boundaries | Product Architecture |
-| APIs, request context, events, FHIR, reliability, finance, AI | Technical Standards Catalogue plus v1.3.2 where it amends the model |
-| Navigation, journeys, UI states, self-service, clinical work experience | Target Architecture v1.3.2 plus the applicable Experience Completion Pack |
+| APIs, request context, events, FHIR, reliability, finance, AI | Technical Standards Catalogue plus v1.3.4 where it amends the model |
+| Navigation, journeys, UI states, self-service, clinical work experience | Target Architecture v1.3.4 plus the applicable Experience Completion Pack |
 | Architectural departure | Existing ADRs plus a new or amended ADR before implementation |
 
 ## 6. Interpretation law

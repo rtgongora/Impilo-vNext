@@ -1,16 +1,22 @@
 # Impilo vNext — Hybrid / Federated Target Architecture
 
-> # ⛔ SUPERSEDED — ARCHIVED WORKING DRAFT
+> # ⛔ SUPERSEDED — ARCHIVED WORKING DRAFT, NEVER FROZEN
 >
-> **This file is not the architecture.** v1.3.1 was directionally accepted by the PO on 2026-08-04 and **never frozen**; it was superseded by v1.3.2 and then by **v1.3.3**, which is the only active version.
+> **This file is not the architecture.** v1.3.3 went to independent freeze review on 2026-08-05. The review **refused freeze**: two stop conditions remained. It was **never approved and never architecture-frozen**, and is superseded by **v1.3.4**.
 >
-> **Active document:** [`../../hybrid-federated-target-architecture-v1.3.3.md`](../../hybrid-federated-target-architecture-v1.3.3.md) · entry point: [`../../ARCHITECTURE_PRECEDENCE.md`](../../ARCHITECTURE_PRECEDENCE.md)
+> **STOP-1 (safety).** §29.0's precedence function applied the `MANAGED_SHARED` personal-domain block only to a *requested* destination. Step 9 derived a My Life landing without re-testing it, so a clinician at a ward workstation with `work_assignment = NONE` reached the personal domain that §29.3 blocks. A103 tested only the requested path.
 >
-> Kept for provenance only — to show what was decided when, and what the later reviews corrected. Do not implement from this file, do not cite it as authority, and do not copy its schemas: several were corrected precisely because they were wrong. *(Banner added by v1.3.3, F19.)*
+> **STOP-2 (proof).** Journey 12 cited A38, which proves node-commissioning ordering. The all-24 audit that followed found this was one instance of a wider defect — three unrelated citations, one unproven clause and four partials.
+>
+> **Active document:** [`../../hybrid-federated-target-architecture-v1.3.4.md`](../../hybrid-federated-target-architecture-v1.3.4.md) · entry point: [`../../ARCHITECTURE_PRECEDENCE.md`](../../ARCHITECTURE_PRECEDENCE.md)
+>
+> Kept for provenance only. Do not implement from this file, do not cite it as authority, and do not copy its §29.0 precedence function or its §38 citations — both were corrected because they were wrong. *(Banner added by v1.3.4.)*
 
 ---
 
-**Status:** Controlling architecture · **Version:** 1.3.1 · **Date:** 2026-08-04
+**Status:** Working draft — **NOT architecture-frozen**; freeze requires PO sign-off of this version · **Version:** 1.3.3 · **Date:** 2026-08-05
+
+> **Status discipline.** "Approved, but with corrections required" is not a status. A version is either frozen or it is not. v1.3.1 was **directionally accepted, not approved**: its settled decisions are preserved and its remaining defects were upstream model issues that could not be left to the Experience Completion Packs to resolve divergently. v1.3.2 was the integrity correction the PO required before freeze; the freeze review of v1.3.2 found stop conditions, so **v1.3.2 was never frozen** and v1.3.3 corrects them. Until freeze, the §Implementation-gate table below states exactly what may and may not be built.
 **Factual basis:** [`vnext-current-state-recovery-2026-08-03.md`](vnext-current-state-recovery-2026-08-03.md) (commit `1870cf33d`), plus targeted evidence sweeps for the v1.1 additions. Every current-state statement is a reference, not a re-derivation.
 **Scope:** Converts vNext from a single-instance national deployment into a hub-and-spoke federated national platform, consumed through four service profiles. Immediate delivery target is the **large Hospital Node**. This document does not implement; it governs implementation.
 
@@ -55,7 +61,7 @@ Ten corrections and two settled decisions. Three of the ten are **claims v1.1 ma
 | 2 | **Legal controllership ≠ source authority.** Seven distinct authority roles separated; the matrix no longer asserts a controller that §26.2 says is undetermined | §2B.2, §4A.0, §19A.1 | Internal contradiction |
 | 3 | **Key custody does not defeat a managed platform operator at runtime.** v1.1 claimed the operator "holds ciphertext and cannot decrypt". False under managed Kubernetes | §2B.3, §23.2 | **Overclaim — corrected** |
 | 4 | **Work-context concurrency was too absolute** and contradicted its own test | §4B.5, §11A.2, §11C | Internal contradiction |
-| 5 | **National → node transition need not always be full reauthentication** | §11C.5 | Usability refinement |
+| 5 | **National → node transition need not always be full reauthentication** | §11C sequence 5 | Usability refinement |
 | 6 | **Air-gapped *installation* ≠ air-gapped *operation*** | §22B.4, §22B.6 | Genuine gap |
 | 7 | **The cache cannot suppress a revocation it has not received.** v1.1 claimed immediate offline suppression | §19B.6 | **Overclaim — corrected** |
 | 8 | **Non-MoHCC allergy contribution marked `[D]` while §26.2 says it is undecided** | §4.2 | Internal contradiction |
@@ -109,11 +115,90 @@ v1.3 is approved as the **Experience Architecture baseline** and is not a comple
 - **The inactivity lock has never fired.** `InactivityLockProvider.tsx:33` exempts the prefix list `["/", "/welcome", …]` using `pathname.startsWith(p)` — and every path starts with `"/"`, so `isExempt` is unconditionally true. The five-minute privacy lock and the fifteen-minute auto-logout are dead code on every route. The identical list in `api-client.ts:348` guards against exactly this with `p !== "/"`, so the correct implementation already exists twenty lines of the codebase away (§29.3, item 82).
 - **Notification scope is client-asserted.** `AssistantNotificationsController` scopes the tray by `work_mode`, `facility_id` and `shift_id` taken from **query parameters**, not from the session audience — the same browser-authoritative-context defect §12.4 eliminates for trust headers (§40, item 83).
 
+## v1.3.2 — experience-integrity correction (PO review, 2026-08-04)
+
+PO verdict on v1.3.1: directionally accepted; **not frozen, not approved for implementation**. Thirteen corrections, all upstream model issues that the packs must inherit, not resolve:
+
+| # | Correction | Where | Nature |
+|---|---|---|---|
+| I1 | **Delivery context ≠ clinical setting.** Item 87's "map the vocabularies" was wrong — `facility` cannot map to any one of OUTPATIENT/EMERGENCY/INPATIENT/MATERNITY/THEATRE. Two fields, with `clinical_setting` **derived**, never guessed | §42.2, item 87 rewritten | **Model defect — corrected** |
+| I2 | **Administrative authorities were flattened.** `active_domain: ORG_ADMIN` names no organisation; the vector gains six scoped authority arrays | §29.0 | Model gap |
+| I3 | **Precedence and freshness were too global** — a hospital's dead site link could hijack a My Life visit; one stale bundle blocked every landing | §29.0, §28.2 | **Model defect — corrected** |
+| I4 | **Entry intent lacked its required audience** — the resolver could only refuse, never offer the correct session transition | §28.5 | Model gap |
+| I5 | **Node journey references could disclose** — "national journeys listed as stale references" would put personal-health and regulatory-complaint labels on an employer's node | §28.4, §39.3 | **Privacy defect — corrected** |
+| I6 | **"Node offer ⊆ live national contract" was too centralising** — it denied institutionally authoritative local acts (shift assignments, ward allocations) during an outage. Subset of the **governed authority model**, not of a live resolver response | §28.4, A89 | **Model defect — corrected** |
+| I7 | **Journey persistence preserved position, not work** — no draft content, no versioning, no locking; A92 proved "you were on step 3" but not what was entered there | §39 | **Promise half-kept — corrected** |
+| I8 | **Journey scoping and actor assignment were underspecified** — `authority_domain` alone over-shares; `next_actor_role = REGULATOR` names no regulator, no jurisdiction, no assignment state | §39 | Model gap |
+| I9 | **A single `expires_at` conflated five lifecycles** — an experience-projection TTL must never expire another service's legal case | §39 | **Model defect — corrected** |
+| I10 | **The professional/Work notification boundary was too strict** — it would hide licence-suspension consequences from the place where unsafe work happens | §40 | **Safety defect — corrected** |
+| I11 | **The Action Centre had classes and no storage** — and §40.1's claim that notification-service "holds no concept of a person's inbox" was **measurably wrong** (V005/V010 added read state and a per-recipient inbox); the genuinely absent things are restated precisely | §40 | Gap + own overclaim corrected |
+| I12 | **My Life on a shared ward workstation was too permissive** — default becomes BLOCK, with an isolated step-up variant; fast switch preserves location, never patient data | §29.3 | **Safety default — corrected** |
+| I13 | **Pack ordering** — P5/P6/P7 are cross-cutting and start immediately; functional order runs encounter-context → P3 → P2 → P1 ∥ P4; P1 gains recovery, guardianship and delegation journeys | §42 | Sequencing |
+
+Tests A94–A103 cover the thirteen; A87–A93 are explicitly the v1.3.1 suite, not the whole; v1.3.3 adds A104–A108 (§23.6).
+
+### Evidence refresh — 2026-08-04 second sweep **[evidence corrections, not reopened design decisions]**
+
+A post-v1.3.2 verification sweep at commit `984b2d498` re-measured this document's current-state claims. Eight figures were stale or overbroad and are corrected in place, each marked *(evidence correction 2026-08-04)* at its site. No settled `[D]`/`[T]`/`[O]` decision is changed by any of them:
+
+1. navZone-less routes: **98**, not 95 (§28.3).
+2. A segment `error.tsx` now exists in exactly one route segment (`app/madi`); `global-error.tsx` remains absent (§29.2).
+3. The shell mints **22** `X-*` headers; two server-authoritative overrides exist (actor **enforced**, tenant **SHADOW**) (§12.4).
+4. OPA's repository default is **`OFF`**; SHADOW is an environment assertion no repo file sets — not statically established (§1.2 I2).
+5. `FormScopeEngine` is confirmed in **pct-service** (`core/forms/FormScopeEngine.java:133-139`) — the document already attributed it correctly; recorded here because the sweep re-verified the location.
+6. The `'national-spine'` literal also defaults **`tenant_id`** columns in guidance-service — a second mismatch class (§13.5).
+7. "No DND anywhere" is qualified: a khuluma *presence-status* DND literal exists; no delivery-suppression or quiet-hours mechanism does (§40.3).
+8. `'national-spine'` pod-id defaults measure **71 lines across 52 migration files** (was "≥12 migrations") (§13.5).
+
+## v1.3.3 — freeze-review correction (2026-08-05)
+
+The freeze review of v1.3.2 was run as an adversarial integrity pass: every cross-reference resolved, every journey checked against the test it cited, every `[L]` decision checked for a schema that pre-empts it, and the precedence function walked against its own stated safety defaults. It found stop conditions, so **v1.3.2 was not frozen**. v1.3.3 is that correction. **No settled `[D]`/`[T]`/`[O]` decision is reopened** — every entry below repairs an internal contradiction, a missing proof, or a statement that had drifted from a correction made elsewhere in the same document.
+
+| # | Correction | Where | Nature |
+|---|---|---|---|
+| **F1** | **§41 "The design-system boundary" had been deleted** — an Edit in `984b2d498` consumed its heading and did not restore it, orphaning thirteen lines inside §40.3 and leaving six references dangling. **This was my regression, introduced while writing v1.3.2** | §41 restored | **Structural defect — corrected** |
+| **F2** | **A fail-closed invariant's only exception was undefined** — §1.3 cited "§4.7" for the exceptions to failing closed on bundle expiry; §4.7 has never existed in any version. An invariant whose escape hatch points nowhere is unimplementable, and the safe reading and the unsafe reading were equally available | §1.3 | **Safety defect — corrected** |
+| **F3** | **Eleven broken cross-references repaired**: §19→§23, §18→§20 (×3), §7→§4.2/§4.4, §17→§22, §1.4→§1.1, §6.5→§13.3, §10.1→§3.4, §10.3→§3.2, §F.1→§12.4, §11C.5→"§11C sequence 5"; §30.3 appeared twice and the second is now §30.4 | throughout | Reference integrity |
+| **F4** | **The contract still carried a bare `next_actor_role`** — I8 replaced role-only actor assignment with a scoped model, and §28's contract example was not updated with it, so the example contradicted the correction it was meant to carry | §28.2, §39 | **Correction not propagated — fixed** |
+| **F5** | **Two gates, reconciled nowhere** — the Implementation gate ("may proceed now") and §22's phase gates ("no phase begins before its predecessor's gate is met") were stated in separate sections with no statement of how they interact, leaving the first readable as an override of the second. Both bind; an item clears both or it is not built | Implementation gate | Governance ambiguity |
+| **F6** | **A schema pre-empted an open legal determination** — `data_controller_id` was `NOT NULL`, which forces every responsibility profile to name a controller. §26.2 #1 (who controls a MoHCC hospital's records) is an unresolved `[L]`, and §3A.4 rules that an unresolvable controller must be **refused and flagged**, not guessed. `NOT NULL` made the refusal path unrepresentable | §3A | **`[L]` pre-emption — corrected** |
+| **F7** | **Four journeys cited tests that prove something else** — journey 1 cited A76 (organisation consumption profile), 20 cited A26 (employer refusing correspondence), 11 cited A38 (node commissioning order), 21 cited A42 (sizing-profile deployment). Each now has its own test | §38 → §23.6 | **Unproven claims — corrected** |
+| **F8** | **Journey 3 cited A44** (patient-reported labelling) rather than A81, which actually proves "stated, not blank" | §38 | Mis-citation |
+| **F13** | **"Shipping" contradicted "cannot succeed as shipped"** — §22A.1 listed `/organization-admin/onboarding` as shipping while §35.3 measured it defaulting an `orgType` the CHECK constraint rejects. Governance rule 13: a route existing is not a journey completing | §22A.1 | **Internal contradiction — corrected** |
+| **F14** | **The closing contradiction list was stale** — it said "six" and named six, while the backlog it summarises carried ten (items 83, 88, 89, 90 were omitted) | §closing | Drift |
+| **F15** | **The precedence function contradicted its own safety default** — I12 made `personal_domain_policy = BLOCK` the default on `MANAGED_SHARED` devices, but no precedence step tested it, so the function fell through to step 5 and derived a My Life landing that §29.3 forbids. A default that the deciding function never reads is not a default | §29.0 | **Safety defect — corrected** |
+| **F16** | **I8 was asserted with no test** — scope-bound journey reading is a disclosure boundary and had nothing proving it. Now A108 | §23.6 | Missing proof |
+| **F17** | **The authority-array example carried a partial entry shape** — §29.0 specifies scope, role, effective period, status, permitted journey families, availability, source and freshness; the contract example carried a subset, which is how a contract quietly becomes narrower than its specification | §28.2 | **Correction not propagated — fixed** |
+| **F19** | **Archived versions carried no supersession banner** — v1.3.1 and v1.3.2 sit in `archive/working-drafts/` and read as live architecture to anyone who opens the file directly | archive | Governance hygiene |
+| **F21** | **The six doctrine lines carried no classification** — v1.3.2 marked §1.3's invariants `[D]` and left §1.1, the document's most-quoted normative statements, unmarked | §1.1 | Classification gap |
+| **F25** | **A withdrawn remedy relapsed in the closing passage** — "two care-setting vocabularies never meet" is exactly the framing I1 and the rewritten item 87 exist to withdraw. The defect is one field carrying two concepts | §closing | **Drift from a correction — fixed** |
+| — | **Smaller repairs**: `contract_version` still read `"1.3.1"`; `personal_standing` was specified in §29.0 and missing from the contract's state block; `facility_authorities[]` entries lacked `effective_from` and `permitted_journey_families`; the autonomy capability count read "twelve" in two places against a fifteen-item list; `api-client.ts:355` re-measured to `:348` | throughout | Accuracy |
+
+Tests **A104–A108** (§23.6) prove F7, F8 and F16. The other corrections are repairs to statements the existing suite already covers, or to the document's own integrity, and are verified by the governance-pack verifier rather than by a runtime test.
+
+### Implementation gate **[O]**
+
+| May proceed now (independent of freeze) | Must wait for architecture freeze |
+|---|---|
+| Item 73 — deny-by-default for unregistered routes (P0) | Implementing the canonical journey store (§39) |
+| Item 82 — fix the never-firing inactivity lock (P0) | Implementing the Action Centre data model (§40) |
+| Item 83 — notification scope from the session, server-side | Freezing the experience-contract schema (§28.2) |
+| Item 72 / A81 — `EMPTY` vs `UNAVAILABLE` separation | Implementing administrative-authority selectors (§29.0 arrays) |
+| Measuring the clinical composition seams (§42.2) | Implementing the clinical pathway surfacing rules (P3 build) |
+| P5 / P6 / P7 preparation — accessibility, design system, usability | Implementing node-local journey projection (§28.4/§39.3) |
+| Drafting all seven packs against accepted principles (non-controlling) | Treating A87–A108 as a complete acceptance suite |
+
+**This gate and §22's phase gates are different gates, and both bind** *(v1.3.3, F5)*. The Implementation gate is a **document-status** gate: it says whether this architecture is settled enough for a thing to be built against. §22 is a **delivery-sequence** gate: "no phase begins before its predecessor's gate is met" — Phase 0 before Phase 1, and so on. An item may be built only when it clears **both**. "May proceed now" therefore never means "proceed out of phase order"; it means the freeze is not what is holding that item.
+
+The left column is consistent with that on inspection: items 73, 82, 83 and 72/A81 are all Phase 0 correction work, which is the phase in progress; measuring the clinical seams, P5/P6/P7 preparation and non-controlling pack drafting are analysis and documentation, not deployable change, so no phase gate applies. v1.3.2 stated the two gates in separate sections and reconciled them nowhere, which left "may proceed now" readable as an override of §22.
+
 ---
 
 # 1. Target-state architecture doctrine
 
-## 1.1 The six doctrine lines
+## 1.1 The six doctrine lines **[D]**
+
+All six are doctrine: they state what must be true of the target state, not how it is built. Each is testable, and §1.3's invariants and §23's acceptance plan are where they are proven. *(v1.3.3, F21: v1.3.2 classified §1.3's invariants `[D]` but left §1.1 unmarked, so the document's most-quoted normative statements carried no classification at all. `[T]` implementation choices that serve these lines — signed bundles, band numbering, header names — are marked where they appear and are changeable without touching this section.)*
 
 > **Federation line.** One national hub, many governed spokes; nodes federate through signed contracts, never through shared databases or raw brokers.
 
@@ -134,7 +219,7 @@ The recovery established what vNext is. The target state is defined by eight spe
 | # | From (current, per recovery) | To (target) | Why it is the crux |
 |---|---|---|---|
 | **I1** | Tenancy is a browser-minted `X-Tenant-ID` header with a hardcoded default UUID, and the token's `tenant_id` claim is the hardcoded literal `moh-zw` for every user | `trust_domain_id` is derived server-side from a verified issuer + subject binding, never accepted from a client, and carried in a signed work-context token | Without this, no institutional boundary can be enforced, so non-MoHCC federation is legally impossible |
-| **I2** | The PDP is deployed and disengaged: `ext_authz` templated out, work-context/tenancy/OPA/lawful-basis all SHADOW; consent is enforced in exactly one place the edge never reaches | Enforcement is **on** at every node, PDP-local, bundle-fed; consent evaluation sits on the clinical read path itself, not only in the gateway | A federated platform that ships enforcement in shadow mode exports its defects to every institution |
+| **I2** | The PDP is deployed and disengaged: `ext_authz` templated out (`extAuthz.enabled: false`), tenancy SHADOW, lawful-basis SHADOW; the OPA sidecar is deployed but the repository's own default is `TSHEPO_AUTHZ_OPA_MODE: OFF` — SHADOW is an environment assertion no repo file sets, so "OPA in shadow" is not statically established *(evidence correction, 2026-08-04 second sweep)*; consent is enforced in exactly one place the edge never reaches | Enforcement is **on** at every node, PDP-local, bundle-fed; consent evaluation sits on the clinical read path itself, not only in the gateway | A federated platform that ships enforcement in shadow mode exports its defects to every institution |
 | **I3** | No node concept in the domain model; `pod_id` is the constant `national-spine`; no provenance, no origin, no conflict model | Every clinical fact carries origin node, origin record, version and a signature; amendments supersede, never overwrite | Federation without provenance is data laundering |
 | **I4** | Clinical repositories scope by tenant + patient, not facility or organisation; the PDP's `facility_scope` means "a facility id is present" | Facility and organisation scoping are query-level predicates and PDP-level membership assertions | One organisation can currently read another's clinical rows; this is the top pre-federation blocker |
 | **I5** | Four FHIR-shaped stores; the BFF and gateway write to a stock ungoverned HAPI while IPS/timeline read the governed one | One governed FHIR implementation (`butano-service`), instantiated as a **local projection** at the node and a **longitudinal projection** nationally | Split-brain cannot be federated; it must be resolved before it is replicated |
@@ -142,13 +227,13 @@ The recovery established what vNext is. The target state is defined by eight spe
 | **I7** | Endpoints baked into images at build time (Next rewrites, `NEXT_PUBLIC_*`, `EXPO_PUBLIC_*`); mobile production builds refuse LAN endpoints | Runtime endpoint discovery from a signed node configuration document, with QR enrolment and a governed failover policy | A hospital cannot be asked to rebuild the national mobile app to reach its own node |
 | **I8** | Integration endpoints are global environment variables (one PACS, one SMS sender, one printer URI, no analyser config) | A versioned, audited configuration hierarchy: trust domain → organisation → node → facility → department → service point | A hospital's lab, PACS and till are its own; global env is not a configuration model |
 
-## 1.3 Non-negotiable invariants
+## 1.3 Non-negotiable invariants **[D]**
 
-These are testable statements. The acceptance plan in §19 proves each one.
+These are testable statements. The acceptance plan in §23 proves each one.
 
 1. **No client-supplied authority.** No `X-Tenant-ID`, `X-Facility-ID`, `X-Actor-ID`, `X-Provider-ID`, `X-Purpose-Of-Use` or assurance header originating from a browser or handset is ever load-bearing in a decision. All are derived from a verified token or a signed work-context token, or the request is refused.
 2. **No silent overwrite across nodes.** A federated write that would replace a record whose `origin_node_id` differs from the writer is rejected, not merged. Cross-node last-write-wins is prohibited by contract and by database constraint.
-3. **Offline never weakens policy.** When a signed bundle expires beyond its permitted staleness, the affected decision class **fails closed**, except for the explicitly enumerated emergency classes in §4.7, which proceed with elevated, non-repudiable audit.
+3. **Offline never weakens policy.** When a signed bundle expires beyond its permitted staleness, the affected decision class **fails closed**. The only exceptions are the two emergency paths this document actually enumerates: the **emergency-only consent path past the hard ceiling** (§5.3's ladder, rendered in §12.3) and **break-glass** (§11.4) — each proceeding with elevated, non-repudiable audit, and break-glass never proceeding at all if it cannot be audited. *(v1.3.3, F2: v1.3.2 and earlier cited a §4.7 that has never existed, leaving the sole exception to a fail-closed invariant undefined.)*
 4. **National administration is not clinical access.** A National Core platform administrator role grants no clinical read inside any trust domain. Cross-domain clinical access requires a federation agreement, a consent or legal basis, and produces a disclosure record visible to the institution.
 5. **Local care has no synchronous national dependency.** No routine clinical action in the seven-day autonomy set makes a blocking call to the National Core. Verified by the disconnection test, not by inspection.
 6. **One artefact set.** A Hospital Node runs the same signed images as the National Core, selected by profile. **No forked or independently maintained hospital implementation exists**; profile-specific behaviour is permitted only where it is configuration-driven, declared, tested and compatibility-governed (§2).
@@ -454,7 +539,7 @@ trust_domain (
 );
 
 organisation ADD COLUMN trust_domain_id UUID NOT NULL REFERENCES trust_domain;
--- Backfill: every existing organisation → the MoHCC trust domain (§10.1).
+-- Backfill: every existing organisation → the MoHCC trust domain (§3.4).
 
 facility  -- stays in TUSO; TUSO gains:
   ALTER TABLE tuso.facility
@@ -484,7 +569,7 @@ data_sharing_policy (
   policy_id              UUID PRIMARY KEY,
   trust_domain_id        UUID NOT NULL,
   policy_code            VARCHAR(64) NOT NULL,
-  domain_rules           JSONB NOT NULL,   -- per data domain (§7): residency class, disclosure
+  domain_rules           JSONB NOT NULL,   -- per data domain (§4.2 / §4.4): residency class, disclosure
                                            -- class, sensitivity ceiling, purpose allow-list,
                                            -- consent requirement, redaction profile
   sensitivity_ceiling    VARCHAR(32) NOT NULL,  -- highest class disclosable under this policy
@@ -593,7 +678,7 @@ node_connection (
 );
 ```
 
-`work_context` and `jurisdiction` already exist in substance — `work_context` as the minted duty token plus `tshepo_identity.scoped_token`, `jurisdiction` as `jurisdiction_code` on regulatory appointments and `wgv_jurisdiction`. Both are **promoted to first-class rows** (§10.3) so they can be referenced by federation metadata rather than carried as loose strings.
+`work_context` and `jurisdiction` already exist in substance — `work_context` as the minted duty token plus `tshepo_identity.scoped_token`, `jurisdiction` as `jurisdiction_code` on regulatory appointments and `wgv_jurisdiction`. Both are **promoted to first-class rows** (§3.2) so they can be referenced by federation metadata rather than carried as loose strings.
 
 ## 3.3 Lifecycles
 
@@ -692,7 +777,13 @@ service_responsibility_profile (    -- versioned, immutable once ACTIVE
   infrastructure_operator_id     UUID NOT NULL,
   platform_operator_id           UUID NOT NULL,
   application_operator_id        UUID NOT NULL,
-  data_controller_id             UUID NOT NULL,   -- NEVER inferred from any operator above
+  -- v1.3.3 (F6): NULLABLE, deliberately. §26.2 #1 — who controls a MoHCC hospital's records —
+  -- is an OPEN [L] legal determination. NOT NULL forced every profile to name a controller,
+  -- i.e. to guess an undecided legal fact, while §3A.4 rules that an unresolvable controller
+  -- must be REFUSED and flagged for governance. A nullable column with an explicit refusal
+  -- rule expresses "not yet determined"; NOT NULL could only express a fabricated answer.
+  -- NULL therefore means UNDETERMINED and blocks any operation requiring a controller.
+  data_controller_id             UUID NULL,       -- NEVER inferred from any operator above
   data_processor_id              UUID NOT NULL,
   identity_operator_id           UUID NOT NULL,
   key_custodian_id               UUID NOT NULL,
@@ -1117,7 +1208,7 @@ This is more usable than forced global switching and no weaker, because the boun
 |---|---|---|
 | Local user authentication | Node Keycloak (MoHCC-managed) or institution IdP; both node-local | Local IdP; national issuer not required |
 | Work-context entry | Local PDP + local work-context mint signed by the node's key | `workforce-standing` bundle (assignments), node signing key |
-| Patient registration | Local VITO instance with a pre-allocated identifier block | Identifier allocation grant (§6.5) |
+| Patient registration | Local VITO instance with a pre-allocated identifier block | Identifier allocation grant (§13.3) |
 | Casualty, triage, OPD | PCT local, unchanged code | policy + consent + terminology bundles |
 | Inpatient, ward, theatre | inpatient, surgery, procedures local | policy bundle; local device config |
 | Orders and results | OROS local + local LIMS/PACS adapters | node integration config |
@@ -1887,6 +1978,8 @@ The UI banner is not decoration. A clinician must be able to see, without asking
 
 ## 12.4 Eliminating browser-authoritative headers
 
+*Measured 2026-08-04 (evidence correction): the shell's `api-client.ts` mints **22 distinct `X-*` headers** client-side (21 authority-bearing plus `X-CSRF-Token`), and **two server-authoritative overrides now exist and deserve credit**: the BFF's `ActorContextFilter` forces `X-Actor-ID` from the verified JWT (**enforced**), and `TenantContextFilter` forces `X-Tenant-ID` but defaults to **SHADOW** (`tenant-authority.mode`, `application.yml:61`) — so today exactly one of the twenty-two is server-enforced. Envoy's strip list executes only when `extAuthz.enabled`, which is false in the preview values.*
+
 | Header today | Target |
 |---|---|
 | `X-Tenant-ID` | **Deleted from the client contract.** `trust_domain_id` is a work-context token claim, derived server-side |
@@ -1928,7 +2021,7 @@ The UI banner is not decoration. A clinician must be able to see, without asking
 }
 ```
 
-**Three fields do the heavy lifting.** `origin_node_id` + `origin_record_id` + `record_version` together make cross-node last-write-wins *impossible to express*: a write whose `origin_node_id` is not the receiver's own is only ever an append of a new version, and a version that is not `current + 1` for that origin record is a conflict, not a winner (§18).
+**Three fields do the heavy lifting.** `origin_node_id` + `origin_record_id` + `record_version` together make cross-node last-write-wins *impossible to express*: a write whose `origin_node_id` is not the receiver's own is only ever an append of a new version, and a version that is not `current + 1` for that origin record is a conflict, not a winner (§20).
 
 ## 13.2 Where it lands
 
@@ -1962,7 +2055,7 @@ The recovery established that ~90 services use `GenerationType.IDENTITY` bigseri
 | Journey / order / result (ULID) | Safe | Promote to the federated reference; strengthen the RNG (currently `java.util.Random`) |
 | Encounter | Row PK bigserial, external `encounter_ref` UUID exists | Use `encounter_ref` |
 | Referral, consent (UUID) | Safe | Keep |
-| **Audit event** (bigserial + per-tenant chain) | **BLOCKER for merge — by design** | Do not merge. **Per-node chains stay per-node**; the National Core stores signed chain-head attestations, not interleaved events (§18.4) |
+| **Audit event** (bigserial + per-tenant chain) | **BLOCKER for merge — by design** | Do not merge. **Per-node chains stay per-node**; the National Core stores signed chain-head attestations, not interleaved events (§20.4) |
 
 **The migration path that avoids a big-bang re-key**: every federated entity gains a nullable `origin_record_id UUID` populated on write and backfilled once; a unique index on `(origin_node_id, origin_record_id)`; federated references use that pair exclusively. Local joins keep using the serial. A service is "federation-ready" when its outbound contract contains no serial — provable by a contract test, not by inspection.
 
@@ -1980,7 +2073,7 @@ The estate does not have one request context. It has **three**, and a federation
 
 There are likewise **three** header-constant classes (`libs/tshepo-contracts/.../TrustHeaders.java` ~45 constants, `libs/tech-companion/.../CompanionHeaders.java` ~40, `services/shared-core/.../TrustHeaders.java` 19). The contracts one *declares* itself the single source of truth and lists four mirrors — but omits shared-core's, and shared-core's `TrustContext` inlines a fourth copy anyway. **Consolidating to one generated constant set is a Phase 1 prerequisite**, not a tidy-up: a federation whose header vocabulary has four definitions cannot have one contract test.
 
-> **⚠ The `pod_id` landmine.** `pod_id` already exists in `EventEnvelope`, in four of six sampled outbox tables, and as part of the `idempotency_keys` primary key in both FHIR services. But the SQL default written in ≥12 migrations is the literal **`'national-spine'`**, while `FederationAuthority.NATIONAL_POD_ID` in Java is **`"national"`**. *These two strings do not match*, so `requireNational()` evaluated against a database-defaulted `pod_id` denies. Any node work that leans on the existing `pod_id` plumbing must reconcile these two literals in the same change — and `OutboxEventBuilder` fills the string `"unknown"` when the value is absent, which is precisely the fabrication pattern §1.3(7) forbids for `origin_node_id`.
+> **⚠ The `pod_id` landmine.** `pod_id` already exists in `EventEnvelope`, in four of six sampled outbox tables, and as part of the `idempotency_keys` primary key in both FHIR services. But the SQL default is the literal **`'national-spine'`** — measured 2026-08-04 (evidence correction, replacing the earlier "≥12 migrations" floor): **71 `DEFAULT 'national-spine'` lines across 52 migration files** — while `FederationAuthority.NATIONAL_POD_ID` in Java is **`"national"`**. *These two strings do not match*, so `requireNational()` evaluated against a database-defaulted `pod_id` denies. The same literal also defaults **`tenant_id`** columns in guidance-service (`V004:24`, `V014:32,56`) — a second mismatch class, against tenancy rather than pod authority. Any node work that leans on the existing `pod_id` plumbing must reconcile these literals in the same change — and `OutboxEventBuilder` fills the string `"unknown"` when the value is absent, which is precisely the fabrication pattern §1.3(7) forbids for `origin_node_id`.
 
 ## 13.5 Why the event contract cannot be changed in one place
 
@@ -1989,7 +2082,7 @@ There are likewise **three** header-constant classes (`libs/tshepo-contracts/...
 - **32 services extend `CompanionOutboxPublisher`** and therefore emit real envelopes.
 - **33 services hand-roll their own publisher** — and they include **pct, oros, pharmacy, referral, tshepo-consent and tshepo-identity**, six of the highest-value clinical and trust services in the estate. PCT's publisher sends `event.getPayload()` **raw**, with no envelope at all, routed by a 128-line string `switch` with a `pct.events` catch-all.
 
-**Therefore:** adding federation metadata to `EventEnvelope` reaches *none* of the six services whose events matter most for federation. The migration plan (§17, Phase 1) makes converting those six publishers to `CompanionOutboxPublisher` a **hard prerequisite** for Phase 3, and treats it as a correctness fix rather than a refactor — it also closes PCT's unrouted-event catch-all in the same pass.
+**Therefore:** adding federation metadata to `EventEnvelope` reaches *none* of the six services whose events matter most for federation. The migration plan (§22, Phase 1) makes converting those six publishers to `CompanionOutboxPublisher` a **hard prerequisite** for Phase 3, and treats it as a correctness fix rather than a refactor — it also closes PCT's unrouted-event catch-all in the same pass.
 
 The outbox tables are equally non-uniform — six services, six shapes: the payload column is `payload` in five and `payload_json` in coverage; `tenant_id` is `UUID` in four and `TEXT` in two; `schema_version` is `INT` in three and `VARCHAR(16)` in coverage. Coverage is the only service with a natural `event_id UUID` (the obvious `global_event_id` carrier) and the only one enforcing `UNIQUE (idempotency_key)`. **Coverage's outbox is therefore adopted as the canonical target shape**, and the federation migration normalises the others toward it rather than inventing a new one.
 
@@ -1999,7 +2092,7 @@ The outbox tables are equally non-uniform — six services, six shapes: the payl
 
 ## 14.1 What it is, and what it is explicitly not
 
-A Spring Boot service deployed at both ends, speaking **one governed protocol over mTLS HTTPS**. Local Kafka and local outbox tables feed the node-side gateway; **they never cross the site boundary**. Calling a Kafka topic a federation protocol is prohibited by §1.4 — the topic is the local plumbing behind the gateway, not the contract between institutions.
+A Spring Boot service deployed at both ends, speaking **one governed protocol over mTLS HTTPS**. Local Kafka and local outbox tables feed the node-side gateway; **they never cross the site boundary**. Calling a Kafka topic a federation protocol is prohibited by §1.1 — the topic is the local plumbing behind the gateway, not the contract between institutions.
 
 ## 14.2 The envelope
 
@@ -2078,7 +2171,7 @@ sequenceDiagram
 | **DLQ** | `fed_dead_letter` with the reason code, the full envelope and an operator replay action — modelled on Costa's money DLQ, the recovery's best-in-estate failure handling |
 | **Quarantine** | Signature failure, unknown certificate, schema violation or an agreement that is not ACTIVE → the envelope is quarantined and the node's `node_connection` state moves to `QUARANTINED`. **Quarantine never stops local care** |
 | **Bandwidth awareness** | Priority queues, a configurable per-node rate ceiling, compression, delta-only contribution, and attachments transferred **out-of-band by reference** (§14.4) |
-| **Replay after ≥7 days** | The watermark is per stream, so reconnection is a resumable range request, not a full resend. §18 covers the ordering and conflict rules |
+| **Replay after ≥7 days** | The watermark is per stream, so reconnection is a resumable range request, not a full resend. §20 covers the ordering and conflict rules |
 | **Selective disclosure** | Two independent evaluations — sender-side before signing, receiver-side before applying. Divergence between them is itself an alert |
 
 ## 14.4 Large objects: documents and images
@@ -2373,7 +2466,7 @@ sequenceDiagram
   K8S->>K8S: Trust tier → registry tier → clinical tier → experience tier
   K8S->>CORE: First federation handshake → node_connection ACTIVE
   K8S->>K8S: Publish signed node configuration document + enrolment QR
-  OP->>OP: Run the acceptance gate (§19) — including a disconnection rehearsal BEFORE go-live
+  OP->>OP: Run the acceptance gate (§23) — including a disconnection rehearsal BEFORE go-live
 ```
 
 ---
@@ -2930,7 +3023,7 @@ Six phases. **Phase 0 is not preparation for federation — it is the correction
 **Deployment:** HA Postgres/Kafka/Redis/MinIO; GitOps; cert-manager; External Secrets; real registry; observability; `observability-service`'s existing `/ops/heartbeat`, `/health/summary` and `/metrics/lag` extended with node capacity and federation queue depth.
 **Also in Phase 2 (v1.1 additions):** the **session-domain split** — Keycloak audience mappers per domain (none exist today), per-domain client registration, audience validation in every resource server, and replacement of the client-side `OperationalMode`/`navZone` tables with a server-derived domain claim defaulting to deny; the **Professional Status** surface rendered from the standing bundle; the three domain leaks closed (§4A.3); and the node configuration document extended with the experience-routing block and `clinical_write_authority` (§16A).
 **Tests:** the **seven-day disconnection rehearsal** (§23) in a lab; bundle expiry behaviour at every ceiling; local login and work-context entry with the Core unreachable; the session-separation tests A28–A32.
-**Gate:** all twelve autonomy capabilities (§5.1) pass with the Core network-partitioned for seven days; every ceiling behaves as specified; no fabricated success anywhere in the disconnection log; **no cross-domain token is accepted anywhere**.
+**Gate:** all fifteen autonomy capabilities (§5.1) pass with the Core network-partitioned for seven days; every ceiling behaves as specified; no fabricated success anywhere in the disconnection log; **no cross-domain token is accepted anywhere**.
 **Rollback:** the node profile is additive; the National Core is unaffected. Audience validation is enabled per resource server, so it can be rolled back service by service.
 
 ## Phase 2.5 — Commissioning and consumption
@@ -2982,7 +3075,7 @@ That is good news, not bad. Most of the *substance* exists — and not merely as
 | Practitioner-in-Charge | varapi PIC assignment + eligibility assessment; tuso PIC nomination | **Shipping** |
 | Signed single-use invitations | `org_registry_invitation` (hashed token), `varapi.provider_claim_token` | **Shipping** |
 | Regulator cold start | `wgv_regulator_bootstrap_request`, role locked to `FOUNDING_REGULATOR_ADMINISTRATOR`, one live request per organisation | **Shipping** |
-| "Bring your organisation or facility to Impilo" | Live routes: `/facility/claim`, `/facility/register`, `/site/register`, `/citizen/provider-claim`, `/organization-admin/onboarding`, `/registry/intake`, and 13 delegated `/work/administration-governance/onboard/*` lanes | **Shipping** |
+| "Bring your organisation or facility to Impilo" | Live routes: `/facility/claim`, `/facility/register`, `/site/register`, `/citizen/provider-claim`, `/organization-admin/onboarding`, `/registry/intake`, and 13 delegated `/work/administration-governance/onboard/*` lanes | **Routes present; two lanes do not complete** — §35.3 measures `/organization-admin/onboarding` defaulting `orgType: "PROVIDER"`, a value the CHECK constraint rejects, and the facility-claim lanes rendering three options where the contract declares two unavailable. *(v1.3.3, F13: v1.3.2 read "Shipping" here and "cannot succeed as shipped" in §35.3. A route existing is not a journey completing — governance rule 13. The two statements are now one.)* |
 | Registry steward | Steward routing exists in indawo, tuso and the BFF; **no first-class steward role table** | **Partial** |
 | **Node Administrator, node commissioning states, Bootstrap Manifest, installer** | nothing | **Absent — the genuine gap** |
 
@@ -3146,7 +3239,7 @@ It is recorded here so that, if a security-sector or research facility requires 
 | **A2** | Consent actually gates a read | Read a record; revoke consent; read again | Second read is refused with a consent reason code — the exact test that fails in the current estate |
 | **A3** | Facility scoping | Facility A credentials request facility B's clinical rows | Refused, and audited |
 | **A4** | National admin ≠ clinical access | A platform administrator attempts a clinical read in an institutional trust domain | Refused; the attempt appears on the institution's disclosure dashboard |
-| **A5** | **Seven-day disconnection** | Partition the node for 7×24 h under simulated clinical load; exercise all twelve autonomy capabilities daily | All pass; every ceiling behaves as specified; **no fabricated success in the log** |
+| **A5** | **Seven-day disconnection** | Partition the node for 7×24 h under simulated clinical load; exercise all fifteen autonomy capabilities daily | All pass; every ceiling behaves as specified; **no fabricated success in the log** |
 | **A6** | Ceiling behaviour | Age each bundle past soft and hard ceilings | Warn then fail-closed per §5.3; UI banner present; writes flagged |
 | **A7** | Offline consent integrity | Withdraw consent nationally on day 2 of a disconnection | Node honours it on reconnect; the day 3–7 records are **not** contributed; suppression is recorded |
 | **A8** | Break-glass offline | Emergency access with the Core dark | Proceeds, audits locally **first**, queues for review; a break-glass that cannot be audited does not proceed |
@@ -3248,15 +3341,44 @@ Tests A50–A56 exist because §2B.3's exposure is at the **infrastructure** lay
 
 ## 23.4 v1.3.1 additions — the corrected experience model
 
+**Scope note (v1.3.2, extended v1.3.3):** A87–A93 prove the v1.3.1 corrections only. They are **not** the complete experience acceptance suite; §23.5 adds the v1.3.2 corrections, §23.6 adds the v1.3.3 journey tests, and the packs will add the rest. Treating A87–A108 as complete is on the must-wait side of the Implementation gate.
+
 | # | Test | Method | Pass condition |
 |---|---|---|---|
 | **A87** | State is a vector, not an enum | Drive a session into three simultaneous conditions (multiple contexts + node disconnected + stale authority, on a `MANAGED_SHARED` device) | The contract carries **every** axis; the precedence-derived landing is correct; the surfaces render all applicable facts, not only the ranked-first one |
 | **A88** | The inactivity lock actually fires | On an authenticated non-exempt route, idle past the lock and logout thresholds; **then delete the exemption guard and re-run** | Lock at the posture's threshold, logout after; and the test **goes red when the guard is removed** — a check is proven only by observing its failure |
-| **A89** | A node contract never widens | Diff a node-resolved contract against the national contract for the same identity across the staleness ladder | At every rung, the node offer is a subset; growing staleness only narrows; nothing appears at the node that national would refuse |
+| **A89** | A node contract never exceeds the governed authority model *(rewritten by v1.3.2 I6)* | Validate every element of a node-resolved contract against its authority source class across the staleness ladder | Every granted element cites an unexpired, recognised source (national signed truth · institutionally authoritative local truth per the federation agreement · approved offline instrument); growing staleness only narrows within each class; nothing is granted whose authority class the agreement does not recognise for that institution. The offer is **not** required to be a subset of a live national resolver's response — see A99 |
 | **A90** | The assistant cannot transact | From the assistant surface, attempt each §36.4 forbidden act, including via prompt injection | No transactional endpoint is reachable from the assistant's BFF surface at all; prefill hands off a draft marked `assistant_prefilled`, editable and unsubmitted |
 | **A91** | Notification scope is server-derived | Request the tray asserting a different `facility_id`/`work_mode` than the session holds | The asserted parameters are ignored; scope comes from the session audience; cross-domain notifications never appear |
-| **A92** | Journeys survive the device | Start a journey on a shared workstation, switch user (§29.3), sign in on a personal phone | The journey resumes from the server store with step, next actor and waiting-since intact; nothing depended on the workstation's storage, which was cleared |
+| **A92** | Journeys survive the device *(amended by v1.3.2 I7)* | Start a journey on a shared workstation, **enter data on a step**, switch user (§29.3), sign in on a personal phone | The journey resumes from the server store with step, next actor, waiting-since **and the entered draft content** intact; nothing depended on the workstation's storage, which was cleared. "You were on step 3" without what was entered there is a fail |
 | **A93** | Entry intent survives and degrades honestly | Capture an intent anonymously, sign in, land; repeat with a destination the resolved session may not use | Permitted: the person resumes the intended step. Not permitted: the landing states what was attempted and why it cannot continue — never a silent discard |
+
+## 23.5 v1.3.2 additions — the integrity corrections
+
+| # | Test | Method | Pass condition |
+|---|---|---|---|
+| **A94** | `clinical_setting` is derived, never guessed | Start an OPD encounter and an ED encounter at the **same facility** (same `delivery_context = FACILITY`); resolve forms for each | The two encounters carry different `clinical_setting` values derived from their journeys (sort context / `ed_visit` row) and resolve **different, correct** form sets; no code path infers `clinical_setting` from `delivery_context`; the alias collapse (`outpatient→facility`) no longer destroys the caller's value |
+| **A95** | Scoped authority selection | Sign in as a person administering three facilities, representing two organisations and regulating one jurisdiction | The contract carries the §29.0 arrays with scope ids, roles, effective periods and status; each console operates under exactly one selected scope; `ORG_ADMIN` alone never grants an unscoped view |
+| **A96** | Precedence is capability-scoped | (a) Kill the hospital's site link, then open **national My Life**; (b) age the professional standing bundle past STALE, then open a **personal appointment** | Both destinations load normally, each with an informational banner; neither is hijacked to a failure landing. Then open node Work under (a) and prescribing under (b): both are correctly gated by the same conditions |
+| **A97** | Intent audience transition offered, not refused | While in a Work session, follow an intent requiring `impilo-professional` (e.g. "renew my licence"); repeat as a person ineligible for that audience | Eligible: the contract carries `audience_transition` and the person completes the switch without losing the intent (§4B non-exchange honoured — no token upgrade). Ineligible: the refusal names the missing authority and its acquisition journey |
+| **A98** | Nodes hold no personal or professional journey reference | During a national outage, inspect the node's journey store, its resolved contracts and its action records for a provider known to have an open regulatory complaint and a PHR consent task | Zero rows, zero labels, zero counts referencing personal or professional journeys — the §39.3.6 allow-list is exhaustive; even "1 item unavailable offline" attributable to a personal journey is a fail |
+| **A99** | Institutional local authority during an outage | With the National Core dark, mint a shift assignment and a ward allocation at the node; attempt an act the federation agreement does not grant the institution (e.g. a licence-scope change) | The local acts succeed under the institutionally-authoritative source class, are origin-stamped and reconcile on reconnection; the ungrantable act is refused **at the node** citing the missing authority class |
+| **A100** | Drafts survive and conflicts surface | Enter step data on device A; edit the same draft concurrently on device B; resume on device C | The draft (answers + attachment references) resumes on C at the latest acknowledged version; the concurrent edit produced a **surfaced conflict** with both versions recoverable — never a silent overwrite; credential-class fields were never persisted |
+| **A101** | Action records: dedup, safety ack, and the projection never kills the case | Emit the same obligation event twice; acknowledge a SAFETY record; let a `DOMAIN_SERVICE` journey's `projection_refresh_due_at` elapse while the domain case stays open | One action record per (obligation, recipient); the SAFETY record requires acknowledgement distinct from read and is audited; the stale projection renders as stale and the journey **does not expire** — the domain case's lifecycle is untouched |
+| **A102** | The licence consequence reaches Work; the correspondence does not | Suspend a provider's licence, then open their Work session at an employer's node and their My Professional nationally | Work shows only the derived consequence (suspended · session ends at T · whom to contact) sourced from the standing bundle; the case detail and correspondence appear **only** in My Professional; nothing about the case is stored at the node |
+| **A103** | My Life is blocked on the ward machine, and switching leaks nothing | On a `MANAGED_SHARED` device: attempt My Life under default policy, then under `ALLOW_ISOLATED_STEP_UP`; then fast-switch users mid-queue with a patient record open | Default: blocked with the stated reason and the "use your own device" route. Step-up variant: isolated storage, no Work-token inheritance, no residue after close. The switch preserves facility/department/service point and returns the **next** clinician to the queue only after their own authentication — the open patient, search results and drafts are gone |
+
+## 23.6 v1.3.3 additions — journeys that had no test of their own
+
+Five §38 journeys cited a test that proved a **different** claim (F7/F8): journey 1 cited A76 (the organisation consumption-profile assistant), journey 20 cited A26 (an employer refused regulatory correspondence), journey 11 cited A38 (node commissioning order), journey 21 cited A42 (sizing-profile deployment) and journey 3 cited A44 (patient-reported labelling). Journey 3 is retargeted to **A81**, which genuinely proves "stated, not blank". The other four had no existing test that proved their behaviour, so pointing them elsewhere would have repeated the defect — they get their own. **A108** closes the gap F16 found: I8's scope-bound journey reading was asserted with no test.
+
+| # | Test | Method | Pass condition |
+|---|---|---|---|
+| **A104** | Anonymous care discovery degrades honestly | Search from the public front door with (a) no result in the radius, (b) the street stack down, (c) results whose coordinates are partly missing | (a) offers widening or the emergency route — never an empty page; (b) the bundled boundary map still renders; (c) the count is stated as *"N of M results have map coordinates"*, never silently filtered |
+| **A105** | A facility claimant sees the real state machine | Submit a facility claim and drive it through the eleven `facility_profile_submission` states, including `CORRECTION_REQUIRED` | The claimant sees the actual state, the **named reviewing role**, and time-in-state at every step — never a boolean `claimable`. The deliberate anti-enumeration collapse on *registration* outcomes (§35.1) is preserved and distinguished |
+| **A106** | A regulator with zero appointments is not stranded | Sign in as a regulator whose organisation holds no appointment yet | The founding-request route is offered with its named next actor — not an empty workspace and not a denial. One live founding request per organisation is enforced |
+| **A107** | Facility setup adapts to facility scale | Run the setup wizard for a rural health post and for a central hospital | The post is not walked through theatre, ICU, PACS or multi-campus configuration; the hospital is not given a six-field clinic form; a missing Practitioner-in-Charge is named as **the** blocking item in both. Adaptation keys on facility type, capability packs and sizing profile |
+| **A108** | Journey reading is scope-bound, not merely domain-bound | As a person administering three facilities and representing two organisations, list journeys; then attempt a journey belonging to a fourth facility | Only journeys whose scope columns match a live entry in the person's `facility_authorities[]` / `organisation_authorities[]` are returned. Unclaimed steps appear to the scoped queue, claimed steps only to the claimant, and reassignment only to the `reassignable_by` role |
 
 ---
 
@@ -3347,13 +3469,15 @@ Priority reflects *what unblocks the most* and *what is riskiest to defer*. P0 i
 | 79 | Add work-home families for `COMMUNITY_OUTREACH` and `SPECIMEN_TRANSPORT`, or remove the mobile modes | P2 | 2 | Both modes currently lead to `work_mode_unavailable` |
 | 80 | Facility claim status page + the eleven-state submission model surfaced | P1 | 2.5 | The facility claimant is the worst-served person on the platform (§35.2) |
 | 81 | Fix the facility-claim lane contradiction, the org-onboarding `orgType` default, and the bootstrap status-literal mismatch | P1 | 2.5 | Three shipped defects that block their own journeys (§35.3) |
-| **82** | **Fix the inactivity-lock exemption so the lock can fire at all** (§29.3), then bind thresholds to device posture | **P0** | 0 | `startsWith("/")` exempts every route; the privacy lock and auto-logout have never executed. The correct guard already exists in `api-client.ts:355` |
+| **82** | **Fix the inactivity-lock exemption so the lock can fire at all** (§29.3), then bind thresholds to device posture | **P0** | 0 | `startsWith("/")` exempts every route; the privacy lock and auto-logout have never executed. The correct guard already exists in `api-client.ts:348` |
 | **83** | **Notification scope from the session audience, server-side** (§40.1) | P1 | 2 | `work_mode`/`facility_id`/`shift_id` are client query parameters today — the §12.4 defect class at the notification seam |
 | 84 | One shared `returnTo`/destination validator; the find-care envelope's TTL + data-minimisation + fencing as the standard for every client draft store (§28.5, §39.3) | P2 | 2 | `returnTo` crosses ~25 files; full validation exists in one |
 | 85 | `journey_instance` + `journey_step_event` store; the contract's `journeys` block reads from it (§39) | P1 | 2 | The contract currently promises `resumable: true` against no persistence anywhere |
 | 86 | The action centre: four notification classes, server-side read state, `ACTION_REQUIRED` as a §39 projection (§40.2) | P2 | 2→3 | Today's tray is computed-on-request and evaporates on navigation |
-| **87** | **Map the care-setting vocabularies so encounter forms can resolve** | **P1** | 2 | PCT stores `facility\|community\|home\|mobile_outreach\|virtual`; all 22 seeded forms declare `OUTPATIENT\|EMERGENCY\|INPATIENT\|…`; no layer translates — so an ordinary OPD or casualty encounter resolves to **zero** structured forms, and the correctly age/sex/pregnancy-scoped IMNCI, ANC and partograph forms never surface (§42.1) |
+| **87** | **Introduce the two-field encounter-context model** (§42.2) — *rewritten by v1.3.2; the original "map the vocabularies" remedy is withdrawn as wrong* | **P1** | 2 | `delivery_context` and `clinical_setting` are different concepts; a translation table would surface the **wrong** forms. Converge `encounter_context` into the governed `clinical_setting` vocabulary, derive it from journey/service-point/episode sources, retire the `CARE_SETTING_ALIASES` collapse, and scope forms on the right field. Blocks P3 |
 | 88 | Clinical worklist items deep-link to the patient; retire the dead `/ehr` href | P1 | 2 | Four of six worklist families carry `patient_id` and none links to `/ehr/{patient_id}`; the ORDER family links to a route with no page (§42.1) |
+| 89 | Per-person authority enumeration: a "my organisations" read on the authorised-representative records; a per-person finder on `ind_site_operator_grant`; indawo joins the work-context source union; adapters carry effective period + status through | P2 | 2 | The §29.0 arrays are composition over these reads; today two of six sources cannot be queried per person and all adapters discard the periods (§29.0) |
+| 90 | Optimistic locking on the two shipped draft rails (`pct_form_response` answers PUT; facility-profile field assertions) | P2 | 2 | Both currently race silently; thirteen `@Version` precedents exist in the estate, none applied here (§39.3.2) |
 
 ---
 
@@ -3542,20 +3666,37 @@ An extension of the existing `SessionExperienceContract`, generalising the work-
 
 ```jsonc
 {
-  "contract_version": "1.3.1",
+  "contract_version": "1.3.3",   // tracks the architecture version defining this schema
   "resolved_at": "2026-08-04T09:14:07Z",
   "resolver_origin": "NODE",                            // §28.4 — NATIONAL | NODE
   "expires_at": "2026-08-04T09:29:07Z",                 // bounded by bundle ceilings at a node
   "source_snapshot": { "policy_bundle_age_s": 720, "standing_bundle_age_s": 3400 },  // node-resolved only
 
   "state": {                                            // §29.0 — the vector, never one enum
+                                                        // v1.3.3 (F17): the contract carries EVERY
+                                                        // §29.0 axis. Entries are abbreviated in
+                                                        // this example, never omitted in the wire
+                                                        // contract — a missing axis is a defect.
     "identity_assurance": "AAL2",
+    "personal_standing": "ACTIVE",                      // §29.0 axis absent from the v1.3.2 example
     "professional_standing": "VERIFIED",
     "work_assignment": "MULTIPLE",
     "active_domain": "WORK",
     "deployment_context": "NODE_DISCONNECTED",
-    "authority_freshness": "AGEING",
+    "authority_freshness": [                            // I3 — per bundle, capability-scoped
+      { "bundle_type": "STANDING", "state": "AGEING", "age_s": 3400,
+        "affected_capabilities": ["prescribe", "order"] } ],
     "site_link": "AVAILABLE",
+    "facility_authorities": [                           // I2 — scoped arrays, one shown
+                                                        // v1.3.3 (F17): full §29.0 entry shape.
+                                                        // effective_from and permitted_journey_
+                                                        // families were dropped in v1.3.2, yet
+                                                        // A95 requires effective periods.
+      { "facility_id": "TUSO-0042", "role": "FACILITY_ADMINISTRATOR",
+        "status": "ACTIVE",
+        "effective_from": "2026-01-01", "effective_to": "2026-12-31",
+        "permitted_journey_families": ["facility-setup", "facility-claim"],
+        "source": "tuso.facility_admin_appointment", "source_checked_at": "…" } ],
     "device_posture": "MANAGED_SHARED",                 // §29.3 — server-declared, never client-asserted
     "session_lifecycle": "ACTIVE",
     "journey_obligations": 2
@@ -3586,8 +3727,14 @@ An extension of the existing `SessionExperienceContract`, generalising the work-
                     "freshness": { "content_as_at": "…", "authority_checked_at": "…" } } ]
   },
 
-  "next_best_action": { "id": "…", "label": "Confirm your ward assignment",
-                        "href": "…", "why": "…", "actor": "SELF|FACILITY_ADMIN|REGULATOR|…" },
+  "next_best_action": { "id": "…", "label": "Confirm your ward assignment", "href": "…", "why": "…",
+                        // v1.3.3 (I8): an actor is a ROLE PLUS ITS SCOPE. A bare "REGULATOR"
+                        // names no regulator, no jurisdiction and no assignment state — the
+                        // exact form §39's journey_actor_assignment replaces.
+                        "actor": { "role": "REGULATOR",
+                                   "scope": { "jurisdiction_id": "…", "organisation_id": "…" },
+                                   "assignment_state": "UNASSIGNED|CLAIMED|DELEGATED",
+                                   "claimed_by": null } },
 
   "unavailable": [ { "what": "My Life", "reason": "NATIONAL_SERVICES_UNREACHABLE",
                      "since": "2026-08-04T02:14:00Z",
@@ -3596,7 +3743,12 @@ An extension of the existing `SessionExperienceContract`, generalising the work-
 
   "journeys": [ { "id": "facility-claim-…", "label": "Claim Chitungwiza Practice",
                   "progress": { "completed": 3, "total": 8 },
-                  "next_step": "…", "next_actor": "REGULATOR", "resumable": true } ],
+                  "next_step": "…", "resumable": true,
+                  // v1.3.3 (I8): projected from journey_actor_assignment (§39), never a bare role.
+                  "next_actor": { "role": "REGULATOR",
+                                  "scope": { "jurisdiction_id": "…", "queue": "…" },
+                                  "assignment_state": "UNASSIGNED",
+                                  "claimed_by": null, "waiting_since": "…" } } ],
 
   "guidance": { "nompilo_context": "…", "suggested_prompts": [ … ] },
   "help": { "route": "…", "escalation": { "channel": "…", "context_attached": [ … ] } }
@@ -3611,7 +3763,7 @@ An extension of the existing `SessionExperienceContract`, generalising the work-
 |---|---|
 | **Three landing resolvers already exist** — one in Java (`resolveDefaultRoute`), two in TypeScript (`identity-context`'s `defaultLandingPath`, and `resolvePostLoginDestination` which wraps it). Parity is maintained **by test, not by construction** | The canonical resolver has three implementations to absorb, not one. Until then, a landing rule changed in one place is a silent divergence in two |
 | **The contract governs 9 route prefixes out of 855** — six "work" prefixes and three "professional" prefixes, hard-coded; everything outside them returns `true` | Extending the contract means **moving the decision**, not adding fields |
-| 855 routes in a hand-maintained registry, matched by **linear scan, first match wins**; `EXPECTED_ROUTE_COUNT` is 2 above the real count; **95 routes carry no `navZone` at all**; `guard: "provider"` and `guard: "shift"` are declared and used by **zero** routes | The registry has already drifted from itself. Three ED routes once shipped unregistered and therefore ran **with no guard at all** — the matcher returned null and the guard returned early |
+| 855 routes in a hand-maintained registry, matched by **linear scan, first match wins**; `EXPECTED_ROUTE_COUNT` is 2 above the real count; **98 routes carry no `navZone` at all** *(evidence correction 2026-08-04: was 95 — the gap grew)*; `guard: "provider"` and `guard: "shift"` are declared and used by **zero** routes | The registry has already drifted from itself. Three ED routes once shipped unregistered and therefore ran **with no guard at all** — the matcher returned null and the guard returned early |
 | The sidebar is a hard-coded array of 3 zones and 68 items; `/home` tiles are a hard-coded tree of 11 categories and ~55 tiles gated on four booleans; mobile provider tabs are **15 hard-coded entries with exactly one conditional**; citizen tabs are 10 with none | These are the arrays the contract displaces. The tile file's own header already says a capability list "would be the more architecturally clean version of this file" |
 | **The picker cannot show shift or duty status because the BFF drops it in transit** — the resolved context carries 23 fields, the contract copies 14, and `shift` is among the nine dropped, along with department label, ward, service point and role label | Everything a provider could use to tell two workplaces apart is packed into one `label` string. **This is a one-method fix** that unblocks a whole class of chooser UX (§32.3) |
 | Two mode vocabularies coexist on mobile — canonical `WorkMode` names and lowercase Keycloak role strings — and **two mobile modes (`COMMUNITY_OUTREACH`, `SPECIMEN_TRANSPORT`) have no work-home family at all** | A provider can enter Outreach or Courier mode and land on `work_mode_unavailable` |
@@ -3630,7 +3782,7 @@ v1.3 said "the resolver runs server-side" and stopped. At a Hospital Node that s
 | Serves | `impilo-personal`, `impilo-professional`, national Work, org-admin, regulatory, platform-admin audiences | The node's `impilo-work:NODE-*` audience, Professional Status, node-ops |
 | Identity input | Live national session | Node-issued work token (§11.3) |
 | Authority input | Live services | **Signed bundles at their current ages** (§12.1) |
-| Journey input | National journey store (§39) | Local journey store; national journeys **listed as stale references**, never re-resolved locally |
+| Journey input | National journey store (§39) | Local journey store, restricted to the §39.3 node allow-list — **no personal or professional journey is referenced at a node, even as a label** (I5) |
 | Personal/professional domains | Fully resolved | **Named as unavailable-here with the national route** — never locally substituted (§11B) |
 | Degraded mode | Per-section `DEGRADED` | Its defining condition, not its failure mode |
 
@@ -3638,7 +3790,7 @@ Three rules bind them:
 
 1. **One implementation, two deployments [D].** The node resolver is the same artefact configured with bundle-backed providers — not a fork (ADR-16 rule: no independently maintained implementation). Where a provider cannot exist offline (marketplace, PHR, national journeys), the node configuration declares the element `nationally_resolved`, and the resolver emits it as unavailable-with-reason rather than omitting it. A tab that vanishes when the link drops is the §33.3 defect reintroduced at the contract layer.
 2. **The contract declares its origin.** Every contract carries `resolver_origin: NATIONAL | NODE`, `source_snapshot` (the bundle set and ages it was computed from, when node-resolved), and `expires_at`. A client holding an expired contract re-requests; it never extends one locally.
-3. **A node contract never grants what a national contract would not [D].** The node resolver works from bundles that are a subset of national truth; staleness can only *narrow* what is offered (per the §5.3 ladder), never widen it. Test A89.
+3. **A node contract may grant only what an unexpired, recognised authority source supports [D — corrects v1.3.1].** v1.3.1 said the node offer is a subset of what the national contract would return, and that was too centralising: it denied the institution's own lawful authority. During an outage a hospital validly creates **shift assignments, ward allocations, supervision relationships, temporary duties, department roles and emergency operational appointments** — acts within its institutional authority that a live National Core does not yet know about. The correct rule has three recognised sources: **national signed truth** (bundles at their current ages), **institutionally authoritative local truth** where the federation agreement grants that institution authority over that fact class, and **approved offline authority instruments** (§11.4 break-glass, §22A commissioning grants). The node offer need not be a literal subset of a live national resolver's response; it must be a subset of the **nationally governed authority model** — nothing is granted whose authority class the federation agreement does not recognise for that institution, and staleness still only narrows within each source class (§5.3). Test A89, rewritten to diff against the governed model, plus A99 for the outage case.
 
 **Cache posture:** contracts are short-lived state, not content. The client may hold the current contract in memory and re-render from it; it must not persist a contract across sessions, and `expires_at` at a node is bounded by the shortest remaining bundle ceiling among its inputs — a contract must never outlive the authority it was computed from.
 
@@ -3659,9 +3811,19 @@ v1.3's resolver had no notion of *why the person arrived*, which made its landin
   "requested_destination": "/work/queue" | null,     // the returnTo, post-validation
   "return_to":             "/work/queue" | null,     // where cancel/complete goes back to
   "last_safe_surface":     "/home",                  // fallback when neither survives validation
-  "launch_source":         "DIRECT | PUBLIC_FRONT_DOOR | NOTIFICATION | DEEP_LINK | QR | HANDOFF"
+  "launch_source":         "DIRECT | PUBLIC_FRONT_DOOR | NOTIFICATION | DEEP_LINK | QR | HANDOFF",
+
+  // v1.3.2 (I4): what completing the intent REQUIRES — resolved server-side from the
+  // intent's journey family, so the resolver can offer the right transition instead of a refusal
+  "required_audience":     "impilo-personal | impilo-professional | impilo-work:* | …" | null,
+  "required_assurance":    "AAL1 | AAL2 | AAL3" | null,
+  "required_work_context": { "facility_id": "…", "reason": "…" } | null,
+  "audience_transition":   { "available": true, "kind": "SWITCH | STEP_UP | FRESH_LOGIN",
+                             "label": "Open in My Professional", "href": "…" } | null
 }
 ```
+
+**The transition rule [D — corrects v1.3.1].** *"View my result"* requires `impilo-personal`; *"renew my licence"* requires `impilo-professional`; *"review the casualty queue"* requires a specific `impilo-work:NODE-*` session. When the current session cannot satisfy the intent, the resolver does not merely refuse — where the person is **eligible** for the required audience, it offers the correct transition (`audience_transition`), honouring §4B's non-exchange rule (the transition is a switch, step-up or fresh authentication, never a token upgrade). Where the person is not eligible, the refusal states which authority is missing and its acquisition journey. Test A97.
 
 Five rules, four of which the code already enforces and the contract now guarantees uniformly:
 
@@ -3691,28 +3853,52 @@ v1.3 carried `"ux_state": "PROVIDER_MULTIPLE_WORK_CONTEXTS"` — one field, one 
 | `work_assignment` | `NONE` · `SINGLE` · `MULTIPLE` · `SUSPENDED` | Work-context resolution |
 | `active_domain` | `PUBLIC` · `PERSONAL` · `PROFESSIONAL` · `WORK` · `ORG_ADMIN` · `REGULATORY` · `NODE_OPS` · `PLATFORM_ADMIN` | Session audience (§4B) |
 | `deployment_context` | `NATIONAL` · `NODE_CONNECTED` · `NODE_DISCONNECTED` · `NODE_COMMISSIONING` | Node state (§33.4) |
-| `authority_freshness` | `CURRENT` · `AGEING` · `STALE` · `PAST_CEILING` | Per bundle, staleness ladder (§5.3) |
+| `authority_freshness[]` | Per entry: `{bundle_type, decision_class, state: CURRENT·AGEING·STALE·PAST_CEILING, age, affected_capabilities[]}` — **an array, never one aggregate** (I3): a stale standing bundle restricts prescribing, not a personal appointment | Per bundle, staleness ladder (§5.3) |
 | `site_link` | `AVAILABLE` · `UNAVAILABLE` | Outage B (§2A.2) |
+| `organisation_authorities[]` | Per entry: `{organisation_id, role, effective_from, effective_to, status, permitted_journey_families[], source, source_checked_at}` | `wgv_assignment` (the estate's only per-person authority index) + authorised-representative records |
+| `facility_authorities[]` | Same shape, `facility_id`-scoped | `tuso.facility_admin_appointment` — a per-person endpoint already exists (`/facility-admin-appointments/by-person/{id}`) |
+| `regulatory_authorities[]` | Same shape + `jurisdiction_code`, from the closed 13-role vocabulary | `org_registry_regulatory_appointment` (per-person endpoint + index exist) |
+| `node_authorities[]` | Same shape, node/site-scoped (`SITE_VIEWER…SITE_ADMINISTRATOR`) | `ind_site_operator_grant` — **currently unreachable**: no per-person finder, and indawo is absent from the work-context source union |
+| `commissioning_roles[]` | Same shape, per commissioning case (§22A) | Commissioning case records |
+| `jurisdictions[]` | Distinct jurisdictions across the above | Derived |
 | `device_posture` | `PERSONAL` · `MANAGED_SHARED` · `KIOSK` · `UNKNOWN` | Device policy (§29.3) |
 | `journey_obligations` | count + next actor per open journey | Journey store (§39) |
 | `session_lifecycle` | `ACTIVE` · `EXPIRING` · `EXPIRED` · `STEP_UP_REQUIRED` | Token state |
 
-**Landing is derived, not stored.** The resolver still has to choose one place to put the person, so it applies a **deterministic precedence function** over the vector. Precedence is fixed, published and testable, in this order — safety first, then authority, then continuity, then preference:
+**Landing is derived, not stored — and precedence is capability-scoped [D — corrects v1.3.1].** The resolver still has to choose one place to put the person, so it applies a **deterministic precedence function** over the vector. v1.3.1's function was too global: it sent a provider whose *hospital's* site link was down to a hospital-link failure screen when they had asked for national My Life, and let one stale professional bundle block a personal appointment. Each guard step therefore applies **only when the requested destination depends on the failing condition** — the dependency being declared per destination in the contract's capability map, never inferred client-side:
 
 ```
-1. session_lifecycle = EXPIRED | STEP_UP_REQUIRED     → re-authentication, carrying entry intent (§28.5)
-2. site_link = UNAVAILABLE                            → SITE_LINK_UNAVAILABLE surface (Outage B)
-3. authority_freshness = PAST_CEILING                 → fail-closed surface stating which authority and its age
-4. device_posture = KIOSK                             → kiosk-scoped surface only
-5. active_domain explicitly requested and permitted   → that domain's landing
-6. entry_intent resolvable and permitted (§28.5)      → the intent's destination
-7. work_assignment = SINGLE and domain = WORK         → straight into Work
-8. work_assignment = MULTIPLE and domain = WORK       → workplace chooser (§32.3)
-9. professional/personal standing default             → §32 domain landing
-10. otherwise                                         → public front door
+1. session_lifecycle = EXPIRED | STEP_UP_REQUIRED       → re-authentication, carrying entry intent (§28.5)
+2. site_link = UNAVAILABLE
+     AND destination depends on the node                → SITE_LINK_UNAVAILABLE surface (Outage B)
+     (a national personal/professional destination proceeds untouched)
+3. authority_freshness[] has PAST_CEILING on an entry
+     whose affected_capabilities cover the destination  → fail-closed surface naming THAT authority and its age
+     (other capabilities, and other domains, proceed)
+4. device_posture = KIOSK                               → kiosk-scoped surface only
+4a. device_posture = MANAGED_SHARED | UNKNOWN
+     AND destination is the personal domain
+     AND personal_domain_policy = BLOCK (the default)   → personal-domain-blocked surface (§29.3),
+                                                          stating the device policy and offering
+                                                          the person's own device; step-up only
+                                                          where the institution set
+                                                          ALLOW_ISOLATED_STEP_UP
+     (v1.3.3, F15: without this step the precedence function reached step 5 and derived a My Life
+      landing that §29.3 forbids — a safety default stated in one section and contradicted by the
+      function that decides landings)
+5. active_domain explicitly requested and permitted     → that domain's landing
+6. entry_intent resolvable and permitted (§28.5)        → the intent's destination
+7. work_assignment = SINGLE and domain = WORK           → straight into Work
+8. work_assignment = MULTIPLE and domain = WORK         → workplace chooser (§32.3)
+9. professional/personal standing default               → §32 domain landing
+10. otherwise                                           → public front door
 ```
 
-**The rule [D]:** the contract carries **the whole vector plus the derived landing**, never the landing alone. Every axis not selected by precedence remains renderable — that is what allows a provider entering Work on stale authority at a shared workstation to see all three facts, rather than the one the resolver happened to rank first. Test A87.
+Steps 2–3 still surface as **banners** on non-dependent destinations (the provider in My Life is told their hospital's link is down); they cease to be *landings* for journeys that do not need the failing thing. Test A96.
+
+**The rule [D]:** the contract carries **the whole vector plus the derived landing**, never the landing alone. Every axis not selected by precedence remains renderable — that is what allows a provider entering Work on stale authority at a shared workstation to see all three facts, rather than the one the resolver happened to rank first. Test A87; the authority arrays are A95.
+
+**The authority arrays are composition, not construction — measured 2026-08-04.** The substrates exist: `wgv_assignment` carries organisation, unit, jurisdiction, dates, status and authority level behind the estate's only per-person authority index; tuso and org-registry ship per-person endpoints for facility-admin appointments and regulatory appointments (closed 13-role vocabulary with `jurisdiction_code`). What is missing is exactly what the interface needs: **no "my organisations" endpoint exists anywhere** (the authorised-representative repository has one org-scoped finder and no per-person query); site-operator grants have no per-person finder and indawo is outside the work-context source union entirely; and **every context-source adapter discards the effective period and status it filtered on** — the resolver knows *which* contexts, never *since when, until when, in what standing*. The 23-field `ResolvedWorkContext` is also projected twice, differently (14 fields in the session contract, 16 in the context view) — a divergence the contract-canonical arrays retire.
 
 ## 29.1 Derived presentation states
 
@@ -3777,7 +3963,7 @@ Measured today, and each one is silence or misattribution rather than a wrong an
 | Case | What happens now | Required |
 |---|---|---|
 | **Citizen hits a work or professional route** | Silent `router.replace("/home")` — no message, no toast, no reason. An outage and a genuine lack of authority are experientially identical | A stated reason and, where applicable, the route to obtain the authority |
-| **BFF returns 502** | Swallowed by every hook into a synthetic empty. On `/work` it is **actively misleading**: a 502 renders as *"the assignment could not be re-proven from its source"*, which is a false explanation of an upstream outage. There is **no `error.tsx` or `global-error.tsx` anywhere** in the shell | `UNAVAILABLE` with a retry, distinct from `EMPTY` |
+| **BFF returns 502** | Swallowed by every hook into a synthetic empty. On `/work` it is **actively misleading**: a 502 renders as *"the assignment could not be re-proven from its source"*, which is a false explanation of an upstream outage. There is **no `global-error.tsx`**, and a segment `error.tsx` exists in exactly **one** of ~855 route segments (`app/madi/error.tsx`, blood services) *(evidence correction 2026-08-04: was "none anywhere")* | `UNAVAILABLE` with a retry, distinct from `EMPTY` |
 | **Unregistered route** | The guard **returns early — no auth, facility, role or citizen check at all**. This is not hypothetical: three emergency routes once shipped unregistered and ran with no guard | **Deny by default** (A74) |
 | **Work session expires mid-use** | Nothing. There is no expiry check anywhere — no timer, no comparison, no interceptor — while one screen displays *"Session reissues automatically"*, which is not implemented. The expired token is refused downstream and the failure is swallowed into an empty section | Detect, re-mint or return to the picker, and say which |
 
@@ -3806,13 +3992,29 @@ A ward computer used by eleven clinicians across three shifts is the **normal** 
 | Full sign-out after lock | 8 h | **15 min** | immediate |
 | "Remember me" / persistent credential | Permitted | **Never** | Never |
 | Passkey enrolment | Permitted | **Never** — a resident passkey on a ward machine is a shared credential | Never |
-| Personal domain (My Life) | Available | Available, **not defaulted**, and cleared on switch | Unavailable |
+| Personal domain (My Life) | `ALLOW` | **`BLOCK` by default** (see below) | `BLOCK` |
 | Draft and journey residue (§39) | Retained per person | **Cleared on user switch**, server-side resume only | Not written |
 | Patient context on switch | Retained | **Cleared** — the next clinician never inherits an open record | n/a |
 | Fast user switch | n/a | **Required** — sign-out must not mean losing the queue view | n/a |
 | Print / export / download | Permitted | Recorded as a disclosure with the device id | Blocked |
 
-**Fast user switching is the load-bearing requirement.** If leaving a shared workstation is expensive, clinicians share a session, and every audit record after the first names the wrong person. The switch must be one action, must clear patient and personal context, and must return to the same operational surface — the queue, not the front door.
+### The personal-domain policy **[D — corrects v1.3.1]**
+
+v1.3.1 allowed My Life on a managed shared device, merely not defaulted. Too permissive: a ward computer is not the place to optimise for browsing one's PHR, and personal access is already easy on the provider's own phone. Per-institution policy, three values, **default `BLOCK` for `MANAGED_SHARED`**:
+
+```
+personal_domain_policy = BLOCK | ALLOW_ISOLATED_STEP_UP | ALLOW
+```
+
+An institution electing `ALLOW_ISOLATED_STEP_UP` gets an isolated personal session that must: use **separate storage and cookies**; **never inherit the Work token** (§4B non-exchange applies); clear on close or switch; make return to an open personal screen impossible; never appear on a kiosk; and remain subject to the workstation privacy policy. Test A103.
+
+**Fast user switching is the load-bearing requirement.** If leaving a shared workstation is expensive, clinicians share a session, and every audit record after the first names the wrong person. The switch is one action, and what it preserves is **location, never data** [D — corrects v1.3.1]:
+
+| Preserved across the switch | Never preserved |
+|---|---|
+| Facility · department · service point · a safe route hint ("the queue you were viewing") | An open patient record · search results containing PII · patient-specific tabs · draft clinical notes · clipboard contents · decrypted cached data |
+
+The next clinician **authenticates into** the preserved location — the queue renders only after their own sign-in, never in the gap between users.
 
 ### The control that exists and has never executed **[measured 2026-08-04]**
 
@@ -3885,9 +4087,9 @@ Already right, and to be preserved rather than redesigned:
 
 **Two gates must move together.** Public reachability is decided in two independent places — the middleware prefix list and the route registry's guard — and they are **already out of sync** for three routes. The experience contract makes reachability one decision (§28.2, A74).
 
-## 30.3 Public services that must work before authentication
+## 30.4 Public services that must work before authentication
 
-Care discovery and the facility map, emergency and urgent-care routing, credential and facility verification, share-slip claim, public health information, get-involved, download and status. These already exist as an anonymous lane with its own trust-header stripping (§F.1) — the contract makes them a coherent front door rather than a set of routes.
+Care discovery and the facility map, emergency and urgent-care routing, credential and facility verification, share-slip claim, public health information, get-involved, download and status. These already exist as an anonymous lane with its own trust-header stripping (§12.4) — the contract makes them a coherent front door rather than a set of routes.
 
 ---
 
@@ -4186,9 +4388,9 @@ Twenty-four journeys. Each is specified with actor · entry point · preconditio
 
 | # | Journey | Actor | Entry | Authority transition | Key failure state | Offline behaviour | Test |
 |---|---|---|---|---|---|---|---|
-| 1 | Anonymous citizen finds care | Public | Public front door | none | No result in range → widen or emergency route; *"N of M results have map coordinates"* preserved | Boundary map still renders when the street stack is down | A76 |
+| 1 | Anonymous citizen finds care | Public | Public front door | none | No result in range → widen or emergency route; *"N of M results have map coordinates"* preserved | Boundary map still renders when the street stack is down | **A104** |
 | 2 | Citizen signs up and enters My Life | Citizen | Front door → sign-up | → `impilo-personal` | Proofing incomplete → `HEALTH_ID_PENDING` with what is usable meanwhile | n/a | A75 |
-| 3 | Citizen receives care and later sees the encounter | Citizen | My Life timeline | none | Not yet contributed → stated, not blank | n/a | A44 |
+| 3 | Citizen receives care and later sees the encounter | Citizen | My Life timeline | none | Not yet contributed → stated, not blank | n/a | A81 |
 | 4 | Provider claims their Provider ID | Provider | My Life prompt or front door | → `impilo-professional` | No record → registration route, not a dead end; seven lanes each with their own end state | n/a | A75 |
 | 5 | Provider requests facility access | Provider | My Professional | none (request only) | Declined → reason + re-request path; next actor named | Queued | A78 |
 | 6 | Provider enters national Work | Provider | Domain switch | → `impilo-work` | No assignment → §29.1 landing, never an empty page | n/a | A75 |
@@ -4196,7 +4398,7 @@ Twenty-four journeys. Each is specified with actor · entry point · preconditio
 | 8 | Provider moves between local Work and Full Impilo | Provider | Node header | **new** national session; work token not exchanged | Node offline → stated unavailable, no local substitute | My Life unavailable and says so | A30 |
 | 9 | Provider works at multiple institutions | Provider | Either node | two audiences, no mixing | Cross-node token reuse → rejected on audience | Per-node contexts persist; remote list marked stale | A33, A59, A71 |
 | 10 | Practice owner registers an organisation | Officer | *Bring your organisation* | → `impilo-org-admin` | Duplicate → claim route, not a second row | n/a | A78 |
-| 11 | Existing facility is claimed | Officer / admin | Facility search | facility-admin appointment | **Today: a boolean. Target: the eleven-state submission model with a named reviewer and time in state** | n/a | A38 |
+| 11 | Existing facility is claimed | Officer / admin | Facility search | facility-admin appointment | **Today: a boolean. Target: the eleven-state submission model with a named reviewer and time in state** | n/a | **A105** |
 | 12 | New facility is registered | Officer | Facility register | pending legitimacy | Silent duplicate → steward review, generic receipt **preserved by design** | n/a | A38 |
 | 13 | Organisation chooses hosted service | Officer | Setup assistant (§31) | service agreement ACTIVE | No profile fits → assisted review, not a forced choice | n/a | A76 |
 | 14 | Organisation commissions an on-premises node | Officer + Node Admin | Commissioning case | node ACTIVE on countersignature | Readiness fails → the specific test named; node stays `AWAITING_COMMISSIONING` | Install may be offline | A38–A43 |
@@ -4205,8 +4407,8 @@ Twenty-four journeys. Each is specified with actor · entry point · preconditio
 | 17 | Patient is referred between nodes | Provider | Referral | disclosure basis recorded | Receiver offline → queued with visible status | Queues at sender | A12 |
 | 18 | Clinician views a Shared-Care Cache | Provider | Patient record | cohort + consent | Authority stale → emergency-only or fail closed | Serves with **both clocks** | A46–A48, A62 |
 | 19 | Patient shares selected PHR content with a facility | Citizen | My Life consent centre | item-scoped disclosure | Facility not permitted → refusal with reason | n/a | A44 |
-| 20 | Regulator onboards and operates its workspace | Regulator | Regulator bootstrap | → `impilo-regulatory` | Zero appointments → the founding-request route, which already closes this dead end | n/a | A26 |
-| 21 | Facility administrator configures services and workforce | Facility admin | Facility console | facility-admin scope | Missing PIC named as the blocking item; **steps adapt to facility scale** | n/a | A42 |
+| 20 | Regulator onboards and operates its workspace | Regulator | Regulator bootstrap | → `impilo-regulatory` | Zero appointments → the founding-request route, which already closes this dead end | n/a | **A106** |
+| 21 | Facility administrator configures services and workforce | Facility admin | Facility console | facility-admin scope | Missing PIC named as the blocking item; **steps adapt to facility scale** | n/a | **A107** |
 | 22 | Support engineer enters through approved JIT access | Support | Support case | data-bearing access grant | **Audit sink unavailable → session refused** | n/a | A66, A69 |
 | 23 | Organisation changes service-consumption profile | Officer | Organisation console | new agreement version | Migration needed → planned, never implicit | n/a | A72 |
 | 24 | Node is upgraded, suspended or decommissioned | Node Admin + Officer | Fleet console | release / lifecycle state | Below compatibility floor → quarantined with a remedy | Local care continues | A20, A15 |
@@ -4228,7 +4430,7 @@ A journey that exists only in one browser's storage is not resumable — not fro
 
 ## 39.2 The schema
 
-Owned by the experience plane (experience-bff's datasource — noting the measured fact that experience-bff currently has **no** datasource; this is its first), national and node-local per §28.4, federated as ordinary origin-stamped records (§13.1):
+Owned by the experience plane, national and node-local per §28.4, federated as ordinary origin-stamped records (§13.1). Datasource precision, measured: experience-bff carries **45 orphaned migrations** and a seeded `experience_bff` database, but its pom has **no JPA, no Postgres driver, no Flyway** and its config no datasource block — the migrations are artefacts of an earlier build, not a live store. This schema is the service's first *live* datasource, and reconciling or purging the orphans is part of that work:
 
 ```sql
 CREATE TABLE journey_instance (
@@ -4245,12 +4447,64 @@ CREATE TABLE journey_instance (
   next_actor_role   TEXT,                 -- named role, NULL only when COMPLETED/ABANDONED/EXPIRED
   next_actor_ref    UUID,                 -- the specific actor where known
   waiting_since     TIMESTAMPTZ,          -- powers "with the registrar for six days"
-  authority_domain  TEXT NOT NULL,        -- §4A domain whose session may read it
+
+  -- Scope (I8): authority_domain alone over-shares — a journey marked ORG_ADMIN is NOT
+  -- visible to every organisation the person happens to administer. As applicable:
+  authority_domain  TEXT NOT NULL,        -- §4A domain whose session type may read it
+  trust_domain_id   TEXT,
+  organisation_id   UUID,
+  facility_id       UUID,
+  node_id           TEXT,
+  jurisdiction_id   TEXT,
+  work_context_id   UUID,
+  programme_id      UUID,
+
   source_of_truth   TEXT NOT NULL,        -- EXPERIENCE | DOMAIN_SERVICE (see 39.3)
   domain_ref        TEXT,                 -- the owning record when DOMAIN_SERVICE
-  expires_at        TIMESTAMPTZ NOT NULL, -- every journey ends; abandoned ≠ immortal
+
+  -- Lifecycle (I9): five clocks, never one. An experience TTL must not expire a legal case.
+  action_due_at             TIMESTAMPTZ,  -- deadline on the CURRENT actor's step
+  draft_expires_at          TIMESTAMPTZ,  -- when unsubmitted draft content is discarded
+  projection_refresh_due_at TIMESTAMPTZ,  -- when a DOMAIN_SERVICE projection goes stale
+  domain_case_closed_at     TIMESTAMPTZ,  -- set only by the owning service's own lifecycle
+  retain_until              TIMESTAMPTZ,  -- retention, per journey family policy
+
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE journey_actor_assignment (  -- I8: "REGULATOR" is a queue, not an actor
+  assignment_id  UUID PRIMARY KEY,
+  journey_id     UUID NOT NULL REFERENCES journey_instance,
+  step           TEXT NOT NULL,
+  actor_role     TEXT NOT NULL,          -- the role class (e.g. REGULATOR)
+  actor_scope    JSONB NOT NULL,         -- which regulator, which jurisdiction, which queue
+  state          TEXT NOT NULL,          -- UNASSIGNED | CLAIMED | DELEGATED | REASSIGNED | DONE
+  claimed_by     UUID,                   -- the person who took it, once claimed
+  delegated_to   UUID,
+  delegated_by   UUID,
+  reassignable_by TEXT,                  -- role authorised to reassign
+  occurred_at    TIMESTAMPTZ NOT NULL
+);
+-- The action centre's "next_actor = you" (§40) filters on THIS table: unassigned rows match a
+-- person's scoped authorities (§29.0 arrays); claimed rows match only the claimant.
+
+CREATE TABLE journey_draft (             -- I7: EXPERIENCE-owned journeys only (rule 2 below)
+  draft_id       UUID PRIMARY KEY,
+  journey_id     UUID NOT NULL REFERENCES journey_instance,
+  owner_actor_id UUID NOT NULL,          -- draft ownership: who may edit
+  version        BIGINT NOT NULL DEFAULT 0,  -- optimistic lock; stale writes fail fast
+  content        JSONB NOT NULL,         -- answers, accepted data, validation state, corrections requested
+  attachments    JSONB NOT NULL DEFAULT '[]',  -- document-store object ids, never binaries
+  sensitive_fields_policy TEXT NOT NULL DEFAULT 'STRIP',  -- credential-class fields never persisted
+  autosaved_at   TIMESTAMPTZ,            -- acknowledged autosave watermark
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE TABLE journey_draft_version (     -- append-only history; conflict resolution reads this
+  draft_id UUID NOT NULL, version BIGINT NOT NULL, content JSONB NOT NULL,
+  written_by UUID NOT NULL, written_at TIMESTAMPTZ NOT NULL,
+  PRIMARY KEY (draft_id, version)
 );
 
 CREATE TABLE journey_step_event (        -- append-only; the resume and audit spine
@@ -4265,12 +4519,14 @@ CREATE TABLE journey_step_event (        -- append-only; the resume and audit sp
 );
 ```
 
-## 39.3 Four rules
+## 39.3 Six rules
 
-1. **The journey record is an index, not a second truth [D].** Where a domain service already owns the state machine (provider claims, facility submissions, commissioning cases), `source_of_truth = DOMAIN_SERVICE` and the instance stores only the pointer plus the *rendering* facts (step, next actor, waiting-since), refreshed from the owner. The experience plane never advances a domain machine by writing this table — that would be the composition layer becoming a source of truth, which §Core doctrine forbids. Purely experiential journeys (find-care, guided setup progress) may be `EXPERIENCE`-owned outright.
-2. **Resume is server-first, device-second.** The contract's `journeys` block is read from this store, so a journey started on a ward workstation resumes on the person's phone. Client envelopes remain as *drafts* layered on top — and adopt the find-care envelope's three properties as the standard for all of them (TTL, data minimisation on write, validated `returnTo`), which is item 84.
-3. **Reading is domain-bound.** `authority_domain` gates which session audience may see an instance (§4B); a facility admin sees the facility's journeys, not the personal journeys of the person who happens to hold both roles.
-4. **Every journey expires.** `expires_at` is mandatory, family-specific, and expiry is a rendered state with a restart route — not a silent disappearance (§29.2).
+1. **The journey record is an index, not a second truth [D].** Where a domain service already owns the state machine (provider claims, facility submissions, commissioning cases), `source_of_truth = DOMAIN_SERVICE` and the instance stores only the pointer plus the *rendering* facts (step, next actor, waiting-since), refreshed from the owner. The experience plane never advances a domain machine by writing this table — that would be the composition layer becoming a source of truth, which core doctrine forbids. Purely experiential journeys (find-care, guided setup progress) may be `EXPERIENCE`-owned outright.
+2. **Drafts follow `source_of_truth` [T — corrects v1.3.1].** v1.3.1 preserved position, not work — "you were on step 3" without what was entered there. `EXPERIENCE`-owned journeys store drafts in `journey_draft` above. `DOMAIN_SERVICE` journeys must expose a **versioned draft API on the owning service**, and the experience store holds only the pointer — pre-submission clinical and legal content never accumulates in the composition layer. The shipped precedents set the bar and expose the gap: `pct_form_response` version-locks the form definition at draft and chains supersessions but has **no optimistic lock** (its answer PUT sends no version), and the facility profile submission's field-assertion drafts race silently for the same reason; the thirteen `@Version` sites (best: the resuscitation record's scoped `record_version` with a comment naming exactly what it protects) are the pattern every draft API must adopt — optimistic locking, idempotent autosave with an acknowledged watermark, concurrent-edit detection surfaced as a conflict (never a silent overwrite), and attachment references as versioned document-store ids (`tuso.facility_document` is the one attachment model with both a version and a supersession pointer). Credential-class fields are stripped before persistence, as `useFormDraftStore` already does client-side. Test A100.
+3. **Resume is server-first, device-second.** The contract's `journeys` block is read from this store, so a journey started on a ward workstation resumes on the person's phone **with its draft content** (A92, amended). Client envelopes remain as convenience caches layered on top — adopting the find-care envelope's three properties (TTL, data minimisation on write, validated `returnTo`), item 84.
+4. **Reading is scope-bound, not merely domain-bound [T — corrects v1.3.1].** `authority_domain` gates the session *type*; the scope columns gate the *instance*: a person administering three facilities sees a facility journey only under the matching `facility_authorities[]` entry (§29.0). Actor targeting reads `journey_actor_assignment` — an unclaimed step is visible to the scoped queue, a claimed step to its claimant, and reassignment only to the `reassignable_by` role.
+5. **Lifecycle is five clocks, and the projection never kills the case [D — corrects v1.3.1].** `action_due_at` drives urgency; `draft_expires_at` discards only unsubmitted content; `projection_refresh_due_at` marks a `DOMAIN_SERVICE` projection stale — rendered as stale, not removed; `domain_case_closed_at` is written only from the owning service's own lifecycle; `retain_until` is retention policy. A regulatory application, facility claim or commissioning case **cannot disappear because an experience TTL elapsed** — for domain-owned journeys, lifecycle follows the domain service, and the Experience Plane may only mark its projection stale or unavailable. Expiry of experiential journeys remains a rendered state with a restart route (§29.2). Test A101.
+6. **Nodes hold an allow-list, not a redaction [D — corrects v1.3.1].** A node's journey store and its contracts may hold or reference only: **Work journeys, facility journeys, organisation journeys relevant to that institution, node operations, and commissioning journeys.** Personal-health, regulatory-complaint, professional-correspondence, PHR-consent and personal payment/coverage journeys are never cached, listed, counted or referenced at a node — **even a label discloses** ("regulatory complaint, submitted 6 days ago" on an employer's node is a disclosure). v1.3.1's "national journeys listed as stale references" is withdrawn. Test A98.
 
 ---
 
@@ -4280,7 +4536,7 @@ CREATE TABLE journey_step_event (        -- append-only; the resume and audit sp
 
 v1.3 named "Notifications and communications" as an experience lane and never architected it. What ships today:
 
-- **notification-service**: a real channel-delivery engine — templates (19 migrations' worth), scheduled sends, delivery receipts, channel status. It answers *"send this message through that channel"*. It holds no concept of a person's inbox.
+- **notification-service**: a real channel-delivery engine — templates, scheduled sends, delivery receipts, channel status — **and, corrected from v1.3.1: it does hold a per-person inbox.** v1.3.1 claimed it held "no concept of a person's inbox"; measured, `ns_notifications` gained `read_at` (V005) and `inbox_recipient` with a partial unread index (V010), fan-out writes one row per recipient, inbox/read/read-all/unread-count endpoints exist, and the BFF already derives the recipient server-side with an explicit anti-spoofing comment. What is genuinely absent, stated precisely: **notification class, authority-domain binding, dismissal-versus-acknowledgement distinction, retention/expiry, and any link to an obligation.** `ns_notifications` is a delivery queue that grew read state — not an action record.
 - **The shell tray** (`ShellNotificationTray`): renders `useAssistantNotifications` — signals **computed on request** by `AssistantNotificationsController` — merged with an ephemeral in-memory `shellFeed`, plus an optional WebSocket nobody configures. Nothing persists; nothing is markable read; nothing survives navigation, let alone a device change.
 - **The scoping defect**: that controller takes `work_mode`, `facility_id` and `shift_id` from **query parameters**. The client asserts its own notification scope — the same browser-authoritative-context class §12.4 eliminates, here reintroduced at the notification seam (item 83).
 
@@ -4299,12 +4555,59 @@ Four classes, each with different lifecycle and different rights:
 
 Rules:
 
-1. **Audience-bound like everything else [D].** A notification is minted into exactly one §4A domain, and appears only in that domain's surfaces. A professional licence warning does not surface inside a Work session at an employer's node — it surfaces in My Professional, and Work sees only what Work's audience may see (§36.3.1 applied to notifications). Scope comes from the **session audience server-side**, never from query parameters.
+1. **Audience-bound like everything else [D]** — with one derived exception stated in rule 1a. A notification is minted into exactly one §4A domain, and appears only in that domain's surfaces. Full professional licence correspondence surfaces in My Professional, never inside a Work session at an employer's node (§36.3.1 applied to notifications). Scope comes from the **session audience server-side**, never from query parameters.
+
+1a. **Work receives the minimum safety projection [D — corrects v1.3.1].** v1.3.1's boundary, applied literally, would hide a licence suspension from the place where unsafe work happens. The correction: *the professional-domain notification remains private; Work receives a **separately derived** safety projection containing only the consequence necessary to authorise safe work* — licence expiring soon · scope restricted · supervision required · authority suspended · this work session ends at T · whom to contact (regulator or facility credentialing office). No case detail, no correspondence, no reasons beyond the consequence class. This is not a disclosure of professional-domain content: the consequence is **already part of Professional Status and the standing bundle** that authorises the work session (§11B.1) — the projection renders what the authorisation artefact already carries. Test A102.
 2. **`ACTION_REQUIRED` is a projection of §39, not a parallel list.** The action centre's top section *is* the journey store filtered to `next_actor = you` — one truth, two renderings (work-home sections being the third). Nothing can be "notified done" while the obligation remains, or vice versa.
 3. **Tapping is entry intent.** A notification's action carries a `GatewayIntent` (§28.5), not a bare URL — so it survives the sign-in it may trigger, lands with *why you came* intact, and `launch_source: NOTIFICATION` is on the contract for the landing to use.
 4. **Read state is server-side and per-person** — cross-device by construction, cleared correctly on shared-workstation switch because it was never device state at all.
 5. **Delivery remains notification-service's job.** The action centre decides *what stands in the record*; notification-service decides *how a channel copy reaches a phone or SMS*. A delivered SMS does not mark the record read; reading the record may suppress a pending push. The two systems converse; they do not merge.
 6. **Degraded honestly.** When the store is unreachable the tray says so (§29.2) — it does not render an empty bell, because an empty bell is a claim that nothing needs you.
+
+## 40.3 Storage and recipient model **[T — corrects v1.3.1]**
+
+v1.3.1 defined classes and rules with no storage — the same defect §39 fixed for journeys. The action record is owned by the experience plane (same datasource as §39; notification-service remains unchanged as the delivery engine, per rule 5):
+
+```sql
+CREATE TABLE action_record (
+  record_id        UUID PRIMARY KEY,
+  class            TEXT NOT NULL,        -- ACTION_REQUIRED | STATUS_CHANGE | SAFETY | INFORMATION
+  authority_domain TEXT NOT NULL,        -- §4A binding; scope columns as in journey_instance
+  organisation_id  UUID, facility_id UUID, node_id TEXT, jurisdiction_id TEXT,
+
+  recipient_type   TEXT NOT NULL,        -- PERSON | ROLE_QUEUE (scoped via §29.0 authorities)
+  recipient_ref    JSONB NOT NULL,
+
+  source_event_id  TEXT NOT NULL,        -- the event or obligation that minted it
+  source_ref       TEXT,                 -- journey_id | domain record | standing-bundle element
+  dedup_key        TEXT NOT NULL,        -- same obligation, same recipient → one record
+  priority         TEXT NOT NULL,        -- ROUTINE | IMPORTANT | URGENT | SAFETY_CRITICAL
+
+  content_key      TEXT NOT NULL,        -- i18n key + params; NEVER clinical content in the row
+  content_params   JSONB NOT NULL DEFAULT '{}',   -- redaction by construction: refs, not payloads
+
+  read_at          TIMESTAMPTZ,          -- per person, server-side (§40.2 rule 4)
+  acknowledged_at  TIMESTAMPTZ,          -- SAFETY only; distinct from read, audited
+  dismissed_at     TIMESTAMPTZ,          -- STATUS_CHANGE / INFORMATION only
+  delegated_to     UUID,                 -- with the delegation recorded
+  escalation_state JSONB,                -- tier, due-at, breach flags
+  action_intent    JSONB,                -- the §28.5 GatewayIntent the tap carries
+
+  expires_at       TIMESTAMPTZ,          -- INFORMATION only; other classes follow their source
+  retain_until     TIMESTAMPTZ NOT NULL,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (dedup_key, recipient_type, recipient_ref)
+);
+```
+
+Six model rules, each grounded in a shipped precedent rather than invented:
+
+1. **`ACTION_REQUIRED` rows are derived** from `journey_actor_assignment` (§39) and cannot be dismissed — the dedup key is the obligation, so the row clears exactly when the obligation does (§40.2 rule 2). The other three classes are durable here.
+2. **The read model is two-level, khuluma's shape**: a per-person read watermark plus per-record state — khuluma's participant `last_read_at` + per-message receipts is the estate's proven version of exactly this, along with its `client_message_id` idempotency and its `conversation_links` pattern for binding a record to a domain object (`PATIENT|ENCOUNTER|ORDER|REFERRAL|CASE`).
+3. **Escalation reuses the only escalation model in the estate** — khuluma's SLA policy + escalation with tiers and breach flags — rather than growing a second one.
+4. **Preferences and quiet hours are declared honestly.** `mvumo.communication_preference_revision` (append-only revisions, current pointer, effective/expiry/review-due) is the versioned-preference precedent — but it is **patient-keyed only**; no provider or staff preference model exists anywhere, and **no quiet-hours or delivery-suppression mechanism exists anywhere** in the estate (measured; evidence correction 2026-08-04: a `DND` literal does exist in khuluma, but it is a *presence status* — `khuluma_presence` V002:109, `PresenceService.java:28` — with no notification-suppression behaviour attached). Both are named gaps for the implementing wave, with `SAFETY_CRITICAL` exempt from quiet hours by rule.
+5. **Delivery stays in notification-service** (§40.2 rule 5): the action record decides what stands; `ns_notifications` and the channel adapters decide how a copy reaches a phone or SMS, with channel receipts flowing back by `source_event_id`. The two systems converse; they do not merge.
+6. **Offline-node behaviour follows §28.4 and §39.3.6**: a node mints and holds action records only within its journey allow-list; national-domain records are neither cached nor counted at the node, and reconnection reconciles by `dedup_key`, not by replay.
 
 ---
 
@@ -4332,7 +4635,7 @@ This document is the Experience Architecture **baseline**: it governs models, co
 
 | # | Pack | Scope | Primary seams it must ground in |
 |---|---|---|---|
-| P1 | **Public, My Life and My Professional Journey Pack** | Front door, discovery, sign-up, personal timeline, PHR, consent centre, professional standing, CPD, regulatory self-service | §30–§32; `GatewayIntent`; the mobile timeline contract (provenance/visibility/sensitivity/actions) that already ships; journeys 1–5, 19 |
+| P1 | **Public, My Life and My Professional Journey Pack** | Front door, discovery, sign-up, personal timeline, PHR, consent centre, professional standing, CPD, regulatory self-service — **plus, explicitly (v1.3.2): account and MFA recovery, lost or replaced device, identity correction, guardianship and proxy journeys, child-to-adult transition, delegation expiry and dispute** | §30–§32; `GatewayIntent`; the mobile timeline contract (provenance/visibility/sensitivity/actions) that already ships; the shipped `LostDeviceRecoveryCase` in tshepo-identity; journeys 1–5, 19 |
 | P2 | **Provider, Organisation, Facility and Node Self-Service Pack** | Claims, onboarding, facility setup, commissioning consoles | §35's measured rails — the twelve-status provider lane, the eleven-state facility submission model that reaches no user, the missing `/facility/claim/status`; journeys 10–14, 21, 23–24 |
 | P3 | **Clinical Work Experience Pack** | **The largest substantive gap.** Arrival, queue, triage, casualty, OPD, pathway activation, orders, results, prescribing, dispensing, admission, ward rounds, transfers, discharge, theatre, maternity, paediatrics, adult medicine, lab, radiology, pharmacy, telemedicine, outreach, courier, facility clinical governance — and the controlling question: **how the paediatric, emergency, medicine, surgery and RMNP domain packs surface when a provider opens casualty, OPD or a patient record**, rather than living as destination routes | §29.0 vector in a clinical shift; §33's node states at the bedside; the work-home families; the walk-in receipt pattern; journeys 6–9, 15–18 |
 | P4 | **Regulatory and Oversight Experience Pack** | Regulator workspaces, casework, register operations, jurisdictional views | §35.2's steward-only vocabularies; journey 20; the ROM/NCZ config-pack platform |
@@ -4342,18 +4645,54 @@ This document is the Experience Architecture **baseline**: it governs models, co
 
 **Three rules bind every pack [D]:** each grounds its claims in measured code with paths, exactly as this document does; each conforms to the §28 contract, the §29.0 vector and the §36.4 action-safety contract without extending them (a pack that needs a model change raises it here first); and no journey is built before its blueprint is complete (§38) — the packs *are* those blueprints, at full depth.
 
+**Ordering [O — corrects v1.3.1].** The packs are not produced 1→7:
+
+- **P5, P6 and P7 are cross-cutting and start immediately.** They are not final polish — every journey pack is *produced through* them: P5 sets the content and localisation register a journey is written in, P6 supplies the component states it renders, P7 supplies the protocol it is validated against.
+- **Functional priority follows the Hospital Node delivery target**: the encounter-context correction (§42.2, part of this architecture) → **P3** → **P2** (facility and node commissioning) → **P1 ∥ P4** where teams permit.
+- Until architecture freeze (see the Implementation gate), packs are drafted against accepted principles as **non-controlling** documents; they become controlling implementation specifications only after freeze.
+
 ## 42.1 P3's controlling question — answered by measurement, 2026-08-04
 
 *How do the paediatric, emergency, medicine, surgery and RMNP packs surface when a provider opens casualty, OPD or a patient record?* **Today, with one partial exception, they do not.** The full sweep belongs to P3; the six facts that shape its design belong here, because they change what P3 is:
 
-1. **The adaptive mechanism exists and is disconnected at one seam.** The ordinary encounter page renders `EncounterFormsPanel`, which resolves forms per patient (age, sex, pregnancy, programmes) through PCT's `FormScopeEngine` — and the 22 seeded forms (IMNCI child and young-infant, ANC first contact, partograph, Bishop score…) are correctly scoped. But PCT stores care settings as `facility|community|home|mobile_outreach|virtual` while every seeded form declares `OUTPATIENT|EMERGENCY|INPATIENT|MATERNITY|THEATRE|…`, and no layer maps between them — so an ordinary encounter (`care_setting: "facility"`) resolves to **zero forms**. Item 87 is the single highest-leverage change in the clinical experience: it makes the packs surface *inside* the encounter rather than behind dedicated routes.
+1. **The adaptive mechanism exists and is disconnected at one seam.** The ordinary encounter page renders `EncounterFormsPanel`, which resolves forms per patient (age, sex, pregnancy, programmes) through PCT's `FormScopeEngine` — and the 22 seeded forms (IMNCI child and young-infant, ANC first contact, partograph, Bishop score…) are correctly scoped. But PCT stores care settings as `facility|community|home|mobile_outreach|virtual` while every seeded form declares `OUTPATIENT|EMERGENCY|INPATIENT|MATERNITY|THEATRE|…`, and no layer maps between them — so an ordinary encounter (`care_setting: "facility"`) resolves to **zero forms**. Item 87 is the single highest-leverage change in the clinical experience — and the PO has ruled its remedy is **not a translation table**: the two vocabularies describe different concepts, and the correction is the two-field model of §42.2, which lands **before P3 begins**.
 2. **The cadre cockpit is mounted on mobile and not on web.** `AdaptiveEncounterCockpit` + `useCadreDecision` + PCT's `CadreEngine` form a complete chain; on web the component is imported only by its own test, while the mobile provider app mounts it. Web adaptivity is instead a role-keyed hardcoded menu in which **nothing about the patient changes a single step** — the midwife flow does not include maternity; no flow includes paediatrics.
 3. **Triage is adult-only everywhere it is reachable.** The same ten hardcoded adult danger signs appear byte-identical in `/queue/triage` and the encounter page; the paediatric danger-sign engine is called only from the dedicated `/ehr/[id]/imnci` route, and the ED discriminator only from `/clinical/emergency/[visitId]` — which itself contains no link to the patient chart.
 4. **The worklist reaches pages, never patients** (item 88), and the deepest pack surfaces — maternity, paediatrics — are reachable in-app only through a page whose own banner says it is *"a design template… not wired to production APIs"*.
 5. **The sorting desk — the arrival surface — has no arrivals list**; it requires a typed journey ID, and the sort it records feeds the Cadre Engine, which drives no web surface (fact 2).
 6. **Navigation omits the packs**: neither the sidebar work zone, nor the `/clinical` hub's thirteen tiles, nor the chart's thirteen sections, nor any encounter-menu flow names theatre, surgery, maternity, paediatrics or the sorting desk.
 
-**The consequence for P3's shape [D]:** P3 is not a screen-drawing exercise. The engines, forms, scoping rules and even the routes exist; what is missing is **composition** — mounting the cockpit the mobile app already mounts, mapping one vocabulary, seeding age-appropriate triage where triage already runs, and linking worklists to the patients they already know. P3 specifies those joins first, new surfaces second.
+**The consequence for P3's shape [D]:** P3 is not a screen-drawing exercise. The engines, forms, scoping rules and even the routes exist; what is missing is **composition** — mounting the cockpit the mobile app already mounts, correcting the encounter-context model (§42.2), seeding age-appropriate triage where triage already runs, and linking worklists to the patients they already know. P3 specifies those joins first, new surfaces second.
+
+## 42.2 The encounter-context model **[T — corrects v1.3.1, blocks P3]**
+
+### The correction
+
+v1.3.1's item 87 said *"map the care-setting vocabularies"*. The PO ruled that wrong, and the code proves the ruling: the two vocabularies describe **different concepts**. `facility|community|home|mobile_outreach|virtual` says *where or how care is delivered*. `OUTPATIENT|EMERGENCY|INPATIENT|MATERNITY|THEATRE` says *what clinical setting applies*. `facility` cannot map to any one of them — care at a facility may be emergency, outpatient, inpatient, maternity, theatre, a day procedure, diagnostics or pharmacy. A translation table would make the forms surface, **and surface the wrong forms**.
+
+The model becomes two fields, with optional refinement:
+
+```
+delivery_context   FACILITY | COMMUNITY | HOME | MOBILE_OUTREACH | VIRTUAL
+clinical_setting   OUTPATIENT | EMERGENCY | INPATIENT | MATERNITY |
+                   THEATRE | PROCEDURE | DIAGNOSTIC | PHARMACY | OTHER
+-- optional:       service_line · pathway_context · department_id · service_point_id
+```
+
+**`clinical_setting` is derived — never guessed from `delivery_context` [D]** — from the arrival journey, the service point, the encounter type and the current clinical context. Forms scope on `clinical_setting`; community/home/outreach forms scope on `delivery_context`; a form may constrain both.
+
+### The split is convergence, not invention — measured 2026-08-04
+
+- **PCT already has the second field.** `pct_encounters.encounter_context` (V007) carries `outpatient|emergency|inpatient|community|virtual|procedure|procedure_room|operating_room` — a clinical-setting axis in all but name, missing only `MATERNITY`, `DIAGNOSTIC` and `PHARMACY` (`operating_room` ≈ THEATRE). The correction **converges `encounter_context` into the governed `clinical_setting` vocabulary** rather than adding a third field; `delivery_context` is the existing `care_setting`, whose values already match exactly.
+- **The lossy collapse is in code, twice proven.** `CARE_SETTING_ALIASES` (`EncounterService.java:72-74`) rewrites `outpatient→facility` and `inpatient→facility` — the clinical setting the caller sent is destroyed on write. And both mobile call sites send clinical-setting values into the delivery-context field (`encounterService.ts:99` hardcodes `care_setting:"OUTPATIENT"`; `EncounterScreen.tsx:145` sends `INPATIENT|OUTPATIENT`), which the alias map silently flattens to `facility`.
+- **The derivation inputs exist**, each measured: the sorting desk already records a per-journey context whose vocabulary (`OUTPATIENT|CASUALTY|INPATIENT|PROCEDURE|COMMUNITY|VIRTUAL`) is near-1:1 with the forms vocabulary; an `ed_visit` row (unique journey FK) ⇒ EMERGENCY; an ADMITTED `pct_admissions` row ⇒ INPATIENT; a delivery record's `theatre_episode_ref` — mandatory iff CAESAREAN — ⇒ THEATRE; and `pct_encounters.workspace_id → tuso.workspace.workspace_type` is a live edge and the only place `MATERNITY` appears as a place-type. The queue chain `journey → pct_queues.source_ref (= tuso service point) / queue_type (= service_point_type)` exists end-to-end and is unused for setting derivation today.
+- **The column-shape precedent exists**: `inpatient.procedure_episode.setting` with its CHECK (`THEATRE|BEDSIDE|CLINIC|WARD|CRITICAL_CARE|ENDOSCOPY|CATH_LAB…`) is the closest clinical-setting-typed column in the estate.
+- **Honest gaps, stated**: no `MATERNITY` sorting context exists; `tuso.service_point.service_point_type` is unconstrained VARCHAR and `EMERGENCY|MATERNITY|PHARMACY|WARD` are never written — the derivation chain needs those vocabularies constrained and populated before it can be trusted; `FormScopeEngine` currently ignores the catalogue's `careStages/specialties/encounterContexts` fields entirely (stored, transported, unread); and there is **no FHIR `Encounter.class` mapping anywhere** — the only writer is dead code with zero callers — so `clinical_setting` becomes its first correct populator (`AMB|EMER|IMP|…`). `facility_capability` codes act as a *validity constraint* on a derived setting, not a source.
+- **Boundary warning**: `tuso.facility_regulatory_profile.care_setting` (`INPATIENT|OUTPATIENT_ONLY|UNKNOWN`) is a facility-level regulatory fact sharing the name and nothing else. It is out of scope and must not be touched.
+
+### Implementation guidance for the wave that builds this (architecture states it; nothing here is implemented)
+
+PCT migration in the **V130+ band** per the clinical-core completion lease, with the lease registered before the file is written; PCT runs Flyway out-of-order, and the cross-band-dependency prohibition applies — no FK into the V200/V300/V400/V500 bands. Blast radius is enumerated and modest: ~10 write-path sites (shell encounter start, two mobile call sites, BFF passthroughs, PCT service) and ~11 read-path sites (the resolver chain, the audit column, three event consumers). Backfill derives `clinical_setting` for open encounters from the sources above and marks unresolvable rows `OTHER` — visibly, never silently.
 
 ---
 
@@ -4370,4 +4709,6 @@ This document is the Experience Architecture **baseline**: it governs models, co
 - The **experience seams** (§27–§38) — the session experience contract, the eight-family work-home composition with in-band degradation, the public front door whose H1 already asks *"How can Impilo help you today?"*, the deterministic emergency triage protocol, the Nompilo guidance catalogue, and the provider claim lane's twelve differentiated statuses.
 - The **honesty markers** the recovery and these sweeps identified — the labelled Harare fallback, the refusing provider directory, the never-strand chooser copy, the attestation-versus-real-truth split in facility setup, `answerSource: none`. §30.2, §34 and §35.1 preserve these deliberately; they are product commitments, not placeholder copy.
 
-**Six things this document asserts that the shell currently contradicts**, all carried in the backlog as fixes rather than as new features: unregistered routes are reachable with no guard (item 73, a Phase 0 safety fix); a 502 on `/work` is rendered as a false explanation (item 72); work-session expiry is unhandled while a screen claims automatic reissue (item 74); a clinician with an expired licence sees "Nothing here right now" when the licence service is down (item 77); the inactivity privacy lock has never fired on any route (item 82, Phase 0); and an ordinary OPD or casualty encounter resolves to zero structured forms because two care-setting vocabularies never meet (item 87).
+**Ten things this document asserts that the shell currently contradicts**, all carried in the backlog as fixes rather than as new features: unregistered routes are reachable with no guard (item 73, a Phase 0 safety fix); a 502 on `/work` is rendered as a false explanation (item 72); work-session expiry is unhandled while a screen claims automatic reissue (item 74); a clinician with an expired licence sees "Nothing here right now" when the licence service is down (item 77); the inactivity privacy lock has never fired on any route (item 82, Phase 0); notification scope is taken from client query parameters rather than the session audience (item 83, the §12.4 defect class at the notification seam); an ordinary OPD or casualty encounter resolves to zero structured forms because **one field is carrying two different concepts** — the delivery context overwrites the clinical setting on write, so nothing downstream can tell an outpatient clinic from a casualty bay (item 87, and the two-field split of §42.2 is the remedy, never a translation table); clinical worklist items name a patient they cannot open, one family linking to a route with no page (item 88); a person's authorities cannot be enumerated per person at all, so §29.0's scoped arrays have no read to compose from (item 89); and both shipped draft rails race silently with no optimistic lock despite thirteen `@Version` precedents in the estate (item 90).
+
+*(v1.3.3, F14 and F25: v1.3.2's list said "six" while naming six of the ten contradictions its own backlog carried, and its final clause relapsed into the "two care-setting vocabularies" framing that §42.2 and the rewritten item 87 exist to withdraw — the defect is one field holding two concepts, not two vocabularies failing to meet. A closing summary that contradicts the correction it is summarising is how a withdrawn remedy gets re-implemented.)*
