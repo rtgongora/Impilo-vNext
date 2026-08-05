@@ -1,8 +1,8 @@
 # Impilo vNext — Hybrid / Federated Target Architecture
 
-**Status:** Working draft — **NOT architecture-frozen**; freeze requires PO sign-off of this version · **Version:** 1.3.5 · **Date:** 2026-08-05
+**Status:** Working draft — **NOT architecture-frozen**; freeze requires PO sign-off of this version · **Version:** 1.3.6 · **Date:** 2026-08-05
 
-> **Status discipline.** "Approved, but with corrections required" is not a status. A version is either frozen or it is not. v1.3.1 was **directionally accepted, not approved**: its settled decisions are preserved and its remaining defects were upstream model issues that could not be left to the Experience Completion Packs to resolve divergently. v1.3.2 was the integrity correction the PO required before freeze; its freeze review found stop conditions, so **v1.3.2 was never frozen**. v1.3.3 corrected those; **its own freeze review then refused freeze on two further stop conditions**, so v1.3.3 was never frozen either. v1.3.4 corrected those and added the assurance model (§38A); **its own freeze review then refused freeze on three further stop conditions**, so v1.3.4 was never frozen either. v1.3.5 corrects those and adds the entailment register (§38C), which makes the recurring mis-citation defect machine-checkable for the first time. Until freeze, the §Implementation-gate table below states exactly what may and may not be built.
+> **Status discipline.** "Approved, but with corrections required" is not a status. A version is either frozen or it is not. v1.3.1 was **directionally accepted, not approved**: its settled decisions are preserved and its remaining defects were upstream model issues that could not be left to the Experience Completion Packs to resolve divergently. v1.3.2 was the integrity correction the PO required before freeze; its freeze review found stop conditions, so **v1.3.2 was never frozen**. v1.3.3 corrected those; **its own freeze review then refused freeze on two further stop conditions**, so v1.3.3 was never frozen either. v1.3.4 corrected those and added the assurance model (§38A); **its own freeze review then refused freeze on three further stop conditions**, so v1.3.4 was never frozen either. v1.3.5 corrected those and added the entailment register (§38C); **its own freeze review then refused freeze on two further stop conditions**, so v1.3.5 was never frozen either. v1.3.6 corrects those — chiefly by hardening §38C's checker, which could be desynchronised from what a human reads. Until freeze, the §Implementation-gate table below states exactly what may and may not be built.
 **Factual basis:** [`vnext-current-state-recovery-2026-08-03.md`](vnext-current-state-recovery-2026-08-03.md) (commit `1870cf33d`), plus targeted evidence sweeps for the v1.1 additions. Every current-state statement is a reference, not a re-derivation.
 **Scope:** Converts vNext from a single-instance national deployment into a hub-and-spoke federated national platform, consumed through four service profiles. Immediate delivery target is the **large Hospital Node**. This document does not implement; it governs implementation.
 
@@ -191,6 +191,20 @@ v1.3.4's freeze review refused freeze on three stop conditions. **Two of them we
 | **D5** | **§38B enumeration gaps.** Outcome 1 omitted the node→personal cross-session path (§11C-4, A30); outcome 2 omitted the two channels that deliberately cross the professional/Work boundary — the I10 licence-consequence projection and Nompilo summarisation. All three are safe, and none was listed | §38B | Enumeration |
 | **D6** | **The posture-boundary premise is now stated.** Outcome 1's safety on the node→personal path rests entirely on posture *not* resolving across the national/node boundary, so the national side sees `UNKNOWN` and fails closed. That premise was load-bearing and unwritten; propagating posture, or defaulting an unenrolled browser to `PERSONAL`, would open the path, and both look like improvements | §38B | **Unstated dependency — stated** |
 | **D7** | **§38C, the entailment register.** Every safety-critical citation now records the exact phrase from the cited criterion that entails the claim, and the verifier checks the phrase occurs verbatim in that criterion. Every mis-citation this document has produced — A38, A78, A44, A66, A87 — passed existence, numbering and cross-reference checks. **None can satisfy this one** | §38C | **New — makes the recurring class checkable** |
+
+**No settled `[D]`/`[T]`/`[O]` decision is reopened.** No application functionality was implemented, and nothing here authorises implementation.
+
+## v1.3.6 — freeze-review correction (2026-08-05)
+
+v1.3.5's freeze review refused freeze on two stop conditions. **The first was in §38C itself** — the mechanism v1.3.5 added to close the mis-citation class. That makes five consecutive versions in which the newest control carried the next defect, and it is the reason §38C now states its guarantees as enforced rules rather than as intent.
+
+| # | Correction | Where | Nature |
+|---|---|---|---|
+| **E1** | **§38C's checker could be desynchronised from its reader.** The entailment check split the register row on `|`, so a pipe inside the quoted phrase truncated what the machine verified while a human read the whole cell. The v1.3.4 mis-citation (outcome 8 → A66) could be restored with the verifier **green**. A register whose reader and whose checker see different text is worse than no register: it certifies what it never examined. The row must now have exactly four cells and the phrase cell must be a single backticked string, so a pipe is a hard failure rather than a silent truncation | §38C.1, verifier | **Control bypass — corrected** |
+| **E2** | **Entailing phrases must be unique to one criterion.** A phrase matching several proves nothing about which was cited — `Both refused` occurs in three. A38 is now registered on `to activate before officer countersignature`, which occurs in one | §38C.1 rule 2 | **Weak check — strengthened** |
+| **E3** | **§38A journey 14 named A43 as exact** — *"air-gapped install"* — for the claim *"commissioning refuses out of order"*, which **A38** proves. The criterion column's range did contain A38, so the claim was covered; the annotation pointed at the wrong member | §38A.2 | **Criterion proved a different claim — corrected** |
+| **E4** | **Range citations enumerated.** `A38–A43` and `A46–A48` cited by adjacency — the definition of a proximity citation. The first swept in four criteria proving role separation and sizing, none of which bears on commissioning order. Both are now enumerated to their bearing members with the role each plays | §38, §38A.2 | Precision |
+| **E5** | **Every §38B citation is now registered.** v1.3.5 registered one criterion per outcome and left seven unverified — A79, A40, A41, A66, A69, A112, A89. All seven proved sound on inspection, which is exactly why they needed registering: **a citation that happens to be right is not a citation that has been checked.** The verifier fails if §38B cites anything absent from the register | §38C.2, verifier | Coverage |
 
 **No settled `[D]`/`[T]`/`[O]` decision is reopened.** No application functionality was implemented, and nothing here authorises implementation.
 
@@ -3703,7 +3717,7 @@ An extension of the existing `SessionExperienceContract`, generalising the work-
 
 ```jsonc
 {
-  "contract_version": "1.3.5",   // tracks the architecture version defining this schema
+  "contract_version": "1.3.6",   // tracks the architecture version defining this schema
   "resolved_at": "2026-08-04T09:14:07Z",
   "resolver_origin": "NODE",                            // §28.4 — NATIONAL | NODE
   "expires_at": "2026-08-04T09:29:07Z",                 // bounded by bundle ceilings at a node
@@ -4458,11 +4472,11 @@ Twenty-four journeys. Each is specified with actor · entry point · preconditio
 | 11 | Existing facility is claimed | Officer / admin | Facility search | facility-admin appointment | **Today: a boolean. Target: the eleven-state submission model with a named reviewer and time in state** | n/a | **A105** |
 | 12 | New facility is registered | Officer | Facility register | pending legitimacy | Silent duplicate → steward review, generic receipt **preserved by design** | n/a | **A114** |
 | 13 | Organisation chooses hosted service | Officer | Setup assistant (§31) | service agreement ACTIVE | No profile fits → assisted review, not a forced choice | n/a | A76 (stated alternative) · **A115** |
-| 14 | Organisation commissions an on-premises node | Officer + Node Admin | Commissioning case | node ACTIVE on countersignature | Readiness fails → the specific test named; node stays `AWAITING_COMMISSIONING` | Install may be offline | A38–A43 |
+| 14 | Organisation commissions an on-premises node | Officer + Node Admin | Commissioning case | node ACTIVE on countersignature | Readiness fails → the specific test named; node stays `AWAITING_COMMISSIONING` | Install may be offline | A38 · A43 |
 | 15 | Node operates during national disconnection | Provider | Work | unchanged (local) | Bundle ceilings → fail closed per class | **This is the journey** | A5, A6 |
 | 16 | Facility loses connectivity to a remotely hosted node | Provider | Work | none | `SITE_LINK_UNAVAILABLE` — Edge scope or stop, and it says which | Edge scope only | A57 |
 | 17 | Patient is referred between nodes | Provider | Referral | disclosure basis recorded | Receiver offline → queued with visible status | Queues at sender | A12 |
-| 18 | Clinician views a Shared-Care Cache | Provider | Patient record | cohort + consent | Authority stale → emergency-only or fail closed | Serves with **both clocks** | A46–A48, A62 |
+| 18 | Clinician views a Shared-Care Cache | Provider | Patient record | cohort + consent | Authority stale → emergency-only or fail closed | Serves with **both clocks** | A48 · A62 |
 | 19 | Patient shares selected PHR content with a facility | Citizen | My Life consent centre | item-scoped disclosure | Facility not permitted → refusal with reason | n/a | **A116** |
 | 20 | Regulator onboards and operates its workspace | Regulator | Regulator bootstrap | → `impilo-regulatory` | Zero appointments → the founding-request route, which already closes this dead end | n/a | **A106** |
 | 21 | Facility administrator configures services and workforce | Facility admin | Facility console | facility-admin scope | Missing PIC named as the blocking item; **steps adapt to facility scale** | n/a | **A107** |
@@ -4510,11 +4524,11 @@ Evidence statuses used below. **Only `PASSING` means complete executable evidenc
 | 11 | The claimant sees the real state machine | A boolean `claimable` | A105 | 2.5 | `SPECIFIED_NOT_IMPLEMENTED` | A105 specified | Eleven-state surfacing |
 | 12 | A facility duplicate is stewarded | A second authoritative row, or a disclosing receipt | **A114** | 2.5 | `SPECIFIED_NOT_IMPLEMENTED` | none — A38 withdrawn as unrelated | Steward rail + generic receipt |
 | 13 | No-fit reaches a human and survives | A forced choice from an ill-fitting list | A76 + **A115** | 2.5 | `SPECIFIED_NOT_IMPLEMENTED` | A76 for the stated alternative | Assisted review + resumability |
-| 14 | Commissioning refuses out of order | Activation before countersignature | A38–A43 | 2 | `SPECIFIED_NOT_IMPLEMENTED` | A43 exact | Node track (absent entirely) |
+| 14 | Commissioning refuses out of order | Activation before countersignature | A38 (ordering) · A43 (readiness) | 2 | `SPECIFIED_NOT_IMPLEMENTED` | **A38 exact** — it is the one that attempts activation before countersignature | Node track (absent entirely) |
 | 15 | Seven-day autonomy holds; ceilings fail closed | Fabricated success in the log | A5, A6 | 2 | `SPECIFIED_NOT_IMPLEMENTED` | A5, A6 on-claim | Node deployment |
 | 16 | Site outage says Edge scope or stop | Silent degradation | A57 | 2 | `SPECIFIED_NOT_IMPLEMENTED` | A57 exact | Node deployment |
 | 17 | Referrals queue visibly | A referral lost between nodes | A12 | 3 | `BLOCKED_BY_PHASE` | A12 exact | Federation exchange |
-| 18 | Cache serves with both clocks | An empty section read as "nothing to report" | A46–A48, A62 | 3 | `BLOCKED_BY_PHASE` | A48, A62 on-claim | Shared-Care Cache |
+| 18 | Cache serves with both clocks | An empty section read as "nothing to report" | A48 (freshness honesty) · A62 (two clocks) | 3 | `BLOCKED_BY_PHASE` | A48, A62 on-claim | Shared-Care Cache |
 | 19 | A non-permitted share refuses and leaks nothing | Any disclosure during the failed attempt | **A116** | 2.5 | `SPECIFIED_NOT_IMPLEMENTED` | none — A44 withdrawn as unrelated | PHR sharing rail |
 | 20 | A regulator with no appointment is not stranded | An empty workspace, or a denial | A106 | 2.5 | `SPECIFIED_NOT_IMPLEMENTED` | A106 specified | Founding-request route |
 | 21 | Setup adapts to facility scale | A health post walked through theatre config | A107 | 2.5 | `SPECIFIED_NOT_IMPLEMENTED` | A107 specified | Scale-aware wizard |
@@ -4570,36 +4584,56 @@ STOP-1 was not caused by a missing rule. §29.3 stated the rule correctly, and v
 **Findings.** Ten of eleven outcomes are enforced at a point every enumerated path traverses. **Outcome 7 is the one architecturally sound but implementationally incomplete case** — the invariant is stated and one surface is fixed; the rest are specified and unbuilt, which is a phase matter, not a contradiction. **No outcome has a rule that another rule can bypass.** Outcomes 10 and 11 depend on rails that do not exist; their criteria are specified and phase-owned, which is state 1, not state 3. *(v1.3.5: outcome 1 gained the node→personal cross-session path, outcome 2 gained the licence-consequence and Nompilo channels, and outcomes 5 and 8 had their criteria corrected — see §38C.)*
 
 
-# 38C. The entailment register **[D — new in v1.3.5]**
+# 38C. The entailment register **[D — hardened in v1.3.6]**
 
-Four consecutive reviews found the same defect: a claim citing an acceptance criterion that proves **something else**. Journey 12 → A38. Journey 10 → A78. Journey 19 → A44. Then §38B outcome 8 → A66 and outcome 5 → A87 — inside the very section written to close the class.
+Five consecutive reviews found the same defect: a claim citing an acceptance criterion that proves **something else**. Journey 12 → A38. Journey 10 → A78. Journey 19 → A44. §38B outcome 8 → A66 and outcome 5 → A87 — inside the section written to close the class. Then §38A journey 14 → A43.
 
-Every one of those citations passed every check the repository had. The cited criterion **existed**, the numbering was **contiguous**, the cross-reference **resolved**. What no check could ask was the only question that matters: *does the cited criterion's pass condition entail the claim?*
+Every one passed every check the repository had. The cited criterion **existed**, the numbering was **contiguous**, the cross-reference **resolved**. What no check could ask was the only question that matters: *does the cited criterion entail the claim?*
 
-**The mechanism [D].** A citation is not a number. Every claim that cites an acceptance criterion must also record **the exact phrase from that criterion's pass condition which entails the claim** — quoted, not paraphrased. The verifier then checks that the quoted phrase occurs verbatim in the cited criterion's row. A wrong citation cannot satisfy this: to cite A66 for break-glass you would have to quote a phrase about break-glass from a criterion that contains none.
+## 38C.1 The mechanism **[D]**
 
-This does not make a machine judge entailment. It makes the **author** state the entailment, and the machine verify that the stated entailment is not fictional. That is the part that kept failing.
+A citation is not a number. Every registered claim records **the exact phrase from the cited criterion's row that entails it** — quoted, not paraphrased — and the verifier proves that phrase occurs verbatim in that criterion. To cite A66 for break-glass you would have to quote a phrase about break-glass from a criterion containing none.
 
-| Claim | Criterion | Entailing phrase (must appear verbatim in that criterion) |
+This does not make a machine judge entailment. It makes the **author** state the entailment and the machine catch a fiction. Three rules make that guarantee hold rather than merely sound:
+
+1. **The phrase cell is a single backticked string and nothing else.** No prose beside it, and **no `|` character inside it**. v1.3.5's check split the row on `|`, so a pipe in the phrase truncated what the machine verified while a human read the whole cell — and the v1.3.4 mis-citation could be restored with the verifier green. A register whose reader and whose checker see different text is worse than no register: it certifies what it never examined. The verifier now rejects any register row that does not have exactly four cells.
+2. **The phrase must be unique to one criterion.** A phrase matching several criteria proves nothing about which was cited. `Both refused` occurs in three criteria and is therefore not usable; A38 is registered on `to activate before officer countersignature`, which occurs in one.
+3. **The phrase may come from the method or the pass condition.** Some pass conditions are deliberately terse — A38's is two words — and the distinguishing content lives in the method. Requiring the pass condition alone would force either a fabricated phrase or a rewritten criterion.
+
+## 38C.2 The register
+
+| Claim | Criterion | Entailing phrase (verbatim, unique to that criterion) |
 |---|---|---|
 | §38B-1 My Life unreachable on shared/unknown posture | A103 | `no path returns` |
 | §38B-2 Employer never sees personal/professional correspondence | A102 | `Work shows only the derived consequence` |
-| §38B-3 Administration never yields clinical access | A39 | `No clinical, no application, no work-context minting capability` |
+| §38B-2 Nompilo does not cross the domain boundary | A79 | `It refuses to surface personal content in the employer's context` |
+| §38B-3 Node administration yields no clinical access | A39 | `No clinical, no application, no work-context minting capability` |
+| §38B-3 Authorised Officer holds no platform capability | A40 | `No Kubernetes or platform capability` |
+| §38B-3 Bootstrap authority does not outlive its window | A41 | `the one-time credential is destroyed` |
+| §38B-3 Support access is audited or refused | A66 | `a signed receipt is returned and its id is written into the local chain` |
+| §38B-3 Ambiguous support capability is treated as data-bearing | A69 | `ambiguous capabilities are treated as data-bearing` |
 | §38B-4 Node discloses no personal journey labels | A98 | `Zero rows, zero labels, zero counts` |
-| §38B-5 Browser-supplied authority is never load-bearing | **A1** | `Forged values have **zero** effect on any response` |
+| §38B-5 Browser-supplied authority is never load-bearing | A1 | `Forged values have **zero** effect on any response` |
 | §38B-6 No controller-dependent action while undetermined | A67 | `an unresolvable combination` |
 | §38B-7 `UNAVAILABLE` is never rendered as absence | A81 | `never says "you have none"` |
-| §38B-8 Break-glass never proceeds unaudited | **A8** | `a break-glass that cannot be audited does not proceed` |
+| §38B-7 A node outage is never substituted | A112 | `never an invented local substitute` |
+| §38B-8 Break-glass never proceeds unaudited | A8 | `a break-glass that cannot be audited does not proceed` |
 | §38B-9 Local authority survives Core unavailability | A99 | `The local acts succeed` |
+| §38B-9 A node contract never exceeds the governed model | A89 | `Every granted element cites an unexpired, recognised source` |
 | §38B-10 Duplicate handling discloses no match | A113 | `disclosing none of` |
 | §38B-11 Failed share leaks nothing | A116 | `The failed attempt discloses nothing` |
 | §38A-J3 Not-yet-contributed is stated, not blank | A81 | `The two render **differently**` |
 | §38A-J12 Facility duplicate is stewarded | A114 | `Identical to A113, applied to the facility and practice rails` |
+| §38A-J14 Commissioning refuses out of order | A38 | `to activate before officer countersignature` |
 | §38A-J19 Non-permitted share refuses | A116 | `Recipient authority is derived server-side` |
 
-**Two entries in this register are corrections, and they are the reason it exists.** §38B-5 read A87 and §38B-8 read A66 in v1.3.4. Neither could have been written into this register: A87's pass condition contains no phrase about forged authority, and A66's contains none about break-glass. The register is the check that would have caught them, applied retrospectively to the citations that needed it most.
+**Every criterion cited by §38B now appears here.** v1.3.5 registered one criterion per outcome and left seven citations unverified — A79, A40, A41, A66, A69, A112 and A89. All seven proved sound on inspection, which is precisely why they needed registering: *a citation that happens to be right is not a citation that has been checked.*
 
-**Scope.** The register covers the safety-critical claims — every §38B outcome, and the §38A journeys whose criteria were corrected across v1.3.4 and v1.3.5. Extending it to all 24 journeys is scheduled work, not a freeze condition; the journeys outside it are covered by §38A's status discipline, which now forbids a specified-only criterion from underwriting a proven status.
+**Three entries are corrections, and they are the reason the register exists.** §38B-5 read A87 and §38B-8 read A66 in v1.3.4; §38A-J14 read A43 in v1.3.5. None could be written here: A87 contains no phrase about forged authority, A66 none about break-glass, A43 none about countersignature.
+
+## 38C.3 Scope, stated honestly
+
+The register covers every §38B citation and the §38A journeys whose criteria were corrected across v1.3.4–v1.3.6. **The remaining journeys are not registered**, and are covered only by §38A's status discipline — which forbids a specified-only criterion from underwriting a proven status, but cannot tell whether the right criterion was named. Extending the register to all 24 is scheduled work, not a freeze condition. It is also where the next defect of this class will be, if there is one.
 
 ---
 
