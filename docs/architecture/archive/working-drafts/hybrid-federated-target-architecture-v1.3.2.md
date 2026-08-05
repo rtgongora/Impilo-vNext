@@ -1,5 +1,15 @@
 # Impilo vNext — Hybrid / Federated Target Architecture
 
+> # ⛔ SUPERSEDED — ARCHIVED WORKING DRAFT
+>
+> **This file is not the architecture.** v1.3.2 went to freeze review on 2026-08-05; the review found stop conditions, so it was **never frozen**. It is superseded by **v1.3.3**, which is the only active version.
+>
+> **Active document:** [`../../hybrid-federated-target-architecture-v1.3.3.md`](../../hybrid-federated-target-architecture-v1.3.3.md) · entry point: [`../../ARCHITECTURE_PRECEDENCE.md`](../../ARCHITECTURE_PRECEDENCE.md)
+>
+> Known defects in this file, all corrected in v1.3.3: §41 is missing entirely; a fail-closed invariant cites a §4.7 that does not exist; `data_controller_id NOT NULL` pre-empts an open legal determination; the precedence function never reads the `MANAGED_SHARED` block default; five journeys cite tests that prove something else. See the v1.3.3 change log for the full list. *(Banner added by v1.3.3, F19.)*
+
+---
+
 **Status:** Working draft — **NOT architecture-frozen**; freeze requires PO sign-off of this version · **Version:** 1.3.2 · **Date:** 2026-08-04
 
 > **Status discipline.** "Approved, but with corrections required" is not a status. A version is either frozen or it is not. v1.3.1 was **directionally accepted, not approved**: its settled decisions are preserved and its remaining defects were upstream model issues that could not be left to the Experience Completion Packs to resolve divergently. v1.3.2 is the integrity correction the PO required before freeze. Until freeze, the §Implementation-gate table below states exactly what may and may not be built.

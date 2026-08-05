@@ -16,7 +16,7 @@ else
   root="$(cd "$script_dir/../.." && pwd)"
 fi
 
-versioned_rel="docs/architecture/hybrid-federated-target-architecture-v1.3.2.md"
+versioned_rel="docs/architecture/hybrid-federated-target-architecture-v1.3.3.md"
 pointer_rel="docs/architecture/vnext-hybrid-federation-target-architecture.md"
 # The versioned file is the complete document (~4,600 lines). Anything shorter
 # than this floor is a pointer or a truncation masquerading as the architecture.
@@ -62,19 +62,19 @@ if legacy_hits="$(grep -RIn --exclude-dir=archive --exclude-dir=prompts \
   fail "legacy controlling language remains outside the archive (matches above)"
 fi
 
-# 4. The unversioned pointer names v1.3.2 and links the versioned file.
+# 4. The unversioned pointer names v1.3.3 and links the versioned file.
 if [[ -s "$root/$pointer_rel" ]]; then
-  if ! grep -Fq 'hybrid-federated-target-architecture-v1.3.2.md' "$root/$pointer_rel" \
-     || ! grep -Eq 'v1\.3\.2' "$root/$pointer_rel"; then
-    fail "unversioned pointer does not point to v1.3.2: $pointer_rel"
+  if ! grep -Fq 'hybrid-federated-target-architecture-v1.3.3.md' "$root/$pointer_rel" \
+     || ! grep -Eq 'v1\.3\.3' "$root/$pointer_rel"; then
+    fail "unversioned pointer does not point to v1.3.3: $pointer_rel"
   else
-    echo "OK: pointer names v1.3.2"
+    echo "OK: pointer names v1.3.3"
   fi
 else
   fail "missing unversioned pointer: $pointer_rel"
 fi
 
-# 5. The versioned v1.3.2 file is the complete document, not a pointer/stub.
+# 5. The versioned v1.3.3 file is the complete document, not a pointer/stub.
 if [[ -s "$root/$versioned_rel" ]]; then
   lines="$(wc -l < "$root/$versioned_rel")"
   if (( lines < min_versioned_lines )); then
@@ -84,16 +84,39 @@ if [[ -s "$root/$versioned_rel" ]]; then
   fi
 fi
 
-# 6. v1.3.1 is not referenced as active outside the archive.
-#    Historical references ("supersedes v1.3.1", "corrects v1.3.1", archive paths)
-#    are legitimate; active-status phrasing is not.
-if active_131="$(grep -RIn --exclude-dir=archive --exclude-dir=prompts \
-    -E 'v1\.3\.1[^.]{0,40}\b(is|remains)\b[^.]{0,40}\b(current|active|controlling|working)\b|hybrid-federated-target-architecture-v1\.3\.1\.md' \
-    "$root/docs" 2>/dev/null | grep -v 'archive/')"; then
-  echo "$active_131" >&2
-  fail "v1.3.1 is referenced as active (or by non-archive path) outside the archive (matches above)"
-else
-  echo "OK: v1.3.1 only historical outside archive"
+# 6. No superseded version is referenced as active outside the archive.
+#    Historical references ("supersedes v1.3.1", "corrects v1.3.2", archive paths)
+#    are legitimate; active-status phrasing and non-archive paths are not.
+#    Add each newly superseded version here when the active version moves on —
+#    v1.3.2 was added by v1.3.3, which found it cited as the controlling document
+#    in four governance files after it had already been archived.
+superseded=(1.3.1 1.3.2)
+for v in "${superseded[@]}"; do
+  ve="${v//./\\.}"
+  if active_hits="$(grep -RIn --exclude-dir=archive --exclude-dir=prompts \
+      -E "v${ve}[^.]{0,40}\b(is|remains)\b[^.]{0,40}\b(current|active|controlling|working)\b|hybrid-federated-target-architecture-v${ve}\.md" \
+      "$root/docs" 2>/dev/null | grep -v 'archive/')"; then
+    echo "$active_hits" >&2
+    fail "v$v is referenced as active (or by non-archive path) outside the archive (matches above)"
+  else
+    echo "OK: v$v only historical outside archive"
+  fi
+done
+
+# 6b. Every archived architecture draft carries a supersession banner in its first
+#     20 lines. Without it the file reads as live architecture to anyone who opens
+#     it directly — which is how a corrected schema gets implemented from a draft
+#     that was corrected precisely because it was wrong.
+arch_archive="$root/docs/architecture/archive"
+if [[ -d "$arch_archive" ]]; then
+  while IFS= read -r -d '' f; do
+    head -3 "$f" | grep -Fq "$arch_h1" || continue
+    if ! head -20 "$f" | grep -Fq 'SUPERSEDED'; then
+      fail "archived architecture draft carries no supersession banner: ${f#"$root"/}"
+    else
+      echo "OK: banner present in ${f#"$root"/}"
+    fi
+  done < <(find "$arch_archive" -name '*.md' -print0 2>/dev/null)
 fi
 
 # 7. Exactly one complete active architecture copy exists outside the archive.
