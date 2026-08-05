@@ -40,6 +40,13 @@ export function ProgressiveAuthForm({ returnTo }: ProgressiveAuthFormProps) {
   function destination(): string {
     if (returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//")) return returnTo;
     if (intent === "regulatory") return "/organization-admin";
+    // Work intent used to fall through to "/home" alongside personal — so choosing "Work &
+    // Practice" raised the assurance bar to AAL2 and then landed the person in the My Life
+    // shell anyway, with no work tab and no explanation. The intent selected the FACTOR and
+    // nothing else. /auth/resolving is the identity-resolution screen: it reads the person's
+    // attached identifiers and work assignments and routes accordingly (including on to
+    // /work/resume when a workplace still has to be confirmed).
+    if (intent === "work") return "/auth/resolving";
     return "/home";
   }
 
