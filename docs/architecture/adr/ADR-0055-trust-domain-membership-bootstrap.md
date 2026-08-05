@@ -1,7 +1,8 @@
 # ADR-0055 — Trust-domain membership bootstrap and unresolved controller representation
 
 **Status:** Accepted · **Date:** 2026-08-05 · **Decision by:** Product Owner
-**Amends:** frozen architecture v1.3.8 (ADR-0054) → **v1.3.9**
+**Amends:** frozen architecture v1.3.8 (ADR-0054) → **v1.3.10**
+**Implementation note:** v1.3.9 was the first attempt to carry these decisions and was refused freeze — it left `controller_type` NOT NULL against decision 1, and guarded none of decisions 1, 3, 5 and 6. v1.3.10 completes them. This ADR's decisions are unchanged; only their implementation was incomplete.
 
 ## Why this is a version and not an erratum
 

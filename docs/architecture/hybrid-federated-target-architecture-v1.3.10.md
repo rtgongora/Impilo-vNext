@@ -1,6 +1,6 @@
 # Impilo vNext — Hybrid / Federated Target Architecture
 
-**Status: APPROVED — ARCHITECTURE-FROZEN by Product Owner on 2026-08-05 · Version: 1.3.9**
+**Status: APPROVED — ARCHITECTURE-FROZEN by Product Owner on 2026-08-05 · Version: 1.3.10**
 
 **Freeze ADR:** [`adr/ADR-0054-architecture-freeze-v1.3.8.md`](adr/ADR-0054-architecture-freeze-v1.3.8.md) · **Amendment ADR:** [`adr/ADR-0055-trust-domain-membership-bootstrap.md`](adr/ADR-0055-trust-domain-membership-bootstrap.md) · **Date:** 2026-08-05
 
@@ -255,6 +255,18 @@ The third manufactures governance facts before determination. The closed `org_ty
 **This decides no `[L]` matter.** It corrects how an undetermined fact is represented, which is the opposite of deciding it. The 18 §26.2 determinations remain open, and no controller is inferred from membership at any status.
 
 **Why a version and not an erratum:** ADR-0054 names schema and technical-design changes substantive and requires a new version for them. An additive ADR alone would have breached it.
+
+## v1.3.10 — completing the ADR-0055 correction (2026-08-05)
+
+v1.3.9's independent review refused freeze on two stop conditions. Both were failures of **completeness**, not direction: the membership model was right, and the correction was applied to some of what ADR-0055 decided rather than all of it.
+
+| # | Correction | Where |
+|---|---|---|
+| **K1** | **`controller_type` joins its two siblings as nullable and non-authoritative.** ADR-0055 decision 1 names three descriptive fields; v1.3.9 corrected two and left `controller_type NOT NULL`, so creating a trust domain still forced declaring a controlling-arrangement type. *"Which kind of party controls this"* is the same undecided question as *"which party"*, asked one level up | §3.2 |
+| **K2** | **Four decisions became four guards.** v1.3.9 stated decisions 1, 3, 5 and 6 and guarded none of them — all four review mutations passed green. The verifier now fails on: descriptive metadata cited as a resolution fallback · membership inferred from an organisation or facility attribute · `UNMAPPED` rendered blank, nullable, or read as MoHCC · the projection `trust_domain_id` described as authoritative | verifier |
+| **K3** | **The prohibitions and refusal codes move into the controlling document.** The eleven prohibited inference sources and the three canonical refusal codes lived only in ADR-0055. A rule that binds implementation belongs where implementers read it | §3.2 |
+
+**Nothing in the v1.3.9 model is reopened.** Membership remains an evidenced, effective-dated relationship; controllership remains resolved through `processing_role_assignment`; the blanket backfill remains rejected. **No `[L]` matter is decided** — the 18 §26.2 determinations remain open, and no controller is inferred from membership at any status.
 
 ### Post-freeze implementation control **[O]**
 
@@ -614,13 +626,19 @@ trust_domain (
   trust_domain_id        UUID PRIMARY KEY,
   code                   VARCHAR(48) NOT NULL UNIQUE,     -- 'MOHCC-ZW', 'TD-CIMAS'
   display_name           TEXT NOT NULL,
-  controller_type        VARCHAR(32) NOT NULL,            -- MINISTRY | PRIVATE_GROUP | MISSION |
+  -- CORRECTED BY v1.3.9 / ADR-0055, COMPLETED BY v1.3.10: all three descriptive
+  -- controller fields are nullable and NON-AUTHORITATIVE. A trust domain identifies a
+  -- boundary; it is not a controller (§3.1). Requiring any of them in order to create
+  -- one would fabricate a determination — and controller_type is not exempt, because
+  -- "which kind of party controls this" is the same undecided question as "which
+  -- party", asked one level up. No service may read these as a fallback when
+  -- controller resolution fails — §3A.4 is the only authority.
+  --   (v1.3.10, K1: v1.3.9 corrected the two fields below and left controller_type
+  --    NOT NULL, contradicting ADR-0055 decision 1, which names all three.)
+  controller_type        VARCHAR(32) NULL,                -- MINISTRY | PRIVATE_GROUP | MISSION |
                                                           -- LOCAL_AUTHORITY | SECURITY_SECTOR |
                                                           -- UNIVERSITY | REGULATOR | PARTNER
-  -- CORRECTED BY v1.3.9 / ADR-0055: nullable and NON-AUTHORITATIVE. A trust domain
-  -- identifies a boundary; it is not a controller (§3.1). Requiring a legal name in
-  -- order to create one would fabricate a determination. No service may read these as
-  -- a fallback when controller resolution fails — §3A.4 is the only authority.
+                                                          -- descriptive only, never load-bearing
   data_controller_legal_name TEXT NULL,          -- descriptive only, never load-bearing
   data_controller_contact    JSONB NULL,         -- descriptive only, never load-bearing
   jurisdiction_id        UUID NULL REFERENCES jurisdiction,
@@ -657,6 +675,29 @@ trust_domain_membership (
   EXCLUDE USING gist (subject_id WITH =, tstzrange(effective_from, effective_to) WITH &&)
       WHERE (status = 'ACTIVE')
 );
+-- ── MEMBERSHIP MAY NEVER BE INFERRED [D] (v1.3.10, K3) ──────────────────────
+-- ADR-0055 decision 3 listed these; a prohibition that lives only in an ADR is weaker
+-- than one in the controlling document, so it is stated here. Trust-domain membership
+-- is NEVER inferred from any of:
+--     organisation type · facility type · hosting location · platform operator ·
+--     infrastructure operator · name or code prefix · legacy tenant values ·
+--     'national-spine' · facility ownership · organisation ownership · regulatory status
+-- Each of these describes who runs, owns, names or categorises a thing. None of them is
+-- evidence of which governed boundary it belongs to. Membership becomes ACTIVE only on
+-- an authoritative source: MOHCC_REGISTRY, GOVERNED_HIERARCHY, ACCREDITATION_DECISION or
+-- ONBOARDING_DECISION, with the evidence recorded in provenance.
+--
+-- ── UNMAPPED IS FAIL-CLOSED AND VISIBLE [D] (v1.3.10, K3) ───────────────────
+-- An operation requiring an active trust domain REFUSES when membership is unmapped,
+-- pending, suspended, ended, missing or ambiguous, with the canonical reason code:
+--     TRUST_DOMAIN_UNMAPPED | TRUST_DOMAIN_MEMBERSHIP_PENDING |
+--     TRUST_DOMAIN_MEMBERSHIP_INACTIVE
+-- Every such refusal names the governance action required, fabricates no substitute,
+-- writes an audit event, and grants no cross-domain authority. It does NOT prevent safe
+-- registry review or draft creation: making the open question unrecordable would defeat
+-- the model that exists to hold it. UNMAPPED is never rendered as blank, and never
+-- silently read as MoHCC membership.
+--
 -- organisation and tuso.facility MAY carry a denormalised trust_domain_id as a QUERY
 -- PROJECTION, populated only once an ACTIVE membership exists. It is never the source
 -- of truth, and it is never populated by backfill.
@@ -3815,7 +3856,7 @@ An extension of the existing `SessionExperienceContract`, generalising the work-
 
 ```jsonc
 {
-  "contract_version": "1.3.9",   // tracks the architecture version defining this schema
+  "contract_version": "1.3.10",   // tracks the architecture version defining this schema
   "resolved_at": "2026-08-04T09:14:07Z",
   "resolver_origin": "NODE",                            // §28.4 — NATIONAL | NODE
   "expires_at": "2026-08-04T09:29:07Z",                 // bounded by bundle ceilings at a node
