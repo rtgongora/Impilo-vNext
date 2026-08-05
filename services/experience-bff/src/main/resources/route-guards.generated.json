@@ -1,0 +1,3829 @@
+{
+  "$comment": "GENERATED FILE — DO NOT EDIT. Projection of ui/one-ui-shell/src/lib/routes.ts (with administration-governance/route-registry.ts inlined) and src/lib/auth/role-groups.ts. Route order is load-bearing: the first matching path wins, as in matchRouteDefinition(). Regenerate with `npm run generate:route-guards` in ui/one-ui-shell.",
+  "routeCount": 857,
+  "roleGroups": {
+    "REGISTRY_ADMIN": [
+      "SYSTEM_ADMIN",
+      "HIE_ADMIN",
+      "SUPER_ADMIN"
+    ],
+    "ORGANIZATION_ADMIN": [
+      "SYSTEM_ADMIN",
+      "FACILITY_ADMIN",
+      "DEVELOPER",
+      "FINANCE",
+      "SUPER_ADMIN"
+    ],
+    "ADMIN_OR_HIE": [
+      "SYSTEM_ADMIN",
+      "HIE_ADMIN",
+      "FACILITY_ADMIN",
+      "DEVELOPER",
+      "SUPER_ADMIN"
+    ],
+    "ADMIN": [
+      "SYSTEM_ADMIN",
+      "FACILITY_ADMIN",
+      "DEVELOPER",
+      "SUPER_ADMIN"
+    ],
+    "FINANCE": [
+      "SYSTEM_ADMIN",
+      "FACILITY_ADMIN",
+      "FINANCE",
+      "SUPER_ADMIN"
+    ],
+    "PAYER_OPS": [
+      "SYSTEM_ADMIN",
+      "FINANCE",
+      "DEVELOPER",
+      "SUPER_ADMIN"
+    ],
+    "MSIKA_GOVERNANCE": [
+      "SYSTEM_ADMIN",
+      "FACILITY_ADMIN",
+      "FINANCE",
+      "DEVELOPER",
+      "SUPER_ADMIN"
+    ],
+    "CLINICAL": [
+      "CLINICIAN",
+      "NURSE",
+      "FACILITY_ADMIN",
+      "SYSTEM_ADMIN",
+      "DEVELOPER",
+      "SUPER_ADMIN"
+    ],
+    "LEARNING_AUTHOR": [
+      "TRAINER",
+      "FACILITY_ADMIN",
+      "SYSTEM_ADMIN",
+      "DEVELOPER",
+      "SUPER_ADMIN"
+    ],
+    "PRESCRIBER": [
+      "CLINICIAN",
+      "FACILITY_ADMIN",
+      "SYSTEM_ADMIN",
+      "DEVELOPER",
+      "SUPER_ADMIN"
+    ],
+    "DISPENSER": [
+      "PHARMACIST",
+      "FACILITY_ADMIN",
+      "SYSTEM_ADMIN",
+      "DEVELOPER",
+      "SUPER_ADMIN"
+    ],
+    "QUEUE": [
+      "CLINICIAN",
+      "NURSE",
+      "SUPPORT_AGENT",
+      "FACILITY_ADMIN",
+      "SYSTEM_ADMIN",
+      "DEVELOPER",
+      "SUPER_ADMIN"
+    ],
+    "CITIZEN": [
+      "CITIZEN",
+      "SYSTEM_ADMIN",
+      "DEVELOPER",
+      "SUPER_ADMIN"
+    ],
+    "CAREGIVER": [
+      "CAREGIVER",
+      "CARE_PARTNER",
+      "CITIZEN",
+      "SYSTEM_ADMIN",
+      "SUPER_ADMIN"
+    ],
+    "PUBLIC_HEALTH": [
+      "PUBLIC_HEALTH_OFFICER",
+      "ENV_HEALTH",
+      "CHW",
+      "FACILITY_ADMIN",
+      "SYSTEM_ADMIN",
+      "DEVELOPER",
+      "SUPER_ADMIN"
+    ],
+    "OPERATIONS_AGGREGATE": [
+      "PUBLIC_HEALTH_OFFICER",
+      "ENV_HEALTH",
+      "CHW",
+      "CLINICIAN",
+      "NURSE",
+      "SUPPORT_AGENT",
+      "FACILITY_ADMIN",
+      "SYSTEM_ADMIN",
+      "DEVELOPER",
+      "HIE_ADMIN",
+      "DISPATCH_COORDINATOR",
+      "SUPER_ADMIN"
+    ],
+    "WORKFORCE_ADMIN": [
+      "HR_OFFICER",
+      "FACILITY_ADMIN",
+      "SYSTEM_ADMIN",
+      "DEVELOPER",
+      "SUPER_ADMIN"
+    ],
+    "DISPATCH_OPERATIONS": [
+      "DISPATCH_COORDINATOR",
+      "COURIER",
+      "FACILITY_ADMIN",
+      "SYSTEM_ADMIN",
+      "DEVELOPER",
+      "SUPER_ADMIN"
+    ],
+    "COMMERCE": [
+      "FINANCE",
+      "CLINICIAN",
+      "NURSE",
+      "PHARMACIST",
+      "SUPPORT_AGENT",
+      "FACILITY_ADMIN",
+      "SYSTEM_ADMIN",
+      "DEVELOPER",
+      "SUPER_ADMIN"
+    ],
+    "MARKETPLACE_OPS": [
+      "MARKETPLACE_OPERATOR",
+      "SYSTEM_ADMIN",
+      "DEVELOPER",
+      "SUPER_ADMIN"
+    ],
+    "MARKETPLACE_SELL": [
+      "MARKETPLACE_SELLER",
+      "FACILITY_ADMIN",
+      "SYSTEM_ADMIN",
+      "DEVELOPER",
+      "SUPER_ADMIN"
+    ],
+    "VENDOR_FULFILMENT": [
+      "VENDOR",
+      "MARKETPLACE_OPERATOR",
+      "SYSTEM_ADMIN",
+      "DEVELOPER",
+      "SUPER_ADMIN"
+    ],
+    "MARKETPLACE_ACCESS": [
+      "MARKETPLACE_OPERATOR",
+      "MARKETPLACE_SELLER",
+      "VENDOR",
+      "FINANCE",
+      "CLINICIAN",
+      "NURSE",
+      "PHARMACIST",
+      "SUPPORT_AGENT",
+      "FACILITY_ADMIN",
+      "SYSTEM_ADMIN",
+      "DEVELOPER",
+      "SUPER_ADMIN"
+    ],
+    "REGULATORY_AUTHORITY": [
+      "HPA_REGISTRAR",
+      "HPA_INSPECTOR",
+      "HIE_ADMIN",
+      "SYSTEM_ADMIN",
+      "DEVELOPER",
+      "SUPER_ADMIN"
+    ]
+  },
+  "routes": [
+    {
+      "path": "/bootstrap",
+      "guard": "none"
+    },
+    {
+      "path": "/auth/login",
+      "guard": "none"
+    },
+    {
+      "path": "/auth/login/email",
+      "guard": "none"
+    },
+    {
+      "path": "/auth/login/provider-id",
+      "guard": "none"
+    },
+    {
+      "path": "/auth/login/biometric",
+      "guard": "none"
+    },
+    {
+      "path": "/auth/login/scan",
+      "guard": "none"
+    },
+    {
+      "path": "/auth/login/passkey/callback",
+      "guard": "none"
+    },
+    {
+      "path": "/auth/forgot-password",
+      "guard": "none"
+    },
+    {
+      "path": "/auth/reset-password",
+      "guard": "none"
+    },
+    {
+      "path": "/auth/mfa",
+      "guard": "none"
+    },
+    {
+      "path": "/auth/logout",
+      "guard": "none"
+    },
+    {
+      "path": "/auth",
+      "guard": "none"
+    },
+    {
+      "path": "/auth/register",
+      "guard": "none"
+    },
+    {
+      "path": "/auth/register/contact",
+      "guard": "none"
+    },
+    {
+      "path": "/auth/register/assurance",
+      "guard": "none"
+    },
+    {
+      "path": "/auth/register/status",
+      "guard": "none"
+    },
+    {
+      "path": "/auth/resolving",
+      "guard": "none"
+    },
+    {
+      "path": "/auth/context-chooser",
+      "guard": "auth"
+    },
+    {
+      "path": "/",
+      "guard": "none"
+    },
+    {
+      "path": "/welcome",
+      "guard": "none"
+    },
+    {
+      "path": "/welcome/find-care",
+      "guard": "none"
+    },
+    {
+      "path": "/welcome/emergency",
+      "guard": "none"
+    },
+    {
+      "path": "/welcome/emergency/track",
+      "guard": "none"
+    },
+    {
+      "path": "/welcome/health-info",
+      "guard": "none"
+    },
+    {
+      "path": "/welcome/accessibility",
+      "guard": "none"
+    },
+    {
+      "path": "/get-involved",
+      "guard": "none"
+    },
+    {
+      "path": "/get-involved/idea",
+      "guard": "none"
+    },
+    {
+      "path": "/get-involved/board",
+      "guard": "none"
+    },
+    {
+      "path": "/get-involved/track",
+      "guard": "none"
+    },
+    {
+      "path": "/get-involved/test",
+      "guard": "none"
+    },
+    {
+      "path": "/status",
+      "guard": "none"
+    },
+    {
+      "path": "/download",
+      "guard": "none"
+    },
+    {
+      "path": "/privacy",
+      "guard": "none"
+    },
+    {
+      "path": "/terms",
+      "guard": "none"
+    },
+    {
+      "path": "/consent",
+      "guard": "none"
+    },
+    {
+      "path": "/account-deletion",
+      "guard": "none"
+    },
+    {
+      "path": "/privacy/app-stores",
+      "guard": "none"
+    },
+    {
+      "path": "/clinical",
+      "guard": "facility"
+    },
+    {
+      "path": "/core-transaction",
+      "guard": "facility"
+    },
+    {
+      "path": "/core-transaction/[transactionId]",
+      "guard": "facility"
+    },
+    {
+      "path": "/client-journey",
+      "guard": "auth"
+    },
+    {
+      "path": "/provider-workspace",
+      "guard": "facility"
+    },
+    {
+      "path": "/provider-workspace/wellness",
+      "guard": "facility"
+    },
+    {
+      "path": "/provider-workspace/wellness/social",
+      "guard": "facility"
+    },
+    {
+      "path": "/platform-journey",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/clinical-tools",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical-tools/rules",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical-tools/forms",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical/chronic-registers",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical/control-tower",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical/dictation",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical/emergency",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical/nutrition-tracing",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical/emergency/resus/[activationId]",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical/emergency/episode/[episodeId]",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical/emergency/board",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical/emergency/command",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical/emergency/activation",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical/emergency/pre-arrival",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical/emergency/analytics",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical/emergency/spine/[episodeId]/disposition",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical/emergency/spine/[episodeId]/observation",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical/emergency/spine/[episodeId]",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical/emergency/[visitId]",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical/inpatient",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical/inpatient/admissions",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical/inpatient/admissions/[admissionId]",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical/inpatient/ward-board",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical/inpatient/nursing",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical/inpatient/rounds",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical/inpatient/discharge/[admissionId]",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical/inpatient/escalations",
+      "guard": "facility"
+    },
+    {
+      "path": "/clinical/inpatient/discharge-board",
+      "guard": "facility"
+    },
+    {
+      "path": "/production-command-centre",
+      "guard": "auth"
+    },
+    {
+      "path": "/platform/all-features",
+      "guard": "auth"
+    },
+    {
+      "path": "/health-os/command-centre",
+      "guard": "auth"
+    },
+    {
+      "path": "/data-intelligence",
+      "guard": "auth"
+    },
+    {
+      "path": "/data-intelligence/quality",
+      "guard": "auth"
+    },
+    {
+      "path": "/data-intelligence/pipelines",
+      "guard": "auth"
+    },
+    {
+      "path": "/data-intelligence/integration",
+      "guard": "auth"
+    },
+    {
+      "path": "/data-intelligence/reports",
+      "guard": "auth"
+    },
+    {
+      "path": "/data-intelligence/audit",
+      "guard": "auth"
+    },
+    {
+      "path": "/ndila",
+      "guard": "auth"
+    },
+    {
+      "path": "/public-health",
+      "guard": "role",
+      "requiredRole": "PUBLIC_HEALTH"
+    },
+    {
+      "path": "/public-health/surveillance",
+      "guard": "role",
+      "requiredRole": "PUBLIC_HEALTH"
+    },
+    {
+      "path": "/public-health/campaigns",
+      "guard": "role",
+      "requiredRole": "PUBLIC_HEALTH"
+    },
+    {
+      "path": "/public-health/site-registry",
+      "guard": "role",
+      "requiredRole": "PUBLIC_HEALTH"
+    },
+    {
+      "path": "/public-health/site-registry/[siteId]",
+      "guard": "role",
+      "requiredRole": "PUBLIC_HEALTH"
+    },
+    {
+      "path": "/public-health/oversight",
+      "guard": "role",
+      "requiredRole": "PUBLIC_HEALTH"
+    },
+    {
+      "path": "/omnichannel",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/coverage",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/coverage/enroll",
+      "guard": "auth"
+    },
+    {
+      "path": "/coverage/member",
+      "guard": "auth"
+    },
+    {
+      "path": "/coverage/contracts",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/coverage/operations",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/ruvimbo",
+      "guard": "auth"
+    },
+    {
+      "path": "/ruvimbo/member",
+      "guard": "auth"
+    },
+    {
+      "path": "/ruvimbo/provider",
+      "guard": "role",
+      "requiredRole": "CLINICAL"
+    },
+    {
+      "path": "/ruvimbo/payer",
+      "guard": "role",
+      "requiredRole": "PAYER_OPS"
+    },
+    {
+      "path": "/ruvimbo/administration",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/ruvimbo/performance",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/id-services",
+      "guard": "role",
+      "requiredRole": "ADMIN_OR_HIE"
+    },
+    {
+      "path": "/ai-governance",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/ai-governance/models/[id]",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/access",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/kiosk",
+      "guard": "none"
+    },
+    {
+      "path": "/home",
+      "guard": "auth"
+    },
+    {
+      "path": "/home/notifications",
+      "guard": "auth"
+    },
+    {
+      "path": "/home/profile",
+      "guard": "auth"
+    },
+    {
+      "path": "/home/preferences",
+      "guard": "auth"
+    },
+    {
+      "path": "/home/credentials",
+      "guard": "auth"
+    },
+    {
+      "path": "/home/referrals",
+      "guard": "auth"
+    },
+    {
+      "path": "/home/medications",
+      "guard": "auth"
+    },
+    {
+      "path": "/home/conditions",
+      "guard": "auth"
+    },
+    {
+      "path": "/home/allergies",
+      "guard": "auth"
+    },
+    {
+      "path": "/home/results",
+      "guard": "auth"
+    },
+    {
+      "path": "/home/bookings",
+      "guard": "auth"
+    },
+    {
+      "path": "/home/bookings/new",
+      "guard": "auth"
+    },
+    {
+      "path": "/home/bookings/[bookingId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/home/appointments",
+      "guard": "auth"
+    },
+    {
+      "path": "/home/appointments/[appointmentId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/citizen",
+      "guard": "auth"
+    },
+    {
+      "path": "/citizen/my-care",
+      "guard": "auth"
+    },
+    {
+      "path": "/citizen/virtual-care",
+      "guard": "auth"
+    },
+    {
+      "path": "/citizen/virtual-care/request",
+      "guard": "auth"
+    },
+    {
+      "path": "/citizen/health-id/qr",
+      "guard": "auth"
+    },
+    {
+      "path": "/citizen/health-id/request",
+      "guard": "auth"
+    },
+    {
+      "path": "/citizen/id-recovery",
+      "guard": "auth"
+    },
+    {
+      "path": "/citizen/delegated-pickup",
+      "guard": "auth"
+    },
+    {
+      "path": "/citizen/record-sharing",
+      "guard": "auth"
+    },
+    {
+      "path": "/citizen/visit/[transactionId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/citizen/inpatient/[admissionRef]",
+      "guard": "auth"
+    },
+    {
+      "path": "/citizen/wallet",
+      "guard": "auth"
+    },
+    {
+      "path": "/citizen/wallet/identity",
+      "guard": "auth"
+    },
+    {
+      "path": "/citizen/wallet/profile",
+      "guard": "auth"
+    },
+    {
+      "path": "/citizen/wallet/records",
+      "guard": "auth"
+    },
+    {
+      "path": "/citizen/wallet/timeline",
+      "guard": "auth"
+    },
+    {
+      "path": "/citizen/wallet/dependants",
+      "guard": "auth"
+    },
+    {
+      "path": "/citizen/wallet/payments",
+      "guard": "auth"
+    },
+    {
+      "path": "/citizen/wallet/smart-card",
+      "guard": "auth"
+    },
+    {
+      "path": "/citizen/wallet/comms",
+      "guard": "auth"
+    },
+    {
+      "path": "/citizen/wallet/trust",
+      "guard": "auth"
+    },
+    {
+      "path": "/verify/credential",
+      "guard": "none"
+    },
+    {
+      "path": "/verify/facility-certificate",
+      "guard": "none"
+    },
+    {
+      "path": "/verify/practitioner",
+      "guard": "none"
+    },
+    {
+      "path": "/professional/pic-nominations",
+      "guard": "auth"
+    },
+    {
+      "path": "/professional/regulatory",
+      "guard": "auth"
+    },
+    {
+      "path": "/professional/regulatory/applications/[id]",
+      "guard": "auth"
+    },
+    {
+      "path": "/professional/regulatory/apply/student/[applicationId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/professional/regulatory/contribute/[inviteId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/professional/regulatory/complaints",
+      "guard": "auth"
+    },
+    {
+      "path": "/professional/practice-regulation",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/regulators/[regulatorId]/committee",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/regulators/[regulatorId]/bulk-import",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/regulatory/[orgId]/dashboard",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/regulatory/[orgId]/configuration",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/regulatory/[orgId]/registers",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/regulatory/[orgId]/student-applications",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/regulatory/[orgId]/student-applications/[applicationId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/regulatory/[orgId]/student-reports",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/regulatory/[orgId]/cpd-review",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/regulatory/[orgId]/restrictions",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/regulatory/[orgId]/audit",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/regulatory/hpa/oversight",
+      "guard": "auth"
+    },
+    {
+      "path": "/share/claim",
+      "guard": "none"
+    },
+    {
+      "path": "/collaboration/access",
+      "guard": "none"
+    },
+    {
+      "path": "/facility",
+      "guard": "auth"
+    },
+    {
+      "path": "/facility/[id]",
+      "guard": "auth"
+    },
+    {
+      "path": "/facility/[id]/configuration",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/facility/claim",
+      "guard": "auth"
+    },
+    {
+      "path": "/facility/register",
+      "guard": "auth"
+    },
+    {
+      "path": "/facility/[id]/trust",
+      "guard": "auth"
+    },
+    {
+      "path": "/site/register",
+      "guard": "auth"
+    },
+    {
+      "path": "/site/operator-access",
+      "guard": "auth"
+    },
+    {
+      "path": "/workspace",
+      "guard": "facility"
+    },
+    {
+      "path": "/workspace/[id]",
+      "guard": "facility"
+    },
+    {
+      "path": "/shift",
+      "guard": "workspace"
+    },
+    {
+      "path": "/shift/active",
+      "guard": "facility"
+    },
+    {
+      "path": "/shift/handover",
+      "guard": "facility"
+    },
+    {
+      "path": "/scheduling",
+      "guard": "workspace"
+    },
+    {
+      "path": "/scheduling/roster",
+      "guard": "workspace"
+    },
+    {
+      "path": "/scheduling/on-call",
+      "guard": "workspace"
+    },
+    {
+      "path": "/scheduling/noticeboard",
+      "guard": "workspace"
+    },
+    {
+      "path": "/scheduling/booking-requests",
+      "guard": "workspace"
+    },
+    {
+      "path": "/scheduling/today",
+      "guard": "workspace"
+    },
+    {
+      "path": "/scheduling/bookings/config",
+      "guard": "workspace"
+    },
+    {
+      "path": "/scheduling/surgical-waitlist",
+      "guard": "workspace"
+    },
+    {
+      "path": "/scheduling/theatre-lists",
+      "guard": "workspace"
+    },
+    {
+      "path": "/scheduling/theatre-lists/[sessionId]",
+      "guard": "workspace"
+    },
+    {
+      "path": "/communication",
+      "guard": "auth"
+    },
+    {
+      "path": "/communication/secure-messaging",
+      "guard": "auth"
+    },
+    {
+      "path": "/communication/approvals",
+      "guard": "auth"
+    },
+    {
+      "path": "/communication/announcements",
+      "guard": "auth"
+    },
+    {
+      "path": "/khuluma",
+      "guard": "auth"
+    },
+    {
+      "path": "/khuluma/inbox",
+      "guard": "auth"
+    },
+    {
+      "path": "/khuluma/calls",
+      "guard": "auth"
+    },
+    {
+      "path": "/khuluma/meetings",
+      "guard": "auth"
+    },
+    {
+      "path": "/khuluma/updates",
+      "guard": "auth"
+    },
+    {
+      "path": "/khuluma/channels",
+      "guard": "auth"
+    },
+    {
+      "path": "/khuluma/feedback",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/comms",
+      "guard": "auth"
+    },
+    {
+      "path": "/my/comms",
+      "guard": "auth"
+    },
+    {
+      "path": "/my/orders/[requestId]/offers",
+      "guard": "auth"
+    },
+    {
+      "path": "/my/monitoring",
+      "guard": "auth"
+    },
+    {
+      "path": "/my/pregnancy",
+      "guard": "auth"
+    },
+    {
+      "path": "/queue",
+      "guard": "facility"
+    },
+    {
+      "path": "/queue/triage",
+      "guard": "facility"
+    },
+    {
+      "path": "/queue/waiting",
+      "guard": "facility"
+    },
+    {
+      "path": "/queue/search",
+      "guard": "facility"
+    },
+    {
+      "path": "/queue/walk-in",
+      "guard": "facility"
+    },
+    {
+      "path": "/queue/scheduled",
+      "guard": "facility"
+    },
+    {
+      "path": "/queue/incoming-referrals",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/summary",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/ips",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/vitals",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/maternity",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/history",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/conditions",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/medications",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/allergies",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/orders",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/results",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/notes",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/documents",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/encounters",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/emergency",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/encounter/[encounterId]",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/immunizations",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/consults",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/referrals",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/teleconsults",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/timeline",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/discharge",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/care-plans",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/procedures",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/procedures/[episodeId]",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/paediatrics",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/growth-chart",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/imam",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/family-history",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/social-history",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/functional-status",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/advance-directives",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/care-team",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/preferences/communications",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/goals",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/assessments",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/imnci",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/charts",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/imaging",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/investigations",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/imaging/viewer",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/programmes",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/consultations",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/examination",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/medicine",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/medicine/cds",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/medicine/specialty/[specialty]",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/multimorbidity",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/ward-round",
+      "guard": "facility"
+    },
+    {
+      "path": "/ehr/[patientId]/workspace/[specialty]",
+      "guard": "facility"
+    },
+    {
+      "path": "/admin",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/admin/users",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/admin/comms-ops",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/admin/users/[id]",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/admin/roles",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/admin/policies",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/admin/audit",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/admin/audit/[id]",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/admin/workforce-intake",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/admin/facility-imports",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/admin/hpa-enrichment",
+      "guard": "role",
+      "requiredRole": "REGISTRY_ADMIN"
+    },
+    {
+      "path": "/admin/facility-imports/[runId]",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/admin/facility-imports/[runId]/review",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/admin/consent",
+      "guard": "role",
+      "requiredRole": "ADMIN_OR_HIE"
+    },
+    {
+      "path": "/admin/devices",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/admin/keys",
+      "guard": "role",
+      "requiredRole": "ADMIN_OR_HIE"
+    },
+    {
+      "path": "/admin/federation",
+      "guard": "role",
+      "requiredRole": "ADMIN_OR_HIE"
+    },
+    {
+      "path": "/admin/tenants",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/admin/break-glass",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/admin/beds",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/admin/queues",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/admin/data-export",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/admin/data-governance",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/admin/clinical-curation",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/admin/system-monitor",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/admin/integration-status",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/admin/notifications/templates",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/admin/integration-templates",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/admin/sidecar-retirement",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/dags",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/dags/policy",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/registry-admin",
+      "guard": "role",
+      "requiredRole": "REGISTRY_ADMIN"
+    },
+    {
+      "path": "/registry-admin/trust-console",
+      "guard": "role",
+      "requiredRole": "REGISTRY_ADMIN"
+    },
+    {
+      "path": "/registry-admin/activation-letter",
+      "guard": "role",
+      "requiredRole": "REGISTRY_ADMIN"
+    },
+    {
+      "path": "/registry-admin/fee-schedules",
+      "guard": "role",
+      "requiredRole": "REGISTRY_ADMIN"
+    },
+    {
+      "path": "/organization-admin",
+      "guard": "role",
+      "requiredRole": "ORGANIZATION_ADMIN"
+    },
+    {
+      "path": "/organization-admin/facility",
+      "guard": "role",
+      "requiredRole": "ORGANIZATION_ADMIN"
+    },
+    {
+      "path": "/organization-admin/staffing",
+      "guard": "role",
+      "requiredRole": "ORGANIZATION_ADMIN"
+    },
+    {
+      "path": "/organization-admin/governance",
+      "guard": "role",
+      "requiredRole": "ORGANIZATION_ADMIN"
+    },
+    {
+      "path": "/organization-admin/governance/[id]",
+      "guard": "role",
+      "requiredRole": "ORGANIZATION_ADMIN"
+    },
+    {
+      "path": "/registry/clients",
+      "guard": "role",
+      "requiredRole": "REGISTRY_ADMIN"
+    },
+    {
+      "path": "/registry/clients/new",
+      "guard": "auth"
+    },
+    {
+      "path": "/registry/clients/[id]",
+      "guard": "auth"
+    },
+    {
+      "path": "/registry/trust",
+      "guard": "role",
+      "requiredRole": "REGISTRY_ADMIN"
+    },
+    {
+      "path": "/registry/mvumo",
+      "guard": "role",
+      "requiredRole": "REGISTRY_ADMIN"
+    },
+    {
+      "path": "/registry",
+      "guard": "auth"
+    },
+    {
+      "path": "/registry/intake",
+      "guard": "auth"
+    },
+    {
+      "path": "/registry/locality-review",
+      "guard": "role",
+      "requiredRole": "REGISTRY_ADMIN"
+    },
+    {
+      "path": "/registry/facility-verification",
+      "guard": "role",
+      "requiredRole": "REGULATORY_AUTHORITY"
+    },
+    {
+      "path": "/registry/facility-lifecycle",
+      "guard": "role",
+      "requiredRole": "REGULATORY_AUTHORITY"
+    },
+    {
+      "path": "/registry/facility-lifecycle/[facilityId]",
+      "guard": "role",
+      "requiredRole": "REGULATORY_AUTHORITY"
+    },
+    {
+      "path": "/registry/providers",
+      "guard": "auth"
+    },
+    {
+      "path": "/registry/providers/verification",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/registry/providers/[id]",
+      "guard": "auth"
+    },
+    {
+      "path": "/registry/provider-council/self-service",
+      "guard": "auth"
+    },
+    {
+      "path": "/registry/provider-council/council-workspace",
+      "guard": "role",
+      "requiredRole": "REGISTRY_ADMIN"
+    },
+    {
+      "path": "/registry/facility-classification",
+      "guard": "role",
+      "requiredRole": "REGISTRY_ADMIN"
+    },
+    {
+      "path": "/registry/facilities",
+      "guard": "auth"
+    },
+    {
+      "path": "/registry/facilities/worklist",
+      "guard": "auth"
+    },
+    {
+      "path": "/registry/facilities/[id]",
+      "guard": "auth"
+    },
+    {
+      "path": "/registry/place-governance",
+      "guard": "role",
+      "requiredRole": "REGISTRY_ADMIN"
+    },
+    {
+      "path": "/registry/terminology",
+      "guard": "auth"
+    },
+    {
+      "path": "/registry/terminology/[id]",
+      "guard": "auth"
+    },
+    {
+      "path": "/registry/products",
+      "guard": "auth"
+    },
+    {
+      "path": "/registry/products/[id]",
+      "guard": "auth"
+    },
+    {
+      "path": "/ubomi",
+      "guard": "auth"
+    },
+    {
+      "path": "/marketplace",
+      "guard": "auth"
+    },
+    {
+      "path": "/marketplace/catalog",
+      "guard": "role",
+      "requiredRole": "COMMERCE"
+    },
+    {
+      "path": "/marketplace/orders",
+      "guard": "auth"
+    },
+    {
+      "path": "/marketplace/orders/[id]",
+      "guard": "auth"
+    },
+    {
+      "path": "/marketplace/orders/[id]/pay",
+      "guard": "auth"
+    },
+    {
+      "path": "/marketplace/ops",
+      "guard": "role",
+      "requiredRole": "MARKETPLACE_OPS"
+    },
+    {
+      "path": "/marketplace/vendor",
+      "guard": "role",
+      "requiredRole": "VENDOR_FULFILMENT"
+    },
+    {
+      "path": "/marketplace/vendor/orders",
+      "guard": "role",
+      "requiredRole": "VENDOR_FULFILMENT"
+    },
+    {
+      "path": "/marketplace/pickup",
+      "guard": "role",
+      "requiredRole": "COMMERCE"
+    },
+    {
+      "path": "/marketplace/vendors",
+      "guard": "auth"
+    },
+    {
+      "path": "/marketplace/bookings",
+      "guard": "auth"
+    },
+    {
+      "path": "/marketplace/store",
+      "guard": "auth"
+    },
+    {
+      "path": "/marketplace/store/search",
+      "guard": "auth"
+    },
+    {
+      "path": "/marketplace/store/listing/[id]",
+      "guard": "auth"
+    },
+    {
+      "path": "/marketplace/store/activity",
+      "guard": "auth"
+    },
+    {
+      "path": "/marketplace/establishment-guide",
+      "guard": "auth"
+    },
+    {
+      "path": "/marketplace/seller",
+      "guard": "role",
+      "requiredRole": "MARKETPLACE_SELL"
+    },
+    {
+      "path": "/marketplace/seller/listings",
+      "guard": "role",
+      "requiredRole": "MARKETPLACE_SELL"
+    },
+    {
+      "path": "/marketplace/seller/listings/new",
+      "guard": "role",
+      "requiredRole": "MARKETPLACE_SELL"
+    },
+    {
+      "path": "/marketplace/seller/moderation",
+      "guard": "role",
+      "requiredRole": "MARKETPLACE_SELL"
+    },
+    {
+      "path": "/finance",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/finance/claims",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/finance/claims/[id]",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/finance/billing",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/finance/billing/[id]",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/finance/payments",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/finance/msika-governance",
+      "guard": "role",
+      "requiredRole": "MSIKA_GOVERNANCE"
+    },
+    {
+      "path": "/finance/ledger",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/finance/workspace",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/finance/settlements",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/finance/remittances",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/finance/reconciliation",
+      "guard": "role",
+      "requiredRole": "PAYER_OPS"
+    },
+    {
+      "path": "/finance/bank-reconciliation",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/finance/failed-money-events",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/finance/insurance-plans",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/finance/refunds",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/finance/payer-ops",
+      "guard": "role",
+      "requiredRole": "PAYER_OPS"
+    },
+    {
+      "path": "/finance/payer-claims",
+      "guard": "role",
+      "requiredRole": "PAYER_OPS"
+    },
+    {
+      "path": "/finance/payer-claims/[claimId]",
+      "guard": "role",
+      "requiredRole": "PAYER_OPS"
+    },
+    {
+      "path": "/finance/tariffs",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/finance/costa",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/finance/costa/encounter/[encounterId]",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/finance/service-access",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/finance/mushex-platform",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/finance/mushex-platform/wallets/[walletId]",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/finance/mushex-platform/remittance/[transferId]",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/finance/mushex-platform/cards/[cardId]",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/finance/mushex-platform/reversals/[reversalId]",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/finance/commerce-integrations",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/finance/reports",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/finance/my-account",
+      "guard": "auth"
+    },
+    {
+      "path": "/wallet",
+      "guard": "auth"
+    },
+    {
+      "path": "/wallet/deposit",
+      "guard": "auth"
+    },
+    {
+      "path": "/wallet/send",
+      "guard": "auth"
+    },
+    {
+      "path": "/wallet/transactions",
+      "guard": "auth"
+    },
+    {
+      "path": "/wallet/cards",
+      "guard": "auth"
+    },
+    {
+      "path": "/wallet/merchant",
+      "guard": "auth"
+    },
+    {
+      "path": "/beds",
+      "guard": "facility"
+    },
+    {
+      "path": "/pharmacy",
+      "guard": "facility"
+    },
+    {
+      "path": "/pharmacy/dispense",
+      "guard": "facility"
+    },
+    {
+      "path": "/pharmacy/collect",
+      "guard": "facility"
+    },
+    {
+      "path": "/pharmacy/stock",
+      "guard": "facility"
+    },
+    {
+      "path": "/pharmacy/prescriptions",
+      "guard": "facility"
+    },
+    {
+      "path": "/pharmacy/transaction-journey",
+      "guard": "facility"
+    },
+    {
+      "path": "/inventory",
+      "guard": "facility"
+    },
+    {
+      "path": "/inventory/movements",
+      "guard": "facility"
+    },
+    {
+      "path": "/inventory/counts",
+      "guard": "facility"
+    },
+    {
+      "path": "/inventory/requisitions",
+      "guard": "facility"
+    },
+    {
+      "path": "/inventory/stock-management",
+      "guard": "facility"
+    },
+    {
+      "path": "/enterprise",
+      "guard": "auth"
+    },
+    {
+      "path": "/enterprise/warehousing",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/enterprise/fleet",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/enterprise/charge-sheet",
+      "guard": "facility"
+    },
+    {
+      "path": "/enterprise/oversight",
+      "guard": "auth"
+    },
+    {
+      "path": "/erp",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/erp/gl",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/erp/hr",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/erp/procurement",
+      "guard": "auth"
+    },
+    {
+      "path": "/erp/assets",
+      "guard": "role",
+      "requiredRole": "FINANCE"
+    },
+    {
+      "path": "/workspace/aggregate",
+      "guard": "auth"
+    },
+    {
+      "path": "/reports",
+      "guard": "auth"
+    },
+    {
+      "path": "/reports/facility",
+      "guard": "auth"
+    },
+    {
+      "path": "/reports/clinical",
+      "guard": "auth"
+    },
+    {
+      "path": "/reports/operational",
+      "guard": "auth"
+    },
+    {
+      "path": "/reports/custom",
+      "guard": "auth"
+    },
+    {
+      "path": "/reports/theatre",
+      "guard": "auth"
+    },
+    {
+      "path": "/reports/[id]",
+      "guard": "auth"
+    },
+    {
+      "path": "/settings",
+      "guard": "auth"
+    },
+    {
+      "path": "/settings/account",
+      "guard": "auth"
+    },
+    {
+      "path": "/settings/security",
+      "guard": "auth"
+    },
+    {
+      "path": "/settings/notifications",
+      "guard": "auth"
+    },
+    {
+      "path": "/settings/display",
+      "guard": "auth"
+    },
+    {
+      "path": "/settings/integrations",
+      "guard": "auth"
+    },
+    {
+      "path": "/settings/privacy",
+      "guard": "auth"
+    },
+    {
+      "path": "/telemedicine",
+      "guard": "auth"
+    },
+    {
+      "path": "/telemedicine/new",
+      "guard": "auth"
+    },
+    {
+      "path": "/telemedicine/session/[sessionId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/telemedicine/analytics",
+      "guard": "facility"
+    },
+    {
+      "path": "/work/telemedicine/worklist",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/telemedicine/groups",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/telemedicine/virtual-hospitals",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/telemedicine/virtual-hospitals/[id]",
+      "guard": "auth"
+    },
+    {
+      "path": "/provider/activate",
+      "guard": "auth"
+    },
+    {
+      "path": "/provider/status",
+      "guard": "auth"
+    },
+    {
+      "path": "/provider/workplace",
+      "guard": "auth"
+    },
+    {
+      "path": "/provider/get-access",
+      "guard": "none"
+    },
+    {
+      "path": "/citizen/provider-claim",
+      "guard": "auth"
+    },
+    {
+      "path": "/citizen/provider-claim/status",
+      "guard": "auth"
+    },
+    {
+      "path": "/facility/[id]/mode",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/dashboard",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/goals",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/programs",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/screenings",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/activity",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/connect",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/diet",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/sleep",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/clubs",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/challenges",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/routes",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/coaching",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/plans",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/care",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/commodities",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/community",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/assessment",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/timeline",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/reminders",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/follow-ups",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/insights",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/wellness/settings/consent",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/social/feed",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/social/reels",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/social/posts/[id]",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/social/saved",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/social/my-activity",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/social/groups",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/social/groups/new",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/social/groups/[id]",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/social/communities",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/social/communities/[id]",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/social/challenges",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/social/challenges/[id]",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/social/notifications",
+      "guard": "auth"
+    },
+    {
+      "path": "/wellness/social/moderation",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/wellness/social/programme-dashboard",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/social",
+      "guard": "auth"
+    },
+    {
+      "path": "/social/drafts",
+      "guard": "auth"
+    },
+    {
+      "path": "/social/saved",
+      "guard": "auth"
+    },
+    {
+      "path": "/social/moderation",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/communities",
+      "guard": "auth"
+    },
+    {
+      "path": "/communities/[id]",
+      "guard": "auth"
+    },
+    {
+      "path": "/pages",
+      "guard": "auth"
+    },
+    {
+      "path": "/pages/[id]",
+      "guard": "auth"
+    },
+    {
+      "path": "/caregiving",
+      "guard": "auth"
+    },
+    {
+      "path": "/caregiving/dependants",
+      "guard": "auth"
+    },
+    {
+      "path": "/caregiving/delegation",
+      "guard": "auth"
+    },
+    {
+      "path": "/caregiving/tasks",
+      "guard": "role",
+      "requiredRole": "CAREGIVER"
+    },
+    {
+      "path": "/caregiving/notifications",
+      "guard": "auth"
+    },
+    {
+      "path": "/monitoring",
+      "guard": "auth"
+    },
+    {
+      "path": "/monitoring/devices",
+      "guard": "auth"
+    },
+    {
+      "path": "/monitoring/readings",
+      "guard": "auth"
+    },
+    {
+      "path": "/monitoring/alerts",
+      "guard": "auth"
+    },
+    {
+      "path": "/monitoring/care-plans",
+      "guard": "auth"
+    },
+    {
+      "path": "/monitoring/provider-dashboard",
+      "guard": "facility"
+    },
+    {
+      "path": "/discover",
+      "guard": "auth"
+    },
+    {
+      "path": "/discover/providers",
+      "guard": "auth"
+    },
+    {
+      "path": "/discover/facilities",
+      "guard": "auth"
+    },
+    {
+      "path": "/discover/services",
+      "guard": "auth"
+    },
+    {
+      "path": "/discover/virtual-care",
+      "guard": "auth"
+    },
+    {
+      "path": "/lab",
+      "guard": "facility"
+    },
+    {
+      "path": "/lab/worklist",
+      "guard": "facility"
+    },
+    {
+      "path": "/imaging/worklist",
+      "guard": "facility"
+    },
+    {
+      "path": "/diagnostics/orders",
+      "guard": "facility"
+    },
+    {
+      "path": "/diagnostics/orders/new",
+      "guard": "facility"
+    },
+    {
+      "path": "/diagnostics/orders/route",
+      "guard": "facility"
+    },
+    {
+      "path": "/diagnostics/results-inbox",
+      "guard": "facility"
+    },
+    {
+      "path": "/diagnostics/critical-queue",
+      "guard": "facility"
+    },
+    {
+      "path": "/diagnostics/worklist",
+      "guard": "facility"
+    },
+    {
+      "path": "/diagnostics/lab-worklist",
+      "guard": "facility"
+    },
+    {
+      "path": "/diagnostics/procedure-worklist",
+      "guard": "facility"
+    },
+    {
+      "path": "/diagnostics/reporting",
+      "guard": "facility"
+    },
+    {
+      "path": "/diagnostics/intake/qr",
+      "guard": "facility"
+    },
+    {
+      "path": "/operations/diagnostics-reconciliation",
+      "guard": "facility"
+    },
+    {
+      "path": "/admin/integrations",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/admin/diagnostics-catalogue",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/imaging/facility",
+      "guard": "facility"
+    },
+    {
+      "path": "/lab/results",
+      "guard": "facility"
+    },
+    {
+      "path": "/lab/catalog",
+      "guard": "facility"
+    },
+    {
+      "path": "/lab/reconciliation",
+      "guard": "facility"
+    },
+    {
+      "path": "/operations",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/facility-operations",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/facility-operations/district-view",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/facility-operations/patient-flow",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/facility-operations/resources",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/workflows",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/workflows/[instanceId]",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/dispatch",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/dispatch/[taskId]",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/vito",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/vito/registration",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/vito/registration/new",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/vito/issuance",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/vito/issuance/[requestId]",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/vito/cards",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/vito/card-verify",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/vito/card-sync",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/vito/cards/pickup",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/vito/match",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/vito/dedup",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/vito/print",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/vito/patient-shares",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/vito/internal-search",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/vito/biometrics",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/vito/biometric-enrol",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/vito/biometric-onboard",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/vito/adjudication",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/vito/adjudication/[caseId]",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/vito/recovery",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/vito/registry-admin",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/butano",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/assets",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/equipment",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/equipment/[equipmentId]",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/equipment/maintenance",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/equipment/calibration",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/equipment/readiness",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/equipment/iot",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/equipment/deployment",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/operations/equipment/audit",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/support",
+      "guard": "auth"
+    },
+    {
+      "path": "/support/tickets",
+      "guard": "auth"
+    },
+    {
+      "path": "/support/knowledge-base",
+      "guard": "auth"
+    },
+    {
+      "path": "/developer",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/developer/api-catalog",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/developer/clients",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/developer/sandbox",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/home/documents",
+      "guard": "auth"
+    },
+    {
+      "path": "/marketplace/cart",
+      "guard": "auth"
+    },
+    {
+      "path": "/marketplace/substitutions",
+      "guard": "role",
+      "requiredRole": "MARKETPLACE_OPS"
+    },
+    {
+      "path": "/shell/file-manager",
+      "guard": "auth"
+    },
+    {
+      "path": "/shell/task-manager",
+      "guard": "auth"
+    },
+    {
+      "path": "/ask",
+      "guard": "auth"
+    },
+    {
+      "path": "/intelligence",
+      "guard": "auth"
+    },
+    {
+      "path": "/search",
+      "guard": "auth"
+    },
+    {
+      "path": "/nompilo",
+      "guard": "auth"
+    },
+    {
+      "path": "/guidance",
+      "guard": "auth"
+    },
+    {
+      "path": "/guidance/reminders",
+      "guard": "auth"
+    },
+    {
+      "path": "/guidance/education",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/catalog",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/courses/[courseId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/my-learning",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/enrolments/[enrolmentId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/enrolments/[enrolmentId]/lessons/[lessonId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/pathways",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/pathways/[pathwayId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/record",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/assessments/[assessmentId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/assessments/[assessmentId]/attempt",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/attempts/[attemptId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/certificates",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/certificates/[certificateId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/cpd",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/reports",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/reports/cohorts",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/reports/courses",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/reports/overdue",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/reports/assessments",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/studio",
+      "guard": "role",
+      "requiredRole": "LEARNING_AUTHOR"
+    },
+    {
+      "path": "/learning/studio/courses",
+      "guard": "role",
+      "requiredRole": "LEARNING_AUTHOR"
+    },
+    {
+      "path": "/learning/studio/courses/new",
+      "guard": "role",
+      "requiredRole": "LEARNING_AUTHOR"
+    },
+    {
+      "path": "/learning/studio/courses/[courseId]",
+      "guard": "role",
+      "requiredRole": "LEARNING_AUTHOR"
+    },
+    {
+      "path": "/learning/studio/courses/[courseId]/builder",
+      "guard": "role",
+      "requiredRole": "LEARNING_AUTHOR"
+    },
+    {
+      "path": "/learning/studio/library",
+      "guard": "role",
+      "requiredRole": "LEARNING_AUTHOR"
+    },
+    {
+      "path": "/learning/studio/media",
+      "guard": "role",
+      "requiredRole": "LEARNING_AUTHOR"
+    },
+    {
+      "path": "/learning/studio/media/recordings",
+      "guard": "role",
+      "requiredRole": "LEARNING_AUTHOR"
+    },
+    {
+      "path": "/learning/studio/media/scripts",
+      "guard": "role",
+      "requiredRole": "LEARNING_AUTHOR"
+    },
+    {
+      "path": "/learning/studio/media/voiceovers",
+      "guard": "role",
+      "requiredRole": "LEARNING_AUTHOR"
+    },
+    {
+      "path": "/learning/studio/media/[mediaId]",
+      "guard": "role",
+      "requiredRole": "LEARNING_AUTHOR"
+    },
+    {
+      "path": "/learning/studio/assessments",
+      "guard": "role",
+      "requiredRole": "LEARNING_AUTHOR"
+    },
+    {
+      "path": "/learning/studio/surveys",
+      "guard": "role",
+      "requiredRole": "LEARNING_AUTHOR"
+    },
+    {
+      "path": "/learning/studio/ai",
+      "guard": "role",
+      "requiredRole": "LEARNING_AUTHOR"
+    },
+    {
+      "path": "/learning/studio/publish",
+      "guard": "role",
+      "requiredRole": "LEARNING_AUTHOR"
+    },
+    {
+      "path": "/learning/studio/analytics",
+      "guard": "role",
+      "requiredRole": "LEARNING_AUTHOR"
+    },
+    {
+      "path": "/learning/library",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/library/resources",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/library/uploads",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/library/[resourceId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/notifications",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/surveys/[surveyId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/surveys/[surveyId]/respond",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/feedback/course/[courseId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/learning/admin",
+      "guard": "role",
+      "requiredRole": "ADMIN_OR_HIE"
+    },
+    {
+      "path": "/learning/admin/courses",
+      "guard": "role",
+      "requiredRole": "ADMIN_OR_HIE"
+    },
+    {
+      "path": "/learning/admin/courses/new",
+      "guard": "role",
+      "requiredRole": "ADMIN_OR_HIE"
+    },
+    {
+      "path": "/learning/admin/courses/[courseId]/edit",
+      "guard": "role",
+      "requiredRole": "ADMIN_OR_HIE"
+    },
+    {
+      "path": "/learning/admin/pathways",
+      "guard": "role",
+      "requiredRole": "ADMIN_OR_HIE"
+    },
+    {
+      "path": "/learning/admin/pathways/new",
+      "guard": "role",
+      "requiredRole": "ADMIN_OR_HIE"
+    },
+    {
+      "path": "/learning/admin/pathways/[pathwayId]/edit",
+      "guard": "role",
+      "requiredRole": "ADMIN_OR_HIE"
+    },
+    {
+      "path": "/learning/admin/assessments",
+      "guard": "role",
+      "requiredRole": "ADMIN_OR_HIE"
+    },
+    {
+      "path": "/learning/admin/assessments/new",
+      "guard": "role",
+      "requiredRole": "ADMIN_OR_HIE"
+    },
+    {
+      "path": "/learning/admin/assessments/[assessmentId]/edit",
+      "guard": "role",
+      "requiredRole": "ADMIN_OR_HIE"
+    },
+    {
+      "path": "/nhume",
+      "guard": "auth"
+    },
+    {
+      "path": "/nhume/dashboard",
+      "guard": "auth"
+    },
+    {
+      "path": "/nhume/deliveries",
+      "guard": "auth"
+    },
+    {
+      "path": "/nhume/deliveries/new",
+      "guard": "auth"
+    },
+    {
+      "path": "/nhume/deliveries/[deliveryId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/nhume/dispatcher",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/nhume/map",
+      "guard": "auth"
+    },
+    {
+      "path": "/nhume/courier",
+      "guard": "auth"
+    },
+    {
+      "path": "/nhume/inbound",
+      "guard": "auth"
+    },
+    {
+      "path": "/nhume/fleet",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/nhume/fleet/[assetId]",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/nhume/couriers",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/nhume/couriers/[courierId]",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/nhume/policies",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/nhume/autonomous",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/nhume/analytics",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/nhume/custody/[deliveryId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/nhume/track/[deliveryId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/madi",
+      "guard": "auth"
+    },
+    {
+      "path": "/madi/donor",
+      "guard": "auth"
+    },
+    {
+      "path": "/madi/donor/register",
+      "guard": "auth"
+    },
+    {
+      "path": "/madi/donor/profile",
+      "guard": "auth"
+    },
+    {
+      "path": "/madi/donor/screening",
+      "guard": "auth"
+    },
+    {
+      "path": "/madi/donor/drives",
+      "guard": "auth"
+    },
+    {
+      "path": "/madi/donor/history",
+      "guard": "auth"
+    },
+    {
+      "path": "/madi/donor/feedback",
+      "guard": "auth"
+    },
+    {
+      "path": "/madi/donor/preferences",
+      "guard": "auth"
+    },
+    {
+      "path": "/madi/drives",
+      "guard": "facility"
+    },
+    {
+      "path": "/madi/drives/new",
+      "guard": "facility"
+    },
+    {
+      "path": "/madi/drives/[driveId]",
+      "guard": "facility"
+    },
+    {
+      "path": "/madi/blood-bank",
+      "guard": "facility"
+    },
+    {
+      "path": "/madi/blood-bank/orders",
+      "guard": "facility"
+    },
+    {
+      "path": "/madi/blood-bank/stock",
+      "guard": "facility"
+    },
+    {
+      "path": "/madi/blood-bank/crossmatch",
+      "guard": "facility"
+    },
+    {
+      "path": "/madi/blood-bank/issue",
+      "guard": "facility"
+    },
+    {
+      "path": "/madi/blood-bank/fridges",
+      "guard": "facility"
+    },
+    {
+      "path": "/madi/central-bank",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/madi/orders",
+      "guard": "facility"
+    },
+    {
+      "path": "/madi/orders/[orderId]",
+      "guard": "facility"
+    },
+    {
+      "path": "/madi/transfusion",
+      "guard": "facility"
+    },
+    {
+      "path": "/madi/transfusion/[episodeId]",
+      "guard": "facility"
+    },
+    {
+      "path": "/madi/haemovigilance",
+      "guard": "facility"
+    },
+    {
+      "path": "/madi/haemovigilance/national",
+      "guard": "role",
+      "requiredRole": "ADMIN"
+    },
+    {
+      "path": "/madi/dashboard",
+      "guard": "facility"
+    },
+    {
+      "path": "/madi/processing",
+      "guard": "facility"
+    },
+    {
+      "path": "/madi/logistics",
+      "guard": "facility"
+    },
+    {
+      "path": "/live",
+      "guard": "auth"
+    },
+    {
+      "path": "/live/manage",
+      "guard": "auth"
+    },
+    {
+      "path": "/live/admin",
+      "guard": "auth"
+    },
+    {
+      "path": "/live/create",
+      "guard": "auth"
+    },
+    {
+      "path": "/live/discover",
+      "guard": "auth"
+    },
+    {
+      "path": "/live/saved",
+      "guard": "auth"
+    },
+    {
+      "path": "/live/my-events",
+      "guard": "auth"
+    },
+    {
+      "path": "/live/replays",
+      "guard": "auth"
+    },
+    {
+      "path": "/live/cpd",
+      "guard": "auth"
+    },
+    {
+      "path": "/live/certificates",
+      "guard": "auth"
+    },
+    {
+      "path": "/live/event/[eventId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/live/event/[eventId]/room",
+      "guard": "auth"
+    },
+    {
+      "path": "/live/event/[eventId]/replay",
+      "guard": "auth"
+    },
+    {
+      "path": "/live/event/[eventId]/analytics",
+      "guard": "auth"
+    },
+    {
+      "path": "/platform-origin",
+      "guard": "role",
+      "requiredRole": "PLATFORM_ORIGIN_ADMINISTRATOR"
+    },
+    {
+      "path": "/platform-origin/[id]",
+      "guard": "role",
+      "requiredRole": "PLATFORM_ORIGIN_ADMINISTRATOR"
+    },
+    {
+      "path": "/organization-admin/onboarding",
+      "guard": "role",
+      "requiredRole": "ORGANIZATION_ADMIN"
+    },
+    {
+      "path": "/work/administration-governance",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/access-requests",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/access-review",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/access-review/[subjectId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/audit",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/gdhcn-readiness",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/municipal",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/onboard",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/onboard/citizen",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/onboard/external-partner-user",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/onboard/hsc-user",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/onboard/madi-user",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/onboard/marketplace-user",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/onboard/municipal-user",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/onboard/payer-user",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/onboard/private-facility-user",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/onboard/provider-worker",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/onboard/public-sector-worker",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/onboard/regulator-user",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/onboard/system-admin",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/onboard/training-user",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/organisations",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/organisations/[orgId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/organisations/[orgId]/api-access",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/organisations/[orgId]/audit",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/organisations/[orgId]/contracts",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/organisations/[orgId]/data-sharing",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/organisations/[orgId]/data-uploads",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/organisations/[orgId]/users",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/organisations/[orgId]/verification",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/organisations/new",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/administration-governance/private-facility",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/facility/[facilityId]/audit/access",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/facility/[facilityId]/departments/[departmentId]/staff",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/facility/[facilityId]/staff-access",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/facility/[facilityId]/staff-access/[assignmentId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/facility/[facilityId]/staff-access/add",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/facility/staff-access",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/fundo/admin/accreditation",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/fundo/admin/courses",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/fundo/admin/partners",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/fundo/admin/partners/[orgId]/users",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/hsc",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/hsc/appointments",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/hsc/audit",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/hsc/discipline",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/hsc/establishment",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/hsc/postings",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/hsc/posts",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/hsc/scope",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/hsc/transfers",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/hsc/users",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/madi/admin",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/madi/assignments",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/madi/audit",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/madi/blood-banks",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/madi/users",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/marketplace/organisations",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/marketplace/organisations/[orgId]/api-access",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/marketplace/organisations/[orgId]/audit",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/marketplace/organisations/[orgId]/compliance",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/marketplace/organisations/[orgId]/products",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/marketplace/organisations/[orgId]/users",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/partners",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/partners/[orgId]/audit",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/partners/[orgId]/data-access",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/partners/[orgId]/projects",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/partners/[orgId]/users",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/payers",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/payers/[orgId]/api-access",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/payers/[orgId]/claims-access",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/payers/[orgId]/compliance",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/payers/[orgId]/users",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/regulators",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/regulators/[regulatorId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/regulators/[regulatorId]/audit",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/regulators/[regulatorId]/cases",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/regulators/[regulatorId]/cpd-review",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/regulators/[regulatorId]/disciplinary",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/regulators/[regulatorId]/licence-review",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/regulators/[regulatorId]/registration-review",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/regulators/[regulatorId]/restrictions",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/regulators/[regulatorId]/users",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/system-admin",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/system-admin/audit",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/system-admin/break-glass",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/system-admin/integrations",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/system-admin/keycloak",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/system-admin/opa",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/system-admin/scopes",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/system-admin/tshepo",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/system-admin/users",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/vashandi",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/vashandi/workforce",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/vashandi/workforce/[id]",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/vashandi/assignments",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/vashandi/rosters",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/vashandi/attendance",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/vashandi/leave-availability",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/vashandi/imports",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/vashandi/access-review",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/vashandi/analytics",
+      "guard": "auth"
+    },
+    {
+      "path": "/rito",
+      "guard": "auth"
+    },
+    {
+      "path": "/rito/cases",
+      "guard": "auth"
+    },
+    {
+      "path": "/rito/cases/[caseId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/rito/quality-signals",
+      "guard": "auth"
+    },
+    {
+      "path": "/rito/audits",
+      "guard": "auth"
+    },
+    {
+      "path": "/rito/audits/[auditId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/rito/improvement",
+      "guard": "auth"
+    },
+    {
+      "path": "/rito/surveys",
+      "guard": "auth"
+    },
+    {
+      "path": "/rito/mpdsr",
+      "guard": "auth"
+    },
+    {
+      "path": "/rito/mpdsr/[reviewId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/my-life",
+      "guard": "auth"
+    },
+    {
+      "path": "/my-life/feedback",
+      "guard": "auth"
+    },
+    {
+      "path": "/my-life/feedback/new",
+      "guard": "auth"
+    },
+    {
+      "path": "/my-life/feedback/[caseId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/my-life/feedback/respectful-maternity",
+      "guard": "auth"
+    },
+    {
+      "path": "/feedback/visit/[encounterRef]",
+      "guard": "auth"
+    },
+    {
+      "path": "/work",
+      "guard": "auth"
+    },
+    {
+      "path": "/programme/[programmeId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/rito/my-reputation",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/facility/rito/reputation",
+      "guard": "facility"
+    },
+    {
+      "path": "/work/facility/rito",
+      "guard": "facility"
+    },
+    {
+      "path": "/work/above-site/rito",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/regulatory",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/regulatory/request",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/regulatory/[orgId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/dura",
+      "guard": "facility"
+    },
+    {
+      "path": "/work/patient-safety",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/mental-health",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/mental-health/restraint-review",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/mental-health/[referralId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/patient-safety/new",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/patient-safety/reports/[reportId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/patient-safety/cases/[caseId]",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/patient-safety/mcaz",
+      "guard": "auth"
+    },
+    {
+      "path": "/emergency",
+      "guard": "auth"
+    },
+    {
+      "path": "/emergency/sos",
+      "guard": "auth"
+    },
+    {
+      "path": "/emergency/card-phr",
+      "guard": "auth"
+    },
+    {
+      "path": "/emergency/services",
+      "guard": "auth"
+    },
+    {
+      "path": "/emergency/track",
+      "guard": "auth"
+    },
+    {
+      "path": "/emergency/track/[id]",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/daidzai",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/daidzai/dispatch",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/daidzai/verify-callbacks",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/daidzai/missions",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/daidzai/disasters",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/daidzai/disasters/[id]/casualties",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/telemonitoring",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/telemonitoring/chw",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/sorting-desk",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/clinical/death-cases",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/clinical/death-cases/[id]",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/clinical/mortality-certification",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/mortuary",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/crvs/death-registration",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/clinical/theatre",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/clinical/theatre/board",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/clinical/theatre/referrals",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/clinical/theatre/[id]",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/clinical/procedures",
+      "guard": "auth"
+    },
+    {
+      "path": "/work/clinical/surgery",
+      "guard": "auth"
+    }
+  ]
+}

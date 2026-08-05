@@ -81,9 +81,16 @@ const SURFACES: Surface[] = [
     audience: ["FINANCE"],
   },
   // Deliberately NOT covered here: app/api/mobile/provider/hubs/[hub]/route.ts. It is a
-  // multi-hub catalogue whose hubs have different audiences, and its GET applies no role
-  // filter and no auth check at all — so "which audience is offered this link" has no single
-  // answer to assert against. That is a broader authorization question than link targeting.
+  // multi-hub catalogue whose hubs have different audiences, so "which audience is offered this
+  // link" has no single answer to assert against.
+  //
+  // Its links ARE now filtered by role, but not here and not in this language: that handler is
+  // shadowed by the `/api/:path*` rewrite in next.config.mjs and never executes. The catalogue
+  // the mobile app receives is composed in the experience BFF, which filters it through
+  // RouteGuardRegistry against `route-guards.generated.json` — a generated projection of this
+  // same route registry. The guard that keeps that projection honest is
+  // `npm run test:route-guard-export`; the filtering itself is covered by
+  // RouteGuardRegistryTest and ProviderMobileHubServiceRoleFilterTest in services/experience-bff.
 ];
 
 /** `href="/x"`, `href: "/x"` and `web_path: "/x"` — the three forms the shell uses. */

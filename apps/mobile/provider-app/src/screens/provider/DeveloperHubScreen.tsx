@@ -4,6 +4,7 @@
 import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ProfessionalHubBody } from "../../components/ProfessionalHubBody";
+import { resolveHubSections } from "../../lib/hubUi";
 import { fetchDeveloperHub, type DeveloperHubSection } from "../../services/developerHubService";
 
 const FALLBACK_SECTIONS: DeveloperHubSection[] = [
@@ -20,10 +21,11 @@ export function DeveloperHubScreen() {
     retry: 1,
   });
 
-  const sections = useMemo(() => {
-    const remote = data?.sections?.filter((s) => s?.id && s?.title);
-    return remote && remote.length > 0 ? remote : FALLBACK_SECTIONS;
-  }, [data]);
+  // An empty answer from the BFF is a real answer — see resolveHubSections.
+  const { sections, isOfflineLayout } = useMemo(
+    () => resolveHubSections(data?.sections, FALLBACK_SECTIONS),
+    [data],
+  );
 
   return (
     <ProfessionalHubBody
@@ -33,6 +35,7 @@ export function DeveloperHubScreen() {
       sections={sections}
       isPending={isPending}
       isError={isError}
+      isOfflineLayout={isOfflineLayout}
       refreshedAt={data?.refreshed_at}
       isRefetching={isRefetching}
       onRefresh={() => refetch()}

@@ -7,6 +7,7 @@ import { View, Text, TextInput, StyleSheet } from "react-native";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button, Card, CardBody, colors } from "@impilo/mobile-design-system";
 import { ProfessionalHubBody } from "../../components/ProfessionalHubBody";
+import { resolveHubSections } from "../../lib/hubUi";
 import { fetchAdminRegistryHub, type AdminRegistrySection } from "../../services/adminRegistryService";
 import {
   createProviderIdentity,
@@ -67,10 +68,11 @@ export function AdminRegistryHubScreen() {
     retry: 1,
   });
 
-  const sections = useMemo(() => {
-    const remote = data?.sections?.filter((s) => s?.id && s?.title);
-    return remote && remote.length > 0 ? remote : FALLBACK_SECTIONS;
-  }, [data]);
+  // An empty answer from the BFF is a real answer — see resolveHubSections.
+  const { sections, isOfflineLayout } = useMemo(
+    () => resolveHubSections(data?.sections, FALLBACK_SECTIONS),
+    [data],
+  );
 
   return (
     <ProfessionalHubBody
@@ -80,6 +82,7 @@ export function AdminRegistryHubScreen() {
       sections={sections}
       isPending={isPending}
       isError={isError}
+      isOfflineLayout={isOfflineLayout}
       refreshedAt={data?.refreshed_at}
       isRefetching={isRefetching}
       onRefresh={() => refetch()}

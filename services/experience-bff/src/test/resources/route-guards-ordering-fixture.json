@@ -1,0 +1,12 @@
+{
+  "$comment": "TEST FIXTURE — not generated. Exercises first-match-wins ordering, which today's real registry cannot: it holds exactly one shadowing pair (/workspace/[id] over /workspace/aggregate) and neither side is role-guarded, so the ordering is invisible through admits(). Here the shadowing route IS role-guarded, so getting the order wrong changes the answer.",
+  "routeCount": 3,
+  "roleGroups": {
+    "ADMIN": ["SYSTEM_ADMIN", "DEVELOPER", "SUPER_ADMIN"]
+  },
+  "routes": [
+    { "path": "/thing/[id]", "guard": "role", "requiredRole": "ADMIN" },
+    { "path": "/thing/public", "guard": "auth" },
+    { "path": "/other/public", "guard": "auth" }
+  ]
+}

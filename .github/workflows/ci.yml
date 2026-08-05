@@ -613,6 +613,13 @@ jobs:
         working-directory: ui/one-ui-shell
         run: npm run test:routes
 
+      # The experience BFF filters mobile provider hub sections against a generated projection
+      # of routes.ts. If a guard changes here and the projection is not regenerated, the BFF
+      # filters against stale guards and offers links that bounce back to /home.
+      - name: Route-guard export up to date
+        working-directory: ui/one-ui-shell
+        run: npm run test:route-guard-export
+
   e2e-test:
     name: E2E Tests
     runs-on: ubuntu-latest

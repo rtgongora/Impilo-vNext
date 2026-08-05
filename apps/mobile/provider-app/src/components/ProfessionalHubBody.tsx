@@ -22,6 +22,8 @@ type Props = {
   /** True until the first query result is available (initial fetch). */
   isPending: boolean;
   isError: boolean;
+  /** True when `sections` is the bundled local layout because the hub could not be loaded. */
+  isOfflineLayout?: boolean;
   refreshedAt?: string | null;
   isRefetching: boolean;
   onRefresh: () => void | Promise<unknown>;
@@ -45,6 +47,7 @@ export function ProfessionalHubBody({
   sections,
   isPending,
   isError,
+  isOfflineLayout = false,
   refreshedAt,
   isRefetching,
   onRefresh,
@@ -61,10 +64,10 @@ export function ProfessionalHubBody({
       {isPending ? <LoadingSpinner /> : null}
       {isError ? (
         <Badge variant="warning">Showing offline layout — hub API unavailable</Badge>
-      ) : refreshedAt ? (
-        <Badge variant="success">Synced</Badge>
-      ) : (
+      ) : isOfflineLayout ? (
         <Badge variant="outline">Local layout</Badge>
+      ) : (
+        <Badge variant="success">Synced</Badge>
       )}
       {timeLabel && !isError ? <Text style={styles.syncedAt}>Updated {timeLabel}</Text> : null}
       <ScrollView
@@ -75,6 +78,20 @@ export function ProfessionalHubBody({
         }
       >
         {children}
+        {!isPending && !isOfflineLayout && sections.length === 0 ? (
+          // EMPTY, not UNAVAILABLE: the hub loaded and the answer is that none of its workflows
+          // admit this person's roles. Saying so beats an empty screen that reads as breakage,
+          // and beats offering links that would bounce them back to /home.
+          <Card testID="hub-empty-for-roles">
+            <CardBody>
+              <Text style={styles.cardTitle}>Nothing here is open to your roles</Text>
+              <Text style={styles.hint}>
+                This hub&rsquo;s workflows exist, but your current roles do not admit them. Signing
+                in again will not change that — ask your facility administrator if you need access.
+              </Text>
+            </CardBody>
+          </Card>
+        ) : null}
         {sections.map((s) => {
           const url = resolveWebUrl(webShellBaseUrl, s.web_path);
           return (
