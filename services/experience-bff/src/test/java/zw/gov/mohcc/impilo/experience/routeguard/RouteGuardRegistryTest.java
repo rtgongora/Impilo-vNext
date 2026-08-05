@@ -182,6 +182,12 @@ class RouteGuardRegistryTest {
     void hubCataloguePathsAreKnown() {
         // Guards against a hub quietly pointing at a path that no longer exists: such a path is
         // admitted (unknown paths are), so nothing else in this file would catch it.
+        //
+        // Note the limit of a hand-copied list, because this one already hit it: while the channels
+        // hub shipped /tools/ph-field, this test passed, since a path missing from BOTH the list
+        // and the registry is never asked about. It can catch a path that STOPS resolving; it
+        // cannot catch one that is ADDED. The mechanical check — every section in either catalogue
+        // copy, read from the source — is `npm run test:hub-catalogue-parity` in ui/one-ui-shell.
         List<String> hubPaths = List.of(
                 "/admin", "/registry", "/registry-admin", "/organization-admin", "/public-health",
                 "/id-services", "/access", "/ai-governance",
