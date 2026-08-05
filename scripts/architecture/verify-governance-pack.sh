@@ -16,7 +16,7 @@ else
   root="$(cd "$script_dir/../.." && pwd)"
 fi
 
-versioned_rel="docs/architecture/hybrid-federated-target-architecture-v1.3.4.md"
+versioned_rel="docs/architecture/hybrid-federated-target-architecture-v1.3.5.md"
 pointer_rel="docs/architecture/vnext-hybrid-federation-target-architecture.md"
 # The versioned file is the complete document (~4,600 lines). Anything shorter
 # than this floor is a pointer or a truncation masquerading as the architecture.
@@ -62,19 +62,19 @@ if legacy_hits="$(grep -RIn --exclude-dir=archive --exclude-dir=prompts \
   fail "legacy controlling language remains outside the archive (matches above)"
 fi
 
-# 4. The unversioned pointer names v1.3.4 and links the versioned file.
+# 4. The unversioned pointer names v1.3.5 and links the versioned file.
 if [[ -s "$root/$pointer_rel" ]]; then
-  if ! grep -Fq 'hybrid-federated-target-architecture-v1.3.4.md' "$root/$pointer_rel" \
+  if ! grep -Fq 'hybrid-federated-target-architecture-v1.3.5.md' "$root/$pointer_rel" \
      || ! grep -Eq 'v1\.3\.3' "$root/$pointer_rel"; then
-    fail "unversioned pointer does not point to v1.3.4: $pointer_rel"
+    fail "unversioned pointer does not point to v1.3.5: $pointer_rel"
   else
-    echo "OK: pointer names v1.3.4"
+    echo "OK: pointer names v1.3.5"
   fi
 else
   fail "missing unversioned pointer: $pointer_rel"
 fi
 
-# 5. The versioned v1.3.4 file is the complete document, not a pointer/stub.
+# 5. The versioned v1.3.5 file is the complete document, not a pointer/stub.
 if [[ -s "$root/$versioned_rel" ]]; then
   lines="$(wc -l < "$root/$versioned_rel")"
   if (( lines < min_versioned_lines )); then
@@ -88,9 +88,9 @@ fi
 #    Historical references ("supersedes v1.3.1", "corrects v1.3.2", archive paths)
 #    are legitimate; active-status phrasing and non-archive paths are not.
 #    Add each newly superseded version here when the active version moves on —
-#    v1.3.2 was added by v1.3.4, which found it cited as the controlling document
+#    v1.3.2 was added by v1.3.5, which found it cited as the controlling document
 #    in four governance files after it had already been archived.
-superseded=(1.3.1 1.3.2 1.3.3)
+superseded=(1.3.1 1.3.2 1.3.3 1.3.4)
 for v in "${superseded[@]}"; do
   ve="${v//./\\.}"
   if active_hits="$(grep -RIn --exclude-dir=archive --exclude-dir=prompts \
@@ -133,7 +133,7 @@ else
   echo "OK: exactly one complete active architecture copy (${copies[0]#"$root"/})"
 fi
 
-# 8. v1.3.4-specific content invariants. The architecture is a governance artefact,
+# 8. v1.3.5-specific content invariants. The architecture is a governance artefact,
 #    so these check the document says what the governed decisions require it to say.
 #    They are deliberately content checks, not style checks: each one failed at least
 #    once in a real review before it was written here.
@@ -148,18 +148,18 @@ if [[ -s "$A" ]]; then
     fi
   }
 
-  # 8a. Still a working draft. v1.3.4 is NOT frozen; freeze is a separate PO act.
+  # 8a. Still a working draft. v1.3.5 is NOT frozen; freeze is a separate PO act.
   grep -Fq 'NOT architecture-frozen' "$A" \
-    && echo "OK: v1.3.4 still marked NOT architecture-frozen" \
-    || fail "v1.3.4 no longer states NOT architecture-frozen"
+    && echo "OK: v1.3.5 still marked NOT architecture-frozen" \
+    || fail "v1.3.5 no longer states NOT architecture-frozen"
   grep -Eq 'ARCHITECTURE-FROZEN by Product Owner' "$A" \
-    && fail "v1.3.4 claims frozen status; freeze is not authorised in this version" \
+    && fail "v1.3.5 claims frozen status; freeze is not authorised in this version" \
     || echo "OK: no premature freeze claim"
 
   # 8b. The contract version tracks the document version.
-  grep -Fq '"contract_version": "1.3.4"' "$A" \
-    && echo "OK: contract_version is 1.3.4" \
-    || fail "contract_version is not 1.3.4"
+  grep -Fq '"contract_version": "1.3.5"' "$A" \
+    && echo "OK: contract_version is 1.3.5" \
+    || fail "contract_version is not 1.3.5"
 
   # 8c. C1 — the personal-domain block must be enforced on the OUTCOME. A guard on
   #     the input is what v1.3.3 had, and step 10 walked past it.
@@ -175,7 +175,7 @@ if [[ -s "$A" ]]; then
   for pair in "10:A78" "12:A38" "19:A44"; do
     j="${pair%%:*}"; t="${pair##*:}"
     if grep -Eq "^\| *$j \|.*\| *$t *\|" "$A"; then
-      fail "journey $j cites $t again — withdrawn in v1.3.4 as an unrelated citation"
+      fail "journey $j cites $t again — withdrawn in v1.3.5 as an unrelated citation"
     else
       echo "OK: journey $j does not cite $t"
     fi
@@ -205,7 +205,7 @@ if [[ -s "$A" ]]; then
     || fail "the pre-freeze implementation gate has been removed"
 
   # 8h. Every acceptance id that is CITED must be DEFINED, and the defined set must be
-  #     contiguous. Citing-vs-defining is the distinction that matters: v1.3.4's first
+  #     contiguous. Citing-vs-defining is the distinction that matters: v1.3.5's first
   #     draft of this check only asked whether an id appeared somewhere, so deleting a
   #     criterion's definition still passed because the journey table still cited it.
   #     A criterion cited by a journey but defined nowhere is precisely the defect
@@ -222,6 +222,45 @@ if [[ -s "$A" ]]; then
   if [[ -n "${gaps// /}" ]]; then fail "acceptance numbering has gaps: $gaps"; else
     echo "OK: defined acceptance criteria contiguous"; fi
 fi
+
+  # 8i. The §38A totals must be DERIVED from the matrix rows, not asserted beside them.
+  #     v1.3.4 published 16/5/3 against rows holding 17/4/3. Both sum to 24, so every
+  #     check that asked "does it total 24?" passed. A count that matches the expected
+  #     total is not a count that matches the data.
+  totals_ok=1
+  rows_tmp="$(awk '/^## 38A\.2/{f=1;next} /^## 38A\.3/{f=0} f && /^\| *[0-9]+ \|/' "$A")"
+  for st in SPECIFIED_NOT_IMPLEMENTED BLOCKED_BY_PHASE PARTIALLY_PROVEN \
+            IMPLEMENTED_NOT_YET_PROVEN PASSING NOT_APPLICABLE_TO_CURRENT_RELEASE; do
+    actual="$(printf '%s\n' "$rows_tmp" | grep -c "\`$st\`" || true)"
+    stated="$(awk -v s="$st" '/^## 38A\.3/{f=1} f && $0 ~ "\\| `"s"` \\|" {gsub(/[^0-9]/,"",$0); print; exit}' "$A")"
+    if [[ -z "$stated" ]]; then fail "§38A totals omit $st"; totals_ok=0
+    elif (( stated != actual )); then
+      fail "§38A totals: $st stated $stated, rows hold $actual"; totals_ok=0
+    fi
+  done
+  (( totals_ok )) && echo "OK: §38A totals derived from the rows agree"
+
+  # 8j. THE ENTAILMENT REGISTER (§38C). A citation is not a number: the register records
+  #     the phrase from the cited criterion that entails the claim, and this check proves
+  #     the phrase is really in that criterion. Every mis-citation this repository has
+  #     produced (A38/A78/A44/A66/A87) passed existence, numbering and cross-reference
+  #     checks. None of them could satisfy this one.
+  ent_ok=1; ent_n=0
+  while IFS='|' read -r _ claim crit phrase _; do
+    crit="$(echo "$crit" | tr -d ' *`')"; [[ "$crit" =~ ^A[0-9]+$ ]] || continue
+    phrase="$(echo "$phrase" | sed -e 's/^ *`//' -e 's/` *$//')"
+    [[ -n "$phrase" ]] || continue
+    ent_n=$((ent_n+1))
+    row="$(grep -F "| **$crit** |" "$A" | head -1)"
+    if [[ -z "$row" ]]; then
+      fail "entailment register cites $crit, which is not defined"; ent_ok=0
+    elif ! printf '%s' "$row" | grep -Fq -- "$phrase"; then
+      fail "entailment broken: $crit does not contain \"$phrase\" (claim:$(echo "$claim" | cut -c1-40))"
+      ent_ok=0
+    fi
+  done < <(awk '/^# 38C\./{f=1} /^# 39\./{f=0} f && /^\| §38[AB]-/' "$A")
+  if (( ent_n == 0 )); then fail "entailment register is empty or missing (§38C)"
+  elif (( ent_ok )); then echo "OK: entailment register verified ($ent_n citations)"; fi
 
 if (( failed )); then
   echo "GOVERNANCE PACK: FAILED" >&2
