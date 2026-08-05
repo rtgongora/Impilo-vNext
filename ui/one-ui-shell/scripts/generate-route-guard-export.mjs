@@ -39,6 +39,26 @@ const OUT = path.resolve(
   "../../services/experience-bff/src/main/resources/route-guards.generated.json",
 );
 
+/** The shell handler that serves the provider hub catalogue — the source copy. */
+const HUB_ROUTE_TS = path.join(SHELL, "src/app/api/mobile/provider/hubs/[hub]/route.ts");
+
+/**
+ * The provider app's offline layout.
+ *
+ * The app shows a bundled catalogue when it cannot reach the hub API, and that copy used to be
+ * hand-written in five screens. It drifted — it was still offering /coverage after the shell copy
+ * was corrected, and it never gained ph_field_tasks — and, being offline, nothing filtered it, so
+ * it offered every section to every role regardless of what that role can open.
+ *
+ * Generating it fixes both: the sections come from the one catalogue, and each carries the role
+ * requirement its route declares, so the app can withhold what the caller cannot open without
+ * having to know anything about the route registry.
+ */
+const HUB_CATALOGUE_OUT = path.resolve(
+  SHELL,
+  "../../apps/mobile/provider-app/src/lib/hubCatalogue.generated.ts",
+);
+
 /**
  * Hand-verified against the real registry. If the parser degrades, these stop holding.
  * A control that is only ever satisfied by a correct parse — not a restatement of the parse.
@@ -240,6 +260,94 @@ function parseRoleGroups() {
   return groups;
 }
 
+/** Mirrors matchRouteDefinition(): first route whose pattern matches wins. */
+function guardFor(routes, webPath) {
+  for (const route of routes) {
+    const pattern = route.path.replace(/\[(\w+)\]/g, "[^/]+").replace(/\//g, "\\/");
+    if (new RegExp(`^${pattern}$`).test(webPath)) return route;
+  }
+  return null;
+}
+
+/** The hub catalogue, read from the shell handler that serves it. */
+function parseHubCatalogue(routes) {
+  const source = fs.readFileSync(HUB_ROUTE_TS, "utf8");
+  const hubs = {};
+  const armRe = /case "([a-z-]+)":([\s\S]*?)(?=\n {4}case "|\n {4}default:)/g;
+  let arm;
+  while ((arm = armRe.exec(source)) !== null) {
+    const sectionRe =
+      /\{\s*id: "([^"]+)",\s*title: "([^"]+)",\s*web_path: "([^"]+)"(?:,\s*hint: "([^"]*)")?/g;
+    const sections = [];
+    let s;
+    while ((s = sectionRe.exec(arm[2])) !== null) {
+      const route = guardFor(routes, s[3]);
+      const section = { id: s[1], title: s[2], web_path: s[3] };
+      if (s[4] !== undefined) section.hint = s[4];
+      // Only the ROLE dimension. auth/facility/none guards do not refuse by role, and an
+      // unrecognised path carries no requirement — matching roleGuardAdmits(), which admits
+      // both rather than hiding a destination it cannot reason about.
+      if (route && route.guard === "role" && route.requiredRole) {
+        section.requiredRole = route.requiredRole;
+      }
+      sections.push(section);
+    }
+    if (sections.length === 0) fail(`hub "${arm[1]}" parsed as having no sections`);
+    hubs[arm[1]] = sections;
+  }
+  if (Object.keys(hubs).length === 0) fail("no hubs parsed from the shell hub handler");
+  return hubs;
+}
+
+function serializeHubCatalogue(hubs, roleGroups) {
+  const groupsUsed = {};
+  for (const sections of Object.values(hubs)) {
+    for (const section of sections) {
+      if (section.requiredRole && roleGroups[section.requiredRole]) {
+        groupsUsed[section.requiredRole] = roleGroups[section.requiredRole];
+      }
+    }
+  }
+  return `/**
+ * GENERATED FILE — DO NOT EDIT.
+ *
+ * The provider app's offline hub layout, projected from the one catalogue that serves these hubs
+ * (ui/one-ui-shell/src/app/api/mobile/provider/hubs/[hub]/route.ts) with each section's role
+ * requirement resolved from the route registry (ui/one-ui-shell/src/lib/routes.ts).
+ *
+ * Online, the experience BFF withholds sections the caller's roles cannot open. Offline there is
+ * no BFF to ask, so the app filters this list itself — see src/lib/hubReachability.ts. Without
+ * the requiredRole carried here it could not, and the offline layout would go on offering every
+ * section to every role, each one a tap that leaves the app and lands on /home.
+ *
+ * Regenerate with \`npm run generate:route-guards\` in ui/one-ui-shell.
+ */
+
+export type GeneratedHubSection = {
+  id: string;
+  title: string;
+  web_path: string;
+  hint?: string;
+  /** Role group or literal role the route demands; absent when it refuses no role. */
+  requiredRole?: string;
+};
+
+/** Role group -> the concrete realm roles that satisfy it, already expanded. */
+export const HUB_ROLE_GROUPS: Record<string, string[]> = ${JSON.stringify(groupsUsed, null, 2)};
+
+export type HubKey =
+${Object.keys(hubs)
+  .map((hub) => `  | ${JSON.stringify(hub)}`)
+  .join("\n")};
+
+export const HUB_FALLBACK_SECTIONS: Record<HubKey, GeneratedHubSection[]> = ${JSON.stringify(
+    hubs,
+    null,
+    2,
+  )};
+`;
+}
+
 function build() {
   const routesSource = fs.readFileSync(ROUTES_TS, "utf8");
   const adminSource = fs.readFileSync(ADMIN_ROUTES_TS, "utf8");
@@ -306,7 +414,27 @@ function build() {
   };
 }
 
-const serialized = `${JSON.stringify(build(), null, 2)}\n`;
+const built = build();
+const serialized = `${JSON.stringify(built, null, 2)}\n`;
+
+const hubs = parseHubCatalogue(built.routes);
+const hubSerialized = serializeHubCatalogue(hubs, built.roleGroups);
+
+// Control on the hub projection: the role requirements must have actually been resolved. If
+// guardFor() silently stopped matching, every section would come out unguarded and the offline
+// filter would admit everything — which is precisely the bug this exists to remove, restored
+// invisibly and with a green check on top.
+const guarded = Object.values(hubs).flat().filter((s) => s.requiredRole);
+if (guarded.length === 0) {
+  fail("no hub section resolved a requiredRole; the guard lookup degraded");
+}
+const channelsCoverage = (hubs["professional-channels"] ?? []).find((s) => s.id === "coverage");
+if (channelsCoverage?.requiredRole !== "CLINICAL") {
+  fail(
+    "professional-channels/coverage should require CLINICAL (it points at /ruvimbo/provider); " +
+      `resolved ${channelsCoverage?.requiredRole ?? "nothing"}`,
+  );
+}
 
 if (process.argv.includes("--check")) {
   if (!fs.existsSync(OUT)) {
@@ -338,13 +466,37 @@ if (process.argv.includes("--check")) {
     console.error("\n  Fix: npm run generate:route-guards (in ui/one-ui-shell), then commit.\n");
     process.exit(1);
   }
-  console.log(`[route-guard-export] up to date (${JSON.parse(serialized).routeCount} routes)`);
+
+  if (!fs.existsSync(HUB_CATALOGUE_OUT)) {
+    fail(`${HUB_CATALOGUE_OUT} does not exist. Run: npm run generate:route-guards`);
+  }
+  if (fs.readFileSync(HUB_CATALOGUE_OUT, "utf8") !== hubSerialized) {
+    console.error("\n[route-guard-export] The generated mobile hub catalogue is STALE.\n");
+    console.error(
+      "  The hub catalogue or a route guard changed without regenerating the projection the\n" +
+        "  provider app bundles. Its OFFLINE layout would show the old sections — and, because\n" +
+        "  offline has no BFF to filter, would offer them regardless of what the roles open.\n",
+    );
+    console.error("  Fix: npm run generate:route-guards (in ui/one-ui-shell), then commit.\n");
+    process.exit(1);
+  }
+
+  console.log(
+    `[route-guard-export] up to date (${built.routeCount} routes, ` +
+      `${Object.keys(hubs).length} hubs, ${guarded.length} role-guarded sections)`,
+  );
 } else {
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
   fs.writeFileSync(OUT, serialized);
-  const built = JSON.parse(serialized);
+  fs.mkdirSync(path.dirname(HUB_CATALOGUE_OUT), { recursive: true });
+  fs.writeFileSync(HUB_CATALOGUE_OUT, hubSerialized);
   console.log(
     `[route-guard-export] wrote ${path.relative(process.cwd(), OUT)} — ` +
       `${built.routeCount} routes, ${Object.keys(built.roleGroups).length} role groups`,
+  );
+  console.log(
+    `[route-guard-export] wrote ${path.relative(process.cwd(), HUB_CATALOGUE_OUT)} — ` +
+      `${Object.keys(hubs).length} hubs, ${Object.values(hubs).flat().length} sections ` +
+      `(${guarded.length} role-guarded)`,
   );
 }

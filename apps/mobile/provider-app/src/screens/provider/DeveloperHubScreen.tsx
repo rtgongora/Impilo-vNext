@@ -5,26 +5,24 @@ import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ProfessionalHubBody } from "../../components/ProfessionalHubBody";
 import { resolveHubSections } from "../../lib/hubUi";
-import { fetchDeveloperHub, type DeveloperHubSection } from "../../services/developerHubService";
-
-const FALLBACK_SECTIONS: DeveloperHubSection[] = [
-  { id: "developer", title: "Developer Portal", web_path: "/developer", hint: "Integrator landing and documentation." },
-  { id: "developer_api_catalog", title: "API Catalog", web_path: "/developer/api-catalog", hint: "Browse versioned APIs and schemas." },
-  { id: "developer_clients", title: "Client Registration", web_path: "/developer/clients", hint: "Register OAuth clients and callbacks." },
-  { id: "developer_sandbox", title: "Sandbox", web_path: "/developer/sandbox", hint: "Test tenants and sample data access." },
-];
+import { HUB_FALLBACK_SECTIONS } from "../../lib/hubCatalogue.generated";
+import { useAuth } from "@impilo/mobile-auth";
+import { fetchDeveloperHub } from "../../services/developerHubService";
 
 export function DeveloperHubScreen() {
+  const auth = useAuth();
   const { data, isPending, isError, refetch, isRefetching } = useQuery({
     queryKey: ["developer-hub"],
     queryFn: fetchDeveloperHub,
     retry: 1,
   });
 
-  // An empty answer from the BFF is a real answer — see resolveHubSections.
+  // Offline the bundled layout is filtered here, because there is no BFF to do it.
+  // Memoised: a fresh [] each render would change the dep below on every render.
+  const roles = useMemo(() => auth.user?.realm_access?.roles ?? [], [auth.user]);
   const { sections, isOfflineLayout } = useMemo(
-    () => resolveHubSections(data?.sections, FALLBACK_SECTIONS),
-    [data],
+    () => resolveHubSections(data?.sections, HUB_FALLBACK_SECTIONS["developer"], roles),
+    [data, roles],
   );
 
   return (

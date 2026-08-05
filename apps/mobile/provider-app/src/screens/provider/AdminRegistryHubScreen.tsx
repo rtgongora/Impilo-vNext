@@ -8,7 +8,9 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button, Card, CardBody, colors } from "@impilo/mobile-design-system";
 import { ProfessionalHubBody } from "../../components/ProfessionalHubBody";
 import { resolveHubSections } from "../../lib/hubUi";
-import { fetchAdminRegistryHub, type AdminRegistrySection } from "../../services/adminRegistryService";
+import { HUB_FALLBACK_SECTIONS } from "../../lib/hubCatalogue.generated";
+import { useAuth } from "@impilo/mobile-auth";
+import { fetchAdminRegistryHub } from "../../services/adminRegistryService";
 import {
   createProviderIdentity,
   getProviderIdentity,
@@ -42,17 +44,6 @@ import {
   type RegistryOperationRecord,
 } from "../../services/registryOperationsService";
 
-const FALLBACK_SECTIONS: AdminRegistrySection[] = [
-  { id: "admin", title: "Administration", web_path: "/admin", hint: "Users, roles, policies, and platform configuration." },
-  { id: "registry", title: "Registry Hub", web_path: "/registry", hint: "Patient and provider registry entry points." },
-  { id: "registry_admin", title: "Registry Administration", web_path: "/registry-admin", hint: "Registry configuration and governance." },
-  { id: "organization_admin", title: "Organization Administration", web_path: "/organization-admin", hint: "Sites, cadres, and org structure." },
-  { id: "public_health", title: "Public Health", web_path: "/public-health", hint: "Programmes, surveillance, and campaigns." },
-  { id: "id_services", title: "Identity Services", web_path: "/id-services", hint: "Identity proofing and credential services." },
-  { id: "access", title: "Access Channels", web_path: "/access", hint: "Kiosk, landline, and alternate access paths." },
-  { id: "ai_governance", title: "AI Governance", web_path: "/ai-governance", hint: "Model registry, safety, and audit controls." },
-];
-
 const REGISTRY_FAMILY_WORKFLOWS = [
   { id: "facility", title: "Facility lifecycle", status: "Application + inspection flow" },
   { id: "locality", title: "Locality governance", status: "Proposal review flow" },
@@ -62,16 +53,19 @@ const REGISTRY_FAMILY_WORKFLOWS = [
 ] as const;
 
 export function AdminRegistryHubScreen() {
+  const auth = useAuth();
   const { data, isPending, isError, refetch, isRefetching } = useQuery({
     queryKey: ["admin-registry-hub"],
     queryFn: fetchAdminRegistryHub,
     retry: 1,
   });
 
-  // An empty answer from the BFF is a real answer — see resolveHubSections.
+  // Offline the bundled layout is filtered here, because there is no BFF to do it.
+  // Memoised: a fresh [] each render would change the dep below on every render.
+  const roles = useMemo(() => auth.user?.realm_access?.roles ?? [], [auth.user]);
   const { sections, isOfflineLayout } = useMemo(
-    () => resolveHubSections(data?.sections, FALLBACK_SECTIONS),
-    [data],
+    () => resolveHubSections(data?.sections, HUB_FALLBACK_SECTIONS["admin-registry"], roles),
+    [data, roles],
   );
 
   return (

@@ -5,36 +5,26 @@ import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ProfessionalHubBody } from "../../components/ProfessionalHubBody";
 import { resolveHubSections } from "../../lib/hubUi";
+import { HUB_FALLBACK_SECTIONS } from "../../lib/hubCatalogue.generated";
+import { useAuth } from "@impilo/mobile-auth";
 import {
   fetchProfessionalChannelsHub,
-  type ProfessionalChannelsSection,
 } from "../../services/professionalChannelsHubService";
 
-const FALLBACK_SECTIONS: ProfessionalChannelsSection[] = [
-  { id: "omnichannel", title: "Omnichannel Hub", web_path: "/omnichannel", hint: "Queues, messaging, and channel routing." },
-  // /coverage admits only ADMIN; this hub is handed to providers. Ruvimbo Provider is the face
-  // their roles actually open (role group CLINICAL). Tapping a section opens web_path in the web
-  // shell, so a role the route refuses becomes a silent bounce to /home in a browser the person
-  // just got thrown into — kept in step with the BFF stub and the one-ui-shell catalogue.
-  { id: "coverage", title: "Coverage Operations", web_path: "/ruvimbo/provider", hint: "Schemes, eligibility, and verification." },
-  { id: "home_credentials", title: "Credentials & CPD", web_path: "/home/credentials", hint: "Professional licenses and learning credits." },
-  { id: "ph_surveillance", title: "Surveillance", web_path: "/public-health/surveillance", hint: "Signals, case lines, and indicators." },
-  { id: "ph_campaigns", title: "Campaigns", web_path: "/public-health/campaigns", hint: "Immunisation and outreach waves." },
-  { id: "ph_site_registry", title: "Site Registry", web_path: "/public-health/site-registry", hint: "Community sites and outreach anchors." },
-  { id: "ph_site_profile", title: "Site Profile", web_path: "/public-health/site-registry/[siteId]", hint: "Single-site programme detail." },
-];
-
 export function ProfessionalChannelsHubScreen() {
+  const auth = useAuth();
   const { data, isPending, isError, refetch, isRefetching } = useQuery({
     queryKey: ["professional-channels-hub"],
     queryFn: fetchProfessionalChannelsHub,
     retry: 1,
   });
 
-  // An empty answer from the BFF is a real answer — see resolveHubSections.
+  // Offline the bundled layout is filtered here, because there is no BFF to do it.
+  // Memoised: a fresh [] each render would change the dep below on every render.
+  const roles = useMemo(() => auth.user?.realm_access?.roles ?? [], [auth.user]);
   const { sections, isOfflineLayout } = useMemo(
-    () => resolveHubSections(data?.sections, FALLBACK_SECTIONS),
-    [data],
+    () => resolveHubSections(data?.sections, HUB_FALLBACK_SECTIONS["professional-channels"], roles),
+    [data, roles],
   );
 
   return (

@@ -5,33 +5,24 @@ import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ProfessionalHubBody } from "../../components/ProfessionalHubBody";
 import { resolveHubSections } from "../../lib/hubUi";
-import { fetchOpsReportsHub, type OpsReportsSection } from "../../services/opsReportsService";
-
-const FALLBACK_SECTIONS: OpsReportsSection[] = [
-  { id: "operations", title: "Operations", web_path: "/operations", hint: "Day-to-day facility and platform operations." },
-  { id: "operations_vito", title: "Identity Operations", web_path: "/operations/vito", hint: "VITO / identity exchange operations." },
-  { id: "operations_butano", title: "SHR Operations", web_path: "/operations/butano", hint: "Shared health record connectivity and operations." },
-  { id: "operations_assets", title: "Asset Management", web_path: "/operations/assets", hint: "Track and maintain physical assets." },
-  { id: "operations_equipment", title: "Equipment Management", web_path: "/operations/equipment", hint: "Devices, maintenance, and calibration." },
-  { id: "reports", title: "Reports", web_path: "/reports", hint: "Reporting home and saved views." },
-  { id: "reports_facility", title: "Facility Reports", web_path: "/reports/facility", hint: "Utilization, throughput, and site KPIs." },
-  { id: "reports_clinical", title: "Clinical Reports", web_path: "/reports/clinical", hint: "Clinical quality and outcomes summaries." },
-  { id: "reports_operational", title: "Operational Reports", web_path: "/reports/operational", hint: "Ops dashboards and SLAs." },
-  { id: "reports_custom", title: "Custom Reports", web_path: "/reports/custom", hint: "User-defined report definitions." },
-  { id: "reports_detail", title: "Report Details", web_path: "/reports/[id]", hint: "Drill into a single report run or export." },
-];
+import { HUB_FALLBACK_SECTIONS } from "../../lib/hubCatalogue.generated";
+import { useAuth } from "@impilo/mobile-auth";
+import { fetchOpsReportsHub } from "../../services/opsReportsService";
 
 export function OpsReportsHubScreen() {
+  const auth = useAuth();
   const { data, isPending, isError, refetch, isRefetching } = useQuery({
     queryKey: ["ops-reports-hub"],
     queryFn: fetchOpsReportsHub,
     retry: 1,
   });
 
-  // An empty answer from the BFF is a real answer — see resolveHubSections.
+  // Offline the bundled layout is filtered here, because there is no BFF to do it.
+  // Memoised: a fresh [] each render would change the dep below on every render.
+  const roles = useMemo(() => auth.user?.realm_access?.roles ?? [], [auth.user]);
   const { sections, isOfflineLayout } = useMemo(
-    () => resolveHubSections(data?.sections, FALLBACK_SECTIONS),
-    [data],
+    () => resolveHubSections(data?.sections, HUB_FALLBACK_SECTIONS["ops-reports"], roles),
+    [data, roles],
   );
 
   return (

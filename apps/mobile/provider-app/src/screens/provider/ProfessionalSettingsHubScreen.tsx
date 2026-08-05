@@ -5,32 +5,26 @@ import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ProfessionalHubBody } from "../../components/ProfessionalHubBody";
 import { resolveHubSections } from "../../lib/hubUi";
+import { HUB_FALLBACK_SECTIONS } from "../../lib/hubCatalogue.generated";
+import { useAuth } from "@impilo/mobile-auth";
 import {
   fetchProfessionalSettingsHub,
-  type ProfessionalSettingsSection,
 } from "../../services/professionalSettingsHubService";
 
-const FALLBACK_SECTIONS: ProfessionalSettingsSection[] = [
-  { id: "settings", title: "Settings", web_path: "/settings", hint: "Professional preferences overview." },
-  { id: "settings_account", title: "Account Settings", web_path: "/settings/account", hint: "Profile, language, and sign-in identity." },
-  { id: "settings_security", title: "Security Settings", web_path: "/settings/security", hint: "MFA, sessions, and device posture." },
-  { id: "settings_notifications", title: "Notification Preferences", web_path: "/settings/notifications", hint: "Channels and alert rules." },
-  { id: "settings_display", title: "Display Settings", web_path: "/settings/display", hint: "Density, contrast, and accessibility." },
-  { id: "settings_integrations", title: "Integrations", web_path: "/settings/integrations", hint: "Connected apps and API tokens." },
-  { id: "settings_privacy", title: "Privacy & Data", web_path: "/settings/privacy", hint: "Retention, export, and consent mirrors." },
-];
-
 export function ProfessionalSettingsHubScreen() {
+  const auth = useAuth();
   const { data, isPending, isError, refetch, isRefetching } = useQuery({
     queryKey: ["professional-settings-hub"],
     queryFn: fetchProfessionalSettingsHub,
     retry: 1,
   });
 
-  // An empty answer from the BFF is a real answer — see resolveHubSections.
+  // Offline the bundled layout is filtered here, because there is no BFF to do it.
+  // Memoised: a fresh [] each render would change the dep below on every render.
+  const roles = useMemo(() => auth.user?.realm_access?.roles ?? [], [auth.user]);
   const { sections, isOfflineLayout } = useMemo(
-    () => resolveHubSections(data?.sections, FALLBACK_SECTIONS),
-    [data],
+    () => resolveHubSections(data?.sections, HUB_FALLBACK_SECTIONS["professional-settings"], roles),
+    [data, roles],
   );
 
   return (
