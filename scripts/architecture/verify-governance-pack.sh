@@ -359,10 +359,30 @@ if [[ -s "$A" ]]; then
     echo "OK: A109-A117 declare no executable evidence"
   fi
 
-  # 8g. The pre-freeze implementation gate is still the active control.
-  grep -Fq 'Implementation gate' "$A" \
-    && echo "OK: pre-freeze implementation gate present" \
-    || fail "the pre-freeze implementation gate has been removed"
+  # 8g. The implementation-control section is present and substantive.
+  #
+  #     This check was VACUOUS from v1.3.8 to v1.3.11. It grepped for the literal
+  #     'Implementation gate', which v1.3.8 renamed to 'Post-freeze implementation
+  #     control'. The phrase survived only in the F5 change-log row, so the check
+  #     passed on a historical sentence and asserted nothing about the live section
+  #     for four versions — while still counting toward "all N declared checks ran".
+  #     A check can outlive its guard by having its SUBJECT renamed, not only by
+  #     having its guard removed.
+  #
+  #     Scoped and size-asserted like every other content guard: the section must
+  #     exist, be of the expected size, and still carry the three columns that make
+  #     it a control rather than a heading.
+  ig_blk="$(extract_block '### Post-freeze implementation control' 'On the acceptance criteria.')"
+  if assert_block_size "$ig_blk" 15 45 'post-freeze implementation control'; then
+    ig_ok=1
+    for required in 'Now eligible for a' 'Still blocked until phase and dependency gates' \
+                    'Eligibility is not authorisation' \
+                    'It does not constitute implementation, runtime acceptance'; do
+      assert_in_block "$ig_blk" "$required" \
+        "implementation control has lost its '$required' element" || ig_ok=0
+    done
+    (( ig_ok )) && echo "OK: post-freeze implementation control present and substantive"
+  fi
   record_check implementation-gate
 
   # 8h. Every acceptance id that is CITED must be DEFINED, and the defined set must be
