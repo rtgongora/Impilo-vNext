@@ -60,12 +60,12 @@ The existing plane doctrine remains part of the Impilo vNext architecture.
 The following successor documents govern cross-plane architecture, product
 capabilities and technical standards:
 
-1. [`hybrid-federated-target-architecture-v1.3.8.md`](./hybrid-federated-target-architecture-v1.3.8.md)
+1. [`hybrid-federated-target-architecture-v1.3.11.md`](./hybrid-federated-target-architecture-v1.3.11.md)
    — the complete, versioned, historically durable document (exactly one active copy).
    Convenience pointer at the legacy path: [`vnext-hybrid-federation-target-architecture.md`](./vnext-hybrid-federation-target-architecture.md).
    Working controlling baseline for federation, trust domains, Hospital Nodes,
    deployment profiles, authority, record topology and the Experience Plane.
-   This version carries the correction history of v1.3.2 through v1.3.8 and
+   This version carries the correction history of v1.3.2 through v1.3.11 and
    remains not architecture-frozen until Product Owner sign-off. v1.3.1
    through v1.3.5 are archived working drafts; not one of them was ever
    frozen.
