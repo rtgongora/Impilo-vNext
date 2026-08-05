@@ -201,3 +201,63 @@ describe("TrustChallengeNotice — offers only what the outcome permits", () => 
     expect(screen.getByRole("button", { name: /send code/i })).toBeTruthy();
   });
 });
+
+/**
+ * CP6 regression guard — a mismatched `user_message_key` must never let one kind
+ * borrow another kind's words.
+ *
+ * `decision` drives behaviour (role, tone, whether a next step is offered) while
+ * `user_message_key` drove the wording, and nothing checked they agreed. Both
+ * directions rendered a self-contradiction on screen before this was fixed. The
+ * DENY case is the serious one: it headlined a refusal with an instruction to
+ * verify, which is the false next step this component exists to withhold.
+ */
+describe("mismatched user_message_key", () => {
+  it("does not let an outage borrow refusal wording", () => {
+    render(
+      <TrustChallengeNotice
+        challenge={{
+          kind: "unavailable",
+          decision: "TEMPORARILY_UNAVAILABLE",
+          outcome: {
+            contract_version: TRUST_CONTRACT_VERSION_V1,
+            decision: "TEMPORARILY_UNAVAILABLE",
+            reason_code: "TRUST_PLANE_TIMEOUT",
+            user_message_key: "trust.deny.generic",
+          },
+        }}
+        onDismiss={() => {}}
+        onRetry={() => {}}
+      />,
+    );
+
+    const text = screen.getByTestId("trust-challenge").textContent ?? "";
+    expect(text).toContain("Can't check this right now");
+    expect(text).toContain("This is not a permissions problem");
+    expect(text).not.toContain("You don't have access to this");
+  });
+
+  it("does not let a refusal headline an instruction to verify", () => {
+    render(
+      <TrustChallengeNotice
+        challenge={{
+          kind: "refusal",
+          decision: "DENY",
+          outcome: {
+            contract_version: TRUST_CONTRACT_VERSION_V1,
+            decision: "DENY",
+            reason_code: "RBAC_NO_MATCHING_RULE",
+            user_message_key: "trust.step_up.required",
+          },
+        }}
+        onDismiss={() => {}}
+      />,
+    );
+
+    const text = screen.getByTestId("trust-challenge").textContent ?? "";
+    expect(text).toContain("You don't have access to this");
+    expect(text).toContain("will not change this");
+    expect(text).not.toContain("Confirm it's really you");
+    expect(text).not.toMatch(/choose how you.d like to verify/i);
+  });
+});

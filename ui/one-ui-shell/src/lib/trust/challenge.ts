@@ -390,7 +390,51 @@ const DECISION_COPY: Record<TrustChallengeDecision, TrustChallengeCopy> = {
   },
 };
 
+/**
+ * Which of the three kinds each known message key speaks for.
+ *
+ * `decision` decides how the notice BEHAVES (role, tone, whether a next step is offered);
+ * `user_message_key` decided what it SAID. Nothing checked the two agreed, so a mismatched
+ * pair rendered a self-contradiction — measured, both directions:
+ *
+ *   TEMPORARILY_UNAVAILABLE + `trust.deny.generic` →
+ *     "You don't have access to this … This is not a permissions problem"
+ *   DENY + `trust.step_up.required` →
+ *     "Confirm it's really you … Verifying your identity will not change this"
+ *
+ * The second is the dangerous one: it puts an instruction to verify at the top of a refusal
+ * that cannot be unlocked by verifying — exactly the false next step this component exists to
+ * withhold. So the decision wins: a key whose kind disagrees is ignored rather than trusted.
+ * A key we do not recognise carries no kind and is still honoured (it is only ever additional
+ * wording for the same decision).
+ */
+const MESSAGE_KEY_KIND: Record<string, TrustChallenge["kind"]> = {
+  "trust.step_up.required": "actionable",
+  "trust.consent.required": "actionable",
+  "trust.recovery.required": "actionable",
+  "trust.deny.generic": "refusal",
+  "trust.deny.missing_verdict": "refusal",
+};
+
+/** The kind a decision implies, independent of any message key. */
+function decisionKind(decision: TrustChallengeDecision): TrustChallenge["kind"] | null {
+  if (decision === "DENY") return "refusal";
+  if (decision === "TEMPORARILY_UNAVAILABLE") return "unavailable";
+  if ((ACTIONABLE_DECISIONS as readonly string[]).includes(decision)) return "actionable";
+  return null;
+}
+
 export function trustChallengeCopy(outcome: TrustChallengeOutcome): TrustChallengeCopy {
-  const byKey = outcome.user_message_key ? MESSAGE_KEY_COPY[outcome.user_message_key] : undefined;
-  return byKey ?? DECISION_COPY[outcome.decision] ?? DECISION_COPY.DENY;
+  const key = outcome.user_message_key;
+  const byKey = key ? MESSAGE_KEY_COPY[key] : undefined;
+
+  if (byKey && key) {
+    const keyKind = MESSAGE_KEY_KIND[key];
+    const ownKind = decisionKind(outcome.decision);
+    // Unknown key kind → nothing to disagree with. Kinds match → the key refines the wording.
+    if (!keyKind || !ownKind || keyKind === ownKind) return byKey;
+    // Mismatch: fall through to the decision's own copy, which is always kind-consistent.
+  }
+
+  return DECISION_COPY[outcome.decision] ?? DECISION_COPY.DENY;
 }
