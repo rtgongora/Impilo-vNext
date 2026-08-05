@@ -16,7 +16,7 @@ else
   root="$(cd "$script_dir/../.." && pwd)"
 fi
 
-versioned_rel="docs/architecture/hybrid-federated-target-architecture-v1.3.6.md"
+versioned_rel="docs/architecture/hybrid-federated-target-architecture-v1.3.7.md"
 pointer_rel="docs/architecture/vnext-hybrid-federation-target-architecture.md"
 # The versioned file is the complete document (~4,600 lines). Anything shorter
 # than this floor is a pointer or a truncation masquerading as the architecture.
@@ -39,6 +39,17 @@ required=(
 failed=0
 fail() { echo "FAIL: $*" >&2; failed=1; }
 
+# Patterns whose expected result is EMPTY. A search meant to find nothing behaves
+# identically when its pattern is broken, so each is defined ONCE here and used by both
+# the real check and its positive control (§38C.4 rule 2). v1.3.7's first attempt gave
+# the probe its own copy of the pattern, which proved only that a hardcoded string
+# matches a hardcoded regex — the instrument supplying its own answer. Breaking the real
+# pattern left the probe passing, so the control controlled nothing.
+LEGACY_PATTERN='Architecture frozen\. Implementation must conform|All business APIs MUST require these headers|X-Tenant-ID: <uuid\|string>.*logical tenant/customer'
+LEGACY_PROBE='Architecture frozen. Implementation must conform'
+SUPERSEDED_BODY='[^.]{0,40}\b(is|remains)\b[^.]{0,40}\b(current|active|controlling|working)\b'
+SUPERSEDED_PROBE_TAIL=' is the current working architecture'
+
 # 1. Required governance files exist and are non-empty.
 for path in "${required[@]}"; do
   if [[ ! -s "$root/$path" ]]; then
@@ -56,25 +67,25 @@ fi
 # 3. No controlling/frozen legacy language outside the archive (hard failure).
 if legacy_hits="$(grep -RIn --exclude-dir=archive --exclude-dir=prompts \
     --exclude='supersession-notice-v1.0.md' \
-    -E 'Architecture frozen\. Implementation must conform|All business APIs MUST require these headers|X-Tenant-ID: <uuid\|string>.*logical tenant/customer' \
+    -E "$LEGACY_PATTERN" \
     "$root/docs" 2>/dev/null)"; then
   echo "$legacy_hits" >&2
   fail "legacy controlling language remains outside the archive (matches above)"
 fi
 
-# 4. The unversioned pointer names v1.3.6 and links the versioned file.
+# 4. The unversioned pointer names v1.3.7 and links the versioned file.
 if [[ -s "$root/$pointer_rel" ]]; then
-  if ! grep -Fq 'hybrid-federated-target-architecture-v1.3.6.md' "$root/$pointer_rel" \
+  if ! grep -Fq 'hybrid-federated-target-architecture-v1.3.7.md' "$root/$pointer_rel" \
      || ! grep -Eq 'v1\.3\.3' "$root/$pointer_rel"; then
-    fail "unversioned pointer does not point to v1.3.6: $pointer_rel"
+    fail "unversioned pointer does not point to v1.3.7: $pointer_rel"
   else
-    echo "OK: pointer names v1.3.6"
+    echo "OK: pointer names v1.3.7"
   fi
 else
   fail "missing unversioned pointer: $pointer_rel"
 fi
 
-# 5. The versioned v1.3.6 file is the complete document, not a pointer/stub.
+# 5. The versioned v1.3.7 file is the complete document, not a pointer/stub.
 if [[ -s "$root/$versioned_rel" ]]; then
   lines="$(wc -l < "$root/$versioned_rel")"
   if (( lines < min_versioned_lines )); then
@@ -88,13 +99,13 @@ fi
 #    Historical references ("supersedes v1.3.1", "corrects v1.3.2", archive paths)
 #    are legitimate; active-status phrasing and non-archive paths are not.
 #    Add each newly superseded version here when the active version moves on —
-#    v1.3.2 was added by v1.3.6, which found it cited as the controlling document
+#    v1.3.2 was added by v1.3.7, which found it cited as the controlling document
 #    in four governance files after it had already been archived.
-superseded=(1.3.1 1.3.2 1.3.3 1.3.4 1.3.5)
+superseded=(1.3.1 1.3.2 1.3.3 1.3.4 1.3.5 1.3.6)
 for v in "${superseded[@]}"; do
   ve="${v//./\\.}"
   if active_hits="$(grep -RIn --exclude-dir=archive --exclude-dir=prompts \
-      -E "v${ve}[^.]{0,40}\b(is|remains)\b[^.]{0,40}\b(current|active|controlling|working)\b|hybrid-federated-target-architecture-v${ve}\.md" \
+      -E "v${ve}${SUPERSEDED_BODY}|hybrid-federated-target-architecture-v${ve}\.md" \
       "$root/docs" 2>/dev/null | grep -v 'archive/')"; then
     echo "$active_hits" >&2
     fail "v$v is referenced as active (or by non-archive path) outside the archive (matches above)"
@@ -108,7 +119,13 @@ done
 #     it directly — which is how a corrected schema gets implemented from a draft
 #     that was corrected precisely because it was wrong.
 arch_archive="$root/docs/architecture/archive"
-if [[ -d "$arch_archive" ]]; then
+# §38C.4 rule 1 again: this loop's scope is a find result. v1.3.6 wrapped it in a bare
+# `if [[ -d ]]` with no else, so relocating or renaming the archive skipped every banner
+# check in silence. Count what was examined and require at least one.
+banner_checked=0
+if [[ ! -d "$arch_archive" ]]; then
+  fail "archive directory not found at docs/architecture/archive — banner checks examined nothing"
+else
   while IFS= read -r -d '' f; do
     head -3 "$f" | grep -Fq "$arch_h1" || continue
     if ! head -20 "$f" | grep -Fq 'SUPERSEDED'; then
@@ -116,7 +133,11 @@ if [[ -d "$arch_archive" ]]; then
     else
       echo "OK: banner present in ${f#"$root"/}"
     fi
+    banner_checked=$((banner_checked+1))
   done < <(find "$arch_archive" -name '*.md' -print0 2>/dev/null)
+  if (( banner_checked == 0 )); then
+    fail "archive exists but no archived architecture draft was examined for a supersession banner"
+  fi
 fi
 
 # 7. Exactly one complete active architecture copy exists outside the archive.
@@ -133,7 +154,7 @@ else
   echo "OK: exactly one complete active architecture copy (${copies[0]#"$root"/})"
 fi
 
-# 8. v1.3.6-specific content invariants. The architecture is a governance artefact,
+# 8. v1.3.7-specific content invariants. The architecture is a governance artefact,
 #    so these check the document says what the governed decisions require it to say.
 #    They are deliberately content checks, not style checks: each one failed at least
 #    once in a real review before it was written here.
@@ -148,18 +169,18 @@ if [[ -s "$A" ]]; then
     fi
   }
 
-  # 8a. Still a working draft. v1.3.6 is NOT frozen; freeze is a separate PO act.
+  # 8a. Still a working draft. v1.3.7 is NOT frozen; freeze is a separate PO act.
   grep -Fq 'NOT architecture-frozen' "$A" \
-    && echo "OK: v1.3.6 still marked NOT architecture-frozen" \
-    || fail "v1.3.6 no longer states NOT architecture-frozen"
+    && echo "OK: v1.3.7 still marked NOT architecture-frozen" \
+    || fail "v1.3.7 no longer states NOT architecture-frozen"
   grep -Eq 'ARCHITECTURE-FROZEN by Product Owner' "$A" \
-    && fail "v1.3.6 claims frozen status; freeze is not authorised in this version" \
+    && fail "v1.3.7 claims frozen status; freeze is not authorised in this version" \
     || echo "OK: no premature freeze claim"
 
   # 8b. The contract version tracks the document version.
-  grep -Fq '"contract_version": "1.3.6"' "$A" \
-    && echo "OK: contract_version is 1.3.6" \
-    || fail "contract_version is not 1.3.6"
+  grep -Fq '"contract_version": "1.3.7"' "$A" \
+    && echo "OK: contract_version is 1.3.7" \
+    || fail "contract_version is not 1.3.7"
 
   # 8c. C1 — the personal-domain block must be enforced on the OUTCOME. A guard on
   #     the input is what v1.3.3 had, and step 10 walked past it.
@@ -175,7 +196,7 @@ if [[ -s "$A" ]]; then
   for pair in "10:A78" "12:A38" "19:A44"; do
     j="${pair%%:*}"; t="${pair##*:}"
     if grep -Eq "^\| *$j \|.*\| *$t *\|" "$A"; then
-      fail "journey $j cites $t again — withdrawn in v1.3.6 as an unrelated citation"
+      fail "journey $j cites $t again — withdrawn in v1.3.7 as an unrelated citation"
     else
       echo "OK: journey $j does not cite $t"
     fi
@@ -188,10 +209,14 @@ if [[ -s "$A" ]]; then
 
   # 8f. Nothing unimplemented may be labelled PASSING. The whole point of §38A is
   #     that a written criterion is not evidence.
-  if awk '/^## 38A\.2/{f=1;next} /^## 38A\.3/{f=0} f' "$A" | grep -q 'PASSING'; then
+  # §38C.4 rule 1: an absence-of-PASSING scan over an empty range also finds no PASSING.
+  matrix_scan="$(awk '/^## 38A\.2/{f=1;next} /^## 38A\.3/{f=0} f' "$A" | wc -l)"
+  if (( matrix_scan == 0 )); then
+    fail "the §38A.2 matrix range is empty — the PASSING scan examined nothing"
+  elif awk '/^## 38A\.2/{f=1;next} /^## 38A\.3/{f=0} f' "$A" | grep -q 'PASSING'; then
     fail "a journey is labelled PASSING; no executable evidence exists in this version"
   else
-    echo "OK: no journey falsely labelled PASSING"
+    echo "OK: no journey falsely labelled PASSING ($matrix_scan lines scanned)"
   fi
   if grep -E '^\| \*\*A1(0[9]|1[0-7])\*\*' "$A" | grep -q 'Executable test: \*\*yes\*\*\|PASSING'; then
     fail "a specified-only criterion (A109-A117) claims executable evidence"
@@ -205,7 +230,7 @@ if [[ -s "$A" ]]; then
     || fail "the pre-freeze implementation gate has been removed"
 
   # 8h. Every acceptance id that is CITED must be DEFINED, and the defined set must be
-  #     contiguous. Citing-vs-defining is the distinction that matters: v1.3.6's first
+  #     contiguous. Citing-vs-defining is the distinction that matters: v1.3.7's first
   #     draft of this check only asked whether an id appeared somewhere, so deleting a
   #     criterion's definition still passed because the journey table still cited it.
   #     A criterion cited by a journey but defined nowhere is precisely the defect
@@ -291,13 +316,45 @@ fi
 
   # 8k. Every criterion cited by §38B must appear in the register. v1.3.5 left seven
   #     unregistered; all seven happened to be sound, which is not the same as checked.
-  unreg=""
-  for c in $(awk '/^\| # \| Prohibited outcome/,/^\*\*A posture declared/' "$A" \
-             | grep -E '^\| [0-9]+ \|' | awk -F'|' '{print $6}' | grep -oE 'A[0-9]+' | sort -u); do
-    grep -E '^\| §38[AB]-' "$A" | awk -F'|' '{gsub(/[ *`]/,"",$3); print $3}' | grep -qx "$c" || unreg="$unreg $c"
-  done
-  if [[ -n "${unreg// /}" ]]; then fail "§38B cites criteria absent from the entailment register:$unreg"
-  else echo "OK: every §38B citation is registered"; fi
+  #
+  #     §38C.4 rule 1: this check derives its scope from an anchored range, so it MUST
+  #     assert the scope is non-empty and of the expected size. v1.3.6's version did not:
+  #     renaming the table header column from "| # |" to "| No. |" made the range match
+  #     nothing, and it printed "OK: every §38B citation is registered" with a
+  #     registration deleted. "Found nothing wrong" and "looked at nothing" must never
+  #     produce the same output.
+  outcome_rows="$(awk '/^\| *#? *N?o?\.? *\| Prohibited outcome/{f=1} /^\*\*/{f=0} f && /^\| *[0-9]+ *\|/' "$A" | wc -l)"
+  if (( outcome_rows != 11 )); then
+    fail "§38B prohibited-outcome table: found $outcome_rows rows, expected 11 (has the table header or its anchor changed?)"
+  else
+    cited_38b="$(awk '/^\| *#? *N?o?\.? *\| Prohibited outcome/{f=1} /^\*\*/{f=0} f && /^\| *[0-9]+ *\|/' "$A" \
+                 | awk -F'|' '{print $6}' | grep -oE 'A[0-9]+' | sort -u)"
+    n_cited="$(printf '%s\n' "$cited_38b" | grep -c . || true)"
+    if (( n_cited < 11 )); then
+      fail "§38B cites only $n_cited distinct criteria across 11 outcomes — the criterion column is not being read"
+    else
+      unreg=""
+      for c in $cited_38b; do
+        grep -E '^\| §38[AB]-' "$A" | awk -F'|' '{gsub(/[ *`]/,"",$3); print $3}' | grep -qx "$c" || unreg="$unreg $c"
+      done
+      if [[ -n "${unreg// /}" ]]; then fail "§38B cites criteria absent from the entailment register:$unreg"
+      else echo "OK: every §38B citation is registered ($n_cited criteria over $outcome_rows outcomes)"; fi
+    fi
+  fi
+
+  # 8l. §38C.4 rule 2: the two checks whose expected result is EMPTY cannot assert
+  #     non-emptiness, so they carry a positive control. A broken pattern and a clean
+  #     repository are indistinguishable to a search that is supposed to find nothing.
+  if printf '%s\n' "$LEGACY_PROBE" | grep -Eq "$LEGACY_PATTERN"; then
+    echo "OK: positive control — LEGACY_PATTERN still matches known-bad text"
+  else
+    fail "positive control FAILED: LEGACY_PATTERN no longer matches its own example — check 3 is silently disarmed"
+  fi
+  if printf '%s\n' "v1.3.1${SUPERSEDED_PROBE_TAIL}" | grep -Eq "v1\.3\.1${SUPERSEDED_BODY}"; then
+    echo "OK: positive control — SUPERSEDED_BODY still matches known-bad text"
+  else
+    fail "positive control FAILED: SUPERSEDED_BODY no longer matches its own example — check 6 is silently disarmed"
+  fi
 
 if (( failed )); then
   echo "GOVERNANCE PACK: FAILED" >&2

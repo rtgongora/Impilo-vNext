@@ -1,8 +1,8 @@
 # Impilo vNext — Hybrid / Federated Target Architecture
 
-**Status:** Working draft — **NOT architecture-frozen**; freeze requires PO sign-off of this version · **Version:** 1.3.6 · **Date:** 2026-08-05
+**Status:** Working draft — **NOT architecture-frozen**; freeze requires PO sign-off of this version · **Version:** 1.3.7 · **Date:** 2026-08-05
 
-> **Status discipline.** "Approved, but with corrections required" is not a status. A version is either frozen or it is not. v1.3.1 was **directionally accepted, not approved**: its settled decisions are preserved and its remaining defects were upstream model issues that could not be left to the Experience Completion Packs to resolve divergently. v1.3.2 was the integrity correction the PO required before freeze; its freeze review found stop conditions, so **v1.3.2 was never frozen**. v1.3.3 corrected those; **its own freeze review then refused freeze on two further stop conditions**, so v1.3.3 was never frozen either. v1.3.4 corrected those and added the assurance model (§38A); **its own freeze review then refused freeze on three further stop conditions**, so v1.3.4 was never frozen either. v1.3.5 corrected those and added the entailment register (§38C); **its own freeze review then refused freeze on two further stop conditions**, so v1.3.5 was never frozen either. v1.3.6 corrects those — chiefly by hardening §38C's checker, which could be desynchronised from what a human reads. Until freeze, the §Implementation-gate table below states exactly what may and may not be built.
+> **Status discipline.** "Approved, but with corrections required" is not a status. A version is either frozen or it is not. v1.3.1 was **directionally accepted, not approved**: its settled decisions are preserved and its remaining defects were upstream model issues that could not be left to the Experience Completion Packs to resolve divergently. v1.3.2 was the integrity correction the PO required before freeze; its freeze review found stop conditions, so **v1.3.2 was never frozen**. v1.3.3 corrected those; **its own freeze review then refused freeze on two further stop conditions**, so v1.3.3 was never frozen either. v1.3.4 corrected those and added the assurance model (§38A); **its own freeze review then refused freeze on three further stop conditions**, so v1.3.4 was never frozen either. v1.3.5 corrected those and added the entailment register (§38C); **its own freeze review then refused freeze on two further stop conditions**, so v1.3.5 was never frozen either. v1.3.6 corrected those by hardening §38C's checker; **its own freeze review then refused freeze on one further stop condition**, so v1.3.6 was never frozen either. v1.3.7 corrects it and adds §38C.4, the rules the checker itself must obey. Until freeze, the §Implementation-gate table below states exactly what may and may not be built.
 **Factual basis:** [`vnext-current-state-recovery-2026-08-03.md`](vnext-current-state-recovery-2026-08-03.md) (commit `1870cf33d`), plus targeted evidence sweeps for the v1.1 additions. Every current-state statement is a reference, not a re-derivation.
 **Scope:** Converts vNext from a single-instance national deployment into a hub-and-spoke federated national platform, consumed through four service profiles. Immediate delivery target is the **large Hospital Node**. This document does not implement; it governs implementation.
 
@@ -207,6 +207,20 @@ v1.3.5's freeze review refused freeze on two stop conditions. **The first was in
 | **E5** | **Every §38B citation is now registered.** v1.3.5 registered one criterion per outcome and left seven unverified — A79, A40, A41, A66, A69, A112, A89. All seven proved sound on inspection, which is exactly why they needed registering: **a citation that happens to be right is not a citation that has been checked.** The verifier fails if §38B cites anything absent from the register | §38C.2, verifier | Coverage |
 
 **No settled `[D]`/`[T]`/`[O]` decision is reopened.** No application functionality was implemented, and nothing here authorises implementation.
+
+## v1.3.7 — freeze-review correction (2026-08-05)
+
+v1.3.6's freeze review refused freeze on one stop condition — **again in the newest control**. §38C survived every attack on its *content* and fell to an attack on its *scope*.
+
+| # | Correction | Where | Nature |
+|---|---|---|---|
+| **G1** | **A check reported success while examining nothing.** §38B's register-coverage check took its scope from an awk range anchored on a markdown table header. Renaming that column from `\| # \|` to `\| No. \|` — a cosmetic edit — made the range match nothing, and the check printed *"OK: every §38B citation is registered"* with a registration deleted. It now asserts the table holds **11 outcome rows** and that at least 11 distinct criteria were read, and names the counts in its success line | verifier | **Control silently disarmed — corrected** |
+| **G2** | **The archive-banner loop had the same shape**, wrapped in a bare `if [[ -d ]]` with no `else`: relocating or renaming the archive skipped every banner check in silence. It now fails when the directory is absent *and* when it is present but nothing was examined. Found by auditing the class rather than by a second exploit — the audit is the point | verifier | Same class — corrected |
+| **G3** | **The `PASSING` scan** ran over the same anchored range with no emptiness guard. It now fails if the range is empty and reports how many lines it scanned | verifier | Same class — corrected |
+| **G4** | **Positive controls for the two checks whose expected result is empty.** *"No legacy language outside the archive"* and *"no superseded version cited as active"* pass by finding nothing — which is also what a broken pattern does. Each now runs its own pattern against a synthetic string that must match, and fails if the instrument has stopped working | verifier | **Undetectable failure mode — closed** |
+| **G5** | **§38C.4 states both rules as doctrine**: a guard deriving its scope from a pattern must assert that scope is non-empty and of its expected size; a check whose expected result is empty must carry a positive control. Neither is about markdown — they are the general form of a defect this document produced five times in different clothing | §38C.4 | **New — checker discipline** |
+
+**No settled `[D]`/`[T]`/`[O]` decision is reopened.** The architecture text is unchanged apart from §38C.4; every other correction is in the verifier. No application functionality was implemented, and nothing here authorises implementation.
 
 ### Implementation gate **[O]**
 
@@ -3717,7 +3731,7 @@ An extension of the existing `SessionExperienceContract`, generalising the work-
 
 ```jsonc
 {
-  "contract_version": "1.3.6",   // tracks the architecture version defining this schema
+  "contract_version": "1.3.7",   // tracks the architecture version defining this schema
   "resolved_at": "2026-08-04T09:14:07Z",
   "resolver_origin": "NODE",                            // §28.4 — NATIONAL | NODE
   "expires_at": "2026-08-04T09:29:07Z",                 // bounded by bundle ceilings at a node
@@ -4633,7 +4647,19 @@ This does not make a machine judge entailment. It makes the **author** state the
 
 ## 38C.3 Scope, stated honestly
 
-The register covers every §38B citation and the §38A journeys whose criteria were corrected across v1.3.4–v1.3.6. **The remaining journeys are not registered**, and are covered only by §38A's status discipline — which forbids a specified-only criterion from underwriting a proven status, but cannot tell whether the right criterion was named. Extending the register to all 24 is scheduled work, not a freeze condition. It is also where the next defect of this class will be, if there is one.
+The register covers every §38B citation and the §38A journeys whose criteria were corrected across v1.3.4–v1.3.6. **The remaining journeys are not registered**, and are covered only by §38A's status discipline — which forbids a specified-only criterion from underwriting a proven status, but cannot tell whether the right criterion was named. Extending the register to all 24 is scheduled work, not a freeze condition.
+
+## 38C.4 Rules the checker itself must obey **[D — new in v1.3.7]**
+
+Six versions placed a control and the seventh found the defect in the control. The register survived every attack on its *content* and fell to an attack on its *scope*: the coverage check derived which citations to examine from an awk range anchored on a markdown table header, and renaming that header column from `| # |` to `| No. |` — a cosmetic edit — made the range match nothing. The check then reported success with a registration deleted. **For that check, *"found nothing wrong"* and *"looked at nothing"* produced identical output.**
+
+Two rules follow, and they bind the verifier, not the document:
+
+1. **A guard that derives its scope from a pattern must assert the scope is non-empty, and its expected size where one is known [D].** Anchored ranges, `find` results, filtered file lists and glob expansions all share this failure mode. The two sibling checks survived the same attack only because they already asserted it — *"matrix has 0 entries, expected 24"*, *"register is empty or missing"*. Nothing about their design was better; they simply happened to count.
+
+2. **A check whose expected result is *empty* cannot assert non-emptiness, so it must carry a positive control [D].** *"No legacy language outside the archive"* and *"no superseded version cited as active"* pass by finding nothing — which is also what they do when their pattern is broken. Each such check now runs its own pattern against a synthetic string that must match, and fails if the instrument itself has stopped working.
+
+**Neither rule is about markdown.** They are the general form of a defect this document produced five times in different clothing: a control that appears to hold because nothing contradicted it, when nothing *examined* it. A conformance check is not proven by breaking the thing it guards — that proves the check can fire. It is proven by **also** breaking the check's own reach, and confirming it still fires or says plainly that it could not look.
 
 ---
 
