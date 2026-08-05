@@ -13,6 +13,7 @@ export const ADMINISTRATION_GOVERNANCE_ROUTES = [
   { path: "/work/administration-governance/access-review", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Access Review", navLabel: "Access Review", navZone: "work" },
   { path: "/work/administration-governance/access-review/[subjectId]", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Access Review", navLabel: "Access Review", navZone: "work" },
   { path: "/work/administration-governance/audit", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Audit", navLabel: "Audit", navZone: "work" },
+  { path: "/work/administration-governance/trust-domains", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Audit", navLabel: "Audit", navZone: "work" },
   { path: "/work/administration-governance/gdhcn-readiness", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "GDHCN Readiness", navLabel: "GDHCN Readiness", navZone: "work" },
   { path: "/work/administration-governance/municipal", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Municipal", navLabel: "Municipal", navZone: "work" },
   { path: "/work/administration-governance/onboard", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Onboard New Actor", navLabel: "Onboard New Actor", navZone: "work" },
