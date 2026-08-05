@@ -18,6 +18,7 @@ import {
 } from "react-native";
 import { useOptionalTheme } from "../theme/ThemeProvider";
 import { colors } from "../tokens/colors";
+import { glossButtonStops, glossSheen, mix } from "../tokens/gloss";
 import type { Theme } from "../theme/ThemeProvider";
 
 export type ButtonVariant =
@@ -56,6 +57,24 @@ export interface ButtonProps {
  *     must NOT vary by app, so they stay pinned to neutral/error tokens rather
  *     than to the brand accent. Only actual brand elements should diverge.
  */
+/**
+ * Which variants take the gloss treatment, and with what stops.
+ *
+ * Only FILLED variants get it — an outline/ghost button has no fill to light. The
+ * gradient is derived from the variant's own resolved background, so the citizen accent
+ * stays green, the provider accent stays teal, and `destructive` stays red: structure is
+ * shared, hue is not. Pure and RN-free so it is unit-testable in isolation.
+ */
+export function resolveButtonGloss(
+  variant: ButtonVariant,
+  bg: string,
+): { enabled: boolean; from: string; to: string } {
+  const filled = variant === "primary" || variant === "secondary" || variant === "destructive" || variant === "default";
+  if (!filled || bg === "transparent") return { enabled: false, from: bg, to: bg };
+  const { from, to } = glossButtonStops(bg);
+  return { enabled: from !== to, from, to };
+}
+
 function getVariantStyles(theme: Theme): Record<ButtonVariant, { bg: string; text: string; border?: string }> {
   return {
     primary:     { bg: theme.colors.primary, text: theme.colors.onPrimary },
@@ -75,6 +94,8 @@ function getVariantStyles(theme: Theme): Record<ButtonVariant, { bg: string; tex
     default:     { bg: colors.gray[500], text: "#FFFFFF" },
   };
 }
+
+const BUTTON_GLOSS_BANDS = 10;
 
 const SIZE_STYLES: Record<ButtonSize, { py: number; px: number; fontSize: number; radius: number }> = {
   sm:    { py: 6,  px: 12, fontSize: 13, radius: 8  },
@@ -103,6 +124,7 @@ export function Button({
   const resolvedTitle = title ?? label ?? "";
   const vs = getVariantStyles(theme)[variant];
   const ss = SIZE_STYLES[size];
+  const gloss = resolveButtonGloss(variant, vs.bg);
 
   return (
     <Pressable
@@ -127,6 +149,29 @@ export function Button({
         style,
       ]}
     >
+      {gloss.enabled ? (
+        <>
+          {/* Flat bands stand in for a gradient — see GlossCanvas for why no gradient
+              library is usable here. A button is short, so a handful of bands is smooth. */}
+          <View
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
+            testID={testID ? `${testID}-gloss` : undefined}
+          >
+            {Array.from({ length: BUTTON_GLOSS_BANDS }, (_, i) => (
+              <View
+                key={i}
+                style={{
+                  flex: 1,
+                  backgroundColor: mix(gloss.from, gloss.to, (i + 0.5) / BUTTON_GLOSS_BANDS),
+                }}
+              />
+            ))}
+          </View>
+          {/* The inner top highlight — the web's `inset 0 1px 0 rgba(255,255,255,.35)`. */}
+          <View style={styles.sheen} pointerEvents="none" />
+        </>
+      ) : null}
       <View style={styles.content}>
         {loading ? (
           <ActivityIndicator size="small" color={vs.text} />
@@ -153,11 +198,23 @@ const styles = StyleSheet.create({
   base: {
     alignItems: "center",
     justifyContent: "center",
+    // The gradient layer is absolutely positioned; without this it paints past the radius.
+    overflow: "hidden",
+  },
+  sheen: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: glossSheen,
   },
   fullWidth: {
     width: "100%",
   },
   content: {
+    // Above the gradient layer.
+    position: "relative",
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
