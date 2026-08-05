@@ -57,17 +57,18 @@ function sectionsFor(hub: string): HubSection[] | null {
         { id: "ph_campaigns", title: "Campaigns", web_path: "/public-health/campaigns", hint: "Immunisation and outreach waves." },
         { id: "ph_site_registry", title: "Site Registry", web_path: "/public-health/site-registry", hint: "Community sites and outreach anchors." },
         { id: "ph_site_profile", title: "Site Profile", web_path: "/public-health/site-registry/[siteId]", hint: "Single-site programme detail." },
-        // Present so that this handler — newly reachable, see next.config.mjs — serves exactly what
-        // the BFF stub has always served. Without it, fixing the shadowing would have silently
-        // dropped a section from the hub.
+        // There is deliberately no ph_field_tasks section. It shipped here and in the BFF stub as
+        // "Field Tasks (native)" -> /tools/ph-field, which is in no web route registry (there are
+        // no /tools routes at all), so the one thing this catalogue promises — a web destination —
+        // it could not keep. Field tasks are a NATIVE screen, PublicHealthFieldTasksScreen, and it
+        // is already reachable in-app from the Outreach tabs and the Clinical Tools "PH Field" tab.
+        // Nothing was lost by removing it; a link that opened a browser on a 404 was.
         //
-        // It is carried forward as-is, NOT endorsed: /tools/ph-field is in no web route registry
-        // (there are no /tools routes at all), and ProfessionalHubBody opens web_path in a browser,
-        // so this resolves to nothing. The real screen is native — PublicHealthFieldTasksScreen,
-        // already reachable in-app via the Outreach tabs and Clinical Tools. Fixing that means
-        // letting a section target a native destination instead of a web_path, which is a contract
-        // change, not a link correction; tracked separately.
-        { id: "ph_field_tasks", title: "Field Tasks (native)", web_path: "/tools/ph-field", hint: "Mobile task board with lifecycle transitions." },
+        // The alternative was a native_route field on the section contract. Rejected: web_path is
+        // the only field ProviderMobileHubService can filter on, and RouteGuardRegistry.admits()
+        // returns true for paths it does not recognise — so a section carrying a native target and
+        // no web_path would be, by construction, one the role filter cannot evaluate. A third door
+        // to a screen that already has two is not worth a hole in that filter.
       ];
     default:
       return null;

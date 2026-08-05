@@ -41,8 +41,14 @@ public class ProviderProfessionalChannelsHubController {
                 section("ph_surveillance", "Surveillance", "/public-health/surveillance", "Signals, case lines, and indicators."),
                 section("ph_campaigns", "Campaigns", "/public-health/campaigns", "Immunisation and outreach waves."),
                 section("ph_site_registry", "Site Registry", "/public-health/site-registry", "Community sites and outreach anchors."),
-                section("ph_site_profile", "Site Profile", "/public-health/site-registry/[siteId]", "Single-site programme detail."),
-                section("ph_field_tasks", "Field Tasks (native)", "/tools/ph-field", "Mobile task board with lifecycle transitions.")
+                // There is deliberately no ph_field_tasks section. It shipped here as
+                // "Field Tasks (native)" -> /tools/ph-field, a path in no web route registry, while
+                // the mobile card opens web_path in a browser — so the tap left the app for a URL
+                // the shell cannot serve. Field tasks are a native screen and are already reachable
+                // in-app from the Outreach tabs and Clinical Tools. See the matching note in
+                // ui/one-ui-shell/src/app/api/mobile/provider/hubs/[hub]/route.ts for why a
+                // native_route field on the contract was rejected rather than added.
+                section("ph_site_profile", "Site Profile", "/public-health/site-registry/[siteId]", "Single-site programme detail.")
         );
         List<Map<String, Object>> sections = hubService.sectionsForHub("professional-channels", stub);
         return ResponseEntity.ok(hubService.hubEnvelope(requestId, correlationId, sections));
