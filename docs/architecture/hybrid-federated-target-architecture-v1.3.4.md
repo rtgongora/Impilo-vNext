@@ -1,8 +1,8 @@
 # Impilo vNext — Hybrid / Federated Target Architecture
 
-**Status:** Working draft — **NOT architecture-frozen**; freeze requires PO sign-off of this version · **Version:** 1.3.3 · **Date:** 2026-08-05
+**Status:** Working draft — **NOT architecture-frozen**; freeze requires PO sign-off of this version · **Version:** 1.3.4 · **Date:** 2026-08-05
 
-> **Status discipline.** "Approved, but with corrections required" is not a status. A version is either frozen or it is not. v1.3.1 was **directionally accepted, not approved**: its settled decisions are preserved and its remaining defects were upstream model issues that could not be left to the Experience Completion Packs to resolve divergently. v1.3.2 was the integrity correction the PO required before freeze; the freeze review of v1.3.2 found stop conditions, so **v1.3.2 was never frozen** and v1.3.3 corrects them. Until freeze, the §Implementation-gate table below states exactly what may and may not be built.
+> **Status discipline.** "Approved, but with corrections required" is not a status. A version is either frozen or it is not. v1.3.1 was **directionally accepted, not approved**: its settled decisions are preserved and its remaining defects were upstream model issues that could not be left to the Experience Completion Packs to resolve divergently. v1.3.2 was the integrity correction the PO required before freeze; its freeze review found stop conditions, so **v1.3.2 was never frozen**. v1.3.3 corrected those; **its own freeze review then refused freeze on two further stop conditions**, so v1.3.3 was never frozen either. v1.3.4 corrects those, and adds the assurance model (§38A) that keeps a specified criterion from reading as a passing test. Until freeze, the §Implementation-gate table below states exactly what may and may not be built.
 **Factual basis:** [`vnext-current-state-recovery-2026-08-03.md`](vnext-current-state-recovery-2026-08-03.md) (commit `1870cf33d`), plus targeted evidence sweeps for the v1.1 additions. Every current-state statement is a reference, not a re-derivation.
 **Scope:** Converts vNext from a single-instance national deployment into a hub-and-spoke federated national platform, consumed through four service profiles. Immediate delivery target is the **large Hospital Node**. This document does not implement; it governs implementation.
 
@@ -134,7 +134,7 @@ A post-v1.3.2 verification sweep at commit `984b2d498` re-measured this document
 5. `FormScopeEngine` is confirmed in **pct-service** (`core/forms/FormScopeEngine.java:133-139`) — the document already attributed it correctly; recorded here because the sweep re-verified the location.
 6. The `'national-spine'` literal also defaults **`tenant_id`** columns in guidance-service — a second mismatch class (§13.5).
 7. "No DND anywhere" is qualified: a khuluma *presence-status* DND literal exists; no delivery-suppression or quiet-hours mechanism does (§40.3).
-8. `'national-spine'` pod-id defaults measure **71 lines across 52 migration files** (was "≥12 migrations") (§13.5).
+8. `'national-spine'` pod-id defaults measure **71 lines across 52 migration files** (was "≥12 migrations") (§13.4 — the `pod_id` landmine note; v1.3.3 cited §13.5, one subsection past it. Errata, not a design change).
 
 ## v1.3.3 — freeze-review correction (2026-08-05)
 
@@ -161,6 +161,22 @@ The freeze review of v1.3.2 was run as an adversarial integrity pass: every cros
 | — | **Smaller repairs**: `contract_version` still read `"1.3.1"`; `personal_standing` was specified in §29.0 and missing from the contract's state block; `facility_authorities[]` entries lacked `effective_from` and `permitted_journey_families`; the autonomy capability count read "twelve" in two places against a fifteen-item list; `api-client.ts:355` re-measured to `:348` | throughout | Accuracy |
 
 Tests **A104–A108** (§23.6) prove F7, F8 and F16. The other corrections are repairs to statements the existing suite already covers, or to the document's own integrity, and are verified by the governance-pack verifier rather than by a runtime test.
+
+## v1.3.4 — freeze-review correction (2026-08-05)
+
+v1.3.3's independent freeze review refused freeze on two stop conditions. Correcting them exposed a third thing, which is why this version is larger than two fixes.
+
+| # | Correction | Where | Nature |
+|---|---|---|---|
+| **C1** | **The shared-workstation personal-domain block was enforced on the input, not the outcome.** §29.3 states it as a property of the *posture*; v1.3.3's step 4a implemented it as a guard on a *requested destination*, so rules that derive a landing — the standing default, a resumed journey — returned My Life without meeting it. The precedence function is now two-stage: derive a candidate, then assert `assert_landing_permitted` over the result. A rule added to stage 1 in any future version **cannot** reintroduce the bypass | §29.0 | **Safety defect — corrected structurally** |
+| **C2** | **Journey 12 cited A38** (node-commissioning order). Withdrawn; **A114** specifies facility-duplicate stewardship | §38, §23.7 | Proof integrity |
+| **C3** | **The all-24 audit — the first time the whole citation layer was checked rather than sampled — found the defect was wider than the two instances named.** Journey 10 cited A78 (journey resumption) and journey 19 cited A44 (provenance labelling); both withdrawn. Journey 4's compound claim had an unproven clause. Four journeys (5, 7, 8, 23) cited tests proving only part of the claim; each is retained **for the clause it proves** and labelled partial | §38, §38A | **Proof integrity — three unrelated citations removed** |
+| **C4** | **A proof model became an assurance model.** v1.3.3's single "Test" column conflated *specified* with *proved*, which is what let an unrelated citation read as coverage. §38A replaces it with five explicit states and six evidence statuses, of which **only `PASSING` means executable evidence exists**. Freeze requires state 1 for all 24 journeys; it requires states 2–5 for none | §38A | **New — assurance model** |
+| **C5** | **Prohibited outcomes are now enforced on the outcome, not on a path.** STOP-1 was one unguarded path to a correctly-stated rule. §38B enumerates every path to eleven prohibited outcomes and names the single enforcement point each must traverse | §38B | **New — path analysis** |
+| **C6** | Acceptance criteria **A109–A117** specified for the claims that had none, each carrying status, owning phase, implementation location, current evidence and an explicit `Executable test: no` | §23.7 | Specification |
+| — | **Errata**: the pod-id evidence reference cited §13.5; the landmine note is §13.4. `contract_version` → `1.3.4` | §13.4 | Errata |
+
+**No settled `[D]`/`[T]`/`[O]` decision is reopened.** C1 changes the *structure* of an existing rule's enforcement, not the rule. **No application functionality was implemented by this version**, and nothing here authorises implementation.
 
 ### Implementation gate **[O]**
 
@@ -3352,7 +3368,7 @@ Tests A50–A56 exist because §2B.3's exposure is at the **infrastructure** lay
 | **A100** | Drafts survive and conflicts surface | Enter step data on device A; edit the same draft concurrently on device B; resume on device C | The draft (answers + attachment references) resumes on C at the latest acknowledged version; the concurrent edit produced a **surfaced conflict** with both versions recoverable — never a silent overwrite; credential-class fields were never persisted |
 | **A101** | Action records: dedup, safety ack, and the projection never kills the case | Emit the same obligation event twice; acknowledge a SAFETY record; let a `DOMAIN_SERVICE` journey's `projection_refresh_due_at` elapse while the domain case stays open | One action record per (obligation, recipient); the SAFETY record requires acknowledgement distinct from read and is audited; the stale projection renders as stale and the journey **does not expire** — the domain case's lifecycle is untouched |
 | **A102** | The licence consequence reaches Work; the correspondence does not | Suspend a provider's licence, then open their Work session at an employer's node and their My Professional nationally | Work shows only the derived consequence (suspended · session ends at T · whom to contact) sourced from the standing bundle; the case detail and correspondence appear **only** in My Professional; nothing about the case is stored at the node |
-| **A103** | My Life is blocked on the ward machine, and switching leaks nothing | On a `MANAGED_SHARED` device: attempt My Life under default policy, then under `ALLOW_ISOLATED_STEP_UP`; then fast-switch users mid-queue with a patient record open | Default: blocked with the stated reason and the "use your own device" route. Step-up variant: isolated storage, no Work-token inheritance, no residue after close. The switch preserves facility/department/service point and returns the **next** clinician to the queue only after their own authentication — the open patient, search results and drafts are gone |
+| **A103** | **My Life cannot be reached on a shared workstation by any path** *(expanded by v1.3.4, C1)* | Drive `resolve_landing` to a returned landing in each case below and assert on **the function's output**, not on a UI route guard: (1) explicit request for My Life, `MANAGED_SHARED`, default policy; (2) **no explicit domain, no entry intent, `work_assignment = NONE`, standing causing rule 10 to derive `/home`** — the v1.3.3 bypass; (3) the same with `device_posture = UNKNOWN`; (4) a resumed journey (rule 7) whose stored landing is personal; (5) `ALLOW_ISOLATED_STEP_UP` with every §29.3 isolation condition met; (6) `ALLOW_ISOLATED_STEP_UP` with one isolation condition unmet; (7) an authorised clinician with `work_assignment = SINGLE`; then fast-switch users mid-queue with a patient record open | (1)–(4) all return the personal-domain-blocked surface with the stated reason and the "use your own device" route — **no path returns `/home` or any route redirecting to it**. (5) returns the isolated step-up surface: separate storage, no Work-token inheritance, no residue after close. (6) returns the blocked surface, not step-up. (7) returns the Work landing **unblocked** — the personal-domain rule must not catch authorised Work. The switch preserves facility/department/service point and returns the **next** clinician to the queue only after their own authentication; the open patient, search results and drafts are gone. **Status:** SPECIFIED_NOT_IMPLEMENTED (cases 2–4, 6 are new) / PARTIALLY_PROVEN (case 1 and the switch behaviour are backlog item 82's territory) · **Owning phase:** 0 (safety) then 2 · **Implementation location:** the experience resolver's landing function (§28.4); TBD in owning wave · **Current evidence:** none executable — v1.3.3 shipped no resolver implementation · **Executable test:** no |
 
 ## 23.6 v1.3.3 additions — journeys that had no test of their own
 
@@ -3365,6 +3381,25 @@ Five §38 journeys cited a test that proved a **different** claim (F7/F8): journ
 | **A106** | A regulator with zero appointments is not stranded | Sign in as a regulator whose organisation holds no appointment yet | The founding-request route is offered with its named next actor — not an empty workspace and not a denial. One live founding request per organisation is enforced |
 | **A107** | Facility setup adapts to facility scale | Run the setup wizard for a rural health post and for a central hospital | The post is not walked through theatre, ICU, PACS or multi-campus configuration; the hospital is not given a six-field clinic form; a missing Practitioner-in-Charge is named as **the** blocking item in both. Adaptation keys on facility type, capability packs and sizing profile |
 | **A108** | Journey reading is scope-bound, not merely domain-bound | As a person administering three facilities and representing two organisations, list journeys; then attempt a journey belonging to a fourth facility | Only journeys whose scope columns match a live entry in the person's `facility_authorities[]` / `organisation_authorities[]` are returned. Unclaimed steps appear to the scoped queue, claimed steps only to the claimant, and reassignment only to the `reassignable_by` role |
+
+
+## 23.7 v1.3.4 acceptance criteria — specified, not yet executable
+
+The all-24 journey audit (§38A) found three journeys citing tests that prove a different feature, one compound claim with an unproven clause, and four journeys whose cited test proves only part of what the row asserts. The corrections below **specify the missing criteria**; they do not implement the functions. Each carries its own status, and **`Executable test: no` means exactly that** — a written criterion is architecture, not evidence.
+
+| # | Criterion | Method | Pass condition | Status block |
+|---|---|---|---|---|
+| **A109** | Provider-claim lanes each reach their own end state | Drive each of the seven claim lanes (§35) to completion and to its failure branch | Each lane terminates in **its own** differentiated end state with a named next actor — never a shared generic "Pending", never a dead end. The twelve differentiated statuses the provider lane already carries are surfaced, not collapsed | `SPECIFIED_NOT_IMPLEMENTED` · phase 2.5 · location: TBD in the P2 pack wave · evidence: none · executable: **no** |
+| **A110** | A declined request is recoverable | Decline a provider facility-access request for each decline reason | The applicant sees a **safe** reason (sufficient to act on, disclosing nothing about other parties), a correction path, a re-request or appeal route with its named actor, and **any valid draft work is preserved** — never silently discarded | `SPECIFIED_NOT_IMPLEMENTED` · phase 2.5 · location: TBD in the P2 pack wave · evidence: none · executable: **no** |
+| **A111** | A stale standing bundle refuses **with its age** | Present an expired standing bundle at a node and request a clinical action | Refusal states the authority that is stale **and its age**, using §19's two clocks. A31 proves the refusal and the no-fallback property; A62 proves the two clocks render separately; **neither proves the age appears in this refusal** — that junction is what this criterion adds | `SPECIFIED_NOT_IMPLEMENTED` · phase 2 · location: TBD in the node wave · evidence: A31 + A62 prove the adjacent invariants · executable: **no** |
+| **A112** | A node outage is stated, never substituted | Take the node link down and request a national-only surface, then a node-only surface | The unavailable surface says `UNAVAILABLE` in §29.2's vocabulary — never `EMPTY`, never an invented local substitute — and names the alternatives that genuinely remain. A30 proves the session boundary only | `SPECIFIED_NOT_IMPLEMENTED` · phase 2 · location: TBD in the node wave · evidence: A81 proves the vocabulary generally, not at this seam · executable: **no** |
+| **A113** | An organisation duplicate is stewarded, not merged and not disclosed | Register an organisation matching an existing authoritative row, by each match attribute | **No second authoritative row is created and no automatic merge occurs.** The case routes to an authorised steward within the review scope. The applicant receives a **generic** receipt disclosing none of: the matched organisation's identity, the match attributes, any identifier, the confidence score, or steward notes — and never whether the match is the same legal entity. Routing and disposition are audited. A false positive is clearable **without linking or corrupting either row** | `SPECIFIED_NOT_IMPLEMENTED` · phase 2.5 · location: TBD in the P2 pack wave · evidence: none · executable: **no** |
+| **A114** | A facility or practice duplicate is stewarded, not merged and not disclosed | The same, against `tuso` facility registration and practice establishment | Identical to A113, applied to the facility and practice rails. **Distinct from A11**, which proves cross-node duplicate *patient* reconciliation — a different mechanism with a different lawful basis, a clinician confirmation step and a CPID repoint; neither test substitutes for the other | `SPECIFIED_NOT_IMPLEMENTED` · phase 2.5 · location: TBD in the P2 pack wave · evidence: none · executable: **no** |
+| **A115** | No suitable consumption profile reaches a human, and survives | Run guided profile selection with an organisation whose needs match no profile | An **assisted review** is offered, not a forced choice: the request routes to a named reviewer scope, the applicant can leave and return without re-entering accepted data, and the state is visible throughout. A76 proves only that a stated alternative is offered | `SPECIFIED_NOT_IMPLEMENTED` · phase 2.5 · location: TBD in the P2 pack wave · evidence: A76 for the alternative-selection clause · executable: **no** |
+| **A116** | A share to a non-permitted recipient refuses and leaks nothing | Attempt to share PHR content with a facility the person is not permitted to share with, by every route | **Refused.** The reason is understandable and safe. **The failed attempt discloses nothing** — not the content, not whether the facility exists, not why it is not permitted beyond a safe class, and no partial delivery occurs. A correction or recipient-selection path is offered. The attempt is audited. **Recipient authority is derived server-side** — a client-asserted recipient is never load-bearing (§12.4). A44 proves provenance labelling and does not touch this path | `SPECIFIED_NOT_IMPLEMENTED` · phase 2.5 · location: TBD in the P1/P4 pack wave · evidence: none · executable: **no** |
+| **A117** | A profile migration is planned, never implicit | Change an organisation's consumption profile where the change requires migration | A migration plan is produced naming **source and target**, the governed authority cutover point, and a rollback or refusal path. **No implicit migration occurs**, and the organisation continues operating on its current authority until cutover. A72 proves compatibility gating only | `SPECIFIED_NOT_IMPLEMENTED` · phase 3 · location: TBD in the fleet wave · evidence: A72 for the gating clause · executable: **no** |
+
+**None of A109–A117 is evidence.** They are specified behaviour with an owning phase, which is state 1 of the five-state model in §38A. Marking one `PASSING` requires an executable test against a real implementation, not a revision of this table.
 
 ---
 
@@ -3652,7 +3687,7 @@ An extension of the existing `SessionExperienceContract`, generalising the work-
 
 ```jsonc
 {
-  "contract_version": "1.3.3",   // tracks the architecture version defining this schema
+  "contract_version": "1.3.4",   // tracks the architecture version defining this schema
   "resolved_at": "2026-08-04T09:14:07Z",
   "resolver_origin": "NODE",                            // §28.4 — NATIONAL | NODE
   "expires_at": "2026-08-04T09:29:07Z",                 // bounded by bundle ceilings at a node
@@ -3851,34 +3886,54 @@ v1.3 carried `"ux_state": "PROVIDER_MULTIPLE_WORK_CONTEXTS"` — one field, one 
 | `journey_obligations` | count + next actor per open journey | Journey store (§39) |
 | `session_lifecycle` | `ACTIVE` · `EXPIRING` · `EXPIRED` · `STEP_UP_REQUIRED` | Token state |
 
-**Landing is derived, not stored — and precedence is capability-scoped [D — corrects v1.3.1].** The resolver still has to choose one place to put the person, so it applies a **deterministic precedence function** over the vector. v1.3.1's function was too global: it sent a provider whose *hospital's* site link was down to a hospital-link failure screen when they had asked for national My Life, and let one stale professional bundle block a personal appointment. Each guard step therefore applies **only when the requested destination depends on the failing condition** — the dependency being declared per destination in the contract's capability map, never inferred client-side:
+**Landing is derived, then constrained — precedence is capability-scoped, and safety is enforced on the outcome [D — corrects v1.3.1 and v1.3.3].** The resolver still has to choose one place to put the person. v1.3.1's function was too global: it sent a provider whose *hospital's* site link was down to a hospital-link failure screen when they had asked for national My Life, and let one stale professional bundle block a personal appointment. Each guard step therefore applies **only when the requested destination depends on the failing condition** — the dependency declared per destination in the contract's capability map, never inferred client-side.
+
+v1.3.3 then made the opposite error. It expressed the shared-workstation personal-domain block as a *guard on an incoming destination* (step 4a), while §29.3 states it as a property of the **posture**. Steps that *derive* a destination — the standing default, a resumed journey, a fallback — ran after that guard and could return My Life without ever meeting it. **A guard placed on the input cannot constrain an output the function produces later.**
+
+The function is therefore two-stage. Selection is a preference order; safety is an invariant over the result:
 
 ```
-1. session_lifecycle = EXPIRED | STEP_UP_REQUIRED       → re-authentication, carrying entry intent (§28.5)
-2. site_link = UNAVAILABLE
-     AND destination depends on the node                → SITE_LINK_UNAVAILABLE surface (Outage B)
-     (a national personal/professional destination proceeds untouched)
-3. authority_freshness[] has PAST_CEILING on an entry
-     whose affected_capabilities cover the destination  → fail-closed surface naming THAT authority and its age
-     (other capabilities, and other domains, proceed)
-4. device_posture = KIOSK                               → kiosk-scoped surface only
-4a. device_posture = MANAGED_SHARED | UNKNOWN
-     AND destination is the personal domain
-     AND personal_domain_policy = BLOCK (the default)   → personal-domain-blocked surface (§29.3),
-                                                          stating the device policy and offering
-                                                          the person's own device; step-up only
-                                                          where the institution set
-                                                          ALLOW_ISOLATED_STEP_UP
-     (v1.3.3, F15: without this step the precedence function reached step 5 and derived a My Life
-      landing that §29.3 forbids — a safety default stated in one section and contradicted by the
-      function that decides landings)
-5. active_domain explicitly requested and permitted     → that domain's landing
-6. entry_intent resolvable and permitted (§28.5)        → the intent's destination
-7. work_assignment = SINGLE and domain = WORK           → straight into Work
-8. work_assignment = MULTIPLE and domain = WORK         → workplace chooser (§32.3)
-9. professional/personal standing default               → §32 domain landing
-10. otherwise                                           → public front door
+resolve_landing(vector, requested):
+
+  ── stage 1: derive the candidate ────────────────────────────────────────────
+  1. session_lifecycle = EXPIRED | STEP_UP_REQUIRED       → re-authentication, carrying entry intent (§28.5)
+  2. site_link = UNAVAILABLE
+       AND candidate depends on the node                  → SITE_LINK_UNAVAILABLE surface (Outage B)
+       (a national personal/professional candidate proceeds untouched)
+  3. authority_freshness[] has PAST_CEILING on an entry
+       whose affected_capabilities cover the candidate    → fail-closed surface naming THAT authority and its age
+       (other capabilities, and other domains, proceed)
+  4. device_posture = KIOSK                               → kiosk-scoped surface only
+  5. active_domain explicitly requested and permitted     → that domain's landing
+  6. entry_intent resolvable and permitted (§28.5)        → the intent's destination
+  7. resumed journey with a stored landing (§39)          → that landing
+  8. work_assignment = SINGLE and domain = WORK           → straight into Work
+  9. work_assignment = MULTIPLE and domain = WORK         → workplace chooser (§32.3)
+ 10. professional/personal standing default               → §32 domain landing
+ 11. otherwise                                            → public front door
+
+  ── stage 2: constrain the outcome (runs on EVERY candidate, without exception) ──
+  assert_landing_permitted(candidate, vector):
+    a. candidate is in the personal domain (§32.1 / /home, and every route that redirects there)
+         AND device_posture ∈ { MANAGED_SHARED, UNKNOWN }
+         AND personal_domain_policy ≠ ALLOW
+       → if personal_domain_policy = ALLOW_ISOLATED_STEP_UP and the institution's stated
+           isolation conditions (§29.3) can all be met  → isolated step-up surface
+         else                                           → personal-domain-blocked surface (§29.3),
+                                                           stating the device policy and offering
+                                                           the person's own device
+    b. candidate's audience ≠ the session's audience (§4B)      → audience-transition offer (§28.5), never a silent grant
+    c. candidate requires an assurance level above the session's → step-up surface for that level
+    d. candidate is in a domain the person holds no authority for → the §29.1 no-authority landing
+
+  return the candidate only if (a)–(d) all pass; otherwise return the surface they name.
 ```
+
+**Why an invariant and not more guards [D].** The same policy condition is *not* repeated across stage 1's eleven rules. It is stated once, in stage 2, and every rule in stage 1 is subject to it by construction. That is the structural property v1.3.3 lacked: a rule added to stage 1 in a later version **cannot** reintroduce the bypass, because it cannot return without passing stage 2. Adding a twelfth selection rule requires no change to the safety logic and cannot weaken it.
+
+**`UNKNOWN` fails closed [D].** §29.3 already rules that `UNKNOWN` is *"treated as `MANAGED_SHARED` for every restriction — fail safe, not fail convenient."* Stage 2(a) names both postures explicitly rather than relying on a coercion happening upstream, because that coercion is exactly the kind of step a later change can move or omit.
+
+**What stage 2 does not do.** It never widens. It cannot turn a refusal into a grant, and it cannot select a landing stage 1 did not derive — it only replaces an impermissible candidate with the surface that explains why. Work landings, node landings and the workplace chooser are untouched by (a): they are not personal-domain candidates, so an authorised clinician reaches Work on a `MANAGED_SHARED` device exactly as before — carrying facility, department and service point, and never carrying patient context across a switch (§29.3).
 
 Steps 2–3 still surface as **banners** on non-dependent destinations (the provider in My Life is told their hospital's link is down); they cease to be *landings* for journeys that do not need the failing thing. Test A96.
 
@@ -4377,29 +4432,118 @@ Twenty-four journeys. Each is specified with actor · entry point · preconditio
 | 1 | Anonymous citizen finds care | Public | Public front door | none | No result in range → widen or emergency route; *"N of M results have map coordinates"* preserved | Boundary map still renders when the street stack is down | **A104** |
 | 2 | Citizen signs up and enters My Life | Citizen | Front door → sign-up | → `impilo-personal` | Proofing incomplete → `HEALTH_ID_PENDING` with what is usable meanwhile | n/a | A75 |
 | 3 | Citizen receives care and later sees the encounter | Citizen | My Life timeline | none | Not yet contributed → stated, not blank | n/a | A81 |
-| 4 | Provider claims their Provider ID | Provider | My Life prompt or front door | → `impilo-professional` | No record → registration route, not a dead end; seven lanes each with their own end state | n/a | A75 |
-| 5 | Provider requests facility access | Provider | My Professional | none (request only) | Declined → reason + re-request path; next actor named | Queued | A78 |
+| 4 | Provider claims their Provider ID | Provider | My Life prompt or front door | → `impilo-professional` | No record → registration route, not a dead end; seven lanes each with their own end state | n/a | A75 (not-a-dead-end) · **A109** |
+| 5 | Provider requests facility access | Provider | My Professional | none (request only) | Declined → reason + re-request path; next actor named | Queued | A78 (resumption, next actor) · **A110** |
 | 6 | Provider enters national Work | Provider | Domain switch | → `impilo-work` | No assignment → §29.1 landing, never an empty page | n/a | A75 |
-| 7 | Provider enters a Hospital Node | Provider | Node URL | node-issued work token | Standing bundle stale → refusal stating its age | Works offline | A31 |
-| 8 | Provider moves between local Work and Full Impilo | Provider | Node header | **new** national session; work token not exchanged | Node offline → stated unavailable, no local substitute | My Life unavailable and says so | A30 |
+| 7 | Provider enters a Hospital Node | Provider | Node URL | node-issued work token | Standing bundle stale → refusal stating its age | Works offline | A31 (refusal, no fallback) · A62 (two clocks) · **A111** |
+| 8 | Provider moves between local Work and Full Impilo | Provider | Node header | **new** national session; work token not exchanged | Node offline → stated unavailable, no local substitute | My Life unavailable and says so | A30 (session separation) · **A112** |
 | 9 | Provider works at multiple institutions | Provider | Either node | two audiences, no mixing | Cross-node token reuse → rejected on audience | Per-node contexts persist; remote list marked stale | A33, A59, A71 |
-| 10 | Practice owner registers an organisation | Officer | *Bring your organisation* | → `impilo-org-admin` | Duplicate → claim route, not a second row | n/a | A78 |
+| 10 | Practice owner registers an organisation | Officer | *Bring your organisation* | → `impilo-org-admin` | Duplicate → claim route, not a second row | n/a | **A113** |
 | 11 | Existing facility is claimed | Officer / admin | Facility search | facility-admin appointment | **Today: a boolean. Target: the eleven-state submission model with a named reviewer and time in state** | n/a | **A105** |
-| 12 | New facility is registered | Officer | Facility register | pending legitimacy | Silent duplicate → steward review, generic receipt **preserved by design** | n/a | A38 |
-| 13 | Organisation chooses hosted service | Officer | Setup assistant (§31) | service agreement ACTIVE | No profile fits → assisted review, not a forced choice | n/a | A76 |
+| 12 | New facility is registered | Officer | Facility register | pending legitimacy | Silent duplicate → steward review, generic receipt **preserved by design** | n/a | **A114** |
+| 13 | Organisation chooses hosted service | Officer | Setup assistant (§31) | service agreement ACTIVE | No profile fits → assisted review, not a forced choice | n/a | A76 (stated alternative) · **A115** |
 | 14 | Organisation commissions an on-premises node | Officer + Node Admin | Commissioning case | node ACTIVE on countersignature | Readiness fails → the specific test named; node stays `AWAITING_COMMISSIONING` | Install may be offline | A38–A43 |
 | 15 | Node operates during national disconnection | Provider | Work | unchanged (local) | Bundle ceilings → fail closed per class | **This is the journey** | A5, A6 |
 | 16 | Facility loses connectivity to a remotely hosted node | Provider | Work | none | `SITE_LINK_UNAVAILABLE` — Edge scope or stop, and it says which | Edge scope only | A57 |
 | 17 | Patient is referred between nodes | Provider | Referral | disclosure basis recorded | Receiver offline → queued with visible status | Queues at sender | A12 |
 | 18 | Clinician views a Shared-Care Cache | Provider | Patient record | cohort + consent | Authority stale → emergency-only or fail closed | Serves with **both clocks** | A46–A48, A62 |
-| 19 | Patient shares selected PHR content with a facility | Citizen | My Life consent centre | item-scoped disclosure | Facility not permitted → refusal with reason | n/a | A44 |
+| 19 | Patient shares selected PHR content with a facility | Citizen | My Life consent centre | item-scoped disclosure | Facility not permitted → refusal with reason | n/a | **A116** |
 | 20 | Regulator onboards and operates its workspace | Regulator | Regulator bootstrap | → `impilo-regulatory` | Zero appointments → the founding-request route, which already closes this dead end | n/a | **A106** |
 | 21 | Facility administrator configures services and workforce | Facility admin | Facility console | facility-admin scope | Missing PIC named as the blocking item; **steps adapt to facility scale** | n/a | **A107** |
 | 22 | Support engineer enters through approved JIT access | Support | Support case | data-bearing access grant | **Audit sink unavailable → session refused** | n/a | A66, A69 |
-| 23 | Organisation changes service-consumption profile | Officer | Organisation console | new agreement version | Migration needed → planned, never implicit | n/a | A72 |
+| 23 | Organisation changes service-consumption profile | Officer | Organisation console | new agreement version | Migration needed → planned, never implicit | n/a | A72 (compatibility gating) · **A117** |
 | 24 | Node is upgraded, suspended or decommissioned | Node Admin + Officer | Fleet console | release / lifecycle state | Below compatibility floor → quarantined with a remedy | Local care continues | A20, A15 |
 
 **The rule that binds them.** Every journey has a defined state at every step, a named next actor, a resumable progress record, and an honest failure mode. A journey that can reach a state with no landing, no explanation and no next actor is not finished — A75 and A78 exist to catch exactly that.
+
+
+# 38A. Journey assurance model **[O — new in v1.3.4]**
+
+## 38A.1 Five states, and freeze requires only the first
+
+v1.3.3's §38 carried a single "Test" column, which conflated *"we have specified what must be true"* with *"we have proved it."* That conflation is what let three journeys cite tests proving a different feature and read as covered. The states are distinct:
+
+| State | Meaning |
+|---|---|
+| **1 — Architecture specified** | Required behaviour, authority, failure handling and acceptance criterion are defined |
+| **2 — Implementation authorised** | The owning phase and implementation wave have been approved |
+| **3 — Implemented** | Working code exists |
+| **4 — Runtime proven** | Executable tests pass against that implementation |
+| **5 — Production ready** | Deployment and operational evidence complete |
+
+**Architecture freeze requires state 1 for every journey. It does not require states 2–5 for any of them** — those arrive through the phase and Experience Completion Pack sequence, each under its own authorisation. A journey with a correctly specified, unimplemented criterion is *freeze-ready*; a journey citing a test that proves something else is not, however much code exists behind it.
+
+Evidence statuses used below. **Only `PASSING` means complete executable evidence exists today:**
+
+`SPECIFIED_NOT_IMPLEMENTED` · `BLOCKED_BY_PHASE` · `IMPLEMENTED_NOT_YET_PROVEN` · `PARTIALLY_PROVEN` · `PASSING` · `NOT_APPLICABLE_TO_CURRENT_RELEASE`
+
+## 38A.2 The 24-journey assurance matrix
+
+| J | Target behaviour | Prohibited outcome | Acceptance criterion | Phase | Status | Existing evidence | Remaining dependency |
+|---|---|---|---|---|---|---|---|
+| 1 | Anonymous care discovery degrades honestly | An empty page, or silently filtered results | A104 | 2.5 | `SPECIFIED_NOT_IMPLEMENTED` | A104 specified | Street-stack + boundary-map wiring |
+| 2 | Pending proofing still lands somewhere usable | A generic "Pending" with no next action | A75 | 2 | `PARTIALLY_PROVEN` | A75 proves the landing invariant | "What is usable meanwhile" not separately specified |
+| 3 | Not-yet-contributed is stated, not blank | An outage rendered as "you have none" | A81 | 0 | `PARTIALLY_PROVEN` | A81 specified; item 72 landed for `/work` | Same separation on the timeline surface |
+| 4 | Claim lanes never dead-end, each with its own end state | Seven lanes collapsing to one generic status | A75 + **A109** | 2.5 | `SPECIFIED_NOT_IMPLEMENTED` | A75 for not-a-dead-end only | Differentiated lane end states |
+| 5 | A decline is recoverable | A terminal refusal with no route back | A78 + **A110** | 2.5 | `SPECIFIED_NOT_IMPLEMENTED` | A78 for resumption + next actor | Decline reasons, appeal, draft preservation |
+| 6 | No assignment still lands | An empty Work page | A75 | 2 | `PARTIALLY_PROVEN` | A75 exact | Resolver implementation |
+| 7 | Stale standing refuses, stating its age | A silent refusal, or a fallback to the Core | A31 + A62 + **A111** | 2 | `SPECIFIED_NOT_IMPLEMENTED` | A31 refusal · A62 two clocks | The age-in-refusal junction |
+| 8 | Node offline is stated, never substituted | An invented local substitute, or `EMPTY` | A30 + **A112** | 2 | `SPECIFIED_NOT_IMPLEMENTED` | A30 session separation only | Honest `UNAVAILABLE` at this seam |
+| 9 | Multi-institution contexts stay separate | A token honoured at the wrong node | A33, A59, A71 | 2 | `SPECIFIED_NOT_IMPLEMENTED` | All three specified and on-claim | Node deployment |
+| 10 | An organisation duplicate is stewarded | A second authoritative row, or a disclosing receipt | **A113** | 2.5 | `SPECIFIED_NOT_IMPLEMENTED` | none — A78 withdrawn as unrelated | Steward rail + generic receipt |
+| 11 | The claimant sees the real state machine | A boolean `claimable` | A105 | 2.5 | `SPECIFIED_NOT_IMPLEMENTED` | A105 specified | Eleven-state surfacing |
+| 12 | A facility duplicate is stewarded | A second authoritative row, or a disclosing receipt | **A114** | 2.5 | `SPECIFIED_NOT_IMPLEMENTED` | none — A38 withdrawn as unrelated | Steward rail + generic receipt |
+| 13 | No-fit reaches a human and survives | A forced choice from an ill-fitting list | A76 + **A115** | 2.5 | `SPECIFIED_NOT_IMPLEMENTED` | A76 for the stated alternative | Assisted review + resumability |
+| 14 | Commissioning refuses out of order | Activation before countersignature | A38–A43 | 2 | `SPECIFIED_NOT_IMPLEMENTED` | A43 exact | Node track (absent entirely) |
+| 15 | Seven-day autonomy holds; ceilings fail closed | Fabricated success in the log | A5, A6 | 2 | `SPECIFIED_NOT_IMPLEMENTED` | A5, A6 on-claim | Node deployment |
+| 16 | Site outage says Edge scope or stop | Silent degradation | A57 | 2 | `SPECIFIED_NOT_IMPLEMENTED` | A57 exact | Node deployment |
+| 17 | Referrals queue visibly | A referral lost between nodes | A12 | 3 | `BLOCKED_BY_PHASE` | A12 exact | Federation exchange |
+| 18 | Cache serves with both clocks | An empty section read as "nothing to report" | A46–A48, A62 | 3 | `BLOCKED_BY_PHASE` | A48, A62 on-claim | Shared-Care Cache |
+| 19 | A non-permitted share refuses and leaks nothing | Any disclosure during the failed attempt | **A116** | 2.5 | `SPECIFIED_NOT_IMPLEMENTED` | none — A44 withdrawn as unrelated | PHR sharing rail |
+| 20 | A regulator with no appointment is not stranded | An empty workspace, or a denial | A106 | 2.5 | `SPECIFIED_NOT_IMPLEMENTED` | A106 specified | Founding-request route |
+| 21 | Setup adapts to facility scale | A health post walked through theatre config | A107 | 2.5 | `SPECIFIED_NOT_IMPLEMENTED` | A107 specified | Scale-aware wizard |
+| 22 | Support access refuses without an audit sink | An unaudited data-bearing session | A66, A69 | 1 | `SPECIFIED_NOT_IMPLEMENTED` | A66 exact | Independent audit sink |
+| 23 | Migration is planned, never implicit | An authority cutover nobody chose | A72 + **A117** | 3 | `BLOCKED_BY_PHASE` | A72 for gating | Fleet service |
+| 24 | Quarantine preserves local care | Local care stopping on a version gate | A20, A15 | 3 | `BLOCKED_BY_PHASE` | A15 exact | Fleet service |
+
+## 38A.3 Totals
+
+| Status | Count |
+|---|---|
+| `SPECIFIED_NOT_IMPLEMENTED` | 16 |
+| `BLOCKED_BY_PHASE` | 5 |
+| `PARTIALLY_PROVEN` | 3 |
+| `IMPLEMENTED_NOT_YET_PROVEN` | 0 |
+| `PASSING` | 0 |
+| `NOT_APPLICABLE_TO_CURRENT_RELEASE` | 0 |
+| **Total** | **24** |
+
+**Zero journeys are `PASSING`, and that is the honest position.** The three `PARTIALLY_PROVEN` rows are partial because a shipped Phase 0 fix (item 72) or a specified invariant (A75, A81) covers part of the claim — not because a test passes end to end. No journey is represented as proven on the strength of a written criterion.
+
+**Freeze-readiness against this matrix:** 24 journeys carry coherent target behaviour · 24 carry a relevant acceptance criterion · 24 carry a named prohibited outcome · 24 carry an owning phase · **zero unrelated citations remain** (A78→J10, A38→J12, A44→J19 withdrawn) · four partial citations are labelled partial and retained only for the invariant they genuinely prove · no criterion is placed in a phase earlier than its dependency.
+
+
+# 38B. Prohibited-outcome path analysis **[D — new in v1.3.4]**
+
+STOP-1 was not caused by a missing rule. §29.3 stated the rule correctly, and v1.3.3 added a guard for it. It was caused by **one path to the prohibited state that the guard did not sit on**. That is a structural defect class, and correcting the one instance found does not close it. This section enumerates, for each prohibited outcome, *every* architectural path that could produce it — requested, derived, resumed, defaulted, fallback and offline — and names the single enforcement point each must pass.
+
+**The rule this section exists to enforce [D]:** *a prohibited outcome must be refused at a point every path traverses.* A control placed on one path is not a control; it is a coincidence. Where an outcome has more than one producer, the enforcement point must be on the **outcome**, not on any producer.
+
+| # | Prohibited outcome | Paths that could produce it | Single enforcement point | Criterion | Bypassable? |
+|---|---|---|---|---|---|
+| 1 | **My Life on `MANAGED_SHARED`/`UNKNOWN`** | Explicit request (stage 1 rule 5) · entry intent (6) · **resumed journey landing (7)** · **standing default (10)** · a redirect from `/my-life` to `/home` | §29.0 **stage 2(a)**, on the returned candidate | A103 | **No** — stage 1 cannot return without stage 2. *(v1.3.3 enforced on rules 5–6 only; 7 and 10 bypassed it — STOP-1)* |
+| 2 | **Employer sees personal/professional correspondence** | Work landing composition (§32.3) · node journey store (§39.3 rule 6) · action-centre fan-out (§40) · notification scope from client params | §40's recipient derivation + §39.3 rule 6's **allow-list** (not a redaction) | A98, A102 | **No** — the allow-list enumerates what may be held; a redaction would enumerate what must be hidden, and a new journey family would default to visible |
+| 3 | **Platform/node administration yields clinical access** | Node Administrator role · Authorised Officer role · support JIT session · Bootstrap Mode's 24-hour role | Role capability separation (§22A) + the audit-sink precondition | A39, A40, A41, A66, A69 | **No** — A66 refuses the session outright when the sink is unreachable |
+| 4 | **Node discloses personal journey labels** | Journey store rows · resolved contract `journeys` block · action records · **a stale reference list** | §39.3 rule 6 allow-list, applied to *reference as well as content* | A98 | **No** — v1.3.1's "listed as stale references" was withdrawn precisely because a label discloses |
+| 5 | **Browser-supplied authority becomes load-bearing** | `X-Tenant-ID` · facility/work-mode query params · client-asserted device posture · client-asserted share recipient | Server-side derivation at the PDP (§12.4), posture server-declared (§29.3), recipient server-derived (**A116**) | A87, **A116** | **No** — but note §12.4 measures **22** minted `X-*` headers with only two server-authoritative overrides today; the gap is implementation, not architecture |
+| 6 | **Controller-dependent action with controller undetermined** | Responsibility-profile write · disclosure decision · cross-domain share · retention action | `data_controller_id NULL` ⇒ **UNDETERMINED blocks** (§3A), never a default | A67 | **No** — the column is nullable precisely so the refusal is representable |
+| 7 | **`UNAVAILABLE` represented as absence** | Domain read 502 · node link down · stale bundle · **an empty list from a failed call** | §29.2's distinct state vocabulary, asserted at the render boundary | A81, **A112** | **Partially** — A81 states the invariant, and item 72 fixed `/work`; other surfaces are `SPECIFIED_NOT_IMPLEMENTED`. **Architecturally closed, implementation outstanding** |
+| 8 | **Unauditable break-glass** | Offline node · audit sink unreachable · degraded chain | §11.4: break-glass **never proceeds** if it cannot be audited | A66 | **No** — this is the one path where refusal is preferred to care continuity, stated explicitly |
+| 9 | **Local institutional authority blocked by Core unavailability** | Shift assignment · ward allocation · supervision · emergency appointment during outage | §28.4 rule 3 — subset of the **governed authority model**, not of a live resolver response | A89, A99 | **No** — the v1.3.2 I6 correction exists for exactly this; a live-Core dependency here would be the defect |
+| 10 | **Duplicate handling discloses the suspected match** | Organisation registration · facility registration · practice establishment · steward queue rendering · the applicant receipt | A generic receipt at the applicant boundary; match context confined to the review scope | **A113**, **A114** | **No, as specified** — status `SPECIFIED_NOT_IMPLEMENTED`; the rail does not exist yet |
+| 11 | **Failed PHR share leaks recipient or policy detail** | Refusal message · error code · timing · partial delivery · recipient picker enumeration | Refusal at the server-derived recipient check, with a safe reason class | **A116** | **No, as specified** — status `SPECIFIED_NOT_IMPLEMENTED`; deliberately mirrors §35.1's anti-enumeration collapse |
+
+**Findings.** Ten of eleven outcomes are enforced at a point every enumerated path traverses. **Outcome 7 is the one architecturally sound but implementationally incomplete case** — the invariant is stated and one surface is fixed; the rest are specified and unbuilt, which is a phase matter, not a contradiction. **No outcome has a rule that another rule can bypass.** Outcomes 10 and 11 depend on rails that do not exist; their criteria are specified and phase-owned, which is state 1, not state 3.
 
 ---
 

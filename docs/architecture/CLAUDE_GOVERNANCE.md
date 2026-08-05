@@ -5,7 +5,7 @@
 ## Mandatory operating rules
 
 1. Recover repository and deployment truth before changing implementation. Cite concrete repository paths, symbols, build contexts, images, request paths, persistence paths and policy paths.
-2. Read `hybrid-federated-target-architecture-v1.3.3.md` as the latest working architecture — the versioned file is the complete active document (`vnext-hybrid-federation-target-architecture.md` is only a pointer to it). It is not frozen. Obey its implementation gate.
+2. Read `hybrid-federated-target-architecture-v1.3.4.md` as the latest working architecture — the versioned file is the complete active document (`vnext-hybrid-federation-target-architecture.md` is only a pointer to it). It is not frozen. Obey its implementation gate.
 3. Do not infer authority from browser headers, deployment location, operator identity or UI state.
 4. Client-supplied tenant, trust-domain, facility, provider, actor, purpose, assurance or work-context assertions are never load-bearing.
 5. Tshepo is the complete trust layer. Keycloak, OPA, Envoy, Mvumo, context, sessions, audit, federation trust, risk and supporting services are components within Tshepo.
@@ -39,7 +39,7 @@ For every non-trivial task:
 3. Find existing `CLAUDE.md`, `AGENTS.md`, ADRs, architecture indexes, CI checks and local quality scripts that apply.
 4. State current behaviour with evidence and distinguish it from target doctrine.
 5. Identify contradictions, evidence drift and unresolved PO, clinical, legal or data-protection decisions.
-6. Check the v1.3.3 implementation gate before touching code.
+6. Check the v1.3.4 implementation gate before touching code.
 7. Only then change permitted code or documents.
 
 ## Architecture change discipline
