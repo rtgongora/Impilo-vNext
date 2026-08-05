@@ -149,9 +149,19 @@ export function mix(from: string, to: string, t: number): string {
 export function rampBands(
   height: number,
   count: number,
+  /**
+   * Where in the ramp this surface begins, in dp.
+   *
+   * The light top of the ramp is LOAD-BEARING: it exists so the colourful brand mark can
+   * sit on its natural ground. A surface whose content is white ink must not get it —
+   * that would both break contrast and reproduce the decorative dead band the PO rejected
+   * on web (Wave 1). Such surfaces start mid-ramp instead and still get real depth.
+   */
+  startAt = 0,
 ): Array<{ top: number; height: number; color: string }> {
   const h = Number.isFinite(height) && height > 0 ? height : 0;
   const n = Number.isFinite(count) ? Math.floor(count) : 0;
+  const from = Number.isFinite(startAt) && startAt > 0 ? startAt : 0;
   if (h === 0 || n <= 0) return [];
 
   const step = h / n;
@@ -162,7 +172,7 @@ export function rampBands(
       top,
       // Overlap by a hair so sub-pixel rounding cannot leave seams between bands.
       height: step + 1,
-      color: rampColorAt(top + step / 2),
+      color: rampColorAt(from + top + step / 2),
     });
   }
   return bands;

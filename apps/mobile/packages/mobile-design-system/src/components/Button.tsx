@@ -18,7 +18,8 @@ import {
 } from "react-native";
 import { useOptionalTheme } from "../theme/ThemeProvider";
 import { colors } from "../tokens/colors";
-import { glossButtonStops, glossSheen, mix } from "../tokens/gloss";
+import { glossButtonStops } from "../tokens/gloss";
+import { GlossFill } from "./GlossFill";
 import type { Theme } from "../theme/ThemeProvider";
 
 export type ButtonVariant =
@@ -150,27 +151,12 @@ export function Button({
       ]}
     >
       {gloss.enabled ? (
-        <>
-          {/* Flat bands stand in for a gradient — see GlossCanvas for why no gradient
-              library is usable here. A button is short, so a handful of bands is smooth. */}
-          <View
-            style={StyleSheet.absoluteFill}
-            pointerEvents="none"
-            testID={testID ? `${testID}-gloss` : undefined}
-          >
-            {Array.from({ length: BUTTON_GLOSS_BANDS }, (_, i) => (
-              <View
-                key={i}
-                style={{
-                  flex: 1,
-                  backgroundColor: mix(gloss.from, gloss.to, (i + 0.5) / BUTTON_GLOSS_BANDS),
-                }}
-              />
-            ))}
-          </View>
-          {/* The inner top highlight — the web's `inset 0 1px 0 rgba(255,255,255,.35)`. */}
-          <View style={styles.sheen} pointerEvents="none" />
-        </>
+        <GlossFill
+          from={gloss.from}
+          to={gloss.to}
+          bands={BUTTON_GLOSS_BANDS}
+          testID={testID ? `${testID}-gloss` : undefined}
+        />
       ) : null}
       <View style={styles.content}>
         {loading ? (
@@ -200,14 +186,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     // The gradient layer is absolutely positioned; without this it paints past the radius.
     overflow: "hidden",
-  },
-  sheen: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 1,
-    backgroundColor: glossSheen,
   },
   fullWidth: {
     width: "100%",

@@ -137,7 +137,11 @@ export function HomeScreen() {
           onPress={() => setActiveTab("personal")}
           style={styles.healthIdBanner}
         >
-          <View style={styles.healthIdLeft}>
+          {/* The person's own identity card — the surface this app leads with, so it
+              gets the gloss treatment rather than a flat fill. Solid GREEN stays
+              underneath: the gradient is decoration, never information. */}
+          <GlossFill {...glossButtonStops(GREEN)} testID="health-id-gloss" />
+          <View style={[styles.healthIdLeft, styles.healthIdContent]}>
             <View style={styles.healthIdIconWrap}>
               <Ionicons name="id-card" size={24} color="#FFFFFF" />
             </View>
@@ -146,7 +150,12 @@ export function HomeScreen() {
               <Text style={styles.healthIdSub}>Tap to show QR code</Text>
             </View>
           </View>
-          <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.6)" />
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color="rgba(255,255,255,0.6)"
+            style={styles.healthIdContent}
+          />
         </Pressable>
 
         {/* Trust / assurance banner (G-CZO-05) — reflects the citizen's current trust level */}
@@ -453,6 +462,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    // Without this the gloss fill paints past the rounded corners.
+    overflow: "hidden",
     backgroundColor: GREEN,
     padding: 16,
     borderRadius: 16,
@@ -461,6 +472,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 6,
+  },
+  // Lifts content above the absolutely-positioned gloss fill.
+  healthIdContent: {
+    position: "relative",
   },
   healthIdLeft: {
     flexDirection: "row",

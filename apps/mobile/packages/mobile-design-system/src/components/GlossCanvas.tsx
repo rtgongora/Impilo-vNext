@@ -26,19 +26,33 @@ import { glossFloor, rampBands } from "../tokens/gloss";
 export function GlossCanvas({
   children,
   style,
+  contentStyle,
   /** Where the ramp's last stop lands, in dp. Content below simply sits on the floor. */
   rampHeight = 620,
   /** Number of steps used to paint the ramp. More is smoother and costs more views. */
   bands = 48,
+  /**
+   * Where in the ramp this surface starts, in dp. Leave at 0 for a brand surface (the
+   * light top is what lets the colourful mark sit on its natural ground). Pass a mid-ramp
+   * offset for surfaces that lead with white ink — see `rampBands`.
+   */
+  startAt = 0,
   testID = "gloss-canvas",
 }: {
   children?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
+  /**
+   * Layout for the content container. The ramp lives in absolutely-positioned siblings,
+   * so flex/align/justify belong HERE, not on `style` — putting them on the outer box
+   * would centre this container rather than the children inside it.
+   */
+  contentStyle?: StyleProp<ViewStyle>;
   rampHeight?: number;
   bands?: number;
+  startAt?: number;
   testID?: string;
 }) {
-  const steps = rampBands(rampHeight, bands);
+  const steps = rampBands(rampHeight, bands, startAt);
 
   return (
     <View style={[styles.root, style]} testID={testID}>
@@ -63,12 +77,12 @@ export function GlossCanvas({
           />
         ))}
       </View>
-      <View style={styles.content}>{children}</View>
+      <View style={[styles.content, contentStyle]}>{children}</View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { position: "relative", overflow: "hidden" },
-  content: { position: "relative" },
+  content: { position: "relative", flex: 1 },
 });
