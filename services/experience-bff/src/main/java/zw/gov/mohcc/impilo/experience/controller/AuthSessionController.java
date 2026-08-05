@@ -130,12 +130,17 @@ public class AuthSessionController {
                                  RestTemplate idpRestTemplate,
                                  VarapiServiceClient varapiClient,
                                  VitoServiceClient vitoClient,
-                                 RulesServiceClient rulesClient) {
+                                 RulesServiceClient rulesClient,
+                                 zw.gov.mohcc.impilo.experience.session.SessionExperienceService sessionExperienceService) {
         this.restTemplate = idpRestTemplate;
         this.varapiClient = varapiClient;
         this.vitoClient = vitoClient;
         this.rulesClient = rulesClient;
+        this.sessionExperienceService = sessionExperienceService;
     }
+
+    /** Registry-backed provider resolution — the only admissible basis for professional capacity. */
+    private final zw.gov.mohcc.impilo.experience.session.SessionExperienceService sessionExperienceService;
 
     /**
      * Login via email/password -> Keycloak ROPC grant.
@@ -227,7 +232,7 @@ public class AuthSessionController {
                     }
                 }
 
-                String actorType = determineActorType(roles);
+                String actorType = determineActorTypeShadow(roles, userId);
 
                 log.info("Keycloak login successful: user={}, keycloakSub={}, email={}, roles={}", userId, keycloakSub, userEmail, roles);
 
@@ -627,7 +632,7 @@ public class AuthSessionController {
                     }
                 }
 
-                String actorType = determineActorType(roles);
+                String actorType = determineActorTypeShadow(roles, userId);
                 log.info("Token refreshed for user={}", userId);
 
                 return buildLoginResponse(newAccessToken, newRefreshToken, expiresIn, refreshExpiresIn,
@@ -1043,7 +1048,7 @@ public class AuthSessionController {
             }
         }
 
-        String actorType = determineActorType(roles);
+        String actorType = determineActorTypeShadow(roles, userId);
         log.info("Passkey session established: user={}, keycloakSub={}, roles={}", userId, keycloakSub, roles);
         return buildLoginResponse(accessToken, refreshToken, expiresIn, refreshExpiresIn,
                 userId, keycloakSub, userEmail, displayName, roles, actorType,
@@ -1438,6 +1443,54 @@ public class AuthSessionController {
         }
     }
 
+    /**
+     * SHADOW: resolves actor type from the registry and reports where the role label disagrees.
+     *
+     * <p>{@link #determineActorType(List)} derives provider and regulator capacity from Keycloak
+     * role labels — {@code roles.contains("CLINICIAN")} is enough to become {@code PROVIDER}. That
+     * contradicts the doctrine that capacity comes only from a Health ID carrying a valid Provider
+     * ID, or from the Provider ID itself, and never from a label or a name.</p>
+     *
+     * <p>This phase changes NO behaviour: the label answer is still returned. What it adds is the
+     * evidence needed to flip safely — 22 accounts hold a provider-ish label and it is not known
+     * that any of them has a VARAPI provider record. Enforcing blind would strip clinical access
+     * from all of them at once. The estate has already paid for that lesson once, when an
+     * unratified enforcement flip left 28 services 401-ing on issuer mismatch.</p>
+     *
+     * <p>Same shape as the OPA shadow in CP4.5: compute both, report divergence, decide later.</p>
+     */
+    private String determineActorTypeShadow(List<String> roles, String actorId) {
+        String labelAnswer = determineActorType(roles);
+        try {
+            zw.gov.mohcc.impilo.experience.session.ProviderCapability capability = sessionExperienceService.resolveProviderCapability(actorId);
+            String resolvedAnswer = capability.actorTypeOrNull();
+
+            if (capability.resolution() == zw.gov.mohcc.impilo.experience.session.ProviderCapability.Resolution.UNAVAILABLE) {
+                log.warn("PROVIDER_CAPABILITY_DIVERGENCE actor={} label={} resolved=UNAVAILABLE "
+                        + "note=registry-unreachable-so-no-conclusion-drawn", actorId, labelAnswer);
+            } else if (!labelAnswer.equals(resolvedAnswer)) {
+                // The interesting case, and the one that decides whether this can be enforced:
+                // the label grants capacity the registry does not support, or withholds capacity
+                // the registry does.
+                log.warn("PROVIDER_CAPABILITY_DIVERGENCE actor={} label={} resolved={} providerId={} "
+                        + "status={} licenceValid={}", actorId, labelAnswer, resolvedAnswer,
+                        capability.providerId(), capability.status(), capability.licenceValid());
+            } else {
+                log.info("PROVIDER_CAPABILITY_AGREES actor={} actorType={}", actorId, labelAnswer);
+            }
+        } catch (Exception e) {
+            // A shadow must never break the path it observes.
+            log.warn("PROVIDER_CAPABILITY_SHADOW_FAILED actor={}: {}", actorId, e.toString());
+        }
+        return labelAnswer;
+    }
+
+    /**
+     * @deprecated derives regulated capacity from role LABELS, which the doctrine forbids. Kept
+     *     only as the shadow's comparison arm until {@link #determineActorTypeShadow} has produced
+     *     enough divergence evidence to enforce on the registry answer instead. Do not add callers.
+     */
+    @Deprecated
     private String determineActorType(List<String> roles) {
         // HPA authority personas carry their authority identity through the
         // actor-type seam — tuso's facility regulatory guard keys on it.

@@ -23,6 +23,9 @@ import java.util.*;
 @Service
 public class SessionExperienceService {
 
+    private static final org.slf4j.Logger log =
+            org.slf4j.LoggerFactory.getLogger(SessionExperienceService.class);
+
     private final VarapiServiceClient varapiClient;
     private final WorkforceGovernanceClient workforceGovernanceClient;
     private final VashandiSessionContextResolver vashandiSessionContextResolver;
@@ -197,6 +200,47 @@ public class SessionExperienceService {
                                                        String providerId,
                                                        boolean hasSelectedFacility) {
         return buildExperienceContract(actorId, loginMethod, providerId, hasSelectedFacility, null);
+    }
+
+    /**
+     * Resolves regulated professional capacity from the registry — the ONLY admissible basis.
+     *
+     * <p>Doctrine: provider capability comes from a Health ID carrying a valid Provider ID, or from
+     * the Provider ID itself. Never from a name, and never from a Keycloak role label. This method
+     * is the seam that makes that enforceable; {@code AuthSessionController.determineActorType} has
+     * been deriving it from {@code roles.contains("CLINICIAN")} instead.</p>
+     *
+     * <p>Unlike {@link #fetchLinkedIds}, a lookup failure here is NOT flattened into "no provider".
+     * It returns {@link ProviderCapability.Resolution#UNAVAILABLE}, because an enforcing caller must
+     * be able to tell an outage from an absence — see {@link ProviderCapability}.</p>
+     *
+     * <p>Reuses {@link #isProfessionalEligible} so the status vocabulary cannot drift from the
+     * Session Experience Contract that already governs Work eligibility.</p>
+     */
+    public ProviderCapability resolveProviderCapability(String actorId) {
+        if (actorId == null || actorId.isBlank()) {
+            return ProviderCapability.notAProvider(null);
+        }
+        JsonNode node;
+        try {
+            node = varapiClient.getProviderByHealthId(actorId);
+        } catch (Exception e) {
+            // The registry could not be asked. Saying "not a provider" here would be a claim about
+            // the person derived from a fact about the network.
+            log.warn("PROVIDER_CAPABILITY_UNAVAILABLE actor={} cause={}", actorId, e.toString());
+            return ProviderCapability.unavailable();
+        }
+        if (node == null || node.isNull()) {
+            return ProviderCapability.notAProvider(null);
+        }
+        String providerId = resolveProviderPublicId(node);
+        String status = node.has("status") ? node.get("status").asText() : null;
+        Boolean licenceValid = node.has("licenceValid") ? node.get("licenceValid").asBoolean() : null;
+
+        if (!isProfessionalEligible(providerId, status)) {
+            return ProviderCapability.notAProvider(status);
+        }
+        return ProviderCapability.provider(providerId, status, licenceValid);
     }
 
     private Map<String, Object> fetchLinkedIds(String actorId) {
