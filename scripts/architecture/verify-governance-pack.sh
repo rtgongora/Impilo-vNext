@@ -52,9 +52,10 @@ fail() { echo "FAIL: $*" >&2; failed=1; }
 EXPECTED_CHECKS=(
   required-files claude-import legacy-language pointer versioned-complete
   superseded-versions archive-banners active-copy-count
-  frozen-status contract-version outcome-landing-rule withdrawn-citations
+  contract-version outcome-landing-rule withdrawn-citations
   assurance-rows no-false-passing implementation-gate acceptance-ids
   assurance-totals entailment-register register-coverage positive-controls
+  frozen-baseline frozen-digest stale-acceptance-range
 )
 CHECKS_SEEN=""
 record_check() {
@@ -123,7 +124,6 @@ if [[ -s "$root/$versioned_rel" ]]; then
     echo "OK: versioned architecture is complete ($lines lines)"
   fi
 fi
-  record_check positive-controls
 record_check versioned-complete
 
 # 6. No superseded version is referenced as active outside the archive.
@@ -206,14 +206,56 @@ if [[ -s "$A" ]]; then
     fi
   }
 
-  # 8a. Still a working draft. v1.3.8 is NOT frozen; freeze is a separate PO act.
-  grep -Fq 'NOT architecture-frozen' "$A" \
-    && echo "OK: v1.3.8 still marked NOT architecture-frozen" \
-    || fail "v1.3.8 no longer states NOT architecture-frozen"
-  grep -Eq 'ARCHITECTURE-FROZEN by Product Owner' "$A" \
-    && fail "v1.3.8 claims frozen status; freeze is not authorised in this version" \
-    || echo "OK: no premature freeze claim"
-  record_check frozen-status
+  # 8a. FROZEN BASELINE (ADR-0054, 2026-08-05). Before freeze this check asserted the
+  #     document still said NOT architecture-frozen; it now asserts the opposite, plus
+  #     the things a freeze must not lose: the approval date, the ADR reference, the
+  #     freeze-is-not-implementation distinction, and that no earlier version is
+  #     described as frozen. An architecture that quietly loses its own freeze record is
+  #     indistinguishable from one that was never frozen.
+  grep -Fq 'Status: APPROVED — ARCHITECTURE-FROZEN by Product Owner on 2026-08-05 · Version: 1.3.8' "$A" \
+    && echo "OK: v1.3.8 carries the approved/frozen status line" \
+    || fail "v1.3.8 has lost its APPROVED/ARCHITECTURE-FROZEN status line"
+  grep -Fq 'ADR-0054-architecture-freeze-v1.3.8.md' "$A" \
+    && echo "OK: freeze ADR referenced" \
+    || fail "the freeze ADR reference (ADR-0054) has disappeared from the architecture"
+  [[ -s "$root/docs/architecture/adr/ADR-0054-architecture-freeze-v1.3.8.md" ]] \
+    && echo "OK: freeze ADR present" \
+    || fail "docs/architecture/adr/ADR-0054-architecture-freeze-v1.3.8.md is missing or empty"
+  grep -Fq 'It does not constitute implementation, runtime acceptance, production readiness or deployment authorisation' "$A" \
+    && echo "OK: freeze-is-not-implementation distinction present" \
+    || fail "the freeze-versus-implementation distinction has been removed"
+  # No EARLIER version may be described as frozen. Literal phrasings, deliberately:
+  #     the first draft of this check used nested bounded quantifiers over table rows
+  #     and backtracked catastrophically — a check that hangs is a check that will be
+  #     removed. Three fixed forms cover the assertion; "never frozen" is the correct
+  #     phrasing everywhere and is not matched by any of them.
+  earlier_frozen=0
+  for v in 1.3.1 1.3.2 1.3.3 1.3.4 1.3.5 1.3.6 1.3.7; do
+    for form in "v$v is frozen" "v$v was frozen" "v$v remains frozen" "v$v is architecture-frozen" "v$v was architecture-frozen"; do
+      if grep -Fq -- "$form" "$A"; then
+        fail "an earlier version is described as frozen (\"$form\"); v1.3.1-v1.3.7 were never frozen"
+        earlier_frozen=1
+      fi
+    done
+  done
+  (( earlier_frozen )) || echo "OK: no earlier version described as frozen"
+
+  # [L] matters must never be described as settled in the aggregate. Again literal:
+  #     individual sentences legitimately say a SPECIFIC question is undetermined, and
+  #     §26.3 records questions that WERE settled in earlier versions by ADR — neither
+  #     is what this guards against. What it guards against is a blanket claim.
+  l_settled=0
+  for form in "[L] matters are settled" "[L] matters are resolved" "[L] matters are now settled" \
+              "[L] matters have been resolved" "all [L] matters are" "the [L] questions are settled" \
+              "legal matters are settled" "legal determinations are complete"; do
+    if grep -Fq -- "$form" "$A"; then
+      fail "an [L] matter is described as settled (\"$form\"); freeze decides no legal determination"
+      l_settled=1
+    fi
+  done
+  (( l_settled )) || echo "OK: [L] matters remain unresolved"
+  record_check frozen-baseline
+
 
   # 8b. The contract version tracks the document version.
   grep -Fq '"contract_version": "1.3.8"' "$A" \
@@ -402,6 +444,42 @@ if [[ -s "$A" ]]; then
   else
     fail "positive control FAILED: SUPERSEDED_BODY no longer matches its own example — check 6 is silently disarmed"
   fi
+  record_check positive-controls
+
+  # 8m. FROZEN-CONTENT INTEGRITY (ADR-0054). Recompute the digest of the frozen baseline
+  #     and compare it to the manifest. A frozen document that can be edited without
+  #     anyone noticing is not frozen — it is labelled frozen, which is worse, because
+  #     the label is relied upon. The manifest states how to change it legitimately:
+  #     a substantive change means a new version; a governed erratum updates the digest
+  #     in the same commit with its justification.
+  manifest="$root/docs/architecture/FROZEN-BASELINE.sha256"
+  if [[ ! -s "$manifest" ]]; then
+    fail "frozen-content manifest missing: docs/architecture/FROZEN-BASELINE.sha256"
+  else
+    recorded="$(grep -v '^#' "$manifest" | grep -oE '^[0-9a-f]{64}' | head -1)"
+    actual="$(sha256sum "$A" | cut -d' ' -f1)"
+    if [[ -z "$recorded" ]]; then
+      fail "frozen-content manifest contains no digest"
+    elif [[ "$recorded" != "$actual" ]]; then
+      fail "FROZEN CONTENT CHANGED — v1.3.8 no longer matches its manifest digest (recorded ${recorded:0:12}…, actual ${actual:0:12}…). A substantive change requires a new version; a governed erratum must update the manifest in the same commit."
+    else
+      echo "OK: frozen baseline matches its manifest digest (${actual:0:12}…)"
+    fi
+  fi
+  record_check frozen-digest
+
+  # 8n. The superseded acceptance range A87-A108 must not reappear in an ACTIVE
+  #     governing statement. §23.7 added A109-A117, and two live statements still used
+  #     the old range at freeze review — the pre-freeze erratum of 2026-08-05. A
+  #     historical sentence describing what an earlier version said is legitimate and is
+  #     excluded by requiring the match to sit outside a change-log row.
+  if grep -n 'A87–A108' "$A" | grep -vqE '^\s*[0-9]+:\| \*\*[A-Z][0-9]+\*\* \|'; then
+    grep -n 'A87–A108' "$A" | grep -vE '^\s*[0-9]+:\| \*\*[A-Z][0-9]+\*\* \|' | head -3 >&2
+    fail "the superseded acceptance range A87–A108 appears in an active statement; §23.7 extended it to A117"
+  else
+    echo "OK: no active use of the superseded range A87–A108"
+  fi
+  record_check stale-acceptance-range
 fi
 
 missing_checks=""

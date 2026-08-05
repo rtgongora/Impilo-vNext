@@ -1,8 +1,10 @@
 # Impilo vNext — Hybrid / Federated Target Architecture
 
-**Status:** Working draft — **NOT architecture-frozen**; freeze requires PO sign-off of this version · **Version:** 1.3.8 · **Date:** 2026-08-05
+**Status: APPROVED — ARCHITECTURE-FROZEN by Product Owner on 2026-08-05 · Version: 1.3.8**
 
-> **Status discipline.** "Approved, but with corrections required" is not a status. A version is either frozen or it is not. v1.3.1 was **directionally accepted, not approved**: its settled decisions are preserved and its remaining defects were upstream model issues that could not be left to the Experience Completion Packs to resolve divergently. v1.3.2 was the integrity correction the PO required before freeze; its freeze review found stop conditions, so **v1.3.2 was never frozen**. v1.3.3 corrected those; **its own freeze review then refused freeze on two further stop conditions**, so v1.3.3 was never frozen either. v1.3.4 corrected those and added the assurance model (§38A); **its own freeze review then refused freeze on three further stop conditions**, so v1.3.4 was never frozen either. v1.3.5 corrected those and added the entailment register (§38C); **its own freeze review then refused freeze on two further stop conditions**, so v1.3.5 was never frozen either. v1.3.6 corrected those by hardening §38C's checker; **its own freeze review then refused freeze on one further stop condition**, so v1.3.6 was never frozen either. v1.3.7 corrected it and added §38C.4; **its own freeze review then refused freeze on one further stop**, so v1.3.7 was never frozen either. v1.3.8 closes the aggregate case: a suite of checks must assert its own completeness by name. Until freeze, the §Implementation-gate table below states exactly what may and may not be built.
+**Freeze ADR:** [`adr/ADR-0054-architecture-freeze-v1.3.8.md`](adr/ADR-0054-architecture-freeze-v1.3.8.md) · **Date:** 2026-08-05
+
+> **Status discipline.** "Approved, but with corrections required" is not a status. A version is either frozen or it is not. v1.3.1 was **directionally accepted, not approved**: its settled decisions are preserved and its remaining defects were upstream model issues that could not be left to the Experience Completion Packs to resolve divergently. v1.3.2 was the integrity correction the PO required before freeze; its freeze review found stop conditions, so **v1.3.2 was never frozen**. v1.3.3 corrected those; **its own freeze review then refused freeze on two further stop conditions**, so v1.3.3 was never frozen either. v1.3.4 corrected those and added the assurance model (§38A); **its own freeze review then refused freeze on three further stop conditions**, so v1.3.4 was never frozen either. v1.3.5 corrected those and added the entailment register (§38C); **its own freeze review then refused freeze on two further stop conditions**, so v1.3.5 was never frozen either. v1.3.6 corrected those by hardening §38C's checker; **its own freeze review then refused freeze on one further stop condition**, so v1.3.6 was never frozen either. v1.3.7 corrected it and added §38C.4; **its own freeze review then refused freeze on one further stop**, so v1.3.7 was never frozen either. v1.3.8 closes the aggregate case: a suite of checks must assert its own completeness by name. **Its freeze review found no stop condition, and the Product Owner approved and froze it on 2026-08-05 under ADR-0054.** What that does and does not authorise is stated in §Post-freeze implementation control below.
 **Factual basis:** [`vnext-current-state-recovery-2026-08-03.md`](vnext-current-state-recovery-2026-08-03.md) (commit `1870cf33d`), plus targeted evidence sweeps for the v1.1 additions. Every current-state statement is a reference, not a re-derivation.
 **Scope:** Converts vNext from a single-instance national deployment into a hub-and-spoke federated national platform, consumed through four service profiles. Immediate delivery target is the **large Hospital Node**. This document does not implement; it governs implementation.
 
@@ -234,21 +236,30 @@ v1.3.7's freeze review refused freeze on one stop — the same shape as v1.3.6's
 
 **No settled `[D]`/`[T]`/`[O]` decision is reopened.** The architecture text is unchanged apart from §38C.4 rule 3; every other correction is in the verifier. No application functionality was implemented.
 
-### Implementation gate **[O]**
+### Post-freeze implementation control **[O]**
 
-| May proceed now (independent of freeze) | Must wait for architecture freeze |
-|---|---|
-| Item 73 — deny-by-default for unregistered routes (P0) | Implementing the canonical journey store (§39) |
-| Item 82 — fix the never-firing inactivity lock (P0) | Implementing the Action Centre data model (§40) |
-| Item 83 — notification scope from the session, server-side | Freezing the experience-contract schema (§28.2) |
-| Item 72 / A81 — `EMPTY` vs `UNAVAILABLE` separation | Implementing administrative-authority selectors (§29.0 arrays) |
-| Measuring the clinical composition seams (§42.2) | Implementing the clinical pathway surfacing rules (P3 build) |
-| P5 / P6 / P7 preparation — accessibility, design system, usability | Implementing node-local journey projection (§28.4/§39.3) |
-| Drafting all seven packs against accepted principles (non-controlling) | Treating A87–A108 as a complete acceptance suite |
+> **Architecture freeze establishes the governing baseline. It does not constitute implementation, runtime acceptance, production readiness or deployment authorisation.**
 
-**This gate and §22's phase gates are different gates, and both bind** *(v1.3.3, F5)*. The Implementation gate is a **document-status** gate: it says whether this architecture is settled enough for a thing to be built against. §22 is a **delivery-sequence** gate: "no phase begins before its predecessor's gate is met" — Phase 0 before Phase 1, and so on. An item may be built only when it clears **both**. "May proceed now" therefore never means "proceed out of phase order"; it means the freeze is not what is holding that item.
+The pre-freeze gate asked *"is the architecture settled enough to build against?"* That question is answered. This section replaces it and asks a different one: *"what is now eligible, what is still blocked, and what freeze never authorises."* **The §22 phase gates continue to bind independently** — an item must clear both this control and its phase, as v1.3.3 established and freeze does not change.
 
-The left column is consistent with that on inspection: items 73, 82, 83 and 72/A81 are all Phase 0 correction work, which is the phase in progress; measuring the clinical seams, P5/P6/P7 preparation and non-controlling pack drafting are analysis and documentation, not deployable change, so no phase gate applies. v1.3.2 stated the two gates in separate sections and reconciled them nowhere, which left "may proceed now" readable as an override of §22.
+**Already authorised and complete.** Items 73 (deny-by-default for unregistered routes), 82 (the never-firing inactivity lock), 83 (server-derived notification scope) and 72/A81 (`EMPTY` vs `UNAVAILABLE`) were Phase 0 safety corrections authorised before freeze and are landed.
+
+| Now eligible for a **separately authorised** implementation wave | Still blocked until phase and dependency gates are met | **Never** authorised by freeze alone |
+|---|---|---|
+| Trust-domain and responsibility foundations (§3A, §6A) | Any work whose predecessor phase is incomplete (§22) | Blanket implementation of the full document |
+| Scoped authority schemas (§29.0 arrays) | Any work dependent on an unresolved `[L]` decision (§26.2) | Production migration |
+| The canonical journey store (§39) | Onboarding a second organisation before isolation controls pass (A35) | Deployment of any kind |
+| The Action Centre (§40) | Federation activation before enforcement and provenance are in place (§22 Phases 0–1) | Organisation onboarding |
+| Experience-contract implementation (§28) | A node pilot before the required policy decisions and operational readiness | Any legal determination (§26.2 remains open) |
+| Hospital Node and Fleet foundations (§17A, §22B) | | Website retirement |
+| Node-local journey projection (§28.4, §39.3.6) | | Deletion of legacy repositories or branches |
+| Clinical pathway surfacing (§42.2, P3) | | |
+| Federation Gateway **in its proper phase** (§14, Phase 3) | | Treating **A87–A117**, or any specified-only criterion, as a complete **passing executable** acceptance suite |
+
+**Eligibility is not authorisation.** Every wave in the first column still requires: phase eligibility under §22, a defined scope, tests, evidence, pull-request review, and explicit Product Owner authorisation. Freeze removed document-status uncertainty; it granted no permission to build.
+
+**On the acceptance criteria.** A87–A117 are governed architecture acceptance criteria, and **§38A is authoritative for what has actually been proved** — today, zero of the twenty-four journeys hold `PASSING`. Freezing the architecture does not convert a specified criterion into a passing test, and no wave may cite one as evidence.
+
 
 ---
 
@@ -3399,7 +3410,16 @@ Tests A50–A56 exist because §2B.3's exposure is at the **infrastructure** lay
 
 ## 23.4 v1.3.1 additions — the corrected experience model
 
-**Scope note (v1.3.2, extended v1.3.3):** A87–A93 prove the v1.3.1 corrections only. They are **not** the complete experience acceptance suite; §23.5 adds the v1.3.2 corrections, §23.6 adds the v1.3.3 journey tests, and the packs will add the rest. Treating A87–A108 as complete is on the must-wait side of the Implementation gate.
+**Scope note — what the A87–A117 range is, and is not** *(v1.3.2; extended v1.3.3, v1.3.4, and corrected as a pre-freeze erratum 2026-08-05).*
+
+- **A87–A93** cover the v1.3.1 corrections.
+- **§23.5 adds A94–A103** — the v1.3.2 corrections.
+- **§23.6 adds A104–A108** — the v1.3.3 journey tests.
+- **§23.7 adds A109–A117** — the v1.3.4 criteria for claims that had none.
+
+All of A87–A117 are **governed architecture acceptance criteria**. **Not all are executable**, and several are explicitly `Executable test: no`. **A specified criterion is not evidence**: only the status `PASSING` in §38A means complete executable evidence exists today, and **no journey currently holds it**. **§38A is authoritative for current assurance status** — this section defines what must be true, §38A records what has been proved.
+
+**Architecture freeze does not convert an unimplemented criterion into a passing test.** The range being complete as *specification* is not the range being complete as *evidence*, and treating it as the latter is on the blocked side of the implementation control (§Post-freeze implementation control).
 
 | # | Test | Method | Pass condition |
 |---|---|---|---|
@@ -4527,7 +4547,7 @@ v1.3.3's §38 carried a single "Test" column, which conflated *"we have specifie
 | **4 — Runtime proven** | Executable tests pass against that implementation |
 | **5 — Production ready** | Deployment and operational evidence complete |
 
-**Architecture freeze requires state 1 for every journey. It does not require states 2–5 for any of them** — those arrive through the phase and Experience Completion Pack sequence, each under its own authorisation. A journey with a correctly specified, unimplemented criterion is *freeze-ready*; a journey citing a test that proves something else is not, however much code exists behind it.
+**Architecture freeze required state 1 for every journey, and required states 2–5 for none of them** — the condition that was met on 2026-08-05. It follows that freeze changed nothing about states 2–5: — those arrive through the phase and Experience Completion Pack sequence, each under its own authorisation. A journey with a correctly specified, unimplemented criterion is *freeze-ready*; a journey citing a test that proves something else is not, however much code exists behind it.
 
 Evidence statuses used below. **Only `PASSING` means complete executable evidence exists today:**
 
@@ -4909,7 +4929,7 @@ This document is the Experience Architecture **baseline**: it governs models, co
 
 - **P5, P6 and P7 are cross-cutting and start immediately.** They are not final polish — every journey pack is *produced through* them: P5 sets the content and localisation register a journey is written in, P6 supplies the component states it renders, P7 supplies the protocol it is validated against.
 - **Functional priority follows the Hospital Node delivery target**: the encounter-context correction (§42.2, part of this architecture) → **P3** → **P2** (facility and node commissioning) → **P1 ∥ P4** where teams permit.
-- Until architecture freeze (see the Implementation gate), packs are drafted against accepted principles as **non-controlling** documents; they become controlling implementation specifications only after freeze.
+- **Pack status after freeze (erratum, 2026-08-05).** Before freeze the packs were drafted against accepted principles as **non-controlling** documents. Freeze settles *this* document, not the packs: a pack becomes a controlling implementation specification only when it is itself completed and approved, and it inherits the three binding rules above plus §Post-freeze implementation control. **Architecture freeze does not promote a draft pack to controlling** — it removes the reason a pack could not be finished, which is not the same act.
 
 ## 42.1 P3's controlling question — answered by measurement, 2026-08-04
 

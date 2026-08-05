@@ -1,0 +1,29 @@
+# Frozen-content manifest — Impilo vNext Hybrid / Federated Target Architecture
+#
+# Recorded at architecture freeze, 2026-08-05, under ADR-0054.
+#
+# The digest below pins the EXACT bytes of the frozen baseline. The governance verifier
+# recomputes it on every run and fails on any difference. That is the point: a frozen
+# document that can be edited without anyone noticing is not frozen, it is merely
+# labelled frozen — and this repository has already produced eight controls that held
+# only because nothing contradicted them.
+#
+# HOW TO CHANGE THE FROZEN DOCUMENT
+#
+#   Substantive change  — any change to doctrine, technical design, operating model,
+#                         schemas, contracts, gates, journey behaviour or acceptance
+#                         meaning. NOT permitted here. Cut a new version (v1.3.9, v1.4,
+#                         or a later successor), archive v1.3.8 with a banner, and move
+#                         the pointer. The new version gets its own digest line.
+#
+#   Governed erratum    — a correction that changes none of the above (a superseded
+#                         cross-reference, a stale range, a typo). Permitted. Mark the
+#                         change at its site as an erratum with its date, update the
+#                         digest below in the SAME commit, and state in the commit
+#                         message what was corrected and why it is non-substantive.
+#
+# Updating this digest without one of those two justifications defeats the mechanism.
+# The digest is a tripwire, not a lock: it cannot stop an edit, it can only ensure the
+# edit is deliberate and declared.
+#
+5434e980f3e953d33f7edef82b63234e05de118b57881d88a7b085e74b6a8b0a  docs/architecture/hybrid-federated-target-architecture-v1.3.8.md
