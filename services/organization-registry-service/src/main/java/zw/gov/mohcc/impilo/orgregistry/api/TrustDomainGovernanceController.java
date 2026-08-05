@@ -5,6 +5,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.orgregistry.config.GovernanceEndpointGate;
 import zw.gov.mohcc.impilo.orgregistry.core.ControllerResolutionService;
 import zw.gov.mohcc.impilo.orgregistry.core.GovernanceRefusal;
 import zw.gov.mohcc.impilo.orgregistry.core.ResponsibilityGovernanceService;
@@ -41,6 +42,7 @@ public class TrustDomainGovernanceController {
     private final ServiceResponsibilityProfileRepository profiles;
     private final ServiceAgreementRepository agreements;
     private final ResponsibilityAuditEventRepository auditEvents;
+    private final GovernanceEndpointGate gate;
 
     public TrustDomainGovernanceController(ResponsibilityGovernanceService governance,
                                            ControllerResolutionService resolution,
@@ -48,7 +50,8 @@ public class TrustDomainGovernanceController {
                                            TrustDomainRelationshipRepository relationships,
                                            ServiceResponsibilityProfileRepository profiles,
                                            ServiceAgreementRepository agreements,
-                                           ResponsibilityAuditEventRepository auditEvents) {
+                                           ResponsibilityAuditEventRepository auditEvents,
+                                           GovernanceEndpointGate gate) {
         this.governance = governance;
         this.resolution = resolution;
         this.trustDomains = trustDomains;
@@ -56,6 +59,7 @@ public class TrustDomainGovernanceController {
         this.profiles = profiles;
         this.agreements = agreements;
         this.auditEvents = auditEvents;
+        this.gate = gate;
     }
 
     // ── Trust domains ───────────────────────────────────────────────────────
@@ -217,6 +221,36 @@ public class TrustDomainGovernanceController {
             @RequestParam(defaultValue = "50") int size) {
         return auditEvents.findByTargetTypeAndTargetIdOrderByOccurredAtDesc(
                 targetType, targetId, PageRequest.of(page, Math.min(size, 200)));
+    }
+
+    /**
+     * Refuse every governance operation while the enforcement path this API depends on is
+     * not live (Wave 1B). Applied to reads as well as writes: a read that reports which
+     * organisations are unmapped is itself governance information.
+     */
+    @ModelAttribute
+    void requireEnforcementPath() {
+        if (!gate.open()) {
+            throw new GovernanceEndpointsClosed(gate.closedReason(), gate.requiredAction());
+        }
+    }
+
+    /** Distinct from GovernanceRefusal: the request was never evaluated, so it is 503. */
+    static class GovernanceEndpointsClosed extends RuntimeException {
+        final String action;
+        GovernanceEndpointsClosed(String message, String action) {
+            super(message);
+            this.action = action;
+        }
+    }
+
+    @ExceptionHandler(GovernanceEndpointsClosed.class)
+    public ResponseEntity<Map<String, Object>> onClosed(GovernanceEndpointsClosed closed) {
+        // 503, not 404 (which would deny they exist) and not 200 (which would imply success).
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
+                "reasonCode", "GOVERNANCE_ENDPOINTS_DISABLED",
+                "message", closed.getMessage(),
+                "requiredGovernanceAction", closed.action));
     }
 
     // ── Error contract ──────────────────────────────────────────────────────
