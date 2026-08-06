@@ -119,10 +119,60 @@ fi
 # finds NO candidate rule? That is the only condition that means a rule is genuinely
 # missing. NO_ALLOW_RULE is a policy decision — an actor without the required role SHOULD
 # be denied — and counting it as a gap would be counting correct enforcement as a defect.
+#
+# THE TENANT MUST COME FROM REAL TRAFFIC, NEVER A DEFAULT.
+# This check previously swept a hardcoded 00000000-0000-0000-0000-000000000001 — the tenant
+# the migrations seed — and passed. Real signed-in requests carry
+# 00000000-0000-4000-8000-000000000001, which has ZERO rules, so every authenticated call
+# answered NO_MATCHING_RULES. The gate read 6/6, the cutover proceeded, and every shell
+# endpoint 403'd. A green check against a tenant no request uses is worse than no check.
+#
+# The runtime tenant is read from policy_decision_log — what real requests were evaluated
+# under — EXCLUDING this script's own probe actor. Without that exclusion the sweep's own
+# rows dominate the table and the check reads back the tenant it just used: a tautology,
+# not a measurement.
+PROBE_ACTOR="c0000000-0000-4000-8000-000000000001"
 AUTHZ=$(kubectl get pods -n "$NS" -l app=tshepo-authz-service --no-headers 2>/dev/null \
         | awk '$3=="Running"{print $1;exit}')
+PGPOD=$(kubectl get pods -n "$NS" --no-headers 2>/dev/null | awk '/postgres/ && $3=="Running"{print $1;exit}')
+RUNTIME_TENANT=""
+if [ -n "${PGPOD:-}" ]; then
+  # Order by RECENCY, not frequency. Frequency picks whichever tenant has the most history,
+  # and history is exactly what changed: the seeded tenant holds 77 decisions but none since
+  # 2026-08-02, while the tenant real sessions actually carry holds 7, all from today.
+  # Ranking by count returned the stale one and produced a second false PASS.
+  RUNTIME_TENANT=$(kubectl exec -n "$NS" "$PGPOD" -- psql -U impilo -d tshepo_authz -qtAc \
+    "select tenant_id from tshepo_authz.policy_decision_log
+      where actor_id is distinct from '${PROBE_ACTOR}'
+      group by tenant_id order by max(evaluated_at) desc limit 1;" 2>/dev/null | tr -d '\r ')
+  # A tenant learned from week-old traffic is a guess about what the runtime does now.
+  # Report the age so a stale reading cannot pass as a current measurement.
+  TENANT_AGE_H=$(kubectl exec -n "$NS" "$PGPOD" -- psql -U impilo -d tshepo_authz -qtAc \
+    "select floor(extract(epoch from (now() - max(evaluated_at)))/3600)::int
+       from tshepo_authz.policy_decision_log
+      where actor_id is distinct from '${PROBE_ACTOR}';" 2>/dev/null | tr -d '\r ')
+fi
+# The override exists only so this check can be red-proved against a rule-less tenant.
+# It must never be the silent default.
+TENANT="${POLICY_TENANT:-$RUNTIME_TENANT}"
+RULE_COUNT=0
+if [ -n "${PGPOD:-}" ] && [ -n "$TENANT" ]; then
+  RULE_COUNT=$(kubectl exec -n "$NS" "$PGPOD" -- psql -U impilo -d tshepo_authz -qtAc \
+    "select count(*) from tshepo_authz.policy_rule where active and tenant_id='${TENANT}';" \
+    2>/dev/null | tr -d '\r ')
+fi
+
 if [ -z "${AUTHZ:-}" ]; then
   record UNKNOWN C3 "tshepo-authz-service not running in ${NS} — rule coverage unmeasured"
+elif [ -z "$TENANT" ]; then
+  record UNKNOWN C3 "no non-probe decision in policy_decision_log — the runtime tenant is unknown and this cannot be measured; drive one real signed-in request first"
+elif [ -z "${POLICY_TENANT:-}" ] && [ "${TENANT_AGE_H:-9999}" -gt 24 ]; then
+  record UNKNOWN C3 "newest non-probe decision is ${TENANT_AGE_H}h old — tenant ${TENANT} is inferred from stale traffic, not current behaviour; drive a real signed-in request and re-run"
+elif [ "${RULE_COUNT:-0}" -eq 0 ]; then
+  seeded=$(kubectl exec -n "$NS" "$PGPOD" -- psql -U impilo -d tshepo_authz -qtAc \
+    "select string_agg(distinct tenant_id::text, ', ') from tshepo_authz.policy_rule where active;" \
+    2>/dev/null | tr -d '\r')
+  record FAIL C3 "runtime tenant ${TENANT} has ZERO active policy rules — every authenticated request denies NO_MATCHING_RULES. Rules are seeded under: ${seeded:-<none>}"
 else
   python3 - >"$WORK/paths.txt" <<'PYEOF'
 import re, glob, random
@@ -157,7 +207,7 @@ PYEOF
       while read p; do
         [ -z "$p" ] && continue
         wget -S -O /dev/null -T 5 \
-          --header="x-tenant-id: '"${POLICY_TENANT:-00000000-0000-0000-0000-000000000001}"'" \
+          --header="x-tenant-id: '"${TENANT}"'" \
           --header="x-actor-id: c0000000-0000-4000-8000-000000000001" \
           --header="x-actor-type: PROVIDER" \
           --header="x-purpose-of-use: TREATMENT" \
@@ -180,7 +230,7 @@ PYEOF
     elif [ "$missing" -gt 0 ]; then
       record FAIL C3 "${missing} decisions hit NO_MATCHING_RULES across ${swept} sampled routes — those have no candidate rule at all"
     else
-      record PASS C3 "no route hit NO_MATCHING_RULES across ${swept} sampled routes (${permitted} permitted for this unauthenticated probe actor; the rest are NO_ALLOW_RULE, a policy decision not a gap)"
+      record PASS C3 "no route hit NO_MATCHING_RULES across ${swept} routes on the RUNTIME tenant ${TENANT} (${RULE_COUNT} active rules; ${permitted} permitted for this unauthenticated probe actor — the rest are NO_ALLOW_RULE, a policy decision not a gap)"
     fi
   fi
 fi
