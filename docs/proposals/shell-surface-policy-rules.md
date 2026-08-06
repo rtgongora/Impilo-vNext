@@ -158,16 +158,36 @@ Not personal data. `facilities` is the national register — already public-lane
 
 ## The three open decisions — now resolved, with one correction
 
-**1. Assurance floor — RESOLVED: no floor, and the reason is measured.** Across every decision
-the PDP has logged: **780 null, 25 UNVERIFIED, 62 LOA3.** A `min_loa` / `min_aal` condition
-would therefore deny roughly **93%** of real decisions, including the browser session that
-prompted this proposal. A floor today is not a control, it is the same outage with a better
-name.
+**1. Assurance floor — RESOLVED: no floor, and the reasoning has been corrected twice.**
 
-The measurement also surfaces something worth its own look: assurance *can* be populated —
-LOA3 appears 62 times — but is absent from the overwhelming majority of decisions. **Gating on
-a signal that is populated 7% of the time gates on nothing and denies everything.** Fix the
-signal first, then choose the floor. Recorded here as a finding, not fixed in this proposal.
+My first answer was "no floor, because assurance is populated 7% of the time". **That was
+wrong.** I had measured `policy_decision_log.assurance_level`, which stores the raw
+`X-Assurance-Level` header — a *logging* column, not the policy input. `min_aal` reads the
+validated JWT AAL and always worked; `min_loa` was genuinely broken and is now fixed
+(`8c3324bee`, deployed) to take the stronger of the propagated level and the ACR-derived login
+level, as its comment had always claimed.
+
+So a floor **is** expressible today. The reason not to set one is different, and measured from
+a real signed-in session:
+
+```json
+"acr": "urn:impilo:aal1",  "amr": [],  "identityAssuranceLevel": "UNVERIFIED"
+```
+
+Effective LoA = `max(0, 1)` = **1**. That is what an ordinary password login yields, and
+`KeycloakAdapter` defaults an absent `acr` to AAL 1 besides. Therefore:
+
+| floor | effect on the shell |
+|---|---|
+| `min_aal: 1` / `min_loa: 1` | satisfied by every authenticated session **by construction** — decoration, not a control |
+| `min_aal: 2` / `min_loa: 2` | denies every ordinary login — today's outage again, via a working signal instead of a broken one |
+
+There is no third option until step-up works. `amr` comes back **empty** and `stepUpTime` is
+null, so `accepted_amr` and `phishing_resistant_required` are equally inert right now.
+
+**Ship with no floor. Fix step-up. Then raise Tier 2 to `min_loa: 2` deliberately** — at which
+point the fix above makes it bite for the first time, and the shell needs an answer for what it
+shows a person who has not stepped up.
 
 **2. `/appointments` pin width.** As above. Substring matching makes this rule broader than
 its name suggests.
