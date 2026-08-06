@@ -192,7 +192,25 @@ data:
                             server_uri:
                               uri: http://tshepo-authz-service:8081
                               cluster: tshepo_authz_service
-                              timeout: 0.5s
+                              # Ceiling, not an expected latency. A warm PDP answers in tens of
+                              # milliseconds; this exists so that a slow decision is still a
+                              # DECISION.
+                              #
+                              # It was 0.5s, and with failure_mode_allow: false a timeout IS a
+                              # denial — so any decision slower than half a second was silently
+                              # converted into a 403. The PDP touches Postgres, Redis and a
+                              # consent call on the request path, which a cold JVM does not do in
+                              # 500ms. Measured 2026-08-06, same estate and rules, minutes apart:
+                              # immediately after a tshepo-authz rollout a signed-in session was
+                              # denied 17 of 17; once warm, 10 of 18 succeeded. The giveaway was
+                              # the PDP logging verdict=ALLOW while the browser received 403 —
+                              # the decision was made and then discarded.
+                              #
+                              # 2s covers a cold start and a slow dependency without becoming a
+                              # user-visible stall. Raising it further trades a wrong answer for a
+                              # hung page; the remedy for a persistently slow PDP is to make it
+                              # faster, not to wait longer.
+                              timeout: 2s
                             path_prefix: "/v1/authorize"
                             authorization_request:
                               allowed_headers:
