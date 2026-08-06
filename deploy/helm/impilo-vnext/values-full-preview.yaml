@@ -176,24 +176,31 @@ envoy:
   # duty-context mismatches achieves nothing extra; flipping it AFTER is the
   # ordering that matters).
   extAuthz:
-    # ENABLED 2026-08-06, preview only. The conditions above were met and machine-checked
-    # rather than asserted: scripts/test/verify-extauthz-cutover-readiness.sh reported 6/6,
-    # covering TSHEPO_WORK_CONTEXT_MODE=ENFORCE and TSHEPO_AUTHZ_CONTEXT_HEADER_MODE=
-    # AUTHORITATIVE, Envoy's own --mode validate accepting the rendered config, and the PDP
-    # answering at path_prefix + the original path instead of 401ing before its decision
-    # logic ever ran.
+    # Flipped true on 2026-08-06 and REVERTED the same day. Back to false because the
+    # estate is false: leaving this true while the cluster runs the baseline would mean the
+    # next `helm upgrade` silently re-enabled it and broke the signed-in experience again.
     #
-    # Measured after the flip: bypass routes unchanged (health 200, public lane 400, auth
-    # 401); PDP-gated routes moved 401 -> 403, so the gateway now denies on a policy
-    # decision rather than the BFF denying on authentication; 120 pods Running, unchanged.
+    # What the attempt proved, and what it cost:
+    #   - The filter config had never been valid. Three schema defects (authorization_response
+    #     misnested, headers_to_add misnested, ":"-prefixed pseudo-headers) put Envoy into
+    #     CrashLoopBackOff and took preview ingress down. Fixed, and now checked by running
+    #     Envoy's own `--mode validate` rather than by reading the YAML.
+    #   - tshepo-authz answered 401 at path_prefix + the original path, before its decision
+    #     logic ran, so every request would have been denied. Fixed and deployed.
+    #   - The real blocker, still open: the tenant real sessions carry
+    #     (00000000-0000-4000-8000-000000000001) has ZERO policy rules — all 529 are seeded
+    #     under 00000000-0000-0000-0000-000000000001. With ext_authz on, a signed-in browser
+    #     session denied 10 of 10 shell endpoints with NO_MATCHING_RULES.
     #
-    # V055's boundary rules remain active=false — that is a separate staged decision (D7),
-    # not a precondition for this flag.
+    # The readiness gate missed that because it swept a hardcoded tenant. It now derives the
+    # tenant from policy_decision_log and fails when that tenant has no rules, so re-running
+    # it is a real precondition rather than a formality:
     #
-    # Run that gate before setting this true anywhere else. An earlier attempt flipped it
-    # while the filter config was invalid in three places and put Envoy into
-    # CrashLoopBackOff, taking preview ingress down until the ConfigMap was reverted.
-    enabled: true
+    #     bash scripts/test/verify-extauthz-cutover-readiness.sh
+    #
+    # Do not set this true again until that reports 6/6 AND a signed-in browser session shows
+    # PERMITs on shell endpoints. 6/6 alone did not prove the journey — that is the lesson.
+    enabled: false
 
 minio:
   enabled: true
