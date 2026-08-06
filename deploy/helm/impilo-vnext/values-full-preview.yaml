@@ -176,7 +176,24 @@ envoy:
   # duty-context mismatches achieves nothing extra; flipping it AFTER is the
   # ordering that matters).
   extAuthz:
-    enabled: false
+    # ENABLED 2026-08-06, preview only. The conditions above were met and machine-checked
+    # rather than asserted: scripts/test/verify-extauthz-cutover-readiness.sh reported 6/6,
+    # covering TSHEPO_WORK_CONTEXT_MODE=ENFORCE and TSHEPO_AUTHZ_CONTEXT_HEADER_MODE=
+    # AUTHORITATIVE, Envoy's own --mode validate accepting the rendered config, and the PDP
+    # answering at path_prefix + the original path instead of 401ing before its decision
+    # logic ever ran.
+    #
+    # Measured after the flip: bypass routes unchanged (health 200, public lane 400, auth
+    # 401); PDP-gated routes moved 401 -> 403, so the gateway now denies on a policy
+    # decision rather than the BFF denying on authentication; 120 pods Running, unchanged.
+    #
+    # V055's boundary rules remain active=false — that is a separate staged decision (D7),
+    # not a precondition for this flag.
+    #
+    # Run that gate before setting this true anywhere else. An earlier attempt flipped it
+    # while the filter config was invalid in three places and put Envoy into
+    # CrashLoopBackOff, taking preview ingress down until the ConfigMap was reverted.
+    enabled: true
 
 minio:
   enabled: true
