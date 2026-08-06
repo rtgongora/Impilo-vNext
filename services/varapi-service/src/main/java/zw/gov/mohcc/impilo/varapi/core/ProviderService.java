@@ -338,8 +338,23 @@ public class ProviderService {
             return providerRepository.findByTenantIdAndStatus(tenantId, request.status(), pageable);
         }
 
-        // Default: all providers for tenant
-        return providerRepository.findByTenantIdAndStatus(tenantId, "ACTIVE", pageable);
+        // Default: the whole register.
+        //
+        // This read findByTenantIdAndStatus(tenantId, "ACTIVE") under a comment claiming
+        // "all providers for tenant" — the comment and the code disagreed, and the code won.
+        //
+        // Registration and participation are different things. A practitioner on the Health
+        // Professions Authority roll is registered, and that alone is what makes them
+        // searchable, verifiable and findable. ACTIVE only ever meant they had opted in to
+        // receiving appointment and prescription requests. Filtering discovery on the opt-in
+        // hid 4,241 registered practitioners: a browse returned zero and read as an empty
+        // register rather than an unclaimed one.
+        //
+        // Opt-in still gates booking and request-routing. ProviderSummary carries
+        // lifecycleStatus, registryStatus and claimed precisely so a caller can enforce that,
+        // and so an unverified import is labelled rather than presented as established.
+        // Discovery is not authorisation, and it is not endorsement either.
+        return providerRepository.findByTenantId(tenantId, pageable);
     }
 
     /**

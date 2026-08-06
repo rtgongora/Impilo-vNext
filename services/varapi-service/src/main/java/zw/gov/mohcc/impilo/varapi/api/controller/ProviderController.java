@@ -347,7 +347,10 @@ public class ProviderController {
                 entity.getProfession(),
                 entity.getCadre(),
                 entity.getStatus(),
-                entity.getPracticeNumber()
+                entity.getPracticeNumber(),
+                entity.getLifecycleStatus(),
+                entity.getRegistryStatus(),
+                entity.getClaimedAt() != null
         );
     }
 }

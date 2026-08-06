@@ -25,6 +25,18 @@ public interface ProviderRepository extends JpaRepository<ProviderEntity, Long> 
 
     List<ProviderEntity> findByTenantIdAndStatus(UUID tenantId, String status);
 
+    /**
+     * Every provider on the register for this tenant, whatever their participation status.
+     *
+     * <p>Registration and participation are different questions. A practitioner on the HPA
+     * roll is registered, and that alone makes them searchable and verifiable; opting in to
+     * receive appointment and prescription requests comes later and gates booking, not
+     * discovery. An unfiltered browse must therefore see the whole register — filtering it
+     * to {@code ACTIVE} hid 4,241 HPA-registered practitioners behind a status that only
+     * ever meant "has not opted in yet".
+     */
+    Page<ProviderEntity> findByTenantId(UUID tenantId, Pageable pageable);
+
     @Query("SELECT p FROM ProviderEntity p WHERE p.tenantId = :tenantId " +
            "AND (LOWER(p.givenName) LIKE LOWER(CONCAT('%', :query, '%')) " +
            "OR LOWER(p.familyName) LIKE LOWER(CONCAT('%', :query, '%')))")
