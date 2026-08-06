@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.varapi.core;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
@@ -300,6 +301,43 @@ public class ProviderBootstrapService {
         ProviderEntity provider = providerRepository.findByIdAndTenantId(token.getProviderId(), ctx.tenantId())
                 .orElseThrow(() -> new IllegalStateException("Preloaded provider no longer exists"));
 
+        return toClaimResponse(
+                completeClaim(provider, claimantHealthId, "claim-token:" + token.getId(), assuranceOutcome));
+    }
+
+    /**
+     * Bind a claimable provider profile to a person and open participation.
+     *
+     * <p>This is the whole of what "claiming" does, extracted so that every route into it produces
+     * the same effect and the same record. Two routes exist and a third is coming:</p>
+     *
+     * <ul>
+     *   <li>a claim <b>token</b>, redeemed by the practitioner ({@link #claimProfile});</li>
+     *   <li>a <b>reviewer's approval</b> of a council-number claim request
+     *       ({@link #completeClaimByReview}) — the route the 4,241 HPA-listed practitioners need,
+     *       because the import carried no contact channel and so no token could ever be issued
+     *       to them.</li>
+     * </ul>
+     *
+     * <p>What differs between the routes is only the <em>authorisation</em> to claim — a redeemed
+     * token, or a named reviewer's decision — and that difference is recorded in
+     * {@code bindingSource}. What must not differ is the effect, which is why this is one method
+     * and not two: {@code claimed_at} is what booking reads, so a route that bound the person but
+     * forgot to set it would produce a provider who is claimed and still unbookable.</p>
+     *
+     * @param provider          the profile being claimed; must be in a claimable lifecycle state
+     * @param claimantHealthId  the person anchor the profile binds to
+     * @param bindingSource     what authorised this claim, recorded on the authorisation link
+     * @param assuranceOutcome  identity-assurance outcome to record, or null for RECORD_LINKED
+     */
+    @Transactional
+    public ProviderEntity completeClaim(ProviderEntity provider,
+                                        UUID claimantHealthId,
+                                        String bindingSource,
+                                        String assuranceOutcome) {
+        TrustContext ctx = TrustContextHolder.require();
+        Instant now = Instant.now();
+
         if (!LIFECYCLE_PRELOADED.equals(provider.getLifecycleStatus())) {
             throw new IllegalStateException("Provider profile is not in a claimable state");
         }
@@ -346,22 +384,57 @@ public class ProviderBootstrapService {
         authorizationLinkService.recordBinding(
                 ctx.tenantId(), provider, claimantHealthId,
                 zw.gov.mohcc.impilo.varapi.persistence.entity.ProviderAuthorizationLinkEntity.TYPE_CLAIM,
-                "claim-token:" + token.getId(),
+                bindingSource,
                 assuranceOutcome != null && !assuranceOutcome.isBlank() ? assuranceOutcome.trim() : "RECORD_LINKED",
                 provider.getOnboardingChannel() != null ? provider.getOnboardingChannel() : "BOOTSTRAP_CLAIM",
                 ctx.actorId());
 
-        // The token was already burned atomically above (claimTokenRepository.redeem);
-        // no second, non-atomic save here — that would re-open the race window.
+        // Where a token authorised this claim it was already burned atomically by the caller
+        // (claimTokenRepository.redeem); no second, non-atomic save here — that would re-open
+        // the race window.
 
         publishEvent("PROVIDER", provider.getProviderPublicId(),
                 "varapi.provider.claimed",
                 String.format("{\"providerPublicId\":\"%s\",\"impiloHealthId\":\"%s\","
-                                + "\"lifecycleStatus\":\"CLAIMED\"}",
-                        provider.getProviderPublicId(), provider.getImpiloHealthId()));
+                                + "\"lifecycleStatus\":\"CLAIMED\",\"bindingSource\":\"%s\"}",
+                        provider.getProviderPublicId(), provider.getImpiloHealthId(), bindingSource));
 
-        log.info("provider profile claimed: providerPublicId={}", provider.getProviderPublicId());
-        return toClaimResponse(provider);
+        log.info("provider profile claimed: providerPublicId={} via {}",
+                provider.getProviderPublicId(), bindingSource);
+        return provider;
+    }
+
+    /**
+     * Complete a claim on a reviewer's authority rather than on a token's.
+     *
+     * <p>The 4,241 practitioners HPA listed hold no claim token and never will — the import had no
+     * contact channel to deliver one to. Their route is to submit a council-number claim request,
+     * which a reviewer verifies against the council register. That approval is the identity
+     * decision, so it is what authorises the binding here.</p>
+     *
+     * <p>Until this existed the workflow stopped one step short: a reviewer could approve, the
+     * request went to APPROVED, and the provider row was never touched — so the practitioner
+     * remained unclaimed and unbookable while the console showed their request as granted. An
+     * approval that changes nothing is worse than no approval, because it reads as done.</p>
+     */
+    // REQUIRES_NEW, and that is load-bearing rather than incidental. decide() is itself
+    // transactional, so joining it would mean a failure here marks the reviewer's whole
+    // transaction rollback-only — the decision would vanish along with the failed binding, and
+    // the caller's attempt to record WHY it failed would fail too, at commit. In its own
+    // transaction the binding can fail cleanly and leave the verdict, and the explanation of the
+    // failure, both intact. Same reasoning as providerClaimAdjudicationService.escalate above.
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void completeClaimByReview(String providerPublicId, UUID claimantHealthId, String requestPublicId) {
+        TrustContext ctx = TrustContextHolder.require();
+        ProviderEntity provider = providerRepository
+                .findByProviderPublicIdAndTenantId(providerPublicId, ctx.tenantId())
+                .orElseThrow(() -> new IllegalStateException(
+                        "Approved claim references provider " + providerPublicId + ", which no longer exists"));
+
+        // The reviewer checked the claimant against the council register; that is the assurance
+        // this binding rests on, and it is named rather than left as a bare RECORD_LINKED so the
+        // link says who vouched and on what basis.
+        completeClaim(provider, claimantHealthId, "access-request:" + requestPublicId, "REVIEWER_VERIFIED");
     }
 
     private Optional<ProviderClaimTokenEntity> loadRedeemableToken(UUID tenantId, String rawToken) {

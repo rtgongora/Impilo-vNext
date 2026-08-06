@@ -24,7 +24,9 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,12 +36,13 @@ class ProviderAccessRequestServiceTest {
     @Mock ProviderAccessRequestRepository requestRepository;
     @Mock EventOutboxRepository outboxRepository;
     @Mock ProviderRepository providerRepository;
+    @Mock ProviderBootstrapService bootstrapService;
 
     private static final UUID TENANT = UUID.fromString("00000000-0000-4000-8000-000000000001");
     private static final UUID APPLICANT = UUID.fromString("b0000000-0000-4000-8000-000000000001");
 
     private ProviderAccessRequestService service() {
-        return new ProviderAccessRequestService(requestRepository, outboxRepository, providerRepository);
+        return new ProviderAccessRequestService(requestRepository, outboxRepository, providerRepository, bootstrapService);
     }
 
     private void withContext() {
@@ -222,5 +225,77 @@ class ProviderAccessRequestServiceTest {
 
         assertThrows(IllegalArgumentException.class, () -> service().submit(
                 new SubmitProviderAccessRequest("NEW_PROVIDER", null, null, null, null, null, null, null, null, null, null)));
+    }
+
+    // ── Approving a council-number claim must actually grant it ─────────────────────────────
+    // Before this, decide() moved the request to APPROVED, published the event, and never touched
+    // varapi.provider. claimed_at is what booking gates on, so the practitioner stayed unbookable
+    // while the console showed them approved. Measured at the time: 4,268 providers, zero claimed.
+
+    private ProviderAccessRequestEntity councilClaim(String status, String providerPublicId) {
+        ProviderAccessRequestEntity e = new ProviderAccessRequestEntity();
+        e.setPublicId("PAR-CLAIM01");
+        e.setTenantId(TENANT);
+        e.setApplicantHealthId(APPLICANT);
+        e.setRequestType("COUNCIL_NUMBER");
+        e.setStatus(status);
+        e.setProviderPublicId(providerPublicId);
+        return e;
+    }
+
+    @Test
+    void approvingACouncilNumberClaimCompletesTheClaim() {
+        withContext();
+        when(requestRepository.findByTenantIdAndPublicId(TENANT, "PAR-CLAIM01"))
+                .thenReturn(Optional.of(councilClaim("PENDING_NATIONAL_REVIEW", "PRV-0001")));
+
+        ProviderAccessRequestEntity e = service().decide("PAR-CLAIM01", "APPROVED", "Verified against the register");
+
+        assertEquals("APPROVED", e.getStatus());
+        // The binding is the point of the approval, and it carries the request id so the link
+        // records which decision authorised it.
+        verify(bootstrapService).completeClaimByReview("PRV-0001", APPLICANT, "PAR-CLAIM01");
+    }
+
+    @Test
+    void approvingAnUnmatchedCouncilEnquiryBindsNothing() {
+        withContext();
+        // HpaPractitionerClaimService leaves providerPublicId null when the number matched no
+        // preloaded HPA row. Approving that is a legitimate new-registration enquiry, not a claim.
+        when(requestRepository.findByTenantIdAndPublicId(TENANT, "PAR-CLAIM01"))
+                .thenReturn(Optional.of(councilClaim("PENDING_NATIONAL_REVIEW", null)));
+
+        ProviderAccessRequestEntity e = service().decide("PAR-CLAIM01", "APPROVED", null);
+
+        assertEquals("APPROVED", e.getStatus());
+        verifyNoInteractions(bootstrapService);
+    }
+
+    @Test
+    void rejectingACouncilNumberClaimBindsNothing() {
+        withContext();
+        when(requestRepository.findByTenantIdAndPublicId(TENANT, "PAR-CLAIM01"))
+                .thenReturn(Optional.of(councilClaim("PENDING_NATIONAL_REVIEW", "PRV-0001")));
+
+        service().decide("PAR-CLAIM01", "REJECTED", "Could not verify identity");
+
+        verifyNoInteractions(bootstrapService);
+    }
+
+    @Test
+    void aFailedBindingKeepsTheVerdictAndSaysWhyInsteadOfReadingAsGranted() {
+        withContext();
+        when(requestRepository.findByTenantIdAndPublicId(TENANT, "PAR-CLAIM01"))
+                .thenReturn(Optional.of(councilClaim("PENDING_NATIONAL_REVIEW", "PRV-0001")));
+        doThrow(new IllegalStateException("This person already has a provider profile"))
+                .when(bootstrapService).completeClaimByReview(anyString(), any(), anyString());
+
+        ProviderAccessRequestEntity e = service().decide("PAR-CLAIM01", "APPROVED", null);
+
+        // The silent-success failure mode is the one that matters: a request that reads APPROVED
+        // while nothing was granted. It goes back to a human, carrying the reason.
+        assertEquals("NEEDS_MORE_INFORMATION", e.getStatus());
+        assertEquals("REVIEWER", e.getNextActor());
+        assertTrue(e.getReason().contains("already has a provider profile"));
     }
 }

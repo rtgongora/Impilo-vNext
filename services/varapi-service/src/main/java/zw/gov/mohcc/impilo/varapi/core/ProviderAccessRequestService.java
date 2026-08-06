@@ -37,13 +37,55 @@ public class ProviderAccessRequestService {
     private final ProviderAccessRequestRepository requestRepository;
     private final EventOutboxRepository outboxRepository;
     private final ProviderRepository providerRepository;
+    private final ProviderBootstrapService bootstrapService;
 
     public ProviderAccessRequestService(ProviderAccessRequestRepository requestRepository,
                                         EventOutboxRepository outboxRepository,
-                                        ProviderRepository providerRepository) {
+                                        ProviderRepository providerRepository,
+                                        ProviderBootstrapService bootstrapService) {
         this.requestRepository = requestRepository;
         this.outboxRepository = outboxRepository;
         this.providerRepository = providerRepository;
+        this.bootstrapService = bootstrapService;
+    }
+
+    /**
+     * Turn an approved council-number claim into an actual claim, or explain in the record why it
+     * could not be.
+     *
+     * <p>The decision itself is already committed by the time this runs, and that ordering is
+     * deliberate: a reviewer's verdict is their act, and it stands even if the binding cannot be
+     * completed. What must never happen is the reverse — a request that reads APPROVED while the
+     * provider is silently still unclaimed, with nothing on the record saying so.</p>
+     *
+     * <p>So a failure here is written back onto the request as a reason and the status is moved to
+     * NEEDS_MORE_INFORMATION, putting it back in front of a human, rather than swallowed. The
+     * realistic causes are a profile claimed by someone else in the meantime and the
+     * one-person-one-profile guard, both of which are decisions a person has to make.</p>
+     */
+    private void completeClaimIfCouncilNumber(ProviderAccessRequestEntity entity) {
+        if (!ProviderAccessRequestType.COUNCIL_NUMBER.name().equals(entity.getRequestType())) {
+            return;
+        }
+        String providerPublicId = trimToNull(entity.getProviderPublicId());
+        if (providerPublicId == null || entity.getApplicantHealthId() == null) {
+            // Nothing was resolved to grant — an approved new-registration enquiry, not a claim.
+            return;
+        }
+        try {
+            bootstrapService.completeClaimByReview(
+                    providerPublicId, entity.getApplicantHealthId(), entity.getPublicId());
+            log.info("Provider access request {} approved and claim completed for provider {}",
+                    entity.getPublicId(), providerPublicId);
+        } catch (RuntimeException ex) {
+            log.warn("Provider access request {} approved but the claim could not be completed: {}",
+                    entity.getPublicId(), ex.getMessage());
+            entity.setStatus(ProviderAccessRequestStatus.NEEDS_MORE_INFORMATION.name());
+            entity.setNextActor("REVIEWER");
+            entity.setReason("Approved, but the profile could not be bound: " + ex.getMessage()
+                    + " — this needs a person to resolve before the practitioner can participate.");
+            requestRepository.save(entity);
+        }
     }
 
     @Transactional
@@ -196,6 +238,26 @@ public class ProviderAccessRequestService {
             }
         }
         entity = requestRepository.save(entity);
+
+        // ── An approval has to change something ──────────────────────────────────────────────
+        // For a council-number claim, approving IS the grant: the reviewer has checked the
+        // claimant against the council register, and that check is the only identity evidence
+        // there is — a registration number is public, so matching one proves nothing on its own.
+        //
+        // Until this call existed the workflow stopped here. The request went to APPROVED, the
+        // console showed it granted, and varapi.provider was never touched — so claimed_at stayed
+        // null, and claimed_at is what booking reads. The practitioner stayed unbookable while
+        // every surface said they had been approved. Measured before this change: 4,268 providers,
+        // zero claimed, so not one provider in the estate could be booked.
+        //
+        // Deliberately narrow. Only COUNCIL_NUMBER claims bind a profile, and only when the
+        // submission already resolved one — HpaPractitionerClaimService records providerPublicId
+        // for the reviewer when the number matched a preloaded HPA row and leaves it null when it
+        // did not. A null there means "no profile to grant", which is a legitimate approval of a
+        // new-registration enquiry, not a failure.
+        if (ProviderAccessRequestStatus.APPROVED.name().equals(target)) {
+            completeClaimIfCouncilNumber(entity);
+        }
 
         publishEvent("PROVIDER_ACCESS_REQUEST", entity.getPublicId(),
                 "varapi.provider.access_request.decided",
