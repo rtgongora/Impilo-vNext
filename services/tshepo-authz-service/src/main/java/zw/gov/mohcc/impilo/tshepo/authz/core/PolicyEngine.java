@@ -788,10 +788,10 @@ public class PolicyEngine {
                 return false;
             }
 
-            // min_loa check — keyed on the EFFECTIVE LoA (the stronger of the session's
-            // ACR-derived login level and the actor's current identity-assurance level
-            // propagated via X-Assurance-Level). This is what makes a self-service
-            // verification upgrade actually change what policy sees (closes G-CZO-01).
+            // min_loa check — keyed on the EFFECTIVE LoA: see identityLoa(), which takes the
+            // stronger of the ACR-derived login level and the propagated identity-assurance
+            // level. A self-service verification upgrade changes what policy sees on the next
+            // request (G-CZO-01), and a strong login now counts toward the floor as well.
             if (conditions.containsKey("min_loa")) {
                 int minLoa = ((Number) conditions.get("min_loa")).intValue();
                 int identityLoa = identityLoa(request);
@@ -1034,8 +1034,38 @@ public class PolicyEngine {
      * it never reduces access below the prior ACR-only behaviour, and lifts it the moment a
      * verification upgrade is recorded.
      */
-    private int identityLoa(AuthzInternalRequest request) {
-        return parseAssuranceLoa(request.assuranceLevel());
+    /**
+     * The EFFECTIVE Level of Assurance: the stronger of the session's ACR-derived login level
+     * and the actor's current identity-assurance level propagated via {@code X-Assurance-Level}.
+     *
+     * <p>This previously returned the propagated header alone, while the comment above the
+     * {@code min_loa} check claimed it already took the stronger of both. It did not. The header
+     * is populated server-side only for CITIZEN actors — {@code AssuranceLevelResolutionInterceptor}
+     * skips providers by design, and the ACR fallback its javadoc assumes was never wired — so
+     * for a provider the value was absent and {@code parseAssuranceLoa} returned 0. Every
+     * {@code min_loa} rule therefore failed closed for providers regardless of how strongly they
+     * had authenticated. Measured before this change: 7 active ALLOW rules carry
+     * {@code min_loa: 2} and none of them could ever fire.
+     *
+     * <p><strong>Why folding in the login level is correct here but wrong in
+     * {@link #accountVerified}.</strong> The two ask different questions and the difference is
+     * deliberate. {@code min_loa} asks how assured this <em>session</em> is overall, and a strong
+     * authentication genuinely raises that. {@code account_assurance_required} asks whether this
+     * <em>person</em> has been identity-proofed, which no amount of login strength can establish —
+     * so it stays keyed on the propagated level alone. Conflating the two would let a hardware key
+     * stand in for in-person verification.
+     *
+     * <p>This can only raise the effective LoA, never lower it, so it widens the seven rules above
+     * from never-firing to firing for genuinely stepped-up sessions. That is what their authors
+     * wrote them to do.
+     */
+    // Package-private and static: a pure function of the request, so it is directly testable
+    // without standing up an engine. See EffectiveLoaTest.
+    static int identityLoa(AuthzInternalRequest request) {
+        int propagated = parseAssuranceLoa(request.assuranceLevel());
+        AuthenticationAssurance authentication = request.authenticationAssurance();
+        int loginDerived = authentication == null ? 0 : authentication.aal();
+        return Math.max(propagated, loginDerived);
     }
 
     private boolean meetsAuthenticationRequirement(AuthzInternalRequest request, int minAal,
