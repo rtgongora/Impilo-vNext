@@ -13,7 +13,7 @@ const HOST = process.env.PREVIEW_HOST ?? "impilo.mohcc.gov.zw";
 
 export default defineConfig({
   testDir: "./e2e",
-  testMatch: /browser-preview-(security|authenticated)\.spec\.ts/,
+  testMatch: /browser-preview-(security|authenticated|facility)\.spec\.ts/,
   timeout: 45_000,
   retries: 0,
   reporter: [["list"]],
