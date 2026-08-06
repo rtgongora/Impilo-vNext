@@ -402,10 +402,28 @@ public class TusoServiceClient {
     }
 
     /** Facility registry search (search-before-create). */
+    /**
+     * Facility search across the national register.
+     *
+     * <p>Declares the REGISTRY plane. {@code tuso.facility} holds ~7.3k rows on the registry
+     * tenant and exactly one on the care tenant, so inheriting an authenticated caller's
+     * care-plane context returned a single seeded clinic — a browser session asked for five
+     * facilities and got "FromZero Clinic 47188207" and nothing else. The endpoint answered
+     * 200, so nothing looked broken; the register was simply invisible.
+     *
+     * <p>This is the same declaration {@link #registryPlaneRequest()} already makes for
+     * facility discovery. It was missing here because this lane posts a search body and so
+     * did not go through that helper.
+     */
     public JsonNode searchFacilities(Map<String, Object> requestBody) {
         String url = baseUrl + "/v1/internal/facilities/search";
         log.info("TUSO: Searching facilities");
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, requestBody, JsonNode.class);
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+        headers.set(zw.gov.mohcc.impilo.companion.context.CompanionHeaders.TENANT_ID,
+                zw.gov.mohcc.impilo.experience.config.PublicTenants.REGISTRY_PLANE);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url,
+                new org.springframework.http.HttpEntity<>(requestBody, headers), JsonNode.class);
         return extractData(response);
     }
 
