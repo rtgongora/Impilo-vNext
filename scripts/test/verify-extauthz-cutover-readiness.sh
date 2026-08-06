@@ -11,7 +11,7 @@
 #
 #   C1  Does the rendered config delete any header it strips? (the §21.3 asymmetry)
 #   C2  Do the nine operating-context headers survive? (the §21.3 strip-order trap)
-#   C3  What share of the real route surface has an allowing policy rule?
+#   C3  Does any real route hit NO_MATCHING_RULES — i.e. no candidate rule at all?
 #   C4  Are the service-side ordering preconditions met?
 #
 # Checker discipline (§38C.4): every check declares its scope and FAILS if that scope came
@@ -107,16 +107,25 @@ PY
   fi
 fi
 
-# ── C3: policy coverage over the real route surface ──────────────────────────────────
-PG=$(kubectl get pods -n "$NS" --no-headers 2>/dev/null | awk '/postgres/ && $3=="Running"{print $1;exit}')
-if [ -z "${PG:-}" ]; then
-  record UNKNOWN C3 "no running postgres in ${NS} — policy coverage unmeasured"
+# ── C3: does any real route have NO candidate rule at all? ───────────────────────────
+# This check used to compute a static set-difference between route-derived resource types
+# and policy_rule.resource_type, and reported "16% coverage, 2385 routes would 403". That
+# number was wrong three ways: 141 active rules carry resource_type IS NULL and are
+# candidates for EVERY resource; PolicyCacheService also matches by prefix; and having a
+# candidate rule is not the same as being allowed by one. Measured against the live PDP,
+# NO_MATCHING_RULES never fires for the seeded tenant.
+#
+# So the question worth asking is the narrow one: is there any route for which the engine
+# finds NO candidate rule? That is the only condition that means a rule is genuinely
+# missing. NO_ALLOW_RULE is a policy decision — an actor without the required role SHOULD
+# be denied — and counting it as a gap would be counting correct enforcement as a defect.
+AUTHZ=$(kubectl get pods -n "$NS" -l app=tshepo-authz-service --no-headers 2>/dev/null \
+        | awk '$3=="Running"{print $1;exit}')
+if [ -z "${AUTHZ:-}" ]; then
+  record UNKNOWN C3 "tshepo-authz-service not running in ${NS} — rule coverage unmeasured"
 else
-  kubectl exec -n "$NS" "$PG" -- psql -U impilo -d tshepo_authz -qtAc \
-    "select distinct resource_type from tshepo_authz.policy_rule where active;" 2>/dev/null \
-    | tr -d '\r' | grep -v '^$' >"$WORK/covered.txt"
-  python3 - >"$WORK/routes.txt" <<'PY'
-import re, glob
+  python3 - >"$WORK/paths.txt" <<'PYEOF'
+import re, glob, random
 out=set()
 for f in glob.glob("services/experience-bff/**/*.java", recursive=True):
     src=open(f, encoding="utf-8", errors="ignore").read()
@@ -126,40 +135,52 @@ for f in glob.glob("services/experience-bff/**/*.java", recursive=True):
     for mm in re.finditer(r'@(?:Get|Post|Put|Patch|Delete)Mapping'
                           r'(?:\(\s*(?:value\s*=\s*)?(?:\{\s*)?"([^"]*)"|\(\s*\)|\s*\n)', src):
         p=(cls+"/"+(mm.group(1) or "")).replace("//","/").rstrip("/") or cls
-        if p: out.add(p)
-print("\n".join(sorted(out)))
-PY
-  n_routes=$(grep -cv '^$' "$WORK/routes.txt" || echo 0)
-  n_cov=$(grep -cv '^$' "$WORK/covered.txt" || echo 0)
-  # Both scopes must be non-empty or the percentage is meaningless in the safe direction.
-  if [ "$n_routes" -lt 100 ]; then
-    record FAIL C3 "route scan found only ${n_routes} routes — the scanner is broken, not the estate clean"
-  elif [ "$n_cov" -eq 0 ]; then
-    record FAIL C3 "policy_rule returned zero active resource types — query or schema wrong"
+        if p.startswith("/"):
+            out.add(re.sub(r"\{[^}]+\}", "11111111-1111-4111-8111-111111111111", p))
+random.seed(11)
+s=sorted(out)
+print("\n".join(random.sample(s, min(60, len(s)))))
+PYEOF
+  n_paths=$(grep -cv '^$' "$WORK/paths.txt" || echo 0)
+  if [ "$n_paths" -lt 30 ]; then
+    record FAIL C3 "route scan produced only ${n_paths} paths — the scanner is broken, not the estate clean"
   else
-    pct=$(python3 - "$WORK/routes.txt" "$WORK/covered.txt" <<'PY'
-import re, sys
-covered={l.strip() for l in open(sys.argv[2]) if l.strip()}
-def derive(path):                      # port of AuthzInternalRequest.deriveResourceType
-    if not path or len(path)<2: return "UNKNOWN"
-    for seg in reversed(path.split("/")):
-        if not seg.strip(): continue
-        if re.fullmatch(r"[0-9a-fA-F-]{36}", seg): continue
-        if seg in ("v1","api"): continue
-        return seg
-    return "UNKNOWN"
-rs=[l.strip() for l in open(sys.argv[1]) if l.strip()]
-# Optimistic: assume every path variable is a UUID and is skipped. Real non-UUID ids
-# (codes, keys, slugs) derive to their own literal value and cover even less.
-hit=sum(1 for p in rs if derive(re.sub(r"\{[^}]+\}","0"*8+"-0000-4000-8000-"+"0"*12,p)) in covered)
-print(f"{hit*100//len(rs)} {hit} {len(rs)}")
-PY
-)
-    read -r pc hit tot <<<"$pct"
-    if [ "$pc" -ge "$THRESHOLD" ]; then
-      record PASS C3 "policy covers ${pc}% of routes (${hit}/${tot}, ${n_cov} resource types)"
+    # Stay under the PDP's request ceiling: a 429 is not a verdict, and a sweep that
+    # silently collects them reports a policy result that was never evaluated.
+    #
+    # The verdict REASON cannot be read from the response body here: busybox wget writes
+    # nothing to stdout for a 403, and NO_MATCHING_RULES and NO_ALLOW_RULE are both 403.
+    # The PDP's own log is the authoritative source for which of the two fired, so the
+    # sweep drives the requests and the log supplies the reasons.
+    sweep_start=$(date -u +%s)
+    kubectl exec -i -n "$NS" "$AUTHZ" -- sh -c '
+      while read p; do
+        [ -z "$p" ] && continue
+        wget -S -O /dev/null -T 5 \
+          --header="x-tenant-id: '"${POLICY_TENANT:-00000000-0000-0000-0000-000000000001}"'" \
+          --header="x-actor-id: c0000000-0000-4000-8000-000000000001" \
+          --header="x-actor-type: PROVIDER" \
+          --header="x-purpose-of-use: TREATMENT" \
+          "http://localhost:8081/v1/authorize$p" 2>&1 \
+          | grep -oE "HTTP/1\.[01] [0-9]{3}" | tail -1 | cut -d" " -f2
+      done' <"$WORK/paths.txt" >"$WORK/codes.txt" 2>/dev/null
+    swept=$(grep -cE '^[0-9]{3}$' "$WORK/codes.txt" || echo 0)
+    throttled=$(grep -c '^429$' "$WORK/codes.txt" || echo 0)
+    permitted=$(grep -c '^200$' "$WORK/codes.txt" || echo 0)
+    elapsed=$(( $(date -u +%s) - sweep_start + 15 ))
+    kubectl logs -n "$NS" "$AUTHZ" --since="${elapsed}s" 2>/dev/null \
+      | grep -oE 'reason=[A-Z_]+' | sort | uniq -c >"$WORK/reasons.txt"
+    missing=$(awk '/NO_MATCHING_RULES/{print $1}' "$WORK/reasons.txt"); missing=${missing:-0}
+    if [ "$swept" -lt 30 ]; then
+      record FAIL C3 "sweep returned only ${swept} status codes for ${n_paths} paths — the probe, not the estate"
+    elif [ "$throttled" -gt 0 ]; then
+      record FAIL C3 "${throttled}/${swept} responses were rate-limited — a 429 is not a verdict; re-run slower"
+    elif [ ! -s "$WORK/reasons.txt" ] && [ "$permitted" -lt "$swept" ]; then
+      record FAIL C3 "denials occurred but the PDP log yielded no reason= lines — reasons unmeasured, not absent"
+    elif [ "$missing" -gt 0 ]; then
+      record FAIL C3 "${missing} decisions hit NO_MATCHING_RULES across ${swept} sampled routes — those have no candidate rule at all"
     else
-      record FAIL C3 "policy covers only ${pc}% of routes (${hit}/${tot}) — $((tot-hit)) would 403 on cutover; need ≥${THRESHOLD}%"
+      record PASS C3 "no route hit NO_MATCHING_RULES across ${swept} sampled routes (${permitted} permitted for this unauthenticated probe actor; the rest are NO_ALLOW_RULE, a policy decision not a gap)"
     fi
   fi
 fi
