@@ -195,6 +195,22 @@ clinical data.
   **Needs a `one-ui-shell` rebuild to take effect**; the UI-design lane is carrying it.
   Until then, navigating directly to `/home` after authenticating is the workaround.
 
+### A feed that says `live` while monitoring nothing
+
+`GET /internal/v1/public/gateway/service-status` answers **`live: true` with all six groups
+`monitored: false`** (verified 2026-08-05). Raised by the UI-design lane.
+
+This matters to the trust plane, not just to the UI. `live: true` is the field a consumer reaches
+for, and rendering it as green would assert that six groups are healthy when not one of them is
+being watched. That is the estate's recurring failure mode — a control that reads as present and
+reports nothing — expressed as a status feed rather than a guard.
+
+`UNAVAILABLE` and `UNMONITORED` are not `HEALTHY`. Anything summarising this feed must say so; the
+UI lane's status strip renders it as "Live monitoring not reporting yet" and carries a negative
+control for exactly that case. Either the field should stop claiming `live` while no group is
+monitored, or every consumer has to know the trap — the first is one change, the second is
+unbounded.
+
 ## 5. Constraints still in force
 
 Withheld: production deployment · destructive fullboot · namespace/PVC/database/queue/user/audit
@@ -236,6 +252,14 @@ journey reports.
   Sessions with different-looking cwds share one tree. **Announce any deliberate breakage, or use a
   private worktree.** A negative control run by you appears to every other session as a real defect;
   this cost two sessions several hours.
+- **Before replacing a Deployment's image, confirm the image you are replacing is an ANCESTOR of
+  yours.** Read the running image's `IMPILO_GIT_COMMIT` / OCI `revision` label and check
+  `git merge-base --is-ancestor <running> <yours>`. Multiple sessions deploy `one-ui-shell`; the
+  UI-design lane found the digest it was replacing was *not* the one it had deployed 40 minutes
+  earlier — someone had rolled in between. That check is the single step that turns a silent revert
+  into a stop. Rolling without it discards another lane's work and nothing reports it.
+- **Prefer one batched deploy over two sessions racing on the same Deployment.** Ask who else has
+  un-deployed commits on the branch first.
 - **Never run `kc.sh` inside the live Keycloak pod** — OOM, exit 137. Use an isolated Job with its
   own memory limit.
 - **`wget` prints `Username/Password Authentication Failed.` on any 401.** That is *wget's* text,

@@ -60,7 +60,8 @@ class AuthSessionPasskeyControllerTest {
                 new RestTemplate(),
                 Mockito.mock(VarapiServiceClient.class),
                 Mockito.mock(VitoServiceClient.class),
-                Mockito.mock(RulesServiceClient.class));
+                Mockito.mock(RulesServiceClient.class),
+                null);
         ReflectionTestUtils.setField(controller, "keycloakUrl", keycloak.baseUrl());
         ReflectionTestUtils.setField(controller, "realm", REALM);
         ReflectionTestUtils.setField(controller, "passkeyEnabled", true);

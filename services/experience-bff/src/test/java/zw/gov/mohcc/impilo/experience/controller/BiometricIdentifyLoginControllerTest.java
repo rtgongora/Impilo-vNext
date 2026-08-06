@@ -76,7 +76,8 @@ class BiometricIdentifyLoginControllerTest {
                 new RestTemplate(),
                 Mockito.mock(VarapiServiceClient.class),
                 Mockito.mock(VitoServiceClient.class),
-                Mockito.mock(RulesServiceClient.class));
+                Mockito.mock(RulesServiceClient.class),
+                null);
 
         ReflectionTestUtils.setField(controller, "biometricMinScore", 0.9);
         ReflectionTestUtils.setField(controller, "biometricMargin", 0.15);

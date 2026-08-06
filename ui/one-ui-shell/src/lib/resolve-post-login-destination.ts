@@ -13,6 +13,7 @@ import type { OperationalMode } from "@/lib/operational-context";
 import type { GatewayIntent } from "@/lib/gateway-intent";
 import { resolveIntentDestination } from "@/lib/gateway-intent";
 import { matchRouteDefinition } from "@/lib/routes";
+import { WORK_CONTEXT_ENTRY } from "@/lib/work-home/resume-context";
 
 export interface ResolvePostLoginDestinationInput {
   user: Pick<
@@ -46,6 +47,14 @@ export interface PostLoginDestinationResult {
 }
 
 const AUTH_EXEMPT_PREFIXES = ["/auth", "/consent"];
+
+/**
+ * Re-exported so callers of this module keep a single import. Defined in work-home to avoid an
+ * import cycle with identity-context.ts, which needs it too — pointing only the route guard at
+ * it while the post-login resolver still sent people to `/facility` left the "every time I log
+ * in" path untouched, which was the actual complaint.
+ */
+export { WORK_CONTEXT_ENTRY };
 
 export function isSafeReturnTo(path: string | null | undefined): path is string {
   if (!path || typeof path !== "string") return false;
@@ -113,7 +122,7 @@ export function resolvePostLoginDestination(
     }
     if (routeRequiresFacility(intentDest) && !hasFacility) {
       // Facility context first; the intent stays pending and replays as returnTo.
-      return { href: withReturnTo("/facility", intentDest), operationalMode: "facility_work" };
+      return { href: withReturnTo(WORK_CONTEXT_ENTRY, intentDest), operationalMode: "facility_work" };
     }
     return {
       href: intentDest,
@@ -127,7 +136,7 @@ export function resolvePostLoginDestination(
       return { href: "/home", operationalMode: "my_life" };
     }
     if (routeRequiresFacility(returnTo) && !hasFacility) {
-      return { href: withReturnTo("/facility", returnTo), operationalMode: "facility_work" };
+      return { href: withReturnTo(WORK_CONTEXT_ENTRY, returnTo), operationalMode: "facility_work" };
     }
     return { href: returnTo, operationalMode: context.defaultOperationalMode };
   }
@@ -158,7 +167,7 @@ export function resolvePostLoginDestination(
     const target = context.defaultLandingPath === "/home" ? "/work" : context.defaultLandingPath;
     if (!hasFacility && (target === "/work" || target.startsWith("/clinical"))) {
       return {
-        href: withReturnTo("/facility", "/work"),
+        href: withReturnTo(WORK_CONTEXT_ENTRY, "/work"),
         operationalMode: "facility_work",
         autoActivateProvider: context.isProviderActivated && !user?.providerActivated,
         linkedProviderId,
@@ -193,15 +202,29 @@ export function buildPostLoginResolvingPath(returnTo?: string | null): string {
   return "/auth/resolving";
 }
 
-/** Redirect target when a route guard blocks navigation (facility / workspace / shift). */
+/**
+ * Redirect target when a route guard blocks navigation (facility / workspace / shift).
+ *
+ * `/facility` is deliberately rewritten to `/work/resume`. 148 routes carry `guard: "facility"`
+ * and every one of them used to land on the national facility registry, where a clinician had
+ * to find their own hospital in a list of thousands — on every sign-in, despite the BFF already
+ * having resolved and ranked their real postings. `/work/resume` offers that resolved answer as
+ * one tap, mints a proper duty token, and returns them to what they were doing. It falls back
+ * to `/facility` itself when someone genuinely holds no resolved work context, so the manual
+ * chooser stays reachable rather than being deleted.
+ *
+ * `/workspace` and `/shift` are unchanged: workspace and shift are not carried on a resolved
+ * work context, so there is nothing remembered to offer back yet.
+ */
 export function buildContextGuardRedirect(
   guardTarget: "/facility" | "/workspace" | "/shift",
   attemptedPath: string,
 ): string {
-  if (isSafeReturnTo(attemptedPath) && attemptedPath !== guardTarget) {
-    return withReturnTo(guardTarget, attemptedPath);
+  const target = guardTarget === "/facility" ? WORK_CONTEXT_ENTRY : guardTarget;
+  if (isSafeReturnTo(attemptedPath) && attemptedPath !== target) {
+    return withReturnTo(target, attemptedPath);
   }
-  return guardTarget;
+  return target;
 }
 
 /** After facility pick, continue to returnTo when it only needs facility context. */

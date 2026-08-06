@@ -18,6 +18,8 @@ import {
 } from "react-native";
 import { useOptionalTheme } from "../theme/ThemeProvider";
 import { colors } from "../tokens/colors";
+import { glossButtonStops } from "../tokens/gloss";
+import { GlossFill } from "./GlossFill";
 import type { Theme } from "../theme/ThemeProvider";
 
 export type ButtonVariant =
@@ -56,6 +58,24 @@ export interface ButtonProps {
  *     must NOT vary by app, so they stay pinned to neutral/error tokens rather
  *     than to the brand accent. Only actual brand elements should diverge.
  */
+/**
+ * Which variants take the gloss treatment, and with what stops.
+ *
+ * Only FILLED variants get it — an outline/ghost button has no fill to light. The
+ * gradient is derived from the variant's own resolved background, so the citizen accent
+ * stays green, the provider accent stays teal, and `destructive` stays red: structure is
+ * shared, hue is not. Pure and RN-free so it is unit-testable in isolation.
+ */
+export function resolveButtonGloss(
+  variant: ButtonVariant,
+  bg: string,
+): { enabled: boolean; from: string; to: string } {
+  const filled = variant === "primary" || variant === "secondary" || variant === "destructive" || variant === "default";
+  if (!filled || bg === "transparent") return { enabled: false, from: bg, to: bg };
+  const { from, to } = glossButtonStops(bg);
+  return { enabled: from !== to, from, to };
+}
+
 function getVariantStyles(theme: Theme): Record<ButtonVariant, { bg: string; text: string; border?: string }> {
   return {
     primary:     { bg: theme.colors.primary, text: theme.colors.onPrimary },
@@ -75,6 +95,8 @@ function getVariantStyles(theme: Theme): Record<ButtonVariant, { bg: string; tex
     default:     { bg: colors.gray[500], text: "#FFFFFF" },
   };
 }
+
+const BUTTON_GLOSS_BANDS = 10;
 
 const SIZE_STYLES: Record<ButtonSize, { py: number; px: number; fontSize: number; radius: number }> = {
   sm:    { py: 6,  px: 12, fontSize: 13, radius: 8  },
@@ -103,6 +125,7 @@ export function Button({
   const resolvedTitle = title ?? label ?? "";
   const vs = getVariantStyles(theme)[variant];
   const ss = SIZE_STYLES[size];
+  const gloss = resolveButtonGloss(variant, vs.bg);
 
   return (
     <Pressable
@@ -127,6 +150,14 @@ export function Button({
         style,
       ]}
     >
+      {gloss.enabled ? (
+        <GlossFill
+          from={gloss.from}
+          to={gloss.to}
+          bands={BUTTON_GLOSS_BANDS}
+          testID={testID ? `${testID}-gloss` : undefined}
+        />
+      ) : null}
       <View style={styles.content}>
         {loading ? (
           <ActivityIndicator size="small" color={vs.text} />
@@ -153,11 +184,15 @@ const styles = StyleSheet.create({
   base: {
     alignItems: "center",
     justifyContent: "center",
+    // The gradient layer is absolutely positioned; without this it paints past the radius.
+    overflow: "hidden",
   },
   fullWidth: {
     width: "100%",
   },
   content: {
+    // Above the gradient layer.
+    position: "relative",
     flexDirection: "row",
     alignItems: "center",
     gap: 8,

@@ -91,6 +91,28 @@ describe("LoginPage — Progressive Auth Scene", () => {
     vi.unstubAllGlobals();
   });
 
+  it("work intent lands on identity resolution, not the My Life shell", () => {
+    vi.stubGlobal("open", vi.fn(() => ({ focus: vi.fn(), close: vi.fn(), closed: false })));
+    render(<LoginPage />);
+
+    // Choosing "Work & Practice" used to raise the factor to AAL2 and then send the person to
+    // /home anyway — a clinician with a live facility assignment got the citizen shell, no
+    // work tab, no explanation. The intent has to reach the destination, not just the factor.
+    fireEvent.click(screen.getByRole("button", { name: /Work & Practice/i }));
+    fireEvent.change(screen.getByLabelText(/Email, phone number, or Impilo ID/i), {
+      target: { value: "mapfumo@mohcc.gov.zw" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
+
+    expect(buildOidcLoginUrl).toHaveBeenCalledWith({
+      returnTo: "/auth/complete?to=%2Fauth%2Fresolving",
+      loginHint: "mapfumo@mohcc.gov.zw",
+      requiredAcr: "urn:impilo:aal2",
+    });
+
+    vi.unstubAllGlobals();
+  });
+
   it("ignores a sign-in completion claimed by any other origin", async () => {
     vi.stubGlobal("open", vi.fn(() => ({ focus: vi.fn(), close: vi.fn(), closed: false })));
     render(<LoginPage />);

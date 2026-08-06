@@ -113,4 +113,5 @@ export const ADMINISTRATION_GOVERNANCE_ROUTES = [
   { path: "/work/vashandi/workforce/[id]", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Workforce Profile", navLabel: "Workforce", navZone: "work" },
 ] as const;
 
-export const ADMINISTRATION_GOVERNANCE_ROUTE_COUNT = 102;
+// 102 → 103 on merging the staging-UX line, which registered one further management route.
+export const ADMINISTRATION_GOVERNANCE_ROUTE_COUNT = 103;

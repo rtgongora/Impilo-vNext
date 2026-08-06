@@ -22,6 +22,7 @@ import { ImpiloBrandLogo } from "@/components/brand/ImpiloBrandLogo";
 import { IntentLink } from "./IntentLink";
 import { HeroDiscoverySurface } from "./HeroDiscoverySurface";
 import { HeroContinuity } from "./HeroContinuity";
+import { HeroServiceStatus } from "./HeroServiceStatus";
 
 interface GuidanceAnswer {
   answer?: string;
@@ -390,7 +391,14 @@ export function WelcomeHero() {
             </div>
           )}
 
-          <div className="mt-7 flex flex-wrap items-center gap-2.5 lg:mt-auto lg:pt-4" aria-label="Primary Impilo actions">
+          {/* Live service status. Carries the lg:mt-auto so it and the action row settle
+              together at the foot of the column — the wide-viewport space below the
+              continuity card gets a real signal instead of more canvas. */}
+          <div className="lg:mt-auto">
+            <HeroServiceStatus />
+          </div>
+
+          <div className="mt-7 flex flex-wrap items-center gap-2.5 lg:mt-4" aria-label="Primary Impilo actions">
             <Link
               href="/welcome/find-care"
               className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 px-4 py-2.5 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,.35),0_10px_24px_-10px_rgba(6,95,70,.8)] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2"

@@ -294,6 +294,6 @@ describe("Management tiles", () => {
     // the count from its own lists only. A pinned number alone cannot catch that — it pins the
     // wrong answer just as happily as the right one.
     expect(ADMINISTRATION_GOVERNANCE_ROUTE_COUNT).toBe(ADMINISTRATION_GOVERNANCE_ROUTES.length);
-    expect(ADMINISTRATION_GOVERNANCE_ROUTE_COUNT).toBe(102);
+    expect(ADMINISTRATION_GOVERNANCE_ROUTE_COUNT).toBe(103);
   });
 });

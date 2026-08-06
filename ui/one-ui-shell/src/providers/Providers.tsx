@@ -36,6 +36,18 @@ import { authUserFromWebSession, type WebSessionResponse } from "@/lib/auth/web-
 
 function StoreHydrator({ children }: { children: ReactNode }) {
   const [, setHydrated] = useState(false);
+
+  // Announce the restore during render, not in the effect below. React runs child effects
+  // before parent effects, so by the time this component's effect fires the children's data
+  // queries have already dispatched — and those are exactly the calls that must wait for an
+  // actor. A useState initializer runs once, during this component's render, which precedes
+  // every child's render and effect. Anything mounted without this provider (unit tests, SSR)
+  // never raises the flag and is therefore never made to wait for a session that will not come.
+  useState(() => {
+    if (typeof window !== "undefined") useAuthStore.getState().markSessionRestoreStarted();
+    return null;
+  });
+
   const { hydrateSession, clearAuth } = useAuthStore();
   const { setFacility } = useFacilityStore();
   const { setWorkspace } = useWorkspaceStore();

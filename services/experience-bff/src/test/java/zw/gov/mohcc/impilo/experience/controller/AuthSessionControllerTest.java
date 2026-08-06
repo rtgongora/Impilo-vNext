@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class AuthSessionControllerTest {
 
     private static AuthSessionController controller() {
-        return new AuthSessionController(new RestTemplate(), null, null, null);
+        return new AuthSessionController(new RestTemplate(), null, null, null, null);
     }
 
     @Test
@@ -164,6 +164,7 @@ class AuthSessionControllerTest {
                 new RestTemplate(),
                 new LinkedIdsVarapiClient(),
                 new LinkedIdsVitoClient(),
+                null,
                 null);
 
         ResponseEntity<Map<String, Object>> response =

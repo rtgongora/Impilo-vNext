@@ -64,6 +64,19 @@ interface AuthState {
    * arrived. Consumers that act on the absence of a session must wait for this.
    */
   sessionRestoreAttempted: boolean;
+  /**
+   * True from the moment the hydrator commits to restoring a session until that attempt
+   * settles. It lets a consumer tell "a restore is coming, wait for it" from "no restore will
+   * ever happen here, do not wait" — the second case being every unit test, every SSR pass, and
+   * any surface mounted outside the shell providers.
+   *
+   * Raised during StoreHydrator's *render*, not its effect: React runs child effects before
+   * parent effects, so a flag raised in the hydrator's effect would go up after the very child
+   * queries it is meant to hold back had already dispatched.
+   */
+  sessionRestoreInFlight: boolean;
+  /** Called by the hydrator as it commits to a restore, before any child can dispatch. */
+  markSessionRestoreStarted: () => void;
   /** Called by the hydrator once, on every path including failure, so nothing waits forever. */
   markSessionRestoreAttempted: () => void;
   setAuth: (user: AuthUser, token: string, refreshToken?: string | null, expiresAt?: string | null) => void;
@@ -114,8 +127,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   expiresAt: null,
   isAuthenticated: false,
   sessionRestoreAttempted: false,
+  sessionRestoreInFlight: false,
 
-  markSessionRestoreAttempted: () => set({ sessionRestoreAttempted: true }),
+  markSessionRestoreStarted: () => set({ sessionRestoreInFlight: true }),
+
+  markSessionRestoreAttempted: () => set({ sessionRestoreAttempted: true, sessionRestoreInFlight: false }),
 
   setAuth: (user, _token, _refreshToken, expiresAt) => {
     const currentUser = get().user;

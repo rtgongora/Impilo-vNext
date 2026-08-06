@@ -115,7 +115,10 @@ describe("resolvePostLoginDestination", () => {
       hasFacility: false,
       returnTo: "/clinical",
     });
-    expect(result.href).toBe("/facility?returnTo=%2Fclinical");
+    // /work/resume, not /facility: the post-login resolver is the path someone takes on
+    // EVERY sign-in, so leaving it on the national facility registry left the actual
+    // "why am I re-capturing this" complaint untouched. Single source: WORK_CONTEXT_ENTRY.
+    expect(result.href).toBe("/work/resume?returnTo=%2Fclinical");
   });
 
   it("gateway intent destination takes precedence over returnTo", () => {
@@ -186,7 +189,10 @@ describe("resolvePostLoginDestination", () => {
         createdAt: Date.now(),
       },
     });
-    expect(result.href).toBe("/facility?returnTo=%2Fclinical");
+    // /work/resume, not /facility: the post-login resolver is the path someone takes on
+    // EVERY sign-in, so leaving it on the national facility registry left the actual
+    // "why am I re-capturing this" complaint untouched. Single source: WORK_CONTEXT_ENTRY.
+    expect(result.href).toBe("/work/resume?returnTo=%2Fclinical");
     expect(result.restoredIntent).toBeUndefined();
   });
 
@@ -243,10 +249,15 @@ describe("resolvePostLoginDestination", () => {
   });
 
   it("buildContextGuardRedirect preserves attempted path as returnTo", () => {
+    // The facility guard now resolves to /work/resume, which offers the work context the BFF
+    // already resolved instead of the national facility registry. See resume-context.test.ts.
     expect(buildContextGuardRedirect("/facility", "/clinical")).toBe(
-      "/facility?returnTo=%2Fclinical",
+      "/work/resume?returnTo=%2Fclinical",
     );
-    expect(buildContextGuardRedirect("/facility", "/facility")).toBe("/facility");
+    expect(buildContextGuardRedirect("/facility", "/work/resume")).toBe("/work/resume");
+    expect(buildContextGuardRedirect("/workspace", "/clinical")).toBe(
+      "/workspace?returnTo=%2Fclinical",
+    );
   });
 
   it("resolvePostFacilitySelectionPath returns clinical hub when only facility guard applies", () => {

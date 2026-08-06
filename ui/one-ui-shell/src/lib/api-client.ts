@@ -220,6 +220,11 @@ const getV11Headers = getV12Headers;
  *
  * The auth lane is exempt because /auth/oidc/session IS the call that settles the flag; waiting
  * on it there would deadlock the shell at boot.
+ *
+ * It waits only while a restore is genuinely IN FLIGHT — raised by StoreHydrator during render,
+ * before any child can dispatch. Waiting merely on "not yet attempted" would stall every caller
+ * that has no hydrator above it (unit tests, SSR, standalone surfaces) for the full ceiling,
+ * which is a hang, not a safeguard.
  */
 const AUTH_LANE_PREFIX = "/internal/v1/auth/";
 const ACTOR_READINESS_TIMEOUT_MS = 5_000;
@@ -227,7 +232,8 @@ const ACTOR_READINESS_TIMEOUT_MS = 5_000;
 function awaitActorReadiness(path: string): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
   if (path.startsWith(AUTH_LANE_PREFIX)) return Promise.resolve();
-  if (useAuthStore.getState().sessionRestoreAttempted) return Promise.resolve();
+  const { sessionRestoreAttempted, sessionRestoreInFlight } = useAuthStore.getState();
+  if (sessionRestoreAttempted || !sessionRestoreInFlight) return Promise.resolve();
 
   return new Promise<void>((resolve) => {
     let settled = false;

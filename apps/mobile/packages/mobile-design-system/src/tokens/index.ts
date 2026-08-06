@@ -5,6 +5,7 @@
 import { colors } from "./colors";
 import { spacing } from "./spacing";
 import { typography, textStyles } from "./typography";
+import { gloss } from "./gloss";
 
 export { colors } from "./colors";
 export type { ColorToken } from "./colors";
@@ -14,6 +15,21 @@ export type { SpacingToken } from "./spacing";
 
 export { typography, textStyles } from "./typography";
 export type { TextStyle } from "./typography";
+
+export {
+  gloss,
+  glossRamp,
+  glossFloor,
+  glossInkOnLight,
+  glossInkOnDark,
+  glossPill,
+  glossSheen,
+  glossButtonStops,
+  rampColorAt,
+  rampBands,
+  lighten,
+  mix,
+} from "./gloss";
 
 export const borderRadius = {
   none: 0,
@@ -69,4 +85,5 @@ export const tokens = {
   shadows,
   neon,
   glass,
+  gloss,
 } as const;

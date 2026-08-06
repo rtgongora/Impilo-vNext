@@ -671,3 +671,65 @@ describe("apiClient — trust challenges (401 / 403)", () => {
     expect(err.trustChallenge.outcome.allowed_authentication_methods).toEqual(["SMS_OTP"]);
   });
 });
+
+describe("apiClient — waiting for the actor before dispatch", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useAuthStore.setState({
+      user: null,
+      isAuthenticated: false,
+      sessionRestoreAttempted: false,
+      sessionRestoreInFlight: false,
+    });
+    mockFetch.mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: { get: () => "application/json" },
+      json: async () => ({ data: [] }),
+    });
+  });
+
+  afterEach(() => {
+    useAuthStore.setState({ sessionRestoreAttempted: false, sessionRestoreInFlight: false });
+  });
+
+  // The defect: three shell fetches launched on the first render after the OIDC callback and
+  // reached the trust plane with no X-Actor-ID and no X-Actor-Type, because the session had not
+  // resolved yet. The PDP rejects those before policy runs, so the person sees a 403.
+  it("holds a call until the in-flight session restore settles, then sends the actor", async () => {
+    useAuthStore.setState({ sessionRestoreInFlight: true });
+
+    const pending = apiClient.get("/internal/v1/facilities");
+    await Promise.resolve();
+    expect(mockFetch).not.toHaveBeenCalled();
+
+    useAuthStore.getState().hydrateSession(
+      { id: "actor-1", email: "person@example.org", actorType: "CITIZEN" } as never,
+      null,
+      null,
+    );
+    useAuthStore.getState().markSessionRestoreAttempted();
+    await pending;
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    const headers = mockFetch.mock.calls[0][1].headers as Record<string, string>;
+    expect(headers["X-Actor-ID"]).toBe("actor-1");
+    expect(headers["X-Actor-Type"]).toBe("CITIZEN");
+  });
+
+  // The safeguard must not become a hang. Anything mounted without StoreHydrator above it — unit
+  // tests, SSR, standalone surfaces — has no restore coming and must dispatch immediately rather
+  // than sit out the ceiling.
+  it("does not wait when no restore is in flight", async () => {
+    await apiClient.get("/internal/v1/facilities");
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  // /auth/oidc/session is the call that settles the flag. Waiting on it there would mean the
+  // restore waits for itself and the shell never boots.
+  it("never makes the auth lane wait on the restore it is performing", async () => {
+    useAuthStore.setState({ sessionRestoreInFlight: true });
+    await apiClient.get("/internal/v1/auth/oidc/session");
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+});

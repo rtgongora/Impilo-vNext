@@ -16,6 +16,7 @@ import {
 } from "@/lib/trust";
 import type { OperationalMode } from "@/lib/operational-context";
 import { matchRouteDefinition } from "@/lib/routes";
+import { WORK_CONTEXT_ENTRY } from "@/lib/work-home/resume-context";
 
 export type LoginMethod = "health_id" | "provider_id" | "email" | "biometric" | "unknown";
 
@@ -303,14 +304,14 @@ export function resolveIdentityContext(input: IdentityContextInput): IdentityCon
     defaultLandingPath = "/auth/context-chooser";
   } else if (hasWorkAccess) {
     if (!hasFacility && activeAffiliationCount === 1) {
-      defaultLandingPath = "/facility";
+      defaultLandingPath = WORK_CONTEXT_ENTRY;
     } else if (hasFacility) {
       // Phase F6: /provider-workspace is now an intent-resolution shim to /work — land there
       // directly. The Java-side twin (SessionExperienceService#resolveDefaultRoute) makes the
       // same change; landing-parity is asserted in resolve-post-login-destination.test.ts.
       defaultLandingPath = "/work";
     } else if (providerLogin) {
-      defaultLandingPath = "/facility";
+      defaultLandingPath = WORK_CONTEXT_ENTRY;
     } else {
       defaultLandingPath = "/home";
     }
@@ -366,7 +367,7 @@ function buildContextChooserOptions(args: {
         args.activeAffs.length === 1
           ? `Continue at ${args.activeAffs[0].facilityName ?? "your facility"}`
           : "Select where you are working today",
-      href: "/facility",
+      href: WORK_CONTEXT_ENTRY,
       operationalMode: "facility_work",
     });
   }

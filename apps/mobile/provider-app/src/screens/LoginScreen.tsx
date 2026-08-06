@@ -15,7 +15,7 @@ import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@impilo/mobile-auth";
-import { Button, LoadingSpinner, colors } from "@impilo/mobile-design-system";
+import { Button, LoadingSpinner, colors, GlossCanvas } from "@impilo/mobile-design-system";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -110,7 +110,18 @@ export function LoginScreen() {
 
   return (
     <View testID="login-screen" style={styles.root}>
-      <View style={styles.heroSection}>
+      {/* The hero starts MID-ramp on purpose. The light top of the gloss ramp is
+          load-bearing — it exists so the colourful brand mark can sit on its natural
+          ground — and this hero leads with white ink, so it takes the teal-to-deep half
+          instead. Giving it the light top would break contrast and reproduce the
+          decorative dead band the PO rejected on the web. */}
+      <GlossCanvas
+        style={styles.heroCanvas}
+        contentStyle={styles.heroSection}
+        startAt={230}
+        rampHeight={420}
+        testID="login-hero-canvas"
+      >
         <View style={styles.logoCircle}>
           <Ionicons name="medkit" size={44} color="#FFFFFF" />
         </View>
@@ -124,7 +135,7 @@ export function LoginScreen() {
             </View>
           ))}
         </View>
-      </View>
+      </GlossCanvas>
 
       <View style={styles.bottomSheet}>
         <Text style={styles.sheetTitle}>Provider Sign In</Text>
@@ -207,6 +218,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: BLUE,
   },
+  // The canvas owns the box; the ramp is painted in absolutely-positioned siblings.
+  heroCanvas: {
+    flex: 1,
+  },
+  // Layout lives on the canvas's CONTENT container, not the outer box — see GlossCanvas.
   heroSection: {
     flex: 1,
     alignItems: "center",

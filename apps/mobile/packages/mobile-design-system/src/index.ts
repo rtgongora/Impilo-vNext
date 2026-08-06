@@ -13,6 +13,20 @@ export type { SpacingToken } from "./tokens/spacing";
 export { typography, textStyles } from "./tokens/typography";
 export type { TextStyle } from "./tokens/typography";
 export { borderRadius, shadows, neon, glass, tokens } from "./tokens/index";
+export {
+  gloss,
+  glossRamp,
+  glossFloor,
+  glossInkOnLight,
+  glossInkOnDark,
+  glossPill,
+  glossSheen,
+  glossButtonStops,
+  rampColorAt,
+  rampBands,
+  lighten,
+  mix,
+} from "./tokens/gloss";
 
 // Theme
 export { ThemeProvider, useTheme, useOptionalTheme, lightTheme, darkTheme } from "./theme/ThemeProvider";
@@ -23,6 +37,8 @@ export type { Experience } from "./theme/experience";
 // Future-Realism primitives
 export { GlassSurface, resolveGlassStyle } from "./components/GlassSurface";
 export type { GlassSurfaceProps, GlassTone, GlassGlow, GlassTier } from "./components/GlassSurface";
+export { GlossCanvas } from "./components/GlossCanvas";
+export { GlossFill } from "./components/GlossFill";
 export { useTier, resolveMobileTier } from "./hooks/useTier";
 export type { Tier, TierSignals } from "./hooks/useTier";
 
