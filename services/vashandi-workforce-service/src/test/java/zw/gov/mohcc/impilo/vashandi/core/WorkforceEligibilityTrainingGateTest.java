@@ -139,6 +139,12 @@ class WorkforceEligibilityTrainingGateTest {
     @Test
     @DisplayName("ALLOW decision keeps plain eligible outcome")
     void allowIsPlainEligible() {
+        // This test is about the training axis, so pin the licence axis to a known-good value.
+        // The shared fixture leaves the VARAPI payload empty, which now correctly appends an
+        // "unverified standing" note (see WorkforceEligibilityLicenceGateTest); left as-is this
+        // would fail for a reason that has nothing to do with training.
+        when(varapiClient.fetchProfessionalStatus(anyString()))
+                .thenReturn(IntegrationCheckResult.live("varapi", Map.of("licenceStatus", "ACTIVE")));
         gateReturns("ALLOW", List.of());
         VashandiDtos.WorkforceEligibilityResult result = service.evaluate(assignment, "opa-1");
         assertThat(result.overallStatus()).isEqualTo("allowed");
