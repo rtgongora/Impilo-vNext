@@ -276,6 +276,32 @@ data:
                                 - exact: "x-export-policy"
                                 - exact: "x-suppress-fields"
                                 - exact: "x-drill-down-allowed"
+                                # Phase 0 step 2 (§22). The nine operating-context headers.
+                                # These are NOT stripped on the catch-all route (see the
+                                # strip-order trap note above), so today they arrive
+                                # client-supplied and survive untouched. Listing them here is
+                                # what makes context-header-mode=AUTHORITATIVE mean anything:
+                                # once the PDP regenerates them from validated evidence, this
+                                # allow-list is the only thing that lets the regenerated value
+                                # reach the service instead of being silently dropped in favour
+                                # of the client's own. Adding them while the mode is SHADOW is
+                                # inert — the PDP emits nothing, so nothing is copied.
+                                - exact: "x-facility-id"
+                                - exact: "x-workspace-id"
+                                - exact: "x-department-id"
+                                - exact: "x-ward-id"
+                                - exact: "x-programme-id"
+                                - exact: "x-shift-id"
+                                - exact: "x-work-context-token"
+                                - exact: "x-purpose-of-use"
+                                - exact: "x-workflow-state"
+                                # Phase 0 step 3 (§21.3). The catch-all route strips
+                                # x-confidential-categories; until this entry existed the PDP
+                                # had no way to put it back, so enabling ext_authz deleted the
+                                # confidentiality grant rather than governing it. Paired with
+                                # the emit in PolicyEngine.buildHeaderMutations — strip and
+                                # regenerate are one control, and half of it is a data-loss bug.
+                                - exact: "x-confidential-categories"
                                 # The signed proof that the PDP issued this decision (D2).
                                 # Without it here, the envelope stops at Envoy and D3's
                                 # downstream verification has nothing to verify.

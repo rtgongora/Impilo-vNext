@@ -1879,6 +1879,23 @@ public class PolicyEngine {
                 if (vp.drillDownAllowed() != null) {
                     headers.put(TrustHeaders.DRILL_DOWN_ALLOWED, Boolean.toString(vp.drillDownAllowed()));
                 }
+                // Phase 0 step 3 (§21.3, the x-confidential-categories asymmetry).
+                //
+                // Every other visibility obligation above travels as a flat header. This one
+                // did not — it existed only inside the x-obligations JSON. Envoy's catch-all
+                // route strips x-confidential-categories, and allowed_upstream_headers did not
+                // list it, so the moment ext_authz is enabled the header is removed from the
+                // client request and never re-added: deleted, not merely unset. A downstream
+                // reading flat headers would then see no confidentiality grant at all.
+                //
+                // Emitting it here closes the asymmetry at the source. The absent case stays
+                // fail-closed and is why this is not emitted when empty: null or empty means
+                // no category was granted, and the reader's default is to withhold protected
+                // content. Absence must therefore keep meaning "withhold", never "unknown".
+                if (vp.confidentialCategories() != null && !vp.confidentialCategories().isEmpty()) {
+                    headers.put(TrustHeaders.CONFIDENTIAL_CATEGORIES,
+                            String.join(",", vp.confidentialCategories()));
+                }
             }
         }
 
