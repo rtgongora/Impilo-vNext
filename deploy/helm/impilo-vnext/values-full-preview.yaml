@@ -176,31 +176,43 @@ envoy:
   # duty-context mismatches achieves nothing extra; flipping it AFTER is the
   # ordering that matters).
   extAuthz:
-    # Flipped true on 2026-08-06 and REVERTED the same day. Back to false because the
-    # estate is false: leaving this true while the cluster runs the baseline would mean the
-    # next `helm upgrade` silently re-enabled it and broke the signed-in experience again.
+    # ENABLED 2026-08-06 and live. The estate runs with the TSHEPO PDP on Envoy's data path:
+    # every request through the gateway, except the narrow bypass lanes above, is authorised by
+    # PolicyEngine before it reaches a service. failure_mode_allow stays false, so a PDP outage
+    # denies rather than failing the gateway open.
     #
-    # What the attempt proved, and what it cost:
+    # This took six attempts. What each one cost, kept because every line here is a check that
+    # now exists precisely because its absence broke the estate:
     #   - The filter config had never been valid. Three schema defects (authorization_response
     #     misnested, headers_to_add misnested, ":"-prefixed pseudo-headers) put Envoy into
-    #     CrashLoopBackOff and took preview ingress down. Fixed, and now checked by running
-    #     Envoy's own `--mode validate` rather than by reading the YAML.
+    #     CrashLoopBackOff and took preview ingress down. Now checked by running Envoy's own
+    #     `--mode validate` against the estate's own image, rather than by reading the YAML.
     #   - tshepo-authz answered 401 at path_prefix + the original path, before its decision
-    #     logic ran, so every request would have been denied. Fixed and deployed.
-    #   - The real blocker, still open: the tenant real sessions carry
-    #     (00000000-0000-4000-8000-000000000001) has ZERO policy rules — all 529 are seeded
-    #     under 00000000-0000-0000-0000-000000000001. With ext_authz on, a signed-in browser
-    #     session denied 10 of 10 shell endpoints with NO_MATCHING_RULES.
+    #     logic ran, so every request would have been denied.
+    #   - Rules live on the registry plane while requests present the care plane. The PDP now
+    #     merges the governance tenant's rules into every tenant, re-sorted across the union.
+    #     The two planes are deliberate and must NOT be unified (see PublicTenants.java).
+    #   - The route-level identity strip deleted exactly what the PDP had just re-added: an HTTP
+    #     filter and a route header-removal run in different phases. Nine endpoints went 200 to
+    #     400. Strip deleted; the PDP now emits identity unconditionally, and
+    #     allowed_upstream_headers overwrites a forged value in every case.
+    #   - The ext_authz timeout was 0.5s, so a cold PDP was denied while it logged ALLOW.
+    #     Raised to 2s and the PDP is warmed before a flip.
+    #   - Shell chrome had no rules at all (V309), and /nompilo/context had one for the wrong
+    #     verb (V310) — it is a read that travels by POST.
+    #   - The shell dispatched its first fetches before the session resolved, so they reached
+    #     the PDP with no actor and were refused pre-policy as MISSING_HEADERS. Those denials
+    #     never appear in policy_decision_log, which is why they read as missing rules for two
+    #     attempts. Fixed in api-client, which now waits for the actor.
     #
-    # The readiness gate missed that because it swept a hardcoded tenant. It now derives the
-    # tenant from policy_decision_log and fails when that tenant has no rules, so re-running
-    # it is a real precondition rather than a formality:
+    # Preconditions before ever flipping this again (both, not either):
     #
-    #     bash scripts/test/verify-extauthz-cutover-readiness.sh
+    #     bash scripts/test/verify-extauthz-cutover-readiness.sh     # must read 6/6
     #
-    # Do not set this true again until that reports 6/6 AND a signed-in browser session shows
-    # PERMITs on shell endpoints. 6/6 alone did not prove the journey — that is the lesson.
-    enabled: false
+    # AND a signed-in browser session showing ZERO denials on the shell surface. 6/6 alone has
+    # never once proved the journey — the 12/12 Playwright pass that preceded the first failed
+    # cutover ran entirely on a bypass route.
+    enabled: true
 
 minio:
   enabled: true
