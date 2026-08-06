@@ -229,9 +229,22 @@ PYEOF
           "http://localhost:8081/v1/authorize$p" 2>&1 \
           | grep -oE "HTTP/1\.[01] [0-9]{3}" | tail -1 | cut -d" " -f2
       done' <"$WORK/paths.txt" >"$WORK/codes.txt" 2>/dev/null
-    swept=$(grep -cE '^[0-9]{3}$' "$WORK/codes.txt" || echo 0)
-    throttled=$(grep -c '^429$' "$WORK/codes.txt" || echo 0)
-    permitted=$(grep -c '^200$' "$WORK/codes.txt" || echo 0)
+    # `grep -c` already prints 0 when it matches nothing — and exits 1 while doing so. The
+    # `|| echo 0` that used to guard these therefore appended a SECOND zero, and the variable
+    # held "0\n0". `[ "0\n0" -lt 30 ]` is not false, it is an ERROR ("integer expression
+    # expected"), which bash scores as a failed test and steps past.
+    #
+    # Which branch that breaks is worth being exact about. The rate-limit branch was fine: when
+    # 429s are actually present grep exits 0, `|| echo 0` never runs, and the count is clean. The
+    # damage is on the empty case — a sweep that returned NO status codes at all made `swept`
+    # malformed, so the "the probe, not the estate" branch that exists to catch exactly that
+    # errored out, and C3 fell through every remaining branch to PASS. A check that measured
+    # nothing reported ready to cut over.
+    #
+    # `|| true` keeps the exit code from tripping set -e without inventing a second line.
+    swept=$(grep -cE '^[0-9]{3}$' "$WORK/codes.txt" || true)
+    throttled=$(grep -c '^429$' "$WORK/codes.txt" || true)
+    permitted=$(grep -c '^200$' "$WORK/codes.txt" || true)
     elapsed=$(( $(date -u +%s) - sweep_start + 15 ))
     kubectl logs -n "$NS" "$AUTHZ" --since="${elapsed}s" 2>/dev/null \
       | grep -oE 'reason=[A-Z_]+' | sort | uniq -c >"$WORK/reasons.txt"
