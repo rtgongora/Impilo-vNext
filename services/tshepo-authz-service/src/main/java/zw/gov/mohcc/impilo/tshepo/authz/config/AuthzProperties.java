@@ -68,6 +68,26 @@ public class AuthzProperties {
     // denies clinical writes). Default SHADOW — observe-only, never denies. See Phase B.
     private String workContextMode = "SHADOW";
 
+    /**
+     * The tenant whose policy rules govern every plane.
+     *
+     * <p>The estate runs two deliberate tenant planes: a REGISTRY plane holding national
+     * reference data — facility master, provider register, and the authz policy rules
+     * themselves — and a CARE plane holding what an encounter, order or claim writes. Rules are
+     * seeded only on the registry plane, because rules <em>are</em> reference data by that same
+     * classification.
+     *
+     * <p>Authorization, though, is evaluated under whatever plane the request presents, and an
+     * authenticated session presents the CARE plane. So every authenticated request looked up
+     * rules under a tenant holding none and denied with {@code NO_MATCHING_RULES}. With
+     * ext_authz enabled that denies the whole estate — which is precisely what a signed-in
+     * browser session did: 10 of 10 shell endpoints refused.
+     *
+     * <p>Rules from this tenant are merged into every tenant's rule set. Blank disables the
+     * merge and returns to strictly per-tenant rules.
+     */
+    private String governanceTenantId = "00000000-0000-0000-0000-000000000001";
+
     // Specially-protected confidentiality control (Step 4.7).
     //   OFF     — never evaluate; no audit, no grant, no denial.
     //   SHADOW  — evaluate, grant nothing, deny nothing, AUDIT what it would have done. Default,
@@ -256,6 +276,9 @@ public class AuthzProperties {
     public void setConfidentialityMode(String confidentialityMode) { this.confidentialityMode = confidentialityMode; }
 
     public String getWorkContextMode() { return workContextMode; }
+
+    public String getGovernanceTenantId() { return governanceTenantId; }
+    public void setGovernanceTenantId(String governanceTenantId) { this.governanceTenantId = governanceTenantId; }
     public void setWorkContextMode(String workContextMode) { this.workContextMode = workContextMode; }
 
     public String getWorkContextIntrospectPath() { return workContextIntrospectPath; }

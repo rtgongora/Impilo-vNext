@@ -11,8 +11,10 @@ import zw.gov.mohcc.impilo.tshepo.authz.persistence.entity.PolicyRuleEntity;
 import zw.gov.mohcc.impilo.tshepo.authz.persistence.repository.PolicyRuleRepository;
 
 import java.time.Duration;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 /**
  * Redis-backed cache for policy rules.
@@ -64,7 +66,8 @@ public class PolicyCacheService {
         }
 
         log.debug("Policy rules cache MISS for tenant {}, loading from DB", tenantId);
-        List<PolicyRuleEntity> rules = ruleRepository.findByTenantIdAndActiveTrue(tenantId);
+        List<PolicyRuleEntity> rules = mergeGovernanceRules(
+                tenantId, ruleRepository.findByTenantIdAndActiveTrue(tenantId));
 
         try {
             redisTemplate.opsForValue().set(cacheKey, rules,
@@ -75,6 +78,68 @@ public class PolicyCacheService {
         }
 
         return rules;
+    }
+
+    /**
+     * Merge the governance tenant's rules into a tenant's own set.
+     *
+     * <p>Policy rules live on the REGISTRY plane, because rules are national reference data by
+     * the estate's own classification. Authorization is evaluated under whatever plane the
+     * request presents, and an authenticated session presents the CARE plane — so every
+     * authenticated request looked up rules under a tenant holding none and denied with
+     * {@code NO_MATCHING_RULES}. Measured with ext_authz enabled: a signed-in browser session
+     * was refused on 10 of 10 shell endpoints.
+     *
+     * <p><strong>Ordering is re-established across the union, never concatenated.</strong> The
+     * repository returns {@code ORDER BY effect DESC, priority ASC} — DENY before ALLOW, then
+     * by priority — and PolicyEngine relies on it: DENY wins, first matching ALLOW is taken.
+     * Appending one sorted list to another would leave a governance DENY sitting behind a
+     * tenant ALLOW and silently invert precedence, which is worse than the denial this fixes.
+     *
+     * <p>This widens which rules are <em>found</em>, not what they permit. Every merged rule is
+     * still evaluated in full against actor, role, purpose, scope and conditions — and a
+     * governance DENY now reaches requests it previously never saw.
+     */
+    private List<PolicyRuleEntity> mergeGovernanceRules(UUID tenantId, List<PolicyRuleEntity> own) {
+        String configured = properties.getGovernanceTenantId();
+        if (configured == null || configured.isBlank()) {
+            return own;   // merge deliberately disabled: strictly per-tenant rules
+        }
+        UUID governanceTenant;
+        try {
+            governanceTenant = UUID.fromString(configured.trim());
+        } catch (IllegalArgumentException e) {
+            // A malformed value must not quietly disable the merge: that restores the
+            // deny-everything behaviour while the configuration claims to prevent it.
+            log.error("tshepo.authz.governance-tenant-id is not a UUID ('{}'); rules will NOT be "
+                    + "merged and non-governance tenants may deny NO_MATCHING_RULES", configured);
+            return own;
+        }
+        if (governanceTenant.equals(tenantId)) {
+            return own;   // already the governance tenant
+        }
+
+        List<PolicyRuleEntity> governance = ruleRepository.findByTenantIdAndActiveTrue(governanceTenant);
+        if (governance.isEmpty()) {
+            return own;
+        }
+        log.debug("Merged {} governance rules (tenant {}) into {} own rules for tenant {}",
+                governance.size(), governanceTenant, own.size(), tenantId);
+
+        return Stream.concat(own.stream(), governance.stream())
+                .sorted(Comparator.comparingInt(PolicyCacheService::effectRank)
+                        .thenComparingInt(PolicyCacheService::priorityOf))
+                .toList();
+    }
+
+    /** DENY sorts before ALLOW, mirroring the repository's {@code ORDER BY effect DESC}. */
+    private static int effectRank(PolicyRuleEntity rule) {
+        return "DENY".equalsIgnoreCase(rule.getEffect()) ? 0 : 1;
+    }
+
+    /** Priority is a primitive on the entity, so there is no absent case to defend against. */
+    private static int priorityOf(PolicyRuleEntity rule) {
+        return rule.getPriority();
     }
 
     /**
