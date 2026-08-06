@@ -43,6 +43,11 @@ public final class ProviderRepresentation {
                 r.employmentOrgId(),
                 deidentified ? null : r.profilePhotoRef(),
                 r.status(),
+                // Standing travels through the PII/de-identification filter untouched: it
+                // describes the record's place on the register, not the person.
+                r.lifecycleStatus(),
+                r.registryStatus(),
+                r.claimed(),
                 r.version(),
                 r.identifiers(),
                 r.specialties(),

@@ -130,6 +130,7 @@ public class ProviderController {
                 p.isActive(),
                 hasValidLicense,
                 picEligible,
+                p.getClaimedAt() != null,
                 p.getEffectiveTo()
         );
         return ResponseEntity.ok(ApiResponse.ok(summary, ctx.correlationId().toString()));
@@ -249,6 +250,9 @@ public class ProviderController {
                 entity.getEmploymentOrgId(),
                 entity.getProfilePhotoRef(),
                 entity.getStatus(),
+                entity.getLifecycleStatus(),
+                entity.getRegistryStatus(),
+                entity.getClaimedAt() != null,
                 entity.getVersion(),
                 null, // identifiers — not loaded for single-entity returns
                 null, // specialties
@@ -324,6 +328,9 @@ public class ProviderController {
                 entity.getEmploymentOrgId(),
                 entity.getProfilePhotoRef(),
                 entity.getStatus(),
+                entity.getLifecycleStatus(),
+                entity.getRegistryStatus(),
+                entity.getClaimedAt() != null,
                 entity.getVersion(),
                 identifiers,
                 specialties,

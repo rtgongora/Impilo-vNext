@@ -29,6 +29,14 @@ public record ProviderResponse(
         Long employmentOrgId,
         String profilePhotoRef,
         String status,
+        // Registration standing vs platform participation — see ProviderSummary. Being on the
+        // HPA roll makes a practitioner findable and verifiable; it does not mean they have
+        // agreed to receive appointment or prescription requests here. Consumers that act on
+        // a provider (booking, request-routing) must gate on {@code claimed}; consumers that
+        // merely display one must show the standing rather than imply it.
+        String lifecycleStatus,
+        String registryStatus,
+        boolean claimed,
         Integer version,
         List<ProviderIdentifierDto> identifiers,
         List<ProviderSpecialtyDto> specialties,

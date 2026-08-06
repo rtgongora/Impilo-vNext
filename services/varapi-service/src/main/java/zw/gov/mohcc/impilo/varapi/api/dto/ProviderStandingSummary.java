@@ -14,6 +14,11 @@ public record ProviderStandingSummary(
         boolean active,
         boolean hasValidLicense,
         boolean picEligible,
+        // Platform participation: has the practitioner claimed their record? Registration on
+        // the HPA roll makes them findable and verifiable; this is what makes them bookable.
+        // Cross-service gates (booking, commerce, PIC) must read this rather than inferring
+        // participation from status — INACTIVE only ever meant "has not opted in yet".
+        boolean claimed,
         LocalDate licenseValidTo
 ) {}
 
