@@ -36,15 +36,42 @@ public class RoutingDirectoryService {
             }
         }
 
+        // A routing destination is somewhere work can actually be sent, so only practitioners
+        // who have opted in belong here.
+        //
+        // The provider register is deliberately wider than the platform: it carries every
+        // practitioner on the Health Professions Authority roll, because being registered is
+        // what makes someone searchable and verifiable. Claiming their record is what makes
+        // them reachable. Offering an unclaimed practitioner as a destination would route a
+        // real diagnostic order to someone who never agreed to receive one and has no way to
+        // see it — the order would simply stop, looking dispatched.
+        //
+        // Fails closed: a provider whose participation cannot be determined is not offered.
         for (Map<String, Object> provider : varapiClient.searchProviders()) {
             String id = str(provider.get("providerPublicId"));
             String name = composeName(provider);
-            if (id != null) {
+            if (id != null && isClaimed(provider)) {
                 out.add(new DestinationDto("EXTERNAL_PROVIDER", id, name, "VARAPI"));
             }
         }
 
         return out;
+    }
+
+    /**
+     * Has this practitioner claimed their record — the platform-participation opt-in?
+     *
+     * <p>Absent means not claimed. The registry answers for the whole HPA roll, so a missing
+     * field is far more likely to mean "never opted in" than "opted in but unreported", and
+     * routing to the wrong answer sends real clinical work into silence.
+     */
+    private static boolean isClaimed(Map<String, Object> provider) {
+        Object claimed = provider.get("claimed");
+        if (claimed instanceof Boolean b) {
+            return b;
+        }
+        Object claimedAt = provider.get("claimedAt");
+        return claimedAt != null && !String.valueOf(claimedAt).isBlank();
     }
 
     private static String composeName(Map<String, Object> provider) {
