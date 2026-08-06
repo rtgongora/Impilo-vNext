@@ -120,16 +120,17 @@ identifiers, a feed. Safe only because of the server-derived actor above.
 ('…0001'::uuid, 'shell-self-affiliations',          …, '{"path_contains": "/identity/affiliations"}',     true),
 ('…0001'::uuid, 'shell-self-linked-ids',            …, '{"path_contains": "/identity/linked-ids"}',       true),
 ('…0001'::uuid, 'shell-self-notifications',         …, '{"path_contains": "/assistant/notifications"}',   true),
-('…0001'::uuid, 'shell-self-appointments',          …, '{"path_contains": "/appointments"}',              true),
+('…0001'::uuid, 'shell-self-appointments',          …, '{"path_contains": "/internal/v1/appointments"}',  true),
 ('…0001'::uuid, 'shell-self-citizen-feed',          …, '{"path_contains": "/mobile/citizen/feed"}',       true),
 ('…0001'::uuid, 'shell-self-citizen-appointments',  …, '{"path_contains": "/mobile/citizen/appointments"}', true);
 ```
 
-⚠️ **`/appointments` is the loosest pin here.** `path_contains` is a substring test, so
-`"/appointments"` also matches `/internal/v1/facilities/{id}/appointments` and any other
-appointment lane in the estate — and **two active rules already mention appointments**, so this
-would sit alongside them rather than in empty space. Either accept the breadth (appointments
-are self-scoped wherever they appear) or tighten the pin. This needs a decision, not a default.
+**RESOLVED — pin anchored.** An earlier draft warned that `"/appointments"` would also match
+`/internal/v1/facilities/{id}/appointments`. **That path does not exist** — zero matches across
+every service — so the over-grant I described was hypothetical, and I should have checked
+before raising it. The pin is nonetheless anchored to `"/internal/v1/appointments"` rather than
+`"/appointments"`, because a bare substring is a standing trap for whatever path someone adds
+next, and the anchored form costs nothing today.
 
 ### Tier 3 — Directory reads (rows 12–13)
 
@@ -155,22 +156,28 @@ Not personal data. `facilities` is the national register — already public-lane
   lane rule is still consulted first.)
 - **No effect on the confidential lane**, which keeps its own narrower rules at priority 40.
 
-## Three decisions I am not making for you
+## The three open decisions — now resolved, with one correction
 
-**1. Assurance floor.** The observed session is `assurance=UNVERIFIED`. I have set **no**
-`min_aal` / `min_loa` on any rule, because any floor would deny the whole shell to a
-newly-signed-in person and reproduce today's outage in a different costume. But Tier 2 carries
-personal data. If an assurance floor belongs anywhere it is there — and it needs a companion
-answer for what the shell should *show* below that floor, or we have simply moved the blank
-screen. My recommendation: ship Tier 1–3 with no floor, then raise Tier 2 deliberately once
-step-up has somewhere to land.
+**1. Assurance floor — RESOLVED: no floor, and the reason is measured.** Across every decision
+the PDP has logged: **780 null, 25 UNVERIFIED, 62 LOA3.** A `min_loa` / `min_aal` condition
+would therefore deny roughly **93%** of real decisions, including the browser session that
+prompted this proposal. A floor today is not a control, it is the same outage with a better
+name.
+
+The measurement also surfaces something worth its own look: assurance *can* be populated —
+LOA3 appears 62 times — but is absent from the overwhelming majority of decisions. **Gating on
+a signal that is populated 7% of the time gates on nothing and denies everything.** Fix the
+signal first, then choose the floor. Recorded here as a finding, not fixed in this proposal.
 
 **2. `/appointments` pin width.** As above. Substring matching makes this rule broader than
 its name suggests.
 
-**3. Role-agnostic vs per-role.** I propose `role = NULL` throughout so providers keep their
-shell. The alternative — duplicate every rule per role — is more explicit and much more to
-maintain, and would silently break any role the duplication misses.
+**3. Role-agnostic vs per-role — RESOLVED: role-agnostic.** These are *self*-scoped reads: the
+scoping is done by actor identity via `ActorContextFilter`, not by role. Role is the wrong axis
+here, and duplicating each rule per role would add maintenance while failing silently for any
+role the duplication misses — a provider's shell going blank the first time someone adds a
+cadre. Role-based narrowing belongs where roles actually differentiate capability, which is the
+clinical surface, not shell chrome.
 
 ## How to verify this worked, and how to know if it did not
 
