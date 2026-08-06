@@ -155,10 +155,12 @@ public class TusoServiceClient {
      * plane its rows live in rather than inherit the caller's care-plane context, which finds nothing
      * and 502s. See {@link zw.gov.mohcc.impilo.experience.config.PublicTenants}.
      *
-     * <p>NOTE: this header only takes effect if the trust-forwarding interceptor forwards
-     * X-Tenant-ID <em>only-if-absent</em> (as it does for Authorization since 2026-07-27). While it
-     * forwards unconditionally, an authenticated caller's care-plane tenant overwrites this — the
-     * interceptor precedence is owned by the BFF trust layer.
+     * <p>This declaration is <b>live</b>: {@code ServiceClientConfig} forwards X-Tenant-ID with
+     * {@code forwardHeaderIfAbsent}, so a plane pre-set here survives an authenticated caller's
+     * care-plane context. (An earlier revision of this note warned the opposite — that the
+     * interceptor forwarded tenant unconditionally and would overwrite this. That was true when
+     * written and is no longer; the only-if-absent change has landed. A stale warning that
+     * inverts the truth is worse than none, which is why this is stated rather than hedged.)
      */
     private static org.springframework.http.HttpEntity<Void> registryPlaneRequest() {
         org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
