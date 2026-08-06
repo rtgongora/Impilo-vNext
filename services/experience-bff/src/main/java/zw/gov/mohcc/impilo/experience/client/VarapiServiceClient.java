@@ -400,12 +400,25 @@ public class VarapiServiceClient {
 
     /**
      * Search-before-create for provider registry (VARAPI internal).
+     *
+     * <p>Declares the REGISTRY plane, for the same reason facility search does.
+     * {@code varapi.provider} holds 4,241 rows on the registry tenant and 27 on the care
+     * tenant, so inheriting an authenticated caller's care-plane context silently truncated
+     * the register: a signed-in session asked for 50 providers and received exactly 27 —
+     * HTTP 200, no error, the whole care-plane slice presented as the national register.
+     *
+     * <p>The 27 is the tell. Truncation to a round page size looks like paging; truncation
+     * to an arbitrary number is the size of the wrong tenant's data.
      */
     public JsonNode searchProviders(Map<String, Object> requestBody) {
         String url = baseUrl + "/v1/internal/providers/search";
         log.info("VARAPI: Searching providers");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+        headers.set(zw.gov.mohcc.impilo.companion.context.CompanionHeaders.TENANT_ID,
+                zw.gov.mohcc.impilo.experience.config.PublicTenants.REGISTRY_PLANE);
         ResponseEntity<JsonNode> response =
-                restTemplate.postForEntity(url, new HttpEntity<>(requestBody), JsonNode.class);
+                restTemplate.postForEntity(url, new HttpEntity<>(requestBody, headers), JsonNode.class);
         return extractData(response);
     }
 
