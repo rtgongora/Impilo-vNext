@@ -177,10 +177,34 @@ public class RegistryController {
         attrs.put("registrationNumber", text(n, "practiceNumber"));
         attrs.put("speciality", text(n, "profession"));
         attrs.put("status", text(n, "status"));
+        // Registration standing vs platform participation — both, or a surface cannot tell
+        // them apart.
+        //
+        // Provider search returns the whole Health Professions Authority roll, because being
+        // registered is what makes a practitioner searchable and verifiable. Most of those
+        // records carry status=INACTIVE, which means only "has not opted in to receiving
+        // requests here". Passing status alone left the client unable to distinguish an
+        // HPA-registered practitioner pending verification from one who was deactivated or
+        // struck off — the same conflation that hid the register in the first place, moved
+        // one layer up.
+        //
+        // claimed is the opt-in and the booking gate. lifecycleStatus (PRELOADED vs
+        // REGISTERED) and registryStatus (e.g. PENDING_VERIFICATION) are what let a surface
+        // say "registered with HPA, pending verification, not yet accepting bookings" instead
+        // of implying an established provider.
+        attrs.put("lifecycleStatus", text(n, "lifecycleStatus"));
+        attrs.put("registryStatus", text(n, "registryStatus"));
+        attrs.put("claimed", n.has("claimed") && n.get("claimed").asBoolean(false));
         attrs.put("impiloHealthId", n.has("impiloHealthId") && !n.get("impiloHealthId").isNull()
                 ? n.get("impiloHealthId").asText()
                 : null);
-        return Map.of("id", publicId, "type", "provider", "attributes", attrs);
+        // Map.of rejects null values and caps at 10 pairs; attrs is built above as a
+        // LinkedHashMap precisely because several of these are legitimately absent.
+        Map<String, Object> resource = new LinkedHashMap<>();
+        resource.put("id", publicId);
+        resource.put("type", "provider");
+        resource.put("attributes", attrs);
+        return resource;
     }
 
     private static Map<String, Object> mapRegistryFacilitySummary(JsonNode n) {
