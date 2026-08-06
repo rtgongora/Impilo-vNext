@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
@@ -90,5 +91,49 @@ class AuthorizeControllerTest {
         verify(policyEngine).evaluate(captor.capture());
         assertEquals("svc-actor", captor.getValue().actorId(), "header is the source when the session lacks sub");
         assertEquals(tenant, captor.getValue().tenantId());
+    }
+
+    // ── Envoy calls this endpoint at path_prefix + the original path ─────────────────────
+    // Until the controller handled that shape, tshepo-authz answered 401 to every ext_authz
+    // call and, with failure_mode_allow: false, the gateway denied the entire estate.
+
+    @Test
+    void envoyPrefixedPathIsAuthorizedAsTheCallersOwnPath() {
+        when(sessionRouter.validateSession(anyString()))
+                .thenReturn(new SessionInfo(null, null, List.of("SERVICE"), null, 0, "s", "iss"));
+        when(policyEngine.evaluate(any())).thenReturn(AuthzResponse.deny("X", "y", 0));
+
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        req.setMethod("GET");
+        // Exactly what Envoy requests: http_service.path_prefix + the original path.
+        req.setRequestURI("/v1/authorize/api/v1/patients/search");
+        req.addHeader(TrustHeaders.TENANT_ID, "33333333-3333-3333-3333-333333333333");
+        req.addHeader(TrustHeaders.ACTOR_ID, "svc-actor");
+        req.addHeader(TrustHeaders.ACTOR_TYPE, "SERVICE");
+        req.addHeader(TrustHeaders.PURPOSE_OF_USE, "SYSTEM");
+        req.addHeader("authorization", "Bearer service-token");
+
+        controller().authorize(req);
+
+        ArgumentCaptor<AuthzInternalRequest> captor = ArgumentCaptor.forClass(AuthzInternalRequest.class);
+        verify(policyEngine).evaluate(captor.capture());
+        assertEquals("/api/v1/patients/search", captor.getValue().path(),
+                "the decision must be about the caller's path, not Envoy's wrapper path");
+    }
+
+    @Test
+    void stripPrefixLeavesUnrelatedPathsAlone() {
+        assertEquals("/api/v1/patients/search",
+                AuthorizeController.stripAuthorizePrefix("/v1/authorize/api/v1/patients/search"));
+        assertEquals("/internal/v1/mobile/x",
+                AuthorizeController.stripAuthorizePrefix("/internal/v1/mobile/x"),
+                "a path that is not prefixed must pass through untouched");
+        assertNull(AuthorizeController.stripAuthorizePrefix("/v1/authorize"),
+                "the bare endpoint yields no subject path, so it must read as absent not empty");
+        assertNull(AuthorizeController.stripAuthorizePrefix("/v1/authorize/"));
+        assertEquals("/v1/authorizerext/thing",
+                AuthorizeController.stripAuthorizePrefix("/v1/authorizerext/thing"),
+                "only a segment boundary counts — this is a different endpoint, not a suffix");
+        assertNull(AuthorizeController.stripAuthorizePrefix(null));
     }
 }

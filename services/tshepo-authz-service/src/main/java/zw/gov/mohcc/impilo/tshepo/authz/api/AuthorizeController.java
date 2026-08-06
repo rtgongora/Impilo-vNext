@@ -61,7 +61,21 @@ public class AuthorizeController {
      * Primary HTTP ext_authz check endpoint.
      * Accepts all HTTP methods — Envoy forwards the original request's method.
      */
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT,
+    /**
+     * Mapped at both {@code /v1/authorize} and {@code /v1/authorize/**}.
+     *
+     * <p>The wildcard is not cosmetic. Envoy's HTTP ext_authz filter prepends {@code path_prefix}
+     * to the original request path, so it calls
+     * {@code /v1/authorize/api/v1/patients/search} — never the bare endpoint. Without a handler
+     * there, two things failed at once: Spring MVC had nothing to dispatch to, and Spring
+     * Security's {@code MvcRequestMatcher} — which matches against the handler mapping, not the
+     * raw string — could not match {@code /v1/authorize/**} either, so the permitAll entry was
+     * skipped and the request fell through to {@code anyRequest().authenticated()} and answered
+     * <strong>401</strong>. With {@code failure_mode_allow: false} that denies every request in
+     * the estate, so the whole ext_authz integration could never have worked.</p>
+     */
+    @RequestMapping(value = {"", "/**"},
+                    method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT,
                               RequestMethod.DELETE, RequestMethod.PATCH, RequestMethod.HEAD,
                               RequestMethod.OPTIONS})
     public ResponseEntity<AuthzResponse> authorize(HttpServletRequest request) {
@@ -80,7 +94,7 @@ public class AuthorizeController {
         String originalPath = firstPresent(
                 request.getHeader(":path"),
                 request.getHeader(TrustHeaders.ORIGINAL_PATH),
-                request.getRequestURI());
+                stripAuthorizePrefix(request.getRequestURI()));
 
         // Extract trust headers
         String tenantIdStr = request.getHeader(TrustHeaders.TENANT_ID);
@@ -229,6 +243,37 @@ public class AuthorizeController {
      * the next source rather than authorize an empty path, which would match no rule and produce a
      * denial whose cause is invisible.</p>
      */
+    /** The prefix Envoy prepends to the original path ({@code http_service.path_prefix}). */
+    static final String AUTHORIZE_PREFIX = "/v1/authorize";
+
+    /**
+     * Recover the caller's own path from the URI Envoy actually requested.
+     *
+     * <p>Envoy asks about {@code GET /api/v1/patients/search} by calling
+     * {@code /v1/authorize/api/v1/patients/search}. Left as-is, the servlet URI would be fed to
+     * {@code deriveResourceType}, which takes the last meaningful path segment — so the resource
+     * would be derived from the caller's trailing id rather than its resource, and the decision
+     * would be made about the wrong thing.
+     *
+     * <p>Returns {@code null} for the bare endpoint rather than {@code ""}, so
+     * {@link #firstPresent} treats it as absent and the servlet's own URI is never mistaken for
+     * a real subject path. A direct caller that supplies neither the pseudo-header nor
+     * {@code x-original-path} then authorizes {@code /v1/authorize} itself, which matches no
+     * rule and denies — visibly, rather than by silently evaluating an empty path.
+     */
+    static String stripAuthorizePrefix(String uri) {
+        if (uri == null || !uri.startsWith(AUTHORIZE_PREFIX)) {
+            return uri;
+        }
+        String remainder = uri.substring(AUTHORIZE_PREFIX.length());
+        if (remainder.isEmpty() || remainder.equals("/")) {
+            return null;
+        }
+        // Only a path-segment boundary counts: "/v1/authorizerext" is a different endpoint,
+        // not this one with a suffix.
+        return remainder.startsWith("/") ? remainder : uri;
+    }
+
     private static String firstPresent(String... values) {
         for (String value : values) {
             if (value != null && !value.isBlank()) {
