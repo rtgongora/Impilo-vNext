@@ -107,6 +107,90 @@ class ProviderBootstrapServiceTest {
                 .hasMessageContaining("claimed by the authenticated person");
     }
 
+    // ── Participation: registration is not participation ──────────────────────
+
+    private ProviderEntity linkedProfile(UUID person, String lifecycle, java.time.Instant claimedAt) {
+        ProviderEntity p = new ProviderEntity();
+        p.setId(77L);
+        p.setTenantId(tenantId);
+        p.setProviderPublicId("PRV-SELF-1");
+        p.setImpiloHealthId(person);
+        p.setLifecycleStatus(lifecycle);
+        p.setClaimedAt(claimedAt);
+        return p;
+    }
+
+    private void asPerson(UUID person) {
+        TrustContextHolder.set(new TrustContext(
+                tenantId, person.toString(), "PROVIDER", "TREATMENT", "device",
+                correlationId, null, null, null, AccessMode.INTERNAL));
+    }
+
+    @org.junit.jupiter.api.Test
+    void setParticipation_optingInMakesARegisteredProviderBookable() {
+        UUID person = UUID.randomUUID();
+        asPerson(person);
+        // The 27 self-registered providers in the estate: bound to a person, lifecycle REGISTERED,
+        // claimed_at null — so booking refused them and no route existed to change that.
+        ProviderEntity p = linkedProfile(person, "REGISTERED", null);
+        lenient().when(providerRepository.findByTenantIdAndImpiloHealthId(tenantId, person))
+                .thenReturn(java.util.Optional.of(p));
+        lenient().when(providerRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        service.setParticipation(true);
+
+        org.assertj.core.api.Assertions.assertThat(p.getClaimedAt()).isNotNull();
+    }
+
+    @org.junit.jupiter.api.Test
+    void setParticipation_optingOutClearsTheSwitchOnly() {
+        UUID person = UUID.randomUUID();
+        asPerson(person);
+        ProviderEntity p = linkedProfile(person, "CLAIMED", java.time.Instant.now());
+        p.setClaimedHealthId(person);
+        lenient().when(providerRepository.findByTenantIdAndImpiloHealthId(tenantId, person))
+                .thenReturn(java.util.Optional.of(p));
+        lenient().when(providerRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        service.setParticipation(false);
+
+        // Not bookable any more, but still the same person's profile: the claim itself lives on
+        // the authorisation link (boundAt), so opting out is not an un-claim.
+        org.assertj.core.api.Assertions.assertThat(p.getClaimedAt()).isNull();
+        org.assertj.core.api.Assertions.assertThat(p.getClaimedHealthId()).isEqualTo(person);
+        org.assertj.core.api.Assertions.assertThat(p.getLifecycleStatus()).isEqualTo("CLAIMED");
+    }
+
+    @org.junit.jupiter.api.Test
+    void setParticipation_cannotSelfActivateAnUnclaimedPreloadedProfile() {
+        UUID person = UUID.randomUUID();
+        asPerson(person);
+        // Every one of the 4,241 HPA-imported skeletons carries an impilo_health_id from the
+        // import, so this profile resolves by the caller's Health ID. Allowing opt-in here would
+        // switch on a profile nobody has verified, bypassing both the claim token and the
+        // reviewer — the entire point of the council-number workflow.
+        ProviderEntity p = linkedProfile(person, "PRELOADED", null);
+        lenient().when(providerRepository.findByTenantIdAndImpiloHealthId(tenantId, person))
+                .thenReturn(java.util.Optional.of(p));
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.setParticipation(true))
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
+                .hasMessageContaining("not been claimed yet");
+        org.assertj.core.api.Assertions.assertThat(p.getClaimedAt()).isNull();
+    }
+
+    @org.junit.jupiter.api.Test
+    void setParticipation_unknownProfileIsNotFound() {
+        UUID person = UUID.randomUUID();
+        asPerson(person);
+        lenient().when(providerRepository.findByTenantIdAndImpiloHealthId(tenantId, person))
+                .thenReturn(java.util.Optional.empty());
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.setParticipation(true))
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
+                .hasMessageContaining("No provider profile");
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     /** Make providerRepository.save assign an incrementing id and echo the entity. */

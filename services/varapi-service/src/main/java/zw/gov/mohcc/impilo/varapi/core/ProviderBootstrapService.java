@@ -437,6 +437,82 @@ public class ProviderBootstrapService {
         completeClaim(provider, claimantHealthId, "access-request:" + requestPublicId, "REVIEWER_VERIFIED");
     }
 
+    /**
+     * Turn participation on or off for the authenticated person's own provider profile.
+     *
+     * <p>Registration is not participation. Being on the HPA register makes a practitioner
+     * searchable, verifiable and findable; it does not mean they have agreed to receive
+     * appointment and prescription requests through Impilo. {@code claimed_at} is that agreement,
+     * and it is what booking gates on, so this is the switch that decides whether a practitioner
+     * can be booked.</p>
+     *
+     * <p><b>Why this exists separately from the claim routes.</b> A profile that is already bound
+     * to a person has nothing left to prove: the binding happened at registration or at claim.
+     * But there was no way to set {@code claimed_at} except by claiming a PRELOADED skeleton, so
+     * the 27 self-registered providers in the estate — bound to a person, lifecycle REGISTERED —
+     * could never opt in, and were therefore permanently unbookable. Not a policy, just a missing
+     * door.</p>
+     *
+     * <p><b>PRELOADED is deliberately excluded, and this is the security-load-bearing part.</b>
+     * Every one of the 4,241 HPA-imported skeletons already carries an {@code impilo_health_id}
+     * from the import, so resolving a profile by the caller's Health ID can land on an unclaimed
+     * skeleton. Allowing self opt-in there would let a person switch on a profile whose identity
+     * nobody has checked, bypassing both the claim token and the reviewer — the whole point of
+     * the council-number workflow. An unclaimed profile must be claimed first.</p>
+     *
+     * <p>Opting out clears {@code claimed_at} only. It does not unbind or un-claim: the
+     * authoritative binding record is the authorisation link, which carries its own
+     * {@code boundAt}, so the claim and when it happened survive an opt-out and a later opt-in
+     * does not rewrite history.</p>
+     */
+    @Transactional
+    public ClaimProfileResponse setParticipation(boolean participating) {
+        TrustContext ctx = TrustContextHolder.require();
+        UUID actor;
+        try {
+            actor = UUID.fromString(ctx.actorId());
+        } catch (IllegalArgumentException | NullPointerException ex) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN,
+                    "Participation can only be set by an authenticated person");
+        }
+
+        ProviderEntity provider = providerRepository
+                .findByTenantIdAndImpiloHealthId(ctx.tenantId(), actor)
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND,
+                        "No provider profile is linked to this person"));
+
+        if (LIFECYCLE_PRELOADED.equals(provider.getLifecycleStatus())) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.CONFLICT,
+                    "This profile has not been claimed yet — claim it before choosing to participate");
+        }
+
+        boolean alreadyParticipating = provider.getClaimedAt() != null;
+        if (alreadyParticipating == participating) {
+            return toClaimResponse(provider);          // idempotent; nothing to record
+        }
+
+        provider.setClaimedAt(participating ? Instant.now() : null);
+        if (participating && provider.getClaimedHealthId() == null) {
+            provider.setClaimedHealthId(actor);
+        }
+        provider.deriveStatusProjections();
+        provider.setUpdatedBy(ctx.actorId());
+        provider = providerRepository.save(provider);
+
+        publishEvent("PROVIDER", provider.getProviderPublicId(),
+                participating ? "varapi.provider.participation.opted_in"
+                              : "varapi.provider.participation.opted_out",
+                String.format("{\"providerPublicId\":\"%s\",\"impiloHealthId\":\"%s\",\"participating\":%s}",
+                        provider.getProviderPublicId(), provider.getImpiloHealthId(), participating));
+
+        log.info("provider participation set: providerPublicId={} participating={}",
+                provider.getProviderPublicId(), participating);
+        return toClaimResponse(provider);
+    }
+
     private Optional<ProviderClaimTokenEntity> loadRedeemableToken(UUID tenantId, String rawToken) {
         if (rawToken == null || rawToken.isBlank()) {
             return Optional.empty();

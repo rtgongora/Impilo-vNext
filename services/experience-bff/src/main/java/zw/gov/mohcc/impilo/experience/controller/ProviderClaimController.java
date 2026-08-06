@@ -107,9 +107,21 @@ public class ProviderClaimController {
         JsonNode linked = varapiClient.getProviderByHealthId(actorId);
         boolean alreadyLinked = linked != null && !linked.isNull();
 
+        // Registration is not participation, so "linked" and "participating" are different
+        // answers and the surface must be able to tell them apart. A practitioner whose profile
+        // is linked but not participating is not broken and not pending — they simply have not
+        // said yes yet, and only this distinction lets the UI say so instead of guessing.
+        String lifecycleStatus = alreadyLinked ? text(linked, "lifecycleStatus") : null;
+        boolean participating = alreadyLinked && linked.path("claimed").asBoolean(false);
+
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("alreadyLinked", alreadyLinked);
         data.put("eligibleForClaim", !alreadyLinked);
+        data.put("participating", participating);
+        data.put("lifecycleStatus", lifecycleStatus);
+        // An unclaimed skeleton must go through a claim first; offering the switch there would
+        // promise something varapi will refuse.
+        data.put("canSetParticipation", alreadyLinked && !"PRELOADED".equals(lifecycleStatus));
         if (alreadyLinked) {
             data.put("providerPublicId", maskId(text(linked, "providerPublicId")));
         }
@@ -204,6 +216,46 @@ public class ProviderClaimController {
         } catch (HttpStatusCodeException e) {
             // 409 (token burned / profile not claimable / one-person-one-profile)
             // and every other downstream verdict propagate honestly.
+            return propagate(e, requestId, correlationId);
+        }
+    }
+
+    /**
+     * Opt the signed-in practitioner's own provider profile in or out of participation.
+     *
+     * <p>Registration is not participation. Being on the register makes a practitioner
+     * searchable, verifiable and findable; this is the separate, revocable decision to receive
+     * appointment and prescription requests through Impilo, and it is what booking gates on.</p>
+     *
+     * <p>Whose participation changes is decided downstream from the trust headers, never from
+     * this body — the body carries only the choice. Varapi additionally refuses to switch on a
+     * profile that has not been claimed, so this cannot become a way around the claim.</p>
+     */
+    @PostMapping("/participation")
+    public ResponseEntity<Map<String, Object>> participation(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader("X-Actor-ID") String actorId,
+            @RequestBody Map<String, Object> body) {
+
+        Object choice = body == null ? null : body.get("participating");
+        if (!(choice instanceof Boolean participating)) {
+            return error(HttpStatus.BAD_REQUEST, "PARTICIPATION_CHOICE_REQUIRED",
+                    "Say whether you want to receive requests through Impilo: participating must be true or false.",
+                    requestId, correlationId);
+        }
+
+        try {
+            JsonNode result = varapiClient.setProviderParticipation(Map.of("participating", participating));
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("participating", participating);
+            data.put("providerPublicId", maskId(text(result, "providerPublicId")));
+            data.put("lifecycleStatus", text(result, "lifecycleStatus"));
+            return ok(data, requestId, correlationId);
+        } catch (HttpStatusCodeException e) {
+            // 404 (no profile linked to this person) and 409 (profile not claimed yet) are real
+            // answers about this person's standing, not failures to hide.
             return propagate(e, requestId, correlationId);
         }
     }

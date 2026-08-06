@@ -107,6 +107,24 @@ public class ProviderBootstrapController {
                 hpaClaimService.claimByRegistrationNumber(registrationNumber, councilCode));
     }
 
+    /**
+     * Opt the authenticated person's own provider profile in or out of participation.
+     *
+     * <p>Registration is not participation: being on the register makes a practitioner findable
+     * and verifiable, while this switch decides whether they can be booked. The profile is
+     * resolved from the authenticated actor server-side and never from the body — a caller must
+     * not be able to nominate whose participation they are changing.</p>
+     */
+    @PostMapping("/participation")
+    public ResponseEntity<ClaimProfileResponse> setParticipation(@RequestBody Map<String, Object> body) {
+        TrustContextHolder.require();
+        Object value = body == null ? null : body.get("participating");
+        if (!(value instanceof Boolean participating)) {
+            throw new IllegalArgumentException("participating must be true or false");
+        }
+        return ResponseEntity.ok(bootstrapService.setParticipation(participating));
+    }
+
     // ── Failure mapping (service throws plain exceptions; map to HTTP) ─────────
 
     @ExceptionHandler(IllegalArgumentException.class)

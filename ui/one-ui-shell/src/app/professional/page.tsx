@@ -17,6 +17,11 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
+  useProviderClaimEligibility,
+  useSetProviderParticipation,
+  providerClaimErrorMessage,
+} from "@/hooks/queries/useProviderClaim";
+import {
   AlertTriangle,
   ArrowRight,
   BadgeCheck,
@@ -108,6 +113,9 @@ export default function ProfessionalProfilePage() {
             </Link>
           </div>
         </div>
+
+        {/* Participation — registration is not participation */}
+        <ParticipationCard />
 
         {/* Registration & Licensing */}
         <section className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
@@ -470,3 +478,102 @@ export default function ProfessionalProfilePage() {
     </AppLayout>
   );
 }
+
+/**
+ * The practitioner's own decision to receive requests through Impilo.
+ *
+ * Being on the HPA register makes a practitioner searchable, verifiable and findable. It does
+ * not mean they have agreed to receive appointment and prescription requests, and booking gates
+ * on that separate yes. This is where they give it, and take it back.
+ *
+ * Every state below is a distinct thing the person needs to be told apart, which is why none of
+ * them collapses into a generic empty card: no profile linked yet, a profile still awaiting its
+ * claim, participating, not participating, and "we could not load your standing". The last one
+ * is never rendered as "not participating" — an unavailable answer is not a "no".
+ */
+function ParticipationCard() {
+  const { data, isLoading, isError } = useProviderClaimEligibility();
+  const setParticipation = useSetProviderParticipation();
+
+  if (isLoading) {
+    return (
+      <section className="bg-card rounded-xl border border-border shadow-sm px-6 py-4">
+        <p className="text-sm text-muted-foreground">Checking whether you are accepting requests…</p>
+      </section>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <section className="bg-card rounded-xl border border-border shadow-sm px-6 py-4">
+        <h2 className="text-sm font-semibold text-foreground">Accepting requests</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          We could not load whether you are accepting requests. This is not a &ldquo;no&rdquo; — your
+          current setting is unchanged. Try again shortly.
+        </p>
+      </section>
+    );
+  }
+
+  if (!data.alreadyLinked) {
+    return (
+      <section className="bg-card rounded-xl border border-border shadow-sm px-6 py-4">
+        <h2 className="text-sm font-semibold text-foreground">Accepting requests</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          No provider profile is linked to you yet. Once your profile is linked you can choose
+          whether to receive appointment and prescription requests here.
+        </p>
+        <Link href="/citizen/provider-claim" className="mt-3 inline-block text-sm font-medium text-primary hover:underline">
+          Claim your provider profile
+        </Link>
+      </section>
+    );
+  }
+
+  if (!data.canSetParticipation) {
+    return (
+      <section className="bg-card rounded-xl border border-border shadow-sm px-6 py-4">
+        <h2 className="text-sm font-semibold text-foreground">Accepting requests</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Your profile is on the register but has not been claimed yet. Claiming confirms you are
+          the practitioner it belongs to; you can choose whether to accept requests once that is
+          done.
+        </p>
+        <Link href="/citizen/provider-claim" className="mt-3 inline-block text-sm font-medium text-primary hover:underline">
+          Claim your provider profile
+        </Link>
+      </section>
+    );
+  }
+
+  const participating = data.participating === true;
+
+  return (
+    <section className="bg-card rounded-xl border border-border shadow-sm px-6 py-4">
+      <h2 className="text-sm font-semibold text-foreground">Accepting requests</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {participating
+          ? "People can book appointments with you and send you prescription requests through Impilo."
+          : "You are listed and can be found and verified, but people cannot book you or send you requests."}
+      </p>
+      <button
+        type="button"
+        disabled={setParticipation.isPending}
+        onClick={() => setParticipation.mutate(!participating)}
+        className="mt-3 inline-flex items-center rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-card disabled:opacity-60"
+      >
+        {setParticipation.isPending
+          ? "Saving…"
+          : participating
+            ? "Stop accepting requests"
+            : "Start accepting requests"}
+      </button>
+      {setParticipation.isError && (
+        <p className="mt-2 text-sm text-destructive">
+          {providerClaimErrorMessage(setParticipation.error, "We could not change this just now.")}
+        </p>
+      )}
+    </section>
+  );
+}
+

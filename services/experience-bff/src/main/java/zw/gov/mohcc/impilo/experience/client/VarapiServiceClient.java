@@ -747,6 +747,20 @@ public class VarapiServiceClient {
     }
 
     /**
+     * Set participation for the caller's own provider profile.
+     *
+     * <p>Registration is not participation. Varapi resolves whose profile this is from the
+     * trust headers, never from the body, so nothing here can nominate another person.</p>
+     */
+    public JsonNode setProviderParticipation(Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/providers/bootstrap/participation";
+        log.info("VARAPI: setting provider participation for the authenticated person");
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
+        return response.getBody();
+    }
+
+    /**
      * Initiate provider profile recovery (recover-not-reissue): issues a
      * single-use recovery token bound to the person's EXISTING profile.
      */

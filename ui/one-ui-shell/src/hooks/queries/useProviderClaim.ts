@@ -28,6 +28,15 @@ export interface ProviderClaimPath {
 export interface ProviderClaimEligibility {
   alreadyLinked: boolean;
   eligibleForClaim: boolean;
+  /**
+   * Whether this practitioner has agreed to receive appointment and prescription requests.
+   * Distinct from `alreadyLinked`: registration and linkage make someone findable and
+   * verifiable, participation is the separate, revocable yes that booking gates on.
+   */
+  participating?: boolean;
+  lifecycleStatus?: string;
+  /** False for a profile that has not been claimed yet — it must be claimed before it can participate. */
+  canSetParticipation?: boolean;
   /** Masked (first4***last2) — the BFF never returns the raw identifier here. */
   providerPublicId?: string;
   paths?: ProviderClaimPath[];
@@ -172,6 +181,27 @@ export function useRecoverProviderProfile() {
 }
 
 /** Human-readable message from a BFF error (honest copy travels in error.message). */
+/**
+ * Turn participation on or off for the signed-in practitioner's own profile.
+ *
+ * Whose participation changes is decided server-side from the trust headers; the body carries
+ * only the choice. Invalidates eligibility so the surface re-reads the new standing rather than
+ * assuming the write succeeded.
+ */
+export function useSetProviderParticipation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (participating: boolean) =>
+      (await apiClient.post<Envelope<{ participating: boolean; lifecycleStatus?: string }>>(
+        `${BASE}/participation`,
+        { participating },
+      )).data,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: qk.eligibility() });
+    },
+  });
+}
+
 export function providerClaimErrorMessage(err: unknown, fallback: string): string {
   const e = err as ProviderClaimApiError | undefined;
   return e?.error?.message || fallback;
