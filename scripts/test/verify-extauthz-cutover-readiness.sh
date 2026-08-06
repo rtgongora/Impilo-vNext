@@ -155,6 +155,21 @@ fi
 # The override exists only so this check can be red-proved against a rule-less tenant.
 # It must never be the silent default.
 TENANT="${POLICY_TENANT:-$RUNTIME_TENANT}"
+# The PDP merges the governance tenant's rules into every tenant (tshepo.authz.
+# governance-tenant-id), because rules live on the registry plane while requests present the
+# care plane. So "the runtime tenant owns no rows" stopped being evidence of anything — it is
+# the normal, correct state. Counting rows on the runtime tenant alone would fail a healthy
+# estate; the sweep below remains the authority, and this only fails when NEITHER side can
+# supply a rule.
+GOVERNANCE_TENANT=$(kubectl get deploy tshepo-authz-service -n "$NS" \
+  -o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="TSHEPO_AUTHZ_GOVERNANCE_TENANT_ID")].value}' 2>/dev/null)
+GOVERNANCE_TENANT="${GOVERNANCE_TENANT:-00000000-0000-0000-0000-000000000001}"
+GOVERNANCE_RULE_COUNT=0
+if [ -n "${PGPOD:-}" ] && [ -n "$GOVERNANCE_TENANT" ]; then
+  GOVERNANCE_RULE_COUNT=$(kubectl exec -n "$NS" "$PGPOD" -- psql -U impilo -d tshepo_authz -qtAc \
+    "select count(*) from tshepo_authz.policy_rule where active and tenant_id='${GOVERNANCE_TENANT}';" \
+    2>/dev/null | tr -d '\r ')
+fi
 RULE_COUNT=0
 if [ -n "${PGPOD:-}" ] && [ -n "$TENANT" ]; then
   RULE_COUNT=$(kubectl exec -n "$NS" "$PGPOD" -- psql -U impilo -d tshepo_authz -qtAc \
@@ -168,11 +183,11 @@ elif [ -z "$TENANT" ]; then
   record UNKNOWN C3 "no non-probe decision in policy_decision_log — the runtime tenant is unknown and this cannot be measured; drive one real signed-in request first"
 elif [ -z "${POLICY_TENANT:-}" ] && [ "${TENANT_AGE_H:-9999}" -gt 24 ]; then
   record UNKNOWN C3 "newest non-probe decision is ${TENANT_AGE_H}h old — tenant ${TENANT} is inferred from stale traffic, not current behaviour; drive a real signed-in request and re-run"
-elif [ "${RULE_COUNT:-0}" -eq 0 ]; then
+elif [ "${RULE_COUNT:-0}" -eq 0 ] && [ "${GOVERNANCE_RULE_COUNT:-0}" -eq 0 ]; then
   seeded=$(kubectl exec -n "$NS" "$PGPOD" -- psql -U impilo -d tshepo_authz -qtAc \
     "select string_agg(distinct tenant_id::text, ', ') from tshepo_authz.policy_rule where active;" \
     2>/dev/null | tr -d '\r')
-  record FAIL C3 "runtime tenant ${TENANT} has ZERO active policy rules — every authenticated request denies NO_MATCHING_RULES. Rules are seeded under: ${seeded:-<none>}"
+  record FAIL C3 "runtime tenant ${TENANT} has ZERO active rules and the governance tenant supplies none — every authenticated request denies NO_MATCHING_RULES. Rules are seeded under: ${seeded:-<none>}"
 else
   python3 - >"$WORK/paths.txt" <<'PYEOF'
 import re, glob, random
@@ -230,7 +245,7 @@ PYEOF
     elif [ "$missing" -gt 0 ]; then
       record FAIL C3 "${missing} decisions hit NO_MATCHING_RULES across ${swept} sampled routes — those have no candidate rule at all"
     else
-      record PASS C3 "no route hit NO_MATCHING_RULES across ${swept} routes on the RUNTIME tenant ${TENANT} (${RULE_COUNT} active rules; ${permitted} permitted for this unauthenticated probe actor — the rest are NO_ALLOW_RULE, a policy decision not a gap)"
+      record PASS C3 "no route hit NO_MATCHING_RULES across ${swept} routes on the RUNTIME tenant ${TENANT} (${RULE_COUNT} own + ${GOVERNANCE_RULE_COUNT} governance rules; ${permitted} permitted for this unauthenticated probe actor — the rest are NO_ALLOW_RULE, a policy decision not a gap)"
     fi
   fi
 fi
