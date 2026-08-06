@@ -705,6 +705,42 @@ class PolicyEngineTest {
         );
     }
 
+    @Test
+    @DisplayName("identity headers are emitted even when the PDP has no value — an empty header displaces a forged one")
+    void allowEmitsIdentityHeadersUnconditionally() {
+        // allowed_upstream_headers copies what the PDP sets ON TOP OF the client's copy, and
+        // that overwrite is the anti-impersonation control. A header the PDP declines to emit
+        // therefore leaves the CLIENT's value travelling onward — so a caller could assert
+        // x-provider-id or x-subject-id and keep it precisely because the PDP had none.
+        //
+        // The route-level strip that used to cover this could not: Envoy removes route headers
+        // in the router, after the filter chain, so it deleted what ext_authz had restored and
+        // took nine shell endpoints from 200 to 400. Emitting unconditionally is what lets that
+        // strip go away.
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        PolicyRuleEntity rule = buildAllowRule("patients", "PROVIDER", "DOCTOR", "GET", "TREATMENT");
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(rule));
+        when(consentClient.evaluateConsent(
+                eq(TENANT_ID), eq("patients"), any(), eq(ACTOR_ID), eq("TREATMENT")))
+                .thenReturn(ConsentDecision.permit("consent-1", List.of("read")));
+
+        // defaultRequest() carries no provider, subject or assurance level.
+        AuthzResponse response = policyEngine.evaluate(defaultRequest());
+
+        assertEquals(Verdict.ALLOW, response.verdict());
+        for (String header : List.of(TrustHeaders.PROVIDER_ID, TrustHeaders.SUBJECT_ID,
+                                     TrustHeaders.ASSURANCE_LEVEL, TrustHeaders.TENANT_ID,
+                                     TrustHeaders.ACTOR_ID, TrustHeaders.ACTOR_TYPE)) {
+            assertTrue(response.headerMutations().containsKey(header),
+                    header + " must be PRESENT even when empty: an omitted header leaves the "
+                            + "client's forged value in place, which is the hole this closes");
+        }
+        assertEquals("", response.headerMutations().get(TrustHeaders.PROVIDER_ID),
+                "no provider on this request, so the emitted value clears rather than asserts");
+        assertEquals("", response.headerMutations().get(TrustHeaders.SUBJECT_ID));
+    }
+
     private PolicyRuleEntity buildAllowRuleWithConditions(
             String resourceType, String role, String action, String conditionsJson) {
         PolicyRuleEntity rule = buildAllowRule(resourceType, "PROVIDER", role, action, "TREATMENT");

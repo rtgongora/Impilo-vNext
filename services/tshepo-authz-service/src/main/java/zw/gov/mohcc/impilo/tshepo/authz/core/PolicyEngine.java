@@ -788,10 +788,10 @@ public class PolicyEngine {
                 return false;
             }
 
-            // min_loa check — keyed on the EFFECTIVE LoA: see identityLoa(), which takes the
-            // stronger of the ACR-derived login level and the propagated identity-assurance
-            // level. A self-service verification upgrade changes what policy sees on the next
-            // request (G-CZO-01), and a strong login now counts toward the floor as well.
+            // min_loa check — keyed on the propagated identity-assurance level ONLY. See
+            // identityLoa(): authentication AAL is deliberately NOT folded in, so a strong login
+            // never substitutes for identity proofing. A self-service verification upgrade
+            // changes what policy sees on the next request (G-CZO-01).
             if (conditions.containsKey("min_loa")) {
                 int minLoa = ((Number) conditions.get("min_loa")).intValue();
                 int identityLoa = identityLoa(request);
@@ -1035,37 +1035,36 @@ public class PolicyEngine {
      * verification upgrade is recorded.
      */
     /**
-     * The EFFECTIVE Level of Assurance: the stronger of the session's ACR-derived login level
-     * and the actor's current identity-assurance level propagated via {@code X-Assurance-Level}.
+     * Identity Level of Assurance: the propagated {@code X-Assurance-Level} ONLY.
      *
-     * <p>This previously returned the propagated header alone, while the comment above the
-     * {@code min_loa} check claimed it already took the stronger of both. It did not. The header
-     * is populated server-side only for CITIZEN actors — {@code AssuranceLevelResolutionInterceptor}
-     * skips providers by design, and the ACR fallback its javadoc assumes was never wired — so
-     * for a provider the value was absent and {@code parseAssuranceLoa} returned 0. Every
-     * {@code min_loa} rule therefore failed closed for providers regardless of how strongly they
-     * had authenticated. Measured before this change: 7 active ALLOW rules carry
-     * {@code min_loa: 2} and none of them could ever fire.
+     * <p><strong>Authentication AAL is deliberately not folded in.</strong> An earlier revision
+     * of this method took {@code Math.max(propagated, authenticationAssurance().aal())} because
+     * the comment above the {@code min_loa} check claimed the effective LoA was "the stronger of
+     * the session's ACR-derived login level and the actor's current identity-assurance level".
+     * That comment was wrong, and the code it described was right — a mistake caught by two
+     * tests in {@code PolicyEngineTest} that state the invariant as a matched pair:
      *
-     * <p><strong>Why folding in the login level is correct here but wrong in
-     * {@link #accountVerified}.</strong> The two ask different questions and the difference is
-     * deliberate. {@code min_loa} asks how assured this <em>session</em> is overall, and a strong
-     * authentication genuinely raises that. {@code account_assurance_required} asks whether this
-     * <em>person</em> has been identity-proofed, which no amount of login strength can establish —
-     * so it stays keyed on the propagated level alone. Conflating the two would let a hardware key
-     * stand in for in-person verification.
+     * <ul>
+     *   <li>{@code evaluate_highAal_lowIdentityLoa_deniesIdentityPolicy} —
+     *       "authentication AAL never substitutes for identity min_loa"</li>
+     *   <li>{@code evaluate_highIdentityLoa_lowAal_deniesAuthenticationPolicy} —
+     *       "identity LOA never substitutes for authentication min_aal"</li>
+     * </ul>
      *
-     * <p>This can only raise the effective LoA, never lower it, so it widens the seven rules above
-     * from never-firing to firing for genuinely stepped-up sessions. That is what their authors
-     * wrote them to do.
+     * <p>The axes are separate because they answer different questions. AAL is how strongly this
+     * session authenticated; LoA is how well this person's identity was proofed. A hardware key
+     * proves possession of a credential, not that anyone checked a passport. Folding one into
+     * the other lets a strong login stand in for in-person verification — the same conflation
+     * {@link #accountVerified} already refuses.
+     *
+     * <p>So {@code min_loa} rules genuinely fail closed when the propagated level is absent, and
+     * for providers it is absent: {@code AssuranceLevelResolutionInterceptor} resolves it for
+     * CITIZEN actors only, and {@code ia.assurance_record} is empty estate-wide. That is a real
+     * gap — seven active ALLOW rules carry {@code min_loa: 2} and cannot fire — but the fix is to
+     * populate identity assurance, not to accept authentication strength in its place.
      */
-    // Package-private and static: a pure function of the request, so it is directly testable
-    // without standing up an engine. See EffectiveLoaTest.
     static int identityLoa(AuthzInternalRequest request) {
-        int propagated = parseAssuranceLoa(request.assuranceLevel());
-        AuthenticationAssurance authentication = request.authenticationAssurance();
-        int loginDerived = authentication == null ? 0 : authentication.aal();
-        return Math.max(propagated, loginDerived);
+        return parseAssuranceLoa(request.assuranceLevel());
     }
 
     private boolean meetsAuthenticationRequirement(AuthzInternalRequest request, int minAal,
@@ -1812,21 +1811,35 @@ public class PolicyEngine {
         headers.put(TrustHeaders.ACTOR_ID, request.actorId() != null ? request.actorId() : "");
         headers.put(TrustHeaders.ACTOR_TYPE, request.actorType() != null ? request.actorType() : "");
 
-        if (request.tenantId() != null) {
-            headers.put(TrustHeaders.TENANT_ID, request.tenantId().toString());
-        }
-        if (request.correlationId() != null) {
-            headers.put(TrustHeaders.CORRELATION_ID, request.correlationId().toString());
-        }
-        if (request.providerId() != null) {
-            headers.put(TrustHeaders.PROVIDER_ID, request.providerId());
-        }
-        if (request.subjectId() != null) {
-            headers.put(TrustHeaders.SUBJECT_ID, request.subjectId());
-        }
-        if (request.assuranceLevel() != null) {
-            headers.put(TrustHeaders.ASSURANCE_LEVEL, request.assuranceLevel());
-        }
+        // ── Emitted UNCONDITIONALLY, empty when there is no value. ──────────────────
+        //
+        // These were each inside an `if (… != null)`, which made the anti-impersonation
+        // control conditional on the PDP happening to have a value. Envoy's
+        // allowed_upstream_headers copies what the PDP sets ON TOP OF the client's copy —
+        // that overwrite IS the control — so a header the PDP declines to emit leaves the
+        // CLIENT's value travelling to the service unchallenged. A caller could assert
+        // x-provider-id or x-assurance-level and, precisely because the PDP had none, keep it.
+        //
+        // The route-level request_headers_to_remove was there to cover that gap, and could
+        // not: Envoy applies route header removal in the router, AFTER the filter chain, so it
+        // deleted what ext_authz had just restored. Nine shell endpoints that returned 200
+        // returned 400 with the gate on, because x-actor-id was emitted and then removed.
+        // Emitting unconditionally lets that strip list go away entirely: an empty value
+        // overwrites the client's, which is what the strip was trying to achieve one phase
+        // too late.
+        //
+        // Downstream reads these with isBlank()-style checks, so "" and absent mean the same
+        // thing to a consumer — but only "" actually displaces a forged value.
+        headers.put(TrustHeaders.TENANT_ID,
+                request.tenantId() != null ? request.tenantId().toString() : "");
+        headers.put(TrustHeaders.CORRELATION_ID,
+                request.correlationId() != null ? request.correlationId().toString() : "");
+        headers.put(TrustHeaders.PROVIDER_ID,
+                request.providerId() != null ? request.providerId() : "");
+        headers.put(TrustHeaders.SUBJECT_ID,
+                request.subjectId() != null ? request.subjectId() : "");
+        headers.put(TrustHeaders.ASSURANCE_LEVEL,
+                request.assuranceLevel() != null ? request.assuranceLevel() : "");
         AuthenticationAssurance authentication = request.authenticationAssurance();
         if (authentication != null && authentication.aal() > 0) {
             headers.put(TrustHeaders.AUTHENTICATION_AAL, Integer.toString(authentication.aal()));

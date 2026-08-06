@@ -120,39 +120,33 @@ data:
                               route:
                                 cluster: experience_bff
                               request_headers_to_remove:
-                                {{- if .Values.envoy.extAuthz.enabled }}
-                                # ── Identity, stripped ONLY when the PDP can regenerate it ──
-                                # Checkpoint 4. These were never stripped on this route, so a
-                                # client could set its own x-actor-id / x-tenant-id /
-                                # x-provider-id and have it survive to the service — the
-                                # anti-impersonation control ended at the gate.
-                                #
-                                # Strip and regenerate are ONE control, and this list is
-                                # deliberately gated on extAuthz being enabled: every header
-                                # below is re-added from validated evidence by
-                                # PolicyEngine.buildHeaderMutations via allowed_upstream_headers.
-                                # Stripping them with the PDP off would not harden anything, it
-                                # would DELETE the identity the upstream needs.
-                                #
-                                # Context headers (x-facility-id, x-workspace-id, x-department-id,
-                                # x-ward-id, x-programme-id, x-shift-id, x-work-context-token,
-                                # x-purpose-of-use, x-workflow-state) are deliberately NOT here:
-                                # the browser shell genuinely supplies them and the PDP does not
-                                # regenerate them, so stripping would remove real operating
-                                # context. They remain client-supplied — a retained gap recorded
-                                # in checkpoint-4/HEADER_CONTAINMENT.md, to be closed by teaching
-                                # the PDP to emit them, not by stripping them blind.
-                                - "x-actor-id"
-                                # Decision inputs: a client that could set these would choose which
-                                # resource its own request is authorized against.
-                                - "x-original-method"
-                                - "x-original-path"
-                                - "x-actor-type"
-                                - "x-tenant-id"
-                                - "x-subject-id"
-                                - "x-provider-id"
-                                - "x-assurance-level"
-                                {{- end }}
+                                  # ── Identity is NOT stripped here, and must not be. ────────
+                                  # This block used to remove x-actor-id, x-actor-type, x-tenant-id,
+                                  # x-subject-id, x-provider-id and x-assurance-level whenever extAuthz
+                                  # was enabled, on the understanding that
+                                  # PolicyEngine.buildHeaderMutations regenerated them via
+                                  # allowed_upstream_headers.
+                                  #
+                                  # It cannot work, because the two halves run in different phases.
+                                  # ext_authz is an HTTP filter; request_headers_to_remove is applied by
+                                  # the ROUTER, after the whole filter chain. So the route deleted exactly
+                                  # what the PDP had just restored. Measured 2026-08-06: nine shell
+                                  # endpoints that returned 200 returned 400 with the gate on, because
+                                  # every controller taking @RequestHeader(ACTOR_ID) as mandatory lost it.
+                                  #
+                                  # The strip was never needed for the control it protected.
+                                  # allowed_upstream_headers OVERWRITES the client's value with the PDP's,
+                                  # and that overwrite is the anti-impersonation control. What the strip
+                                  # covered was the gap where the PDP emitted nothing and the client's copy
+                                  # survived; that is now closed at source, by emitting those headers
+                                  # unconditionally (empty when the PDP has no value) so a forged value is
+                                  # displaced in every case.
+                                  #
+                                  # Context headers (x-facility-id, x-workspace-id, x-department-id,
+                                  # x-ward-id, x-programme-id, x-shift-id, x-work-context-token,
+                                  # x-purpose-of-use, x-workflow-state) remain client-supplied — a retained
+                                  # gap in checkpoint-4/HEADER_CONTAINMENT.md, to be closed by teaching the
+                                  # PDP to emit them, not by stripping them blind.
                                 # Authentication assurance is derived from the validated
                                 # token by Tshepo and copied back below. A browser value
                                 # must never survive when a token has no such assurance.
