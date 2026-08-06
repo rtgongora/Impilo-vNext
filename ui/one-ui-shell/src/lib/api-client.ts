@@ -202,6 +202,57 @@ function getCookie(name: string): string | null {
 /** @deprecated Use getV12Headers — kept as alias during migration */
 const getV11Headers = getV12Headers;
 
+/**
+ * The acting person is not known until StoreHydrator has resolved /auth/oidc/session. Before
+ * that, getV12Headers can only emit tenant and purpose — no X-Actor-ID, no X-Actor-Type — and
+ * the trust plane rejects such a request BEFORE policy runs (MISSING_HEADERS). The person sees
+ * a 403 and reads it as a broken page.
+ *
+ * Measured 2026-08-06 during the ext_authz cutover: three fetches (facilities,
+ * community/groups, assistant/notifications) launch on the first render after the OIDC callback
+ * and lost this race every time, while every call issued after the session resolved carried a
+ * full actor. Gating each caller is not the fix — 275 hooks call useQuery directly — so
+ * authenticated dispatch waits here, once, for all of them.
+ *
+ * It waits for the ATTEMPT to settle, not for a user to exist: an anonymous visitor resolves
+ * immediately via clearAuth() + markSessionRestoreAttempted(), so public surfaces are never
+ * delayed by a session that will never exist.
+ *
+ * The auth lane is exempt because /auth/oidc/session IS the call that settles the flag; waiting
+ * on it there would deadlock the shell at boot.
+ */
+const AUTH_LANE_PREFIX = "/internal/v1/auth/";
+const ACTOR_READINESS_TIMEOUT_MS = 5_000;
+
+function awaitActorReadiness(path: string): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
+  if (path.startsWith(AUTH_LANE_PREFIX)) return Promise.resolve();
+  if (useAuthStore.getState().sessionRestoreAttempted) return Promise.resolve();
+
+  return new Promise<void>((resolve) => {
+    let settled = false;
+    let unsubscribe: (() => void) | null = null;
+
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      unsubscribe?.();
+      resolve();
+    };
+
+    // A ceiling, not an expected wait. If the restore never settles we dispatch anyway and let
+    // the request fail honestly at the trust plane, rather than hanging the surface forever.
+    const timer = setTimeout(finish, ACTOR_READINESS_TIMEOUT_MS);
+    unsubscribe = useAuthStore.subscribe((state) => {
+      if (state.sessionRestoreAttempted) finish();
+    });
+
+    // The flag can flip between the check above and the subscribe; re-read after subscribing.
+    if (useAuthStore.getState().sessionRestoreAttempted) finish();
+  });
+}
+
 function getStoredJson<T>(key: string): T | null {
   if (typeof window === "undefined") return null;
 
@@ -496,6 +547,7 @@ async function request<T>(
   responseType: "json" | "text" = "json",
   opts?: ApiRequestOptions,
 ): Promise<T> {
+  await awaitActorReadiness(path);
   const headers = { ...getV11Headers(), ...opts?.extraHeaders };
 
   if (["POST", "PUT", "PATCH"].includes(method) || (method === "DELETE" && body !== undefined)) {
@@ -603,6 +655,7 @@ async function requestForm<T>(
   body: FormData,
   opts?: ApiRequestOptions,
 ): Promise<T> {
+  await awaitActorReadiness(path);
   const headers = { ...getV11Headers(), ...opts?.extraHeaders };
   delete headers["Content-Type"];
 
@@ -659,6 +712,7 @@ async function requestForm<T>(
 
 /** Authenticated GET returning a binary body (e.g. DICOM rendered frames). */
 async function requestBlob(path: string): Promise<Blob> {
+  await awaitActorReadiness(path);
   const headers = { ...getV11Headers() };
   const response = await fetch(`${BFF_BASE_URL}${path}`, {
     method: "GET",
