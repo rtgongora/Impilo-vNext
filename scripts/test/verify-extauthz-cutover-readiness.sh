@@ -261,12 +261,32 @@ PY
   if [ -z "${AUTHZ:-}" ]; then
     record UNKNOWN C6 "tshepo-authz-service not running — PDP reachability unmeasured"
   else
-    code=$(kubectl exec -n "$NS" "$AUTHZ" -- curl -s -o /dev/null -w '%{http_code}' -m 6 \
-      "http://localhost:8081${PREFIX}/api/v1/patients/search" \
-      -H "x-tenant-id: 00000000-0000-4000-8000-000000000001" \
-      -H "x-actor-id: c0000000-0000-4000-8000-000000000001" \
-      -H "x-actor-type: PROVIDER" -H "x-purpose-of-use: TREATMENT" 2>/dev/null)
+    # Do not assume a service image ships any particular HTTP client. It shipped curl until a
+    # rebuild dropped it, and the missing binary silently read as "no answer" — a broken
+    # instrument reporting as a broken estate, which is the exact confusion this gate exists
+    # to remove. Detect what is there; if nothing is, say so rather than inventing a verdict.
+    URL="http://localhost:8081${PREFIX}/api/v1/patients/search"
+    HDRS='-H "x-tenant-id: 00000000-0000-4000-8000-000000000001" -H "x-actor-id: c0000000-0000-4000-8000-000000000001" -H "x-actor-type: PROVIDER" -H "x-purpose-of-use: TREATMENT"'
+    client=$(kubectl exec -n "$NS" "$AUTHZ" -- sh -c \
+      'command -v curl >/dev/null && echo curl || { command -v wget >/dev/null && echo wget || echo none; }' 2>/dev/null)
+    case "$client" in
+      curl) code=$(kubectl exec -n "$NS" "$AUTHZ" -- sh -c \
+              "curl -s -o /dev/null -w '%{http_code}' -m 6 $HDRS '$URL'" 2>/dev/null);;
+      wget) code=$(kubectl exec -n "$NS" "$AUTHZ" -- sh -c \
+              "wget -S -O /dev/null -T 6 \
+                 --header='x-tenant-id: 00000000-0000-4000-8000-000000000001' \
+                 --header='x-actor-id: c0000000-0000-4000-8000-000000000001' \
+                 --header='x-actor-type: PROVIDER' \
+                 --header='x-purpose-of-use: TREATMENT' '$URL' 2>&1 \
+               | grep -oE 'HTTP/1\.[01] [0-9]{3}' | tail -1 | cut -d' ' -f2" 2>/dev/null);;
+      *)    code="";;
+    esac
+    if [ -z "$code" ]; then
+      record UNKNOWN C6 "no usable HTTP client in the tshepo-authz image (found: ${client:-none}) — reachability NOT measured"
+      code="__skip__"
+    fi
     case "$code" in
+      __skip__) ;;
       401|404)
         record FAIL C6 "PDP answers ${code} at ${PREFIX}/<original path> — EVERY request would be denied, not just uncovered ones";;
       200|403)
