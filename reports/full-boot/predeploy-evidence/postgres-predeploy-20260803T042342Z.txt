@@ -1,0 +1,14 @@
+namespace=impilo-full-preview
+job=postgres-predeploy-20260803t042342z
+started_at=20260803T042342Z
+job.batch/postgres-predeploy-20260803t042342z created
+job.batch/postgres-predeploy-20260803t042342z condition met
+completed_at=20260803T042413Z
+succeeded=1
+--- job ---
+NAME                                  STATUS     COMPLETIONS   DURATION   AGE   CONTAINERS   IMAGES               SELECTOR
+postgres-predeploy-20260803t042342z   Complete   1/1           30s        31s   pg-dumpall   postgres:16-alpine   batch.kubernetes.io/controller-uid=eef27aa6-55a9-4c22-a669-874383a2996c
+--- logs ---
+pg_dumpall -> /backups/pgdumpall-2026-08-03-0423.sql.gz
+dump complete: 21366084 bytes
+retention pruned (> 7 days); backup OK
