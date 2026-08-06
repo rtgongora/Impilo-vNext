@@ -895,7 +895,14 @@ public class TusoServiceClient {
         if (district != null && !district.isBlank()) builder.queryParam("district", district);
         // Pass a URI, not a String: getForEntity(String) re-encodes the already-encoded
         // string, so any search term with a space arrived double-encoded and matched nothing.
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.encode().build().toUri(), JsonNode.class);
+        // Declares the REGISTRY plane. FacilityRegulatoryService.searchFacilities binds
+        // ctx.tenantId(), so this list is tenant-scoped exactly like the discovery search —
+        // and tuso.facility holds 7,284 rows on the registry plane against 1 on the care
+        // plane. An authenticated regulator inheriting care-plane context would review a
+        // national register consisting of one seeded clinic.
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                builder.encode().build().toUri(), org.springframework.http.HttpMethod.GET,
+                registryPlaneRequest(), JsonNode.class);
         return extractData(response);
     }
 

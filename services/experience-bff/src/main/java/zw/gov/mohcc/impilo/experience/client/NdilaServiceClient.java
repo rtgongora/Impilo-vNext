@@ -115,9 +115,27 @@ public class NdilaServiceClient {
         return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
     }
 
+    /**
+     * The steward queue of facilities awaiting coordinates.
+     *
+     * <p>Declares the REGISTRY plane. Unlike its {@code hpa-import} sibling — which queries
+     * with no tenant predicate at all and is therefore plane-agnostic — this endpoint serves
+     * {@code findByTenantIdAndStatus(tenantId, "PENDING")}, so it answers strictly within the
+     * caller's tenant. {@code ndila_geocode_review_queue} holds 6,327 rows on the registry
+     * plane and none on the care plane, so an authenticated caller inheriting care-plane
+     * context read an empty queue.
+     *
+     * <p>That failure is quiet in the worst way: a review queue showing nothing looks like
+     * work finished, not work invisible. 6,327 facilities would sit without coordinates while
+     * the surface reported nothing to review.
+     */
     public JsonNode geocodeReviewQueue() {
         String url = baseUrl + "/api/v1/ndila/facilities/geocode-review-queue";
-        return restTemplate.getForEntity(url, JsonNode.class).getBody();
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.set(zw.gov.mohcc.impilo.companion.context.CompanionHeaders.TENANT_ID,
+                zw.gov.mohcc.impilo.experience.config.PublicTenants.REGISTRY_PLANE);
+        return restTemplate.exchange(url, org.springframework.http.HttpMethod.GET,
+                new org.springframework.http.HttpEntity<Void>(headers), JsonNode.class).getBody();
     }
 
     public JsonNode spatialNearby(Map<String, Object> body) {
