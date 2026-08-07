@@ -21,6 +21,13 @@
     </description>
 
     <dependencies>
+        <!-- Break-glass grant contract (framework-agnostic; its Spring binding lives here) -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>shared-kernel-java</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Spring Web (provided — consumers bring their own) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
