@@ -209,6 +209,10 @@ public class AppointmentCommsWorkflowService {
             }
             String dedupKey = text(appt, "id") + "@" + scheduled;
             if (!reminderReceiptStore.tryClaim(dedupKey)) {
+                // Either a peer replica owns this send, or the dedup store is unavailable and no
+                // replica may claim it. Both mean "not us, not now". The window above is two hours
+                // wide against an hourly cron, so an appointment refused on one run is re-offered on
+                // the next — withholding here delays a reminder, it does not drop one.
                 continue;
             }
             Map<String, String> vars = varsFromAppointment(appt);
@@ -220,10 +224,23 @@ public class AppointmentCommsWorkflowService {
         return sent;
     }
 
-    public void processOutboxEvent(String eventType, Map<String, Object> payload, long eventId) {
+    /**
+     * Handles one booking outbox event, at most once across all replicas.
+     *
+     * @return {@code true} when the event is settled — handled here, or provably owned by a peer
+     *         replica — and the caller may advance its cursor past it. {@code false} when no claim
+     *         could be made at all: the event is <b>not</b> handled and the caller must hold its
+     *         cursor so the event is re-offered rather than silently skipped.
+     */
+    public boolean processOutboxEvent(String eventType, Map<String, Object> payload, long eventId) {
         String eventKey = "booking-outbox:" + eventType + ":" + eventId;
-        if (!reminderReceiptStore.tryClaim(eventKey)) {
-            return;
+        AppointmentReminderReceiptStore.ClaimOutcome outcome = reminderReceiptStore.claim(eventKey);
+        if (outcome.mustRetry()) {
+            return false;
+        }
+        if (!outcome.claimed()) {
+            // A peer replica owns this event, or an earlier run already handled it. Settled either way.
+            return true;
         }
         JsonNode node = toJsonNode(payload);
         switch (eventType) {
@@ -234,6 +251,7 @@ public class AppointmentCommsWorkflowService {
             case "appointment.booked" -> onAppointmentCreated(node);
             default -> log.debug("No appointment comms handler for outbox event {}", eventType);
         }
+        return true;
     }
 
     private void notifyCitizen(JsonNode node, String templateKey, String channel, Map<String, String> variables) {
