@@ -9,8 +9,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.oros.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.oros.persistence.repository.EventOutboxRepository;
+import zw.gov.mohcc.impilo.sharedkernel.events.CompanionOutboxPublisher;
+import zw.gov.mohcc.impilo.sharedkernel.events.DualEmitPolicy;
+import zw.gov.mohcc.impilo.sharedkernel.events.EventTopicRegistry;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -41,12 +45,9 @@ import java.util.List;
  * {@code oros.outbox.poll-interval-ms}) and processes events in batches of up to 100.</p>
  */
 @Service
-public class OutboxPublisher {
+public class OutboxPublisher extends CompanionOutboxPublisher {
 
     private static final Logger log = LoggerFactory.getLogger(OutboxPublisher.class);
-
-    /** Maximum number of events to process per poll cycle. */
-    private static final int BATCH_SIZE = 100;
 
     private final EventOutboxRepository outboxRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
@@ -66,7 +67,9 @@ public class OutboxPublisher {
                            @Value("${oros.outbox.dual-emit-canonical-enabled:false}") boolean dualEmitCanonicalEnabled,
                            @Value("${oros.outbox.dual-emit-core-transaction-enabled:true}") boolean dualEmitCoreTransactionEnabled,
                            @Value("${oros.outbox.core-transaction-topic:core.transaction.events}") String coreTransactionTopic,
-                           @Value("${oros.outbox.canonical-topics.result-available:clinical.oros.result.available}") String canonicalResultAvailableTopic) {
+                           @Value("${oros.outbox.canonical-topics.result-available:clinical.oros.result.available}") String canonicalResultAvailableTopic,
+                           @Value("${oros.v11.emit-mode:#{null}}") String ymlEmitMode) {
+        super(new DualEmitPolicy(ymlEmitMode), new EventTopicRegistry("oros"));
         this.outboxRepository = outboxRepository;
         this.kafkaTemplate = kafkaTemplate;
         this.dualEmitCanonicalEnabled = dualEmitCanonicalEnabled;
@@ -85,47 +88,79 @@ public class OutboxPublisher {
      */
     @Scheduled(fixedDelayString = "${oros.outbox.poll-interval-ms:2000}")
     @Transactional
-    public void publishPendingEvents() {
-        List<EventOutboxEntity> pending = outboxRepository.findTop100ByPublishedAtIsNullOrderByCreatedAtAsc();
-
-        if (pending.isEmpty()) {
-            return;
+    public void poll() {
+        int published = publishPendingEvents();
+        if (published > 0) {
+            log.info("Published {} outbox events to Kafka", published);
         }
+    }
 
-        List<EventOutboxEntity> batch = pending.size() > BATCH_SIZE
-                ? pending.subList(0, BATCH_SIZE)
-                : pending;
+    @Override
+    protected List<? extends OutboxRow> fetchUnpublished() {
+        return outboxRepository.findTop100ByPublishedAtIsNullOrderByCreatedAtAsc()
+                .stream()
+                .map(EventOutboxEntity::toOutboxRow)
+                .toList();
+    }
 
-        int successCount = 0;
-        for (EventOutboxEntity event : batch) {
-            try {
-                String topic = routeTopic(event.getEventType());
-                String key = event.getAggregateId();
-                String payload = event.getPayload();
+    @Override
+    protected void sendToKafka(String topic, String key, String value) {
+        kafkaTemplate.send(topic, key, value);
+    }
 
-                kafkaTemplate.send(topic, key, payload);
-                String canonicalTopic = resolveCanonicalCompanionTopic(event.getEventType());
-                if (canonicalTopic != null && !canonicalTopic.equals(topic)) {
-                    kafkaTemplate.send(canonicalTopic, key, payload);
-                }
-                String coreTransactionRoutedTopic = resolveCoreTransactionTopic(event.getEventType());
-                if (dualEmitCoreTransactionEnabled && coreTransactionRoutedTopic != null) {
-                    kafkaTemplate.send(coreTransactionTopic, key, payload);
-                }
+    @Override
+    protected void markPublished(OutboxRow row, OffsetDateTime publishedAt) {
+        outboxRepository.findById(row.id()).ifPresent(entity -> {
+            entity.setPublishedAt(publishedAt);
+            outboxRepository.save(entity);
+        });
+    }
 
-                event.setPublishedAt(OffsetDateTime.now());
-                outboxRepository.save(event);
-                successCount++;
+    @Override
+    protected void markFailed(OutboxRow row, String errorMessage) {
+        outboxRepository.findById(row.id()).ifPresent(entity -> {
+            entity.setPublishError(errorMessage);
+            entity.setRetryCount(row.retryCount() + 1);
+            outboxRepository.save(entity);
+        });
+    }
 
-            } catch (Exception e) {
-                log.error("Failed to publish outbox event {} (type={}) to Kafka: {}",
-                        event.getId(), event.getEventType(), e.getMessage(), e);
-            }
+    /** The primary legacy topic, routed exactly as before the conversion. */
+    @Override
+    protected String resolveLegacyTopic(OutboxRow row) {
+        return routeTopic(legacyEventType(row));
+    }
+
+    /**
+     * oros has always fanned the same payload to more than one legacy topic — a canonical
+     * companion topic for results, and the core-transaction stream. The base class routes one
+     * legacy topic, so without this the consumers of the other two would have been silently
+     * unsubscribed by the conversion.
+     */
+    @Override
+    protected List<String> additionalLegacyTopics(OutboxRow row) {
+        String eventType = legacyEventType(row);
+        String primary = routeTopic(eventType);
+        List<String> extra = new ArrayList<>(2);
+
+        String canonicalTopic = resolveCanonicalCompanionTopic(eventType);
+        if (canonicalTopic != null && !canonicalTopic.equals(primary)) {
+            extra.add(canonicalTopic);
         }
-
-        if (successCount > 0) {
-            log.info("Published {}/{} outbox events to Kafka", successCount, batch.size());
+        if (dualEmitCoreTransactionEnabled && resolveCoreTransactionTopic(eventType) != null) {
+            extra.add(coreTransactionTopic);
         }
+        return extra;
+    }
+
+    /**
+     * Topic routing switches on the stored event type, not the canonical one the envelope
+     * carries — {@code row.eventType()} is the v1.1 form and would match none of the cases.
+     */
+    private static String legacyEventType(OutboxRow row) {
+        return row instanceof EventOutboxEntity.OrosOutboxRow orosRow
+                ? orosRow.legacyEventType()
+                : row.eventType();
     }
 
     /**
