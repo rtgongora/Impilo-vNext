@@ -1,0 +1,2281 @@
+{
+ "confirmed_persisted_write": {
+  "cleaned_up": true,
+  "endpoint": "POST /internal/v1/jobs",
+  "evidence": "jobs.job_definition id=1 created_at=2026-08-07T15:11:24Z",
+  "service": "jobs-service",
+  "status": 201
+ },
+ "date": "2026-08-07",
+ "deployed_services": 103,
+ "endpoint_results": {
+  "abis-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/abis/identify",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/abis/templates",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/abis/templates:extract",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/abis/verify",
+    "status": "401"
+   }
+  ],
+  "ai-model-registry-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/ai-registry/drift-events",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/ai-registry/models",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   }
+  ],
+  "analytics-pipeline-service": [
+   {
+    "class": "OPEN",
+    "method": "POST",
+    "path": "/internal/v1/telemedicine/events",
+    "status": "202"
+   }
+  ],
+  "asset-registry-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/equipment",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/equipment/alerts",
+    "status": "401"
+   }
+  ],
+  "audit-ledger-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/audit/records",
+    "status": "401"
+   }
+  ],
+  "booking-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/appointments",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/bookings",
+    "status": "401"
+   }
+  ],
+  "butano-fhir": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/fhir/resources",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-federation",
+    "status": "401"
+   }
+  ],
+  "butano-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/internal/reconcile-subject",
+    "status": "401"
+   }
+  ],
+  "campaigns-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/campaigns",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-federation",
+    "status": "401"
+   }
+  ],
+  "card-print-agent": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/internal/print-jobs",
+    "status": "401"
+   }
+  ],
+  "channels-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/external/v1/channels/inbound",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/channels/messages",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/channels/notify-only",
+    "status": "401"
+   }
+  ],
+  "clinical-knowledge-platform-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/clinical/assistant/ask",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/clinical/multimorbidity/assess",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/medicine/renal-dosing/advise",
+    "status": "401"
+   }
+  ],
+  "community-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/community/assignments",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/community/social/communities",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/community/social/groups",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/community/units",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/community/visits",
+    "status": "401"
+   },
+   {
+    "class": "OPEN",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "201"
+   }
+  ],
+  "connector-fhir-adapter": [
+   {
+    "class": "UNKNOWN",
+    "method": "POST",
+    "path": "/internal/v1/fhir/destinations",
+    "status": "400"
+   },
+   {
+    "class": "UNKNOWN",
+    "method": "POST",
+    "path": "/internal/v1/fhir/relay",
+    "status": "400"
+   }
+  ],
+  "costing-engine-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/costa/v1/estimate",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/finance/budgets",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/finance/funding-sources",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   }
+  ],
+  "coverage-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/appeals",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/coverage",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/provider-contracts",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/provider-networks",
+    "status": "401"
+   }
+  ],
+  "credential-verification-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/credentials/verify",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/internal/credentials",
+    "status": "401"
+   }
+  ],
+  "daidzai-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/daidzai/assistance",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/daidzai/requests",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/identity/vito-merge",
+    "status": "401"
+   }
+  ],
+  "data-access-governance-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/access-requests",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/policies",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-federation",
+    "status": "401"
+   }
+  ],
+  "data-governance-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/deid/datasets",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/deid/runs",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/governance/data-subject-requests",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/governance/rules",
+    "status": "401"
+   }
+  ],
+  "data-ingestion-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/ingest/batch",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/ingest/events",
+    "status": "401"
+   }
+  ],
+  "data-pipeline-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/ingest",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/sources",
+    "status": "401"
+   }
+  ],
+  "data-warehouse-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/gold/materialize",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-federation",
+    "status": "401"
+   }
+  ],
+  "developer-portal-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/developer/clients",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-federation",
+    "status": "401"
+   }
+  ],
+  "dispatch-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/dispatch/deliveries",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/dispatch/fleet",
+    "status": "401"
+   }
+  ],
+  "document-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/internal/objects",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/internal/objects/register-external",
+    "status": "401"
+   }
+  ],
+  "experience-bff": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/bookings",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/immunizations",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/organizations",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/programmes",
+    "status": "401"
+   }
+  ],
+  "fhir-gateway-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/gateway/forward",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/gateway/routes",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-federation",
+    "status": "401"
+   }
+  ],
+  "forms-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/forms",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/forms/clinical",
+    "status": "401"
+   }
+  ],
+  "general-ledger-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/gl/accounts",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/gl/journals",
+    "status": "401"
+   }
+  ],
+  "guidance-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/guidance/advisory/impression",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/guidance/ask",
+    "status": "401"
+   }
+  ],
+  "hr-payroll-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/hr/contracts",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/hr/employees",
+    "status": "401"
+   }
+  ],
+  "identity-assurance-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/attestations",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/risk/assess",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-federation",
+    "status": "401"
+   }
+  ],
+  "indawo-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/place-links",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/site-registrations",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/surveillance/alerts",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/surveillance/outbreaks",
+    "status": "401"
+   }
+  ],
+  "inpatient-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/admissions",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/care-plans",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/fluid-balance",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/observations",
+    "status": "401"
+   }
+  ],
+  "integration-hub": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/dispatch",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/mapping-templates",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/routes",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   }
+  ],
+  "inventory-elmis-adapter": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/sync-states/trigger",
+    "status": "401"
+   },
+   {
+    "class": "OPEN",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "201"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-federation",
+    "status": "403"
+   }
+  ],
+  "inventory-service": [
+   {
+    "class": "OPEN",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "201"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/counts",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/items",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/requisitions",
+    "status": "401"
+   }
+  ],
+  "iot-ingestion-service": [
+   {
+    "class": "UNKNOWN",
+    "method": "POST",
+    "path": "/internal/v1/devices/register",
+    "status": "500"
+   },
+   {
+    "class": "UNKNOWN",
+    "method": "POST",
+    "path": "/internal/v1/telemetry/ingest",
+    "status": "400"
+   },
+   {
+    "class": "UNKNOWN",
+    "method": "POST",
+    "path": "/internal/v1/telemetry/ingest/batch",
+    "status": "400"
+   }
+  ],
+  "jobs-service": [
+   {
+    "class": "OPEN",
+    "method": "POST",
+    "path": "/internal/v1/jobs",
+    "status": "201"
+   },
+   {
+    "class": "OPEN",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "201"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-federation",
+    "status": "403"
+   }
+  ],
+  "khuluma-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/khuluma/channels",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/khuluma/conversations",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   }
+  ],
+  "landela-adapter-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/internal/documentreference/push",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/internal/documents",
+    "status": "401"
+   }
+  ],
+  "learning-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/learning/resource-opened",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/learning/subject-profile",
+    "status": "401"
+   }
+  ],
+  "live-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/live/clinical-sessions",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/live/events",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/live/fundo-webinars",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/live/public-broadcasts",
+    "status": "401"
+   },
+   {
+    "class": "OPEN",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "201"
+   }
+  ],
+  "llm-orchestration-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/llm/chat",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/llm/structured",
+    "status": "401"
+   }
+  ],
+  "madi-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/identity/vito-merge",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/madi/blood-banks",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/madi/central-bank/emergency-redistributions",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/madi/donors",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/madi/drives",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/madi/drives/sync-conflicts",
+    "status": "401"
+   },
+   {
+    "class": "OPEN",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "201"
+   }
+  ],
+  "matcher-engine": [
+   {
+    "class": "UNKNOWN",
+    "method": "POST",
+    "path": "/v1/engine/extract",
+    "status": "400"
+   },
+   {
+    "class": "UNKNOWN",
+    "method": "POST",
+    "path": "/v1/engine/identify",
+    "status": "400"
+   },
+   {
+    "class": "UNKNOWN",
+    "method": "POST",
+    "path": "/v1/engine/verify",
+    "status": "400"
+   }
+  ],
+  "mental-health-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/mental-health/referrals",
+    "status": "401"
+   }
+  ],
+  "msika-apps-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/marketplace/items",
+    "status": "401"
+   }
+  ],
+  "msika-flow-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/bookings/create",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/marketplace-requests",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/orders",
+    "status": "401"
+   }
+  ],
+  "msika-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/snapshots/catalogs/emit",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/fulfillment-policies",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/listings",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/storefronts",
+    "status": "401"
+   }
+  ],
+  "mushe-wallet-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/holds",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/merchants",
+    "status": "401"
+   },
+   {
+    "class": "OPEN",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "201"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/wallets",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/wallets/offline-transactions",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/wallets/offline-transactions/biometric",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/wallets/transfer",
+    "status": "401"
+   }
+  ],
+  "mushex-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/mushex/v1/claims",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/mushex/v1/payment-intents",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/mushex/v1/remittance-transfers",
+    "status": "401"
+   }
+  ],
+  "mvumo-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/mvumo/consent-requests",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/mvumo/delegations",
+    "status": "401"
+   }
+  ],
+  "national-data-repository-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/datasets",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/query",
+    "status": "401"
+   }
+  ],
+  "ndila-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/api/v1/maps/routes",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/api/v1/ndila/routes",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/locations/hpa-import/apply",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/locations/hpa-import/propose-geocodes",
+    "status": "401"
+   }
+  ],
+  "ndr-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/ndr/build/gold/encounters",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/ndr/ingest/events",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-federation",
+    "status": "401"
+   }
+  ],
+  "nhume-service": [
+   {
+    "class": "UNKNOWN",
+    "method": "POST",
+    "path": "/api/v1/nhume/couriers",
+    "status": "500"
+   },
+   {
+    "class": "UNKNOWN",
+    "method": "POST",
+    "path": "/api/v1/nhume/fleet",
+    "status": "500"
+   },
+   {
+    "class": "UNKNOWN",
+    "method": "POST",
+    "path": "/internal/v1/nhume/couriers",
+    "status": "500"
+   },
+   {
+    "class": "UNKNOWN",
+    "method": "POST",
+    "path": "/internal/v1/nhume/fleet",
+    "status": "500"
+   }
+  ],
+  "notification-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/delivery-receipts",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/templates",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-federation",
+    "status": "401"
+   }
+  ],
+  "observability-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/alert-rules",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/dashboards",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-federation",
+    "status": "401"
+   }
+  ],
+  "offline-edge-service": [
+   {
+    "class": "UNKNOWN",
+    "method": "POST",
+    "path": "/internal/v1/offline/entitlements",
+    "status": "400"
+   },
+   {
+    "class": "UNKNOWN",
+    "method": "POST",
+    "path": "/internal/v1/offline/sync",
+    "status": "400"
+   }
+  ],
+  "offline-sync-service": [
+   {
+    "class": "UNKNOWN",
+    "method": "POST",
+    "path": "/internal/v1/sync-packs",
+    "status": "400"
+   },
+   {
+    "class": "OPEN",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "201"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-federation",
+    "status": "403"
+   }
+  ],
+  "organization-registry-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/governance/responsibility-profiles",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/governance/service-agreements",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/governance/trust-domains",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/organizations",
+    "status": "401"
+   }
+  ],
+  "oros-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/orders/blood/issued",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/orders/blood/submitted",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/orders",
+    "status": "401"
+   }
+  ],
+  "pacs-adapter-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/imaging-studies",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/imaging-studies/search",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   }
+  ],
+  "participation-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/participation/contributions",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/public/participation/contributions",
+    "status": "401"
+   }
+  ],
+  "patient-safety-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/patient-safety/reports",
+    "status": "401"
+   }
+  ],
+  "pct-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/identity/vito-merge",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/allergies",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/telehealth",
+    "status": "401"
+   }
+  ],
+  "pharmacy-elmis-adapter": [
+   {
+    "class": "UNKNOWN",
+    "method": "POST",
+    "path": "/internal/v1/dispense-sync/trigger",
+    "status": "400"
+   },
+   {
+    "class": "OPEN",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "201"
+   }
+  ],
+  "pharmacy-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/pickup/claim",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/pickup/resolve-reference",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/prescriptions",
+    "status": "401"
+   }
+  ],
+  "procedures-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/procedures/appropriateness/evaluate",
+    "status": "401"
+   }
+  ],
+  "procurement-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/procurement/requisitions",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/procurement/suppliers",
+    "status": "401"
+   }
+  ],
+  "product-registry-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/products",
+    "status": "403"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "403"
+   }
+  ],
+  "referral-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/referrals",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/internal/referrals/surgical",
+    "status": "401"
+   }
+  ],
+  "reporting-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/reports",
+    "status": "401"
+   }
+  ],
+  "rito-quality-safety-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/mpdsr/reviews/from-death-event",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/rito/corrective-actions",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/rito/quality-signals",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/public/rito/cases",
+    "status": "401"
+   }
+  ],
+  "rtc-gateway-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/rtc/sessions",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/rtc/webhooks/livekit",
+    "status": "401"
+   }
+  ],
+  "rules-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/rules",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-federation",
+    "status": "401"
+   }
+  ],
+  "scheduling-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/internal/scheduling/surgical-waitlist/from-referral",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/internal/scheduling/theatre-sessions",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/slots/release",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/slots/reserve",
+    "status": "401"
+   }
+  ],
+  "schema-registry-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/schemas",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/schemas/compatibility",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-federation",
+    "status": "401"
+   }
+  ],
+  "search-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/search/index",
+    "status": "401"
+   }
+  ],
+  "security-hardening-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/policy-packs",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/scans",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-federation",
+    "status": "401"
+   }
+  ],
+  "share-slip-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/internal/share-links",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/public/share/claim",
+    "status": "401"
+   }
+  ],
+  "simba-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/mobile/citizen/health-id",
+    "status": "401"
+   },
+   {
+    "class": "OPEN",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "201"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/wellness/activities",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/wellness/assessments",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/wellness/challenges",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/wellness/follow-ups",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/wellness/reminders",
+    "status": "401"
+   }
+  ],
+  "support-service": [
+   {
+    "class": "UNKNOWN",
+    "method": "POST",
+    "path": "/internal/v1/support/articles",
+    "status": "400"
+   },
+   {
+    "class": "UNKNOWN",
+    "method": "POST",
+    "path": "/internal/v1/support/tickets",
+    "status": "400"
+   }
+  ],
+  "surgery-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/surgery/episodes",
+    "status": "401"
+   }
+  ],
+  "surveillance-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/ingest",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/signals",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-federation",
+    "status": "401"
+   }
+  ],
+  "telemonitoring-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/device-assignments",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/monitoring-plans",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/monitoring-programmes",
+    "status": "401"
+   }
+  ],
+  "tshepo-audit-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "UNKNOWN",
+    "method": "POST",
+    "path": "/v1/audit/events",
+    "status": "500"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/audit/export",
+    "status": "401"
+   },
+   {
+    "class": "UNKNOWN",
+    "method": "POST",
+    "path": "/v1/audit/verify-chain",
+    "status": "400"
+   }
+  ],
+  "tshepo-authz-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/break-glass",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/policies",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/trust-authorities",
+    "status": "401"
+   }
+  ],
+  "tshepo-consent-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/consent",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/consent/share-links",
+    "status": "401"
+   }
+  ],
+  "tshepo-identity-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/identity/recovery-cases",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/identity/resolve",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/identity/resolve-identifier",
+    "status": "401"
+   }
+  ],
+  "tshepo-keys-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/certificates",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/secrets",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/sign",
+    "status": "401"
+   }
+  ],
+  "tshepo-offline-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/offline/actions",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/offline/capabilities",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/offline/reconcile",
+    "status": "401"
+   }
+  ],
+  "tuso-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/snapshots/facilities/emit",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-federation",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/appointments",
+    "status": "401"
+   }
+  ],
+  "ubomi-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/births",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/deaths",
+    "status": "401"
+   }
+  ],
+  "varapi-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/snapshots/providers/emit",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-federation",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/registry/resolve",
+    "status": "401"
+   }
+  ],
+  "vashandi-workforce-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/internal/vashandi/leave",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/internal/vashandi/rosters",
+    "status": "401"
+   }
+  ],
+  "vito-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/identities/provisional",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/legacy-phid/import",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-command",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/test-federation",
+    "status": "401"
+   }
+  ],
+  "wellness-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/mobile/citizen/health-id",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/mobile/citizen/wellness/activities",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/wellness/personal-data/remote-alerts",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/wellness/personal-data/sources",
+    "status": "401"
+   }
+  ],
+  "workflow-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/workflows/definitions",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/workflows/instances",
+    "status": "401"
+   }
+  ],
+  "workforce-governance-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/platform-origin/country-operations",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/workforce-governance/adjudications/decisions",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/workforce-governance/regulator-bootstrap/requests",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/internal/governance/organisations",
+    "status": "401"
+   }
+  ],
+  "zibo-service": [
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/confidentiality/classify",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/internal/v1/snapshots/artifacts/emit",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/artifacts",
+    "status": "401"
+   },
+   {
+    "class": "REFUSED",
+    "method": "POST",
+    "path": "/v1/packs",
+    "status": "401"
+   }
+  ]
+ },
+ "endpoint_tally": {
+  "open": 12,
+  "refused": 290,
+  "unknown": 20
+ },
+ "endpoints_probed": 322,
+ "enumerated_services": 104,
+ "method": "in-cluster probe over cluster DNS from a pod in the namespace; escalating well-formedness passes A-D",
+ "namespace": "impilo-full-preview",
+ "positive_control": {
+  "POST opa:8181/v1/data": 200,
+  "pct-service /actuator/health": 200,
+  "tuso-service /actuator/health": 200,
+  "unreachable-host": "000",
+  "vito-service /actuator/health": 200
+ },
+ "registered_not_deployed": [
+  "tshepo-service"
+ ],
+ "service_tally": {
+  "open": 11,
+  "refused": 85,
+  "unknown": 7
+ },
+ "service_verdicts": {
+  "abis-service": "REFUSED",
+  "ai-model-registry-service": "REFUSED",
+  "analytics-pipeline-service": "OPEN",
+  "asset-registry-service": "REFUSED",
+  "audit-ledger-service": "REFUSED",
+  "booking-service": "REFUSED",
+  "butano-fhir": "REFUSED",
+  "butano-service": "REFUSED",
+  "campaigns-service": "REFUSED",
+  "card-print-agent": "REFUSED",
+  "channels-service": "REFUSED",
+  "clinical-knowledge-platform-service": "REFUSED",
+  "community-service": "OPEN",
+  "connector-fhir-adapter": "UNKNOWN",
+  "costing-engine-service": "REFUSED",
+  "coverage-service": "REFUSED",
+  "credential-verification-service": "REFUSED",
+  "daidzai-service": "REFUSED",
+  "data-access-governance-service": "REFUSED",
+  "data-governance-service": "REFUSED",
+  "data-ingestion-service": "REFUSED",
+  "data-pipeline-service": "REFUSED",
+  "data-warehouse-service": "REFUSED",
+  "developer-portal-service": "REFUSED",
+  "dispatch-service": "REFUSED",
+  "document-service": "REFUSED",
+  "experience-bff": "REFUSED",
+  "fhir-gateway-service": "REFUSED",
+  "forms-service": "REFUSED",
+  "general-ledger-service": "REFUSED",
+  "guidance-service": "REFUSED",
+  "hr-payroll-service": "REFUSED",
+  "identity-assurance-service": "REFUSED",
+  "indawo-service": "REFUSED",
+  "inpatient-service": "REFUSED",
+  "integration-hub": "REFUSED",
+  "inventory-elmis-adapter": "OPEN",
+  "inventory-service": "OPEN",
+  "iot-ingestion-service": "UNKNOWN",
+  "jobs-service": "OPEN",
+  "khuluma-service": "REFUSED",
+  "landela-adapter-service": "REFUSED",
+  "learning-service": "REFUSED",
+  "live-service": "OPEN",
+  "llm-orchestration-service": "REFUSED",
+  "madi-service": "OPEN",
+  "matcher-engine": "UNKNOWN",
+  "mental-health-service": "REFUSED",
+  "msika-apps-service": "REFUSED",
+  "msika-flow-service": "REFUSED",
+  "msika-service": "REFUSED",
+  "mushe-wallet-service": "OPEN",
+  "mushex-service": "REFUSED",
+  "mvumo-service": "REFUSED",
+  "national-data-repository-service": "REFUSED",
+  "ndila-service": "REFUSED",
+  "ndr-service": "REFUSED",
+  "nhume-service": "UNKNOWN",
+  "notification-service": "REFUSED",
+  "observability-service": "REFUSED",
+  "offline-edge-service": "UNKNOWN",
+  "offline-sync-service": "OPEN",
+  "organization-registry-service": "REFUSED",
+  "oros-service": "REFUSED",
+  "pacs-adapter-service": "REFUSED",
+  "participation-service": "REFUSED",
+  "patient-safety-service": "REFUSED",
+  "pct-service": "REFUSED",
+  "pharmacy-elmis-adapter": "OPEN",
+  "pharmacy-service": "REFUSED",
+  "procedures-service": "REFUSED",
+  "procurement-service": "REFUSED",
+  "product-registry-service": "REFUSED",
+  "referral-service": "REFUSED",
+  "reporting-service": "REFUSED",
+  "rito-quality-safety-service": "REFUSED",
+  "rtc-gateway-service": "REFUSED",
+  "rules-service": "REFUSED",
+  "scheduling-service": "REFUSED",
+  "schema-registry-service": "REFUSED",
+  "search-service": "REFUSED",
+  "security-hardening-service": "REFUSED",
+  "share-slip-service": "REFUSED",
+  "simba-service": "OPEN",
+  "support-service": "UNKNOWN",
+  "surgery-service": "REFUSED",
+  "surveillance-service": "REFUSED",
+  "telemonitoring-service": "REFUSED",
+  "tshepo-audit-service": "UNKNOWN",
+  "tshepo-authz-service": "REFUSED",
+  "tshepo-consent-service": "REFUSED",
+  "tshepo-identity-service": "REFUSED",
+  "tshepo-keys-service": "REFUSED",
+  "tshepo-offline-service": "REFUSED",
+  "tuso-service": "REFUSED",
+  "ubomi-service": "REFUSED",
+  "varapi-service": "REFUSED",
+  "vashandi-workforce-service": "REFUSED",
+  "vito-service": "REFUSED",
+  "wellness-service": "REFUSED",
+  "workflow-service": "REFUSED",
+  "workforce-governance-service": "REFUSED",
+  "zibo-service": "REFUSED"
+ },
+ "sweep": "phase0-e-unauthenticated-probe-sweep"
+}
