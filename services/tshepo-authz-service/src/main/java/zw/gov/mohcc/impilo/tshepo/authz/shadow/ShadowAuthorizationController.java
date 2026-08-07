@@ -13,6 +13,8 @@ import zw.gov.mohcc.impilo.tshepo.authz.persistence.entity.ShadowDecisionLogEnti
 import zw.gov.mohcc.impilo.tshepo.authz.session.SessionInfo;
 import zw.gov.mohcc.impilo.tshepo.authz.session.SessionAssuranceRouter;
 import zw.gov.mohcc.impilo.tshepo.authz.dto.AuthzInternalRequest;
+import zw.gov.mohcc.impilo.tshepo.authz.dto.DutyContext;
+import zw.gov.mohcc.impilo.tshepo.authz.service.IdentityIntrospectionClient;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.AuthzResponse;
 
 import java.nio.charset.StandardCharsets;
@@ -56,6 +58,7 @@ public class ShadowAuthorizationController {
 
     private final PolicyEngine policyEngine;
     private final SessionAssuranceRouter sessionRouter;
+    private final IdentityIntrospectionClient introspectionClient;
     private final ShadowDecisionRecorder recorder;
     private final ShadowProbeProperties properties;
     /** Per-instance concurrency ceiling; see gate 3. */
@@ -63,10 +66,12 @@ public class ShadowAuthorizationController {
 
     public ShadowAuthorizationController(PolicyEngine policyEngine,
                                          SessionAssuranceRouter sessionRouter,
+                                         IdentityIntrospectionClient introspectionClient,
                                          ShadowDecisionRecorder recorder,
                                          ShadowProbeProperties properties) {
         this.policyEngine = policyEngine;
         this.sessionRouter = sessionRouter;
+        this.introspectionClient = introspectionClient;
         this.recorder = recorder;
         this.properties = properties;
         this.capacity = new Semaphore(Math.max(1, properties.getMaxConcurrent()));
@@ -167,31 +172,56 @@ public class ShadowAuthorizationController {
             List<String> roles = session.roles() == null ? List.of() : session.roles();
             row.setShadowRoles(String.join(",", roles));
 
+            // Resolve the duty token the same way AuthorizeController does. Production introspects
+            // it on every request; a shadow that passed DutyContext.absent() would differ from
+            // production in a SECOND input and every duty-validated rule would appear to change.
+            DutyContext dutyContext = introspectionClient.introspect(ctx.get("workContextToken"));
+
             // The proposed model. Deliberately NOT deriveActorType() — see PrincipalProjection.
-            String workMode = ctx.get("workMode");           // only ever from a proven duty context
-            String providerId = ctx.get("providerId");
+            //
+            // Both inputs come ONLY from the introspected duty token. `x-provider-id` and
+            // `x-work-mode` are client-supplied — PolicyEngine emits x-provider-id back from the
+            // inbound header, and the resolver that would populate it server-side is citizen-only —
+            // so letting either select a persona would reproduce, with a header, exactly the defect
+            // this projection exists to refuse with a role: a caller choosing its own capacity.
+            String provenWorkMode = dutyContext.usable() ? dutyContext.workMode() : null;
+            String provenProviderId = dutyContext.usable() ? dutyContext.providerId() : null;
             PrincipalProjection.Projection projection =
-                    PrincipalProjection.project(roles, workMode, providerId, false);
+                    PrincipalProjection.project(roles, provenWorkMode, provenProviderId, false);
             row.setPrincipalClass(projection.principalClass().name());
             row.setActivePersona(projection.activePersona());
             row.setLegacyActorType(projection.legacyActorType());
 
-            // Same inputs as production, with exactly ONE deliberate difference: roles are present.
-            // Anything else differing would manufacture a delta that says nothing about enforcement.
+            // Derived here, exactly as AuthorizeController derives them from the same method+path.
+            // Passing the caller's values instead would let the BFF choose which rule its own
+            // measurement is scored against; passing null would null out resource_type and make
+            // every resource-scoped rule miss, manufacturing PERMIT_TO_DENY across the dataset.
+            String action = AuthzInternalRequest.deriveAction(req.method(), req.path());
+            String resourceType = AuthzInternalRequest.deriveResourceType(req.path());
+            String resourceId = AuthzInternalRequest.deriveResourceId(req.path());
+
+            // Same inputs as production, with exactly ONE deliberate difference: roles are present
+            // (and the actor type they imply). Anything else differing would manufacture a delta
+            // that says nothing about enforcement. tenant and actor take the session's values for
+            // the same reason production does — that override is part of what a bearer would do.
             AuthzInternalRequest shadowRequest = new AuthzInternalRequest(
-                    row.getTenantId(), session.actorId() != null ? session.actorId() : ctx.get("actorId"),
+                    session.tenantId() != null ? session.tenantId() : row.getTenantId(),
+                    session.actorId() != null ? session.actorId() : ctx.get("actorId"),
                     projection.legacyActorType(), roles, ctx.get("purposeOfUse"),
                     ctx.get("deviceFingerprint"), row.getCorrelationId(),
                     uuid(ctx.get("facilityId")), uuid(ctx.get("workspaceId")), ctx.get("shiftId"),
-                    req.method(), req.path(), ctx.get("action"), ctx.get("resourceType"),
-                    ctx.get("resourceId"), session.loaLevel(), session.sessionId(),
+                    req.method(), req.path(), action, resourceType,
+                    resourceId, session.loaLevel(), session.sessionId(),
+                    // The bearer stops at session validation. PolicyEngine never reads this field,
+                    // so passing "" diverges from nothing and keeps the credential out of the
+                    // object graph that the evaluation carries.
                     "", session.authenticationAssurance(),
-                    providerId, ctx.get("departmentId"), ctx.get("wardId"), ctx.get("programmeId"),
-                    ctx.get("subjectId"), ctx.get("assuranceLevel"),
-                    ctx.get("escalationGrantId"), null, null);
+                    ctx.get("providerId"), ctx.get("departmentId"), ctx.get("wardId"),
+                    ctx.get("programmeId"), ctx.get("subjectId"), ctx.get("assuranceLevel"),
+                    ctx.get("escalationGrantId"), ctx.get("workflowState"), dutyContext);
 
-            row.setAction(ctx.get("action"));
-            row.setResourceType(ctx.get("resourceType"));
+            row.setAction(action);
+            row.setResourceType(resourceType);
 
             AuthzResponse shadow = policyEngine.evaluate(shadowRequest);
             row.setPdpMillis((int) ((System.nanoTime() - started) / 1_000_000L));

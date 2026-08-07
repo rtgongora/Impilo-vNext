@@ -9,7 +9,9 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.http.ResponseEntity;
 import zw.gov.mohcc.impilo.tshepo.authz.core.PolicyEngine;
+import zw.gov.mohcc.impilo.tshepo.authz.dto.DutyContext;
 import zw.gov.mohcc.impilo.tshepo.authz.persistence.entity.ShadowDecisionLogEntity;
+import zw.gov.mohcc.impilo.tshepo.authz.service.IdentityIntrospectionClient;
 import zw.gov.mohcc.impilo.tshepo.authz.session.SessionAssuranceRouter;
 
 import java.util.Map;
@@ -34,6 +36,7 @@ class ShadowProbeGuardTest {
 
     @Mock PolicyEngine policyEngine;
     @Mock SessionAssuranceRouter sessionRouter;
+    @Mock IdentityIntrospectionClient introspectionClient;
     @Mock ShadowDecisionRecorder recorder;
 
     private ShadowProbeProperties props;
@@ -44,10 +47,13 @@ class ShadowProbeGuardTest {
         props.setEnabled(true);
         props.setProbeKey(KEY);
         props.setMaxConcurrent(4);
+        // Stubbed explicitly rather than left to Mockito's null: a null DutyContext would be
+        // caught as PDP_ERROR and these gate assertions would pass for the wrong reason.
+        when(introspectionClient.introspect(any())).thenReturn(DutyContext.absent());
     }
 
     private ShadowAuthorizationController controller() {
-        return new ShadowAuthorizationController(policyEngine, sessionRouter, recorder, props);
+        return new ShadowAuthorizationController(policyEngine, sessionRouter, introspectionClient, recorder, props);
     }
 
     private ShadowEvaluationRequest req() {
