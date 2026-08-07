@@ -429,7 +429,20 @@ experienceBff:
   # Public front door → 2 replicas for HA + zero-downtime RollingUpdate (node maxPods=250,
   # ample headroom). Rest of estate stays replicas:1 / Recreate.
   replicaCount: 2
+  # ── P1 authorization shadow (TEMPORARY — delete with the P1 mechanism) ────────────────
+  # The probe key is a Kubernetes Secret created out of band and NEVER committed:
+  #   kubectl -n <ns> create secret generic impilo-shadow-probe \
+  #     --from-literal=probe-key="$(openssl rand -base64 48 | tr -d '\n')"
+  # optional:true is deliberate — a missing secret must DISABLE the measurement, not refuse
+  # to start the pod. Both ends fail closed on a blank key: the PDP refuses every caller and
+  # the BFF does not dispatch at all, so absence degrades to "no measurement", never to
+  # "no authorization". Was wired by hand with kubectl before this; a helm upgrade would
+  # have silently dropped it.
   secretEnv:
+    IMPILO_TRUST_SHADOW_PROBE_KEY:
+      name: impilo-shadow-probe
+      key: probe-key
+      optional: true
     KEYCLOAK_BACKEND_SECRET:
       name: impilo-app-secrets
       key: keycloak-backend-secret
@@ -452,6 +465,11 @@ experienceBff:
       name: impilo-app-secrets
       key: keycloak-workload-secret-bff
   env:
+    # P1 authorization shadow — see the secretEnv note above. Deliberately in THIS env block
+    # and not a second one: a duplicate key at the same level is silently discarded by YAML
+    # (last one wins), which is how the rtc-gateway fix below failed to reach the pod, and
+    # how the first attempt at this one did too.
+    IMPILO_TRUST_SHADOW_BEARER_ENABLED: "true"
     REDIS_HOST: redis
     REDIS_PORT: "6379"
     KEYCLOAK_URL: http://keycloak:8080
@@ -614,7 +632,17 @@ fullBootServices:
       # MFA cohort: validate external issuer claims using the internal JWKS route.
       IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS: "false"
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
+      # KeycloakAdapter hand-rolls a Nimbus processor rather than using Spring's resource
+      # server, so this property was set here and silently ignored until 020dc3853 taught it
+      # to read the standard name. The value was always right; the code did not read it.
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
+      IMPILO_TRUST_SHADOW_BEARER_ENABLED: "true"
+    # P1 shadow probe key — see the experienceBff block above for why optional:true.
+    secretEnv:
+      IMPILO_TRUST_SHADOW_PROBE_KEY:
+        name: impilo-shadow-probe
+        key: probe-key
+        optional: true
   # G046 cohort fallout (2026-08-03). b12f5dcd3 removed the oauth2-enabled permitAll
   # off-switch from 23 services, so a service whose issuer is unset can no longer skip its
   # OAuth resource-server block — Spring cannot build a JwtDecoder and the pod FAILS TO

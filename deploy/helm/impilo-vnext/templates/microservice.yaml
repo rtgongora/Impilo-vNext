@@ -138,12 +138,20 @@ spec:
                    secretKeyRef, so signing keys/secrets come from out-of-band
                    Secrets (e.g. impilo-app-secrets) instead of committed values.
                    See docs/security/secrets-management-migration-plan.md. */}}
+            {{- /* optional: a MISSING secret leaves the value unset instead of refusing to
+                   start the pod. Only for env whose absence is safe by construction — the
+                   shadow probe key fails closed on blank at both ends, so a missing secret
+                   disables a temporary measurement rather than taking the PDP off the request
+                   path. Defaults to required, which is correct for every other entry here. */}}
             {{- range $ek, $ref := ($svc.secretEnv | default dict) }}
             - name: {{ $ek }}
               valueFrom:
                 secretKeyRef:
                   name: {{ $ref.name | quote }}
                   key: {{ $ref.key | quote }}
+                  {{- if $ref.optional }}
+                  optional: true
+                  {{- end }}
             {{- end }}
           {{- if $svc.startupProbe }}
           startupProbe:
