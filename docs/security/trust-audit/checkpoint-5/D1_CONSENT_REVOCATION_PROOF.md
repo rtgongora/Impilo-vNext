@@ -202,6 +202,38 @@ controllers.
 not have. Everything up to it is measured; the last step is inference from the routing and matcher
 analysis above, and should be confirmed before the finding is closed either way.
 
+### Provenance of the running PDP — settled by content, not by stamp
+
+Needed before any redeploy, and it does not come from where you would expect.
+
+`/actuator/info` on the running pod reports commit **`1d12eef`** (branch
+`claude/staging-ux-orchestration-remediation-Yypyl`). **That is not what the image was built from.**
+The jar's own `git.properties` carries `git.build.time=2026-08-06T02:49`, while the image was created
+`2026-08-07T10:03`: the `git-commit-id-maven-plugin` (`services/pom.xml:546`) skips regeneration when
+the file already exists — a build in this session logged `Properties file […] is up-to-date` — so a
+stale stamp survives in a reused `target/`.
+
+Four lines of evidence, three of them content-based, all agreeing the image is **`020dc3853`**:
+
+| Evidence | Result |
+|---|---|
+| Registry tag on the running digest `sha256:0691c17…` | **`preview-020dc3853`** |
+| `KeycloakAdapter.class` constant pool | contains `"JWKS endpoint verified reachable"`, `"jwk-set-uri"` ⇒ has `020dc3853` |
+| `BreakGlassGrantValidationService.class` | **absent** — and that file exists at `HEAD` but not at `020dc3853`, so the absence is chronological |
+| Startup log | shows the post-fix JWKS banner, which `1d12eef`'s source does not contain |
+| ~~`/actuator/info` / `git.properties`~~ | **`1d12eef` — wrong** |
+
+Ancestry against the TRUE commit, which is what governs a redeploy:
+
+- `020dc3853` **is** an ancestor of `origin/main` and of this branch ⇒ deploying strictly advances.
+- Commits touching `services/tshepo-authz-service/` in `020dc3853` but not in `HEAD`: **0** ⇒ no
+  revert risk for this service.
+- Commits touching it in `HEAD` but not deployed: **5**.
+
+So the running PDP *does* validate Keycloak bearers — an earlier draft of this document inferred
+from the stale stamp that it could not, and that was wrong. Both the inference and the ancestry
+assessment built on it were void. Establish provenance from the tag and the bytecode.
+
 > ⚠️ **The remedy is not to add a rule so that consent becomes reachable.** Doing that would
 > manufacture the gate's own precondition: the estate would demonstrate "a revoked consent blocks a
 > read" only because a rule had been written to make the read reachable in the first place, with no
