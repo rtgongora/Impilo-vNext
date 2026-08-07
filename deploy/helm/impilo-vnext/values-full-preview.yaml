@@ -739,10 +739,23 @@ fullBootServices:
   # OF-C M4 gate finding: iot-ingestion gates on its own impilo.security.mode knob
   # (ignores the platform disable-oauth flag) and its issuer defaulted to localhost —
   # no in-cluster JWT could ever validate. Preview parity + a valid issuer for defence.
+  #
+  # Phase 0 E: permit-all was the workaround for that localhost issuer, and it made the
+  # WHOLE service anonymous — the probe sweep found /internal/v1/telemetry/ingest and
+  # /internal/v1/devices/register reaching application code with no credential. The issuer
+  # is fixed below, so the workaround is retired: mode goes to oauth2 and the chain's
+  # anyRequest().authenticated() branch applies.
+  #
+  # PUBLIC issuer (it is what the token's iss claim carries) with the INTERNAL JWKS route
+  # (this VM cannot reach its own public address) — the same pairing as the MFA and G046
+  # cohorts above. Setting KEYCLOAK_ISSUER alone would have validated against
+  # http://keycloak:8080/... and rejected every real token as an issuer mismatch: a
+  # fail-closed 401 for legitimate callers, which reads like enforcement but is a break.
   iot-ingestion-service:
     env:
-      IMPILO_SECURITY_MODE: "permit-all"
-      KEYCLOAK_ISSUER: "http://keycloak:8080/realms/impilo"
+      IMPILO_SECURITY_MODE: "oauth2"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
   msika-flow-service:
     env:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
