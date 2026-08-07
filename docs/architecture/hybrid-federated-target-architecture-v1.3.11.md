@@ -2585,10 +2585,38 @@ The chart is closer than expected: `templates/microservice.yaml` already reads `
 | 4 | `PodDisruptionBudget`, `HorizontalPodAutoscaler`, `affinity`, `topologySpreadConstraints`, `nodeSelector`, `tolerations`, `priorityClassName` | zero hits, all seven | Spread replicas across three cluster nodes; protect quorum during drain |
 | 5 | `imagePullSecrets` | zero hits | Node pulls from a real registry with credentials |
 | 6 | Namespace and public host are **hardcoded** — `impilo-full-preview` in ingress routes, the secrets script and the TLS sync script; `impilo.mohcc.gov.zw` written literally into ~40 env entries and into every generated service block | `deploy/tls/mohcc-gov/ingressroutes.yaml:15,31`; `scripts/secrets/bootstrap-secrets.sh:28` | Both become values |
-| 7 | Distributed scheduler locking — **139 `@Scheduled` annotations across 74 services and zero locks anywhere** (ShedLock, advisory locks, `SKIP LOCKED`, leader election: all zero hits) | measured | Required before any service runs `replicas > 1` |
+| 7 | Distributed scheduler locking — **131 `@Scheduled` annotations across 74 services**, and no general locking primitive in code (ShedLock, advisory locks, `SKIP LOCKED`, leader election: zero hits outside this document and its archived drafts). **130 of the 131 are latent, not live**: `experience-bff` is the only multi-replica *Java* service, and its patient-facing sends are already deduplicated across replicas by a Redis `SETNX` claim | re-measured 2026-08-07: `git grep -cE "^\s*@Scheduled"` + `kubectl get deploy -n impilo-full-preview` | Needed when a **second** Java service goes `replicas > 1`; deliberately deferred until then — see the note below |
 | 8 | Node identity — the only per-cluster identifier the chart mints is `impilo.workloadId` (`urn:impilo:workload:<env>:<cluster>:<ns>:<sa>:<workload>`) | `_helpers.tpl:31-34` | `node_id` becomes a first-class chart value threaded into every pod |
 
-> **⚠ Double-firing is not hypothetical — it is happening now.** `experience-bff` already runs `replicaCount: 2` and carries three `@Scheduled` beans (`BookingOutboxCommsPoller`, `AppointmentReminderScheduler`, `WorkContextRevalidationJob`). Appointment reminders are being scheduled twice in the current estate. Fixing scheduler locking is therefore a **current-estate defect fix (Phase 0)**, not node-enablement work.
+> **Corrected 2026-08-07 (Phase 0 · Workstream C).** An earlier revision of this document asserted
+> that appointment reminders "are being scheduled twice in the current estate". **That was wrong**,
+> and the claim is withdrawn. What was measured, and what is actually true:
+>
+> - **Three workloads run `replicas: 2`** in `impilo-full-preview` — `experience-bff`, `one-ui-shell`
+>   and `public-website`. Only `experience-bff` is a Java service, so it is the only place a
+>   `@Scheduled` bean can fire on two replicas at once. The other 130 annotations sit in
+>   single-replica services and are **latent, not live**. (`kubectl get deploy`, not `replicaCount`
+>   in a values file — the two are not the same claim.)
+> - `experience-bff` carries **four** scheduled beans, not three: `AppointmentReminderScheduler`,
+>   `BookingOutboxCommsPoller`, `WorkContextRevalidationJob` and `ShadowObserverHealthReporter`.
+> - **The reminder cursor does race, but the send does not.** Both dispatch paths claim through
+>   `AppointmentReminderReceiptStore`, a Redis `SET key value NX EX` against the one Redis both
+>   replicas share — a genuine cross-replica primitive, just not a general-purpose one. Two replicas
+>   racing one due reminder produce exactly one send; measured from two separate JVM processes
+>   against a live Redis, with the dedup removed as a control to prove the measurement could detect a
+>   double-send (it reported 2 claims when it should).
+> - **The real exposure was the failure path, not the happy path.** When Redis was unreachable the
+>   store fell back to a per-pod `ConcurrentHashMap` — which is not a claim at all, so *both* replicas
+>   sent, producing duplicate SMS to real patients; and the degradation was logged at `debug`, so in
+>   production it was invisible. Fixed in Phase 0 · C2: the store now **refuses to claim** when no
+>   shared claim can be made, logs the outage at `error`, and the outbox poller holds its cursor at a
+>   refused event so it is retried rather than dropped.
+>
+> Scheduler locking is therefore **not** a live double-firing defect. The one real defect has been
+> fixed; general locking across the other 130 beans is deliberately deferred, with a written trigger
+> condition — the second Java service to go `replicas > 1` — in
+> [`adr/ADR-0056-scheduler-locking-scope-and-deferral.md`](adr/ADR-0056-scheduler-locking-scope-and-deferral.md),
+> which also records the measurements above and the method behind each.
 
 ## 17.2 Deployment-profile matrix
 
@@ -3177,7 +3205,7 @@ Six phases. **Phase 0 is not preparation for federation — it is the correction
 - **Resolve the FHIR split** — repoint `FhirPublisher` and the gateway default target at `butano-service`; migrate and retire `butano-fhir` and stock `hapi-fhir`.
 - **Repair event contracts** — convert the six hand-rolled publishers (pct, oros, pharmacy, referral, tshepo-consent, tshepo-identity) to `CompanionOutboxPublisher`; fix PCT's unrouted-event catch-all; fix the two OROS result payload contracts that silently drop review tasks and critical alerts; set the `notifiable` marker so surveillance stops skipping every encounter; fix the warehouse topic-pattern mismatch.
 - **Retire false-success paths** — delete `offline-sync-service`, `jobs-service`, `channels-service`; fix or retire `connector-fhir-adapter`; add retry to notification and remove `MockProvider` for unsupported channels; remove the mobile break-glass fail-open, the consent fail-safe-to-yes, the seeded facility-name fallback and the walk-in registration fallthrough.
-- **Scheduler locking** — introduce leader election or advisory locks across all 139 `@Scheduled` beans. **`experience-bff` already runs two replicas with three schedulers, so this is a live defect.**
+- **Scheduler locking** — *no longer a Phase 0 item; corrected 2026-08-07.* The live defect was never double-firing itself: `experience-bff` is the only multi-replica Java service, and its patient-facing sends were already deduplicated across replicas by a Redis `SETNX` claim. The genuine hole was that claim's **fallback** — on a Redis outage it degraded to a per-pod in-memory set, so both replicas sent, invisibly (logged at `debug`). That is fixed (Phase 0 · C2): refuse the claim, log at `error`, hold the outbox cursor so refused work retries. General locking across the other 130 `@Scheduled` beans is **deferred** — they are all single-replica and therefore latent. Trigger to build it: the second Java service to go `replicas > 1`.
 - **Set the missing service base URLs** and add a startup assertion that every configured peer resolves to a non-loopback address in a cluster profile.
 
 **Schema changes:** `encounter_ref UNIQUE NOT NULL` on PCT encounters; audit hash extended to the six unhashed columns with `hash_algorithm_version`; outbox tables normalised toward the coverage shape.
@@ -3603,11 +3631,11 @@ Priority reflects *what unblocks the most* and *what is riskiest to defer*. P0 i
 | 1 | Enforcement sequencing: context-header authority → upstream allow-list → flat `x-confidential-categories` → ext_authz + strip → obligation propagation | **P0** | 0 | Every other control is downstream of this, and the wrong order deletes the estate's operating context |
 | 2 | Consent on the clinical read path | **P0** | 0 | Today a revoked consent changes nothing |
 | 3 | Facility/organisation scoping in clinical repositories + PDP membership | **P0** | 0 | One organisation can read another's records |
-| 4 | Scheduler locking across 139 `@Scheduled` beans | **P0** | 0 | Already double-firing at `replicas: 2` in the live BFF |
+| 4 | ~~Scheduler locking across 139 `@Scheduled` beans~~ → **done for the one live case; general locking deferred** | ~~P0~~ **P2** | 0 (C2) → deferred | **Corrected 2026-08-07:** not double-firing. `experience-bff` is the only multi-replica Java service and its sends already claim via Redis `SETNX`; the real hole was that claim's per-pod fallback on a Redis outage, now fixed. The other 130 beans are single-replica and latent. Re-raise when a second Java service goes `replicas > 1` |
 | 5 | Convert the six hand-rolled publishers to `CompanionOutboxPublisher` | **P0** | 0→1 | Federation metadata otherwise reaches none of PCT, OROS, pharmacy, referral, consent, identity |
 | 6 | Retire `offline-sync`, `jobs`, `channels`, `butano-fhir`, stock `hapi-fhir` | **P0** | 0 | Fabricated success must not be federated |
 | 7 | Missing service base URLs + startup peer-resolution assertion | **P0** | 0 | The node closure cannot be built on the current values files |
-| 8 | Durable Redis, proven restore, NetworkPolicies | **P0** | 0 | Data-loss exposure |
+| 8 | Durable Redis, proven restore, NetworkPolicies | **P0** | 0 | Data-loss exposure — **and now an availability dependency too**: since C2, a Redis outage withholds appointment reminders rather than duplicating them (the deliberate trade), so Redis uptime is on the patient-facing path |
 | 9 | `trust_domain` / `deployment_node` / agreement / policy schema | P1 | 1 | The vocabulary everything else references |
 | 10 | Federation metadata into envelope, outbox, contexts, audit | P1 | 1 | The provenance substrate |
 | 11 | `encounter_ref UNIQUE NOT NULL` | P1 | 1 | The one identifier gap on the critical path |
