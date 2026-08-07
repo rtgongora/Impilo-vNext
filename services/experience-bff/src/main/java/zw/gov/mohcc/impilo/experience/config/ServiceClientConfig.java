@@ -4,6 +4,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
+import zw.gov.mohcc.impilo.experience.auth.session.SessionBearerTokenResolver;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
@@ -35,6 +37,14 @@ import java.util.List;
 @Configuration
 @EnableConfigurationProperties({ServiceClientConfig.ServiceEndpoints.class, ServiceTokenProperties.class})
 public class ServiceClientConfig {
+    private static final org.slf4j.Logger log =
+            org.slf4j.LoggerFactory.getLogger(ServiceClientConfig.class);
+    /**
+     * P1 shadow only. Carries the signed-in person's Keycloak access token to the PDP on a header
+     * the production decision path does not read, so bearer-derived roles can be measured without
+     * any possibility of changing an allow/deny outcome. Never forwarded upstream of the PDP.
+     */
+    static final String SHADOW_AUTHORIZATION = "X-Shadow-Authorization";
     private static final String X_SERVICE_ID = "X-Service-Id";
     private static final String X_SERVICE_NAME = "X-Service-Name";
     private static final String X_SERVICE_VERSION = "X-Service-Version";
@@ -339,7 +349,9 @@ public class ServiceClientConfig {
     public ClientHttpRequestInterceptor trustHeaderForwardingInterceptor(
             ServiceTokenProvider serviceTokenProvider,
             VisibilityPropagationShadowReporter visibilityShadowReporter,
-            VisibilityObligationPropagator visibilityObligationPropagator) {
+            VisibilityObligationPropagator visibilityObligationPropagator,
+            SessionBearerTokenResolver sessionBearerTokenResolver,
+            @Value("${impilo.trust.shadow-bearer.enabled:false}") boolean shadowBearerEnabled) {
         return (request, body, execution) -> {
             ServletRequestAttributes attrs =
                     (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
@@ -426,6 +438,47 @@ public class ServiceClientConfig {
                 // nobody recorded, and the next person to change this line needs to know the
                 // guard is incidental rather than protective.
                 forwardHeaderIfAbsent(inbound, request, CompanionHeaders.AUTHORIZATION);
+
+                // ── P1 SHADOW: give the PDP the roles it has never had ──────────────────────
+                // The browser holds an opaque session cookie and sends NO Authorization header,
+                // so the only-if-absent forward above finds nothing to forward. The PDP therefore
+                // validates no session, resolves no roles, and 489 of 525 active ALLOW rules —
+                // 93% — cannot match a signed-in human. Measured 2026-08-07.
+                //
+                // The token is not missing. The BFF already holds it (WebAuthSessionStore.
+                // SessionData.accessToken, encrypted in Redis) and already resolves it per request
+                // for its own security context. It was simply never attached outbound.
+                //
+                // ORDER IS THE CONTROL, and the comment above is why. This runs AFTER
+                // only-if-absent, so it fires only when neither a client method's deliberate token
+                // (Keycloak admin, service-account) nor an inbound one exists. Attaching earlier
+                // would recreate the confused deputy documented above — a citizen's token carried
+                // on a request asserting SYSTEM authority.
+                //
+                // ISOLATION IS STRUCTURAL, NOT A FLAG. The token is deliberately NOT placed on
+                // `Authorization`. If it were, AuthorizeController would validate it and use its
+                // roles for the REAL decision — that is enforcement, not shadow, and no amount of
+                // downstream flag-checking would undo it. On a dedicated header the production
+                // decision cannot see the token even if every shadow flag were mis-set: the code
+                // path that reads roles never runs.
+                //
+                // Correspondingly the PDP must opt IN to reading this header, and Envoy must be
+                // told to forward it (allowed_headers). It is never forwarded upstream, so it
+                // cannot reach a domain service.
+                //
+                // Flagged off by default; while off the estate is byte-identical to today.
+                if (shadowBearerEnabled && !request.getHeaders().containsKey(SHADOW_AUTHORIZATION)) {
+                    try {
+                        String sessionToken = sessionBearerTokenResolver.resolve(inbound);
+                        if (sessionToken != null && !sessionToken.isBlank()) {
+                            request.getHeaders().set(SHADOW_AUTHORIZATION, "Bearer " + sessionToken);
+                        }
+                    } catch (RuntimeException ex) {
+                        // A measurement must never be able to fail a real request. Resolving the
+                        // session touches Redis; if that fails the call proceeds exactly as today.
+                        log.debug("shadow bearer resolution failed, proceeding without: {}", ex.toString());
+                    }
+                }
                 // Actor identity is forwarded only-if-absent: a BFF client method that has
                 // deliberately pre-set an actor context (e.g. the dependant-registration flow
                 // asserting SYSTEM authority to create a guardianship delegation the guardian is
