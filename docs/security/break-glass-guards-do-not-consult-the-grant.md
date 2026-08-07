@@ -102,11 +102,27 @@ transfusion trades a governance risk for a mortality risk.
    between a real control and another one that looks like validation and is not.
 
 3. **`TshepoEscalationGrantValidator`** (madi-service) — the HTTP mapping, which is where the ruling
-   is actually implemented: 200+`VALID` → VALID; 200+`NO_GRANT` → NO_GRANT; **4xx → NO_GRANT** (the
-   service answered; a malformed request is not an outage, and must not be a route to an ungoverned
-   override); **5xx / timeout / connect / DNS / unparseable → UNREACHABLE**.
+   is actually implemented. **Only an explicit 200 with a recognised outcome is an answer**;
+   everything else is `UNREACHABLE`.
 
-4. **`UngovernedOverrideRecorder`** — a *required* collaborator, so the guard writes the record
+   > **This mapping was wrong on first implementation, and the error was live.** It originally read
+   > 4xx → `NO_GRANT`, on the reasoning that "the service answered, so it is not an outage". But MADI
+   > sent no `Authorization` header at all, the endpoint is `authenticated()`, so every call returned
+   > **401 → NO_GRANT → REFUSE**. Every break-glass action in the estate would have been refused —
+   > MHP activation, pack issue, O-negative release — silently, and it passed every test because all
+   > of them mocked the validator. Found by asking what token the caller actually presents.
+   >
+   > The corrected rule accepts that a caller could force the override branch with a deliberately
+   > broken request. That is the better trade: an override is recorded, attributed and flagged for
+   > review, whereas a blocked transfusion is silent.
+
+4. **Authentication, and binding the answer to the caller.** MADI now forwards the clinician's own
+   bearer to the trust plane on a dedicated `trustCallRestTemplate` — separate from MADI's shared
+   template so the credential does not travel to every other integration. The endpoint takes the
+   actor from **the token's subject, never from a header**, so a caller can only ask "do *I* hold
+   this grant". Taking `x-actor-id` would have made it an oracle for other people's grants.
+
+5. **`UngovernedOverrideRecorder`** — a *required* collaborator, so the guard writes the record
    itself rather than returning a flag and trusting each call site. `OutboxUngovernedOverrideRecorder`
    writes to MADI's event outbox rather than calling an audit service: this record is written
    precisely when remote calls are failing, and a shared network fault would otherwise take out the
@@ -115,7 +131,7 @@ transfusion trades a governance risk for a mortality risk.
    `reviewRequired: true` / `reviewStatus: PENDING` — its own type so the review is a selection, not
    a scan.
 
-5. **`EmergencyAccessGuard`** is now an injected component with both collaborators mandatory. There
+6. **`EmergencyAccessGuard`** is now an injected component with both collaborators mandatory. There
    is no constructor that yields a guard which can allow without recording.
 
 ### What is verified
@@ -126,7 +142,11 @@ All three branches red-proved by mutation:
 - allowing on `UNREACHABLE` without writing the record fails 2
 - letting `NO_GRANT` through (restoring the forged-purpose hole) fails 3
 
-Suites: shared-kernel-java 207, madi-service 61, tshepo-authz-service 399 — all green.
+Plus the two layers that had no test and where the live defect sat: the HTTP mapping
+(`TshepoEscalationGrantValidatorTest`, 10 — restoring 4xx → `NO_GRANT` fails 3) and the actual outbox
+write (`OutboxUngovernedOverrideRecorderTest`, 7 — a recorder that logs without writing fails all 7).
+
+Suites: shared-kernel-java 207, madi-service 78, tshepo-authz-service 399 — all green.
 
 ### Still open
 

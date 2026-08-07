@@ -26,12 +26,24 @@ import java.util.Map;
  * <p>The mapping, and why each line is what it is:</p>
  *
  * <pre>
- *   200 + {"outcome":"VALID"}     → VALID         the trust plane confirmed a grant
- *   200 + {"outcome":"NO_GRANT"}  → NO_GRANT      the trust plane answered, and the answer is no
- *   4xx                           → NO_GRANT      it answered; we asked badly, which is not its outage
- *   5xx / timeout / connect / DNS → UNREACHABLE   it did not answer
- *   200 + unparseable body        → UNREACHABLE   something answered, but not this service
+ *   200 + {"outcome":"VALID"}     → VALID         the trust plane answered: a grant holds
+ *   200 + {"outcome":"NO_GRANT"}  → NO_GRANT      the trust plane answered: no grant holds
+ *   anything else                 → UNREACHABLE   the question was not answered
  * </pre>
+ *
+ * <p><b>Only an explicit 200 with a recognised outcome is an answer.</b> This endpoint returns 200
+ * for every real verdict, so a 401, 403, 404, 5xx, timeout or unparseable body all mean the same
+ * thing: we did not get an answer. An earlier version of this class mapped 4xx to {@code NO_GRANT}
+ * on the reasoning that "the service answered, so it is not an outage". That was wrong in a way that
+ * only shows up in production: a missing token, a stale route or a misconfigured base URL would have
+ * turned into "no grant" on every call and refused every emergency action — silently, and with a
+ * clinical consequence. A misconfiguration is not a statement about whether a clinician holds a
+ * grant.</p>
+ *
+ * <p>The cost of the safer mapping is that a caller who can reach this service at all could send a
+ * deliberately broken request to force the override branch. That is accepted rather than overlooked:
+ * the override is <em>recorded, attributed and flagged for review</em>, so it is visible, whereas a
+ * blocked transfusion is silent. Visible-and-wrong beats silent-and-wrong on this path.</p>
  *
  * <p><b>There is deliberately no catch-all returning NO_GRANT.</b> The single most likely way to
  * rebuild the defect this replaced is a {@code catch (Exception e) { return NO_GRANT; }} — it looks
@@ -40,11 +52,6 @@ import java.util.Map;
  *
  * <p>The inverse mistake — treating an outage as VALID — is worse and is not reachable: VALID is
  * returned only on an explicit {@code "VALID"} string in a parsed 200 body.</p>
- *
- * <p>4xx maps to NO_GRANT rather than UNREACHABLE because the service <em>did</em> answer. A 400 or
- * 404 means our request was wrong or the grant is not there; neither is an outage, and treating a
- * malformed request as grounds for an ungoverned override would make the override branch reachable
- * by sending rubbish.</p>
  */
 @Service
 public class TshepoEscalationGrantValidator implements EscalationGrantValidator {
@@ -55,6 +62,7 @@ public class TshepoEscalationGrantValidator implements EscalationGrantValidator 
     private final String baseUrl;
 
     public TshepoEscalationGrantValidator(
+            @org.springframework.beans.factory.annotation.Qualifier("trustCallRestTemplate")
             RestTemplate restTemplate,
             @Value("${madi.integration.tshepo-authz.base-url:http://tshepo-authz-service:8081}") String baseUrl) {
         this.restTemplate = restTemplate;
@@ -73,7 +81,9 @@ public class TshepoEscalationGrantValidator implements EscalationGrantValidator 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("x-tenant-id", tenantId);
-        headers.set("x-actor-id", actorId);
+        // x-actor-id is deliberately NOT sent as an authority claim. tshepo-authz binds the actor to
+        // the bearer token's subject; a header here would be ignored, and sending one would invite
+        // the belief that a caller may ask about somebody else.
 
         try {
             ResponseEntity<JsonNode> response = restTemplate.postForEntity(
@@ -99,15 +109,11 @@ public class TshepoEscalationGrantValidator implements EscalationGrantValidator 
             return Outcome.UNREACHABLE;
 
         } catch (RestClientResponseException e) {
-            // The service answered with a status. 4xx is an answer about the request; 5xx is the
-            // service failing, which is an outage from the caller's point of view.
-            if (e.getStatusCode().is4xxClientError()) {
-                log.warn("BREAK-GLASS: grant validation refused with {} — treated as NO_GRANT, "
-                        + "because the trust plane answered.", e.getStatusCode());
-                return Outcome.NO_GRANT;
-            }
-            log.error("BREAK-GLASS: grant validation failed with {} — treated as UNREACHABLE.",
-                    e.getStatusCode(), e);
+            // Any non-200 means the question was not answered. 401/403 in particular is the shape a
+            // missing or expired workload credential takes, and treating that as "no grant" would
+            // refuse every emergency action in the estate the moment auth drifted.
+            log.error("BREAK-GLASS: grant validation returned {} — the question was NOT answered, so "
+                            + "this is UNREACHABLE, not a refusal.", e.getStatusCode(), e);
             return Outcome.UNREACHABLE;
 
         } catch (Exception e) {

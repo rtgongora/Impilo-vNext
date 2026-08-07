@@ -85,17 +85,29 @@ public class VisibilityEscalationController {
      * credential and query strings end up in access logs — the same reason
      * {@code ProviderBootstrapController#previewClaim} takes its token in the body.</p>
      *
+     * <p><b>The actor is taken from the bearer token's subject, never from a header.</b> A caller can
+     * therefore only ask "do <em>I</em> hold this grant" — it cannot ask about anybody else. Taking
+     * {@code x-actor-id} here would have made this an oracle: an authenticated caller could probe
+     * whether a given grant belongs to a given clinician. The identity that reaches this endpoint is
+     * the clinician's own, forwarded by the calling service.</p>
+     *
      * <p>Always 200 with an outcome; a missing, malformed, expired, revoked or wrong-actor grant is
      * {@code NO_GRANT}, indistinguishable from the caller's side so the endpoint cannot be used to
      * probe which grant tokens exist.</p>
      */
     @PostMapping("/grants/validate")
     public ResponseEntity<ValidateGrantResponse> validateGrant(
+            @AuthenticationPrincipal Jwt jwt,
             @RequestHeader("x-tenant-id") UUID tenantId,
-            @RequestHeader("x-actor-id") String actorId,
             @RequestBody ValidateGrantRequest body) {
+        // The actor is the bearer's subject, never a header. A caller can only ask about themselves.
+        if (jwt == null || jwt.getSubject() == null || jwt.getSubject().isBlank()) {
+            // Unauthenticated cannot reach here (anyRequest().authenticated()), but a token with no
+            // subject would otherwise validate against a null actor and match nothing silently.
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         return ResponseEntity.ok(visibilityEscalationService
-                .validateGrant(tenantId, actorId, body == null ? null : body.grantId())
+                .validateGrant(tenantId, jwt.getSubject(), body == null ? null : body.grantId())
                 .map(g -> new ValidateGrantResponse("VALID", g.visibilityCeiling(), g.workflowType()))
                 .orElseGet(() -> new ValidateGrantResponse("NO_GRANT", null, null)));
     }
