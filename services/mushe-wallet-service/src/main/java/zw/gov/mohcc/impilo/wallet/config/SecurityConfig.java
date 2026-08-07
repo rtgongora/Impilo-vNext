@@ -28,8 +28,6 @@ public class SecurityConfig {
             http.authorizeHttpRequests(auth -> auth
                             .requestMatchers(
                                     "/actuator/**",
-                                    "/internal/v1/health",
-                                    "/internal/v1/test-command",
                                     "/v3/api-docs/**",
                                     "/swagger-ui/**",
                                     "/swagger-ui.html"

@@ -43,9 +43,7 @@ public class SecurityConfig {
                                     "/actuator/metrics/**",
                                     "/v3/api-docs/**",
                                     "/swagger-ui/**",
-                                    "/swagger-ui.html",
-                                    "/internal/v1/health",
-                                    "/internal/v1/test-command"
+                                    "/swagger-ui.html"
                             ).permitAll()
                             .requestMatchers("/internal/v1/madi/**").authenticated()
                             .anyRequest().authenticated())

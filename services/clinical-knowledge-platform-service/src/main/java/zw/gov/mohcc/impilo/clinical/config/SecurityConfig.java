@@ -49,9 +49,7 @@ public class SecurityConfig {
         if (!disableOauthForTests) {
             http.authorizeHttpRequests(auth -> auth
                             .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
-                            .requestMatchers("/internal/v1/health",
-                                    "/internal/v1/test-command",
-                                    "/internal/v1/test-federation").permitAll()
+                            .requestMatchers(                                    "/internal/v1/test-federation").permitAll()
                             .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
                             .anyRequest().authenticated()
                     )
