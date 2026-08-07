@@ -1,0 +1,7 @@
+# Estate idiom: the in-JVM suites drive this service without a token issuer. The production
+# chain (with oauth2ResourceServer) is not configured under this flag, so no JwtDecoder bean
+# is required and the context starts. ProductionChainRefusesAnonymousWriteTest overrides this
+# back to false so the chain the estate actually runs is the one under test.
+impilo:
+  security:
+    disable-oauth-for-tests: true
