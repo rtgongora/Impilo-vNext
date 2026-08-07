@@ -207,6 +207,13 @@ public class OutboxPublisher extends CompanionOutboxPublisher {
 
             case "TASK_CREATED", "TASK_COMPLETED" -> "pct.task.updated";
 
+            // An emergency clinical write allowed without a validated grant. Routed straight at
+            // the audit plane rather than a pct topic: this is not care traffic, it is the record
+            // of a control that did not run, and it must reach the hash chain clinical governance
+            // reads. Payload is AuditEventRequest-shaped so AuditKafkaConsumer ingests it directly.
+            // See PctUngovernedOverrideRecorder for guaranteed (local row) vs best-effort (chain).
+            case "BREAK_GLASS_UNGOVERNED_OVERRIDE" -> "tshepo.audit.events";
+
             case "TRIAGE_RECORDED" -> "pct.triage.recorded";
 
             // Observations get their own topic because BUTANO subscribes to them specifically to
