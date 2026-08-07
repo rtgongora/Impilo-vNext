@@ -15,6 +15,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 
 /**
  * Facility QR credentials (FJ QR, D-L7). Issuance/revocation is a governed
@@ -25,8 +26,16 @@ import java.util.UUID;
 @RestController
 public class FacilityCredentialController {
 
-    private static final Set<String> ISSUER_ACTOR_TYPES =
-            Set.of("SYSTEM", "REGISTRY_ADMIN", "NATIONAL_ADMIN", "DATA_STEWARD");
+    /**
+     * Issuing or revoking a facility credential.
+     *
+     * <p>Was {@code Set.of("SYSTEM", "REGISTRY_ADMIN", "NATIONAL_ADMIN", "DATA_STEWARD")}; the last
+     * three are role names no client emits.</p>
+     */
+    private static final ActorTypeGuard.Duty ISSUE_FACILITY_CREDENTIAL = new ActorTypeGuard.Duty(
+            "issuing a facility credential",
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            Set.of("REGISTRY_ADMIN", "NATIONAL_ADMIN", "DATA_STEWARD"));
 
     private final FacilityCredentialService credentialService;
 
@@ -65,11 +74,7 @@ public class FacilityCredentialController {
 
     private static void requireIssuer(HttpServletRequest http) {
         String actorType = http.getHeader("X-Actor-Type");
-        String normalised = actorType == null ? "" : actorType.trim().toUpperCase(Locale.ROOT);
-        if (!ISSUER_ACTOR_TYPES.contains(normalised)) {
-            throw new org.springframework.web.server.ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Credential issuance is a registry-administration act");
-        }
+        ActorTypeGuard.require(actorType, http.getHeader("X-Actor-ID"), ISSUE_FACILITY_CREDENTIAL);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 
 /**
  * Reconciliation-workspace mutations for facility classification profiles:
@@ -35,7 +36,18 @@ import java.util.UUID;
 public class FacilityClassificationReviewService {
 
     /** Actor types permitted to mutate classification. Reads stay open like sibling endpoints. */
-    static final Set<String> CLASSIFICATION_ADMIN_ROLES = Set.of("HPA_REGISTRAR", "HPA_ADMIN", "SYSTEM_ADMIN");
+    /**
+     * Completing a facility classification review.
+     *
+     * <p>Was {@code {HPA_REGISTRAR, HPA_ADMIN, SYSTEM_ADMIN}}, none emittable, and permissive when
+     * unset "matching the estate idiom (ext_authz already gated the call)". Envoy defines two
+     * clusters, both experience-bff, and has no route to tuso — so ext_authz had not gated the
+     * call, and omitting the header was the only way to pass. Now fails closed.</p>
+     */
+    static final ActorTypeGuard.Duty COMPLETE_CLASSIFICATION_REVIEW = new ActorTypeGuard.Duty(
+            "completing a facility classification review",
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            Set.of("HPA_REGISTRAR", "HPA_ADMIN", "SYSTEM_ADMIN"));
 
     /** Only genuinely-deterministic machine outcomes may be bulk-confirmed without individual review. */
     static final Set<String> BULK_CONFIRMABLE_STATUSES = Set.of(
@@ -386,12 +398,7 @@ public class FacilityClassificationReviewService {
 
     private void assertRole(TrustContext ctx, String action) {
         String actorType = ctx.actorType();
-        if (actorType == null || actorType.isBlank()) {
-            return; // permissive when unset, matching the estate idiom (ext_authz already gated the call)
-        }
-        if (!CLASSIFICATION_ADMIN_ROLES.contains(actorType)) {
-            throw new SecurityException("Actor type " + actorType + " cannot " + action);
-        }
+        ActorTypeGuard.require(actorType, null, COMPLETE_CLASSIFICATION_REVIEW);
     }
 
     private static boolean blank(String s) { return s == null || s.isBlank(); }

@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Custodial wallet credit/debit mint or burn balance, so they are restricted to
@@ -62,30 +63,43 @@ class WalletPlatformServiceAuthzTest {
 
     @Test
     void patientActor_cannotCreditWallet() {
-        actAs("PATIENT");
-        var ex = assertThrows(SecurityException.class,
+        actAs("CITIZEN");
+        var ex = assertThrows(ResponseStatusException.class,
                 () -> service.credit("WLT1", BigDecimal.ONE, "ADJUSTMENT", "ref"));
-        assertTrue(ex.getMessage().contains("PATIENT"));
+        assertTrue(ex.getMessage().contains("CITIZEN"));
     }
 
     @Test
     void providerActor_cannotDebitWallet() {
         actAs("PROVIDER");
-        assertThrows(SecurityException.class,
+        assertThrows(ResponseStatusException.class,
                 () -> service.debit("WLT1", BigDecimal.ONE, "ADJUSTMENT", "ref"));
     }
 
+    /**
+     * Was {@code actAs("FACILITY_FINANCE")}, which is not an actor type any client emits — so this
+     * test asserted that a value no real request can carry is admitted, while the real finance
+     * operator was refused. OPERATOR is what the admin consoles present.
+     */
     @Test
     void financeActor_canCreditWallet() {
-        actAs("FACILITY_FINANCE");
+        actAs("OPERATOR");
         stubWallet();
         assertDoesNotThrow(() -> service.credit("WLT1", BigDecimal.ONE, "ADJUSTMENT", "ref"));
     }
 
+    /**
+     * This test was named {@code unsetActorType_staysPermissive_estateIdiom} and asserted that a
+     * caller presenting no actor type could move custodial money. The "estate idiom" it cited was
+     * "ext_authz already gated the call" — but Envoy routes only to experience-bff and has no route
+     * to mushex, so nothing had gated it. Combined with a role set whose only emittable member was
+     * SYSTEM, omitting the header was the sole way a human could credit or debit a custodial
+     * wallet. The behaviour is now inverted, and so is this test.
+     */
     @Test
-    void unsetActorType_staysPermissive_estateIdiom() {
+    void unsetActorType_isNowRefusedRatherThanPermitted() {
         actAs(null);
-        stubWallet();
-        assertDoesNotThrow(() -> service.credit("WLT1", BigDecimal.ONE, "ADJUSTMENT", "ref"));
+        assertThrows(ResponseStatusException.class,
+                () -> service.credit("WLT1", BigDecimal.ONE, "ADJUSTMENT", "ref"));
     }
 }

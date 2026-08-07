@@ -21,6 +21,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 
 /**
  * Cross-registry place links — internal API, single writer (D-L2).
@@ -33,8 +34,18 @@ import java.util.UUID;
 @RestController
 public class PlaceLinkController {
 
-    private static final Set<String> STEWARD_ACTOR_TYPES =
-            Set.of("SYSTEM", "REGISTRY_ADMIN", "NATIONAL_ADMIN", "DATA_STEWARD");
+    /**
+     * Creating or ending a cross-registry place link.
+     *
+     * <p>Was {@code Set.of("SYSTEM", "REGISTRY_ADMIN", "NATIONAL_ADMIN", "DATA_STEWARD")}. The last
+     * three are role names no client emits, so the gate was {@code {SYSTEM}} in practice and no
+     * human steward could ever pass it. They are kept as the recorded intent; see
+     * {@link ActorTypeGuard.Duty}.</p>
+     */
+    private static final ActorTypeGuard.Duty MAINTAIN_PLACE_LINKS = new ActorTypeGuard.Duty(
+            "maintaining cross-registry place links",
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            Set.of("REGISTRY_ADMIN", "NATIONAL_ADMIN", "DATA_STEWARD"));
 
     private final PlaceLinkService placeLinkService;
 
@@ -87,10 +98,7 @@ public class PlaceLinkController {
         String actorType = http.getHeader("X-Actor-Type");
         String actorId = http.getHeader("X-Actor-ID");
         String normalised = actorType == null ? "" : actorType.trim().toUpperCase(Locale.ROOT);
-        if (!STEWARD_ACTOR_TYPES.contains(normalised)) {
-            throw new org.springframework.web.server.ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Place links are steward-maintained");
-        }
+        ActorTypeGuard.require(actorType, http.getHeader("X-Actor-ID"), MAINTAIN_PLACE_LINKS);
         return actorId != null ? actorId : normalised;
     }
 

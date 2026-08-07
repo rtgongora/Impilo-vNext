@@ -30,6 +30,30 @@ import java.util.UUID;
 @Service
 public class CaseService {
 
+    /**
+     * Automated actors, which may not decide a CRITICAL or sensitive case.
+     *
+     * <p><b>Deliberately NOT migrated to {@code ActorTypeGuard.Duty}, and the reason is worth
+     * stating because it inverts the rule that governs every other actor-type set in the
+     * estate.</b></p>
+     *
+     * <ol>
+     *   <li><b>This is a deny-list, not an allow-list.</b> For an allow-list, a token no client
+     *       emits is inert — it can never match, so dropping it changes nothing and keeping it
+     *       misrepresents the gate. For a deny-list the arithmetic reverses: an unemittable token
+     *       is load-bearing, and dropping it <em>widens</em> what gets through. Narrowing this set
+     *       to the emittable vocabulary would have let a rules-engine actor close a critical
+     *       safety case.</li>
+     *   <li><b>This {@code actorType} is not the wire header.</b> It is an internal provenance
+     *       label passed as a method argument; {@code RitoSignalConsumer} supplies the literal
+     *       {@code "RULES"} for Kafka-sourced signals. The {@code X-Actor-Type} vocabulary does not
+     *       govern it, so {@code ActorTypeGuard}'s emittable invariant — which exists to stop a
+     *       gate naming something no client can send — does not apply.</li>
+     * </ol>
+     *
+     * <p>{@code SYSTEM} is the one member that overlaps the wire vocabulary. Both readings agree it
+     * belongs here.</p>
+     */
     private static final java.util.Set<String> NON_HUMAN_ACTORS =
             java.util.Set.of("SYSTEM", "AI", "RULES", "RULE", "BOT");
 

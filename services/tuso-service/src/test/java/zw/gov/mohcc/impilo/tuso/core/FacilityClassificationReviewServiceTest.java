@@ -30,6 +30,10 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class FacilityClassificationReviewServiceTest {
+    // Actor types here were HPA_ADMIN / HPA_REGISTRAR / DEVELOPER / FACILITY_APPLICANT — role names
+    // no client emits, so this suite was exercising the service with values no real request can
+    // carry, and would have kept passing against a gate no real operator could satisfy. See
+    // ActorTypeGuard. OPERATOR is what the admin consoles actually emit.
 
     @Mock private FacilityRegulatoryProfileRepository profileRepository;
     @Mock private FacilityRegulatoryProfileHistoryRepository historyRepository;
@@ -69,12 +73,12 @@ class FacilityClassificationReviewServiceTest {
     @Test
     void aNonAdminActorTypeCannotConfirm() {
         assertThatThrownBy(() -> service.confirm(ctx("FACILITY_ADMIN"), 1L, new ConfirmRequest("x")))
-                .isInstanceOf(SecurityException.class);
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
     }
 
     @Test
     void bulkConfirmRejectsNonDeterministicStatuses() {
-        assertThatThrownBy(() -> service.bulkConfirm(ctx("HPA_REGISTRAR"),
+        assertThatThrownBy(() -> service.bulkConfirm(ctx("OPERATOR"),
                 new BulkConfirmRequest(List.of("AMBIGUOUS"))))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("not bulk-confirmable");
@@ -87,7 +91,7 @@ class FacilityClassificationReviewServiceTest {
                 .thenReturn(List.of(profile("DETERMINISTIC_MULTI_FIELD_MATCH", "some label", "C"),
                                     profile("DETERMINISTIC_MULTI_FIELD_MATCH", null, "C")));   // unlabelled → skipped
 
-        BulkConfirmResult r = service.bulkConfirm(ctx("HPA_REGISTRAR"),
+        BulkConfirmResult r = service.bulkConfirm(ctx("OPERATOR"),
                 new BulkConfirmRequest(List.of("DETERMINISTIC_MULTI_FIELD_MATCH")));
 
         assertThat(r.confirmed()).isEqualTo(1);
@@ -97,7 +101,7 @@ class FacilityClassificationReviewServiceTest {
     void confirmRefusesAProfileWithoutAResolvedLabel() {
         when(profileRepository.findByFacilityId(1L))
                 .thenReturn(Optional.of(profile("MISSING_REQUIRED_FACTS", null, "C")));
-        assertThatThrownBy(() -> service.confirm(ctx("HPA_REGISTRAR"), 1L, new ConfirmRequest(null)))
+        assertThatThrownBy(() -> service.confirm(ctx("OPERATOR"), 1L, new ConfirmRequest(null)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("without a resolved classification label");
     }
@@ -106,7 +110,7 @@ class FacilityClassificationReviewServiceTest {
     void confirmSucceedsForALabelledProfile() {
         when(profileRepository.findByFacilityId(1L))
                 .thenReturn(Optional.of(profile("DETERMINISTIC_MULTI_FIELD_MATCH", "a label", "C")));
-        FacilityRegulatoryProfileEntity p = service.confirm(ctx("HPA_REGISTRAR"), 1L, new ConfirmRequest("looks right"));
+        FacilityRegulatoryProfileEntity p = service.confirm(ctx("OPERATOR"), 1L, new ConfirmRequest("looks right"));
         assertThat(p.getClassificationStatus()).isEqualTo("HUMAN_CONFIRMED");
         assertThat(p.getConfirmedBy()).isEqualTo("tester");
         verify(outboxRepository).save(any());
@@ -116,7 +120,7 @@ class FacilityClassificationReviewServiceTest {
     void correctToNotApplicableRequiresAJustification() {
         when(profileRepository.findByFacilityId(1L))
                 .thenReturn(Optional.of(profile("AMBIGUOUS", null, "NOT_YET_DETERMINED")));
-        assertThatThrownBy(() -> service.correct(ctx("HPA_REGISTRAR"), 1L,
+        assertThatThrownBy(() -> service.correct(ctx("OPERATOR"), 1L,
                 new CorrectRequest("NOT_APPLICABLE", null, null, "note")))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("justification");
@@ -124,7 +128,7 @@ class FacilityClassificationReviewServiceTest {
 
     @Test
     void supplyFactsRequiresAtLeastOneFact() {
-        assertThatThrownBy(() -> service.supplyFacts(ctx("HPA_REGISTRAR"), 1L,
+        assertThatThrownBy(() -> service.supplyFacts(ctx("OPERATOR"), 1L,
                 new FactsRequest(null, null, null, null, "note")))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("At least one fact");
@@ -145,7 +149,7 @@ class FacilityClassificationReviewServiceTest {
         when(unitService.create(any(), anyLong(), any())).thenReturn(unit);
         when(candidateRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-        var result = service.confirmCandidate(ctx("HPA_REGISTRAR"), candidateId, new UnitCandidateConfirmRequest(null, "OUTPATIENT", true));
+        var result = service.confirmCandidate(ctx("OPERATOR"), candidateId, new UnitCandidateConfirmRequest(null, "OUTPATIENT", true));
 
         assertThat(result.getStatus()).isEqualTo("CONFIRMED");
         assertThat(result.getCreatedUnitId()).isEqualTo(99L);

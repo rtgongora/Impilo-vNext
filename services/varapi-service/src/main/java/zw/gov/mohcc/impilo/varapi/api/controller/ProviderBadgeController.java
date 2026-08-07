@@ -15,6 +15,7 @@ import zw.gov.mohcc.impilo.varapi.persistence.entity.ProviderBadgeEntity;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 
 /**
  * Badge issuance/revocation (PJ6, D-P5) — registry-administration surface
@@ -24,8 +25,16 @@ import java.util.Set;
 @RestController
 public class ProviderBadgeController {
 
-    private static final Set<String> ISSUER_ACTOR_TYPES =
-            Set.of("SYSTEM", "REGISTRY_ADMIN", "NATIONAL_ADMIN", "ORG_REPRESENTATIVE");
+    /**
+     * Issuing a provider badge.
+     *
+     * <p>Was {@code {SYSTEM, REGISTRY_ADMIN, NATIONAL_ADMIN, ORG_REPRESENTATIVE}}; the last three
+     * are role names no client emits, so only a machine caller could issue a badge.</p>
+     */
+    private static final ActorTypeGuard.Duty ISSUE_PROVIDER_BADGE = new ActorTypeGuard.Duty(
+            "issuing a provider badge",
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            Set.of("REGISTRY_ADMIN", "NATIONAL_ADMIN", "ORG_REPRESENTATIVE"));
 
     private final ProviderBadgeService badgeService;
 
@@ -58,12 +67,7 @@ public class ProviderBadgeController {
 
     private static void requireIssuer() {
         TrustContext ctx = TrustContextHolder.require();
-        String actorType = ctx.actorType() == null ? ""
-                : ctx.actorType().trim().toUpperCase(Locale.ROOT);
-        if (!ISSUER_ACTOR_TYPES.contains(actorType)) {
-            throw new org.springframework.web.server.ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Badge issuance is a registry-administration act");
-        }
+        ActorTypeGuard.require(ctx, ISSUE_PROVIDER_BADGE);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

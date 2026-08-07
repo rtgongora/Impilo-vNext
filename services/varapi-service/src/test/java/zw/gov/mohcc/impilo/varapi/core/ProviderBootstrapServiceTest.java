@@ -75,9 +75,25 @@ class ProviderBootstrapServiceTest {
                 providerClaimAdjudicationService,
                 authorizationLinkService);
         TrustContextHolder.set(new TrustContext(
-                tenantId, "national-admin-1", "REGISTRY_ADMIN", "REGISTRY_ADMIN", "device",
+                tenantId, "national-admin-1", "OPERATOR", "REGISTRY_ADMIN", "device",
                 correlationId, null, null, null, AccessMode.INTERNAL));
         lenient().when(outboxRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+    }
+
+    /**
+     * Put the session on the claimant — the real self-claim path.
+     *
+     * <p>These claim-mechanics tests used to run as actorType {@code REGISTRY_ADMIN} with an actor
+     * id unrelated to the claimant, so they passed through the assisted-desk override rather than
+     * the flow they are named for. {@code REGISTRY_ADMIN} is a value no client emits, so the
+     * override they exercised was unreachable in production, and the override is now machine-only
+     * (see {@code AssistedDeskOverrideAuditTest}). Claiming as the claimant is what the single
+     * HTTP route actually permits.</p>
+     */
+    private void sessionIsTheClaimant(UUID claimantHealthId) {
+        TrustContextHolder.set(new TrustContext(
+                tenantId, claimantHealthId.toString(), "CITIZEN", "REGISTRY_ADMIN", "device",
+                correlationId, null, null, null, AccessMode.INTERNAL));
     }
 
     @AfterEach
@@ -93,7 +109,11 @@ class ProviderBootstrapServiceTest {
         org.assertj.core.api.Assertions.assertThatThrownBy(() ->
                         service.bulkPreload(new BulkPreloadRequest(java.util.List.of())))
                 .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
-                .hasMessageContaining("national-admin");
+                // The refusal used to say "requires national-admin or organisation-representative
+                // capacity" — capacities no client can present, so it named a destination that
+                // leads nowhere. It now names the actor types actually enforced.
+                .hasMessageContaining("OPERATOR")
+                .hasMessageContaining("'CITIZEN'");
     }
 
     @org.junit.jupiter.api.Test
@@ -345,6 +365,7 @@ class ProviderBootstrapServiceTest {
         when(claimTokenRepository.redeem(eq(1L), any(Instant.class), eq(claimantHealthId)))
                 .thenReturn(1);
 
+        sessionIsTheClaimant(claimantHealthId);
         ClaimProfileResponse resp = service.claimProfile(rawToken, claimantHealthId);
 
         assertThat(resp.lifecycleStatus()).isEqualTo("CLAIMED");
@@ -393,6 +414,7 @@ class ProviderBootstrapServiceTest {
         when(claimTokenRepository.redeem(eq(7L), any(Instant.class), eq(claimantHealthId)))
                 .thenReturn(0);
 
+        sessionIsTheClaimant(claimantHealthId);
         assertThatThrownBy(() -> service.claimProfile(rawToken, claimantHealthId))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("invalid, expired, or already used");
@@ -420,6 +442,7 @@ class ProviderBootstrapServiceTest {
                 tenantId, ProviderBootstrapService.hash(rawToken)))
                 .thenReturn(Optional.of(burned));
 
+        sessionIsTheClaimant(claimantHealthId);
         assertThatThrownBy(() -> service.claimProfile(rawToken, claimantHealthId))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("invalid, expired, or already used");
@@ -463,6 +486,7 @@ class ProviderBootstrapServiceTest {
         when(providerRepository.findByTenantIdAndImpiloHealthId(tenantId, claimantHealthId))
                 .thenReturn(Optional.of(otherProfile));
 
+        sessionIsTheClaimant(claimantHealthId);
         assertThatThrownBy(() -> service.claimProfile(rawToken, claimantHealthId))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("already has a provider profile");

@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 
 @Service
 public class WalletPlatformService {
@@ -31,8 +32,19 @@ public class WalletPlatformService {
      * sibling platform endpoints. Permissive when actor type is unset (ext_authz
      * already gated the call), matching the estate idiom.
      */
-    static final Set<String> PLATFORM_MONEY_ROLES = Set.of(
-            "SYSTEM", "SYSTEM_ADMIN", "FINANCE_ADMIN", "FACILITY_FINANCE", "PLATFORM_OPERATOR");
+    /**
+     * Operating a custodial wallet.
+     *
+     * <p>Was {@code {SYSTEM, SYSTEM_ADMIN, FINANCE_ADMIN, FACILITY_FINANCE, PLATFORM_OPERATOR}},
+     * of which only SYSTEM is emittable, and the check was skipped entirely when the actor type
+     * was absent — "permissive when unset (ext_authz already gated the call)". Envoy routes only to
+     * experience-bff and has no route to mushex, so ext_authz had not gated the call, and omitting
+     * the header was the only way a human could move custodial money. Now fails closed.</p>
+     */
+    static final ActorTypeGuard.Duty OPERATE_CUSTODIAL_WALLET = new ActorTypeGuard.Duty(
+            "operating a custodial wallet",
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            Set.of("SYSTEM_ADMIN", "FINANCE_ADMIN", "FACILITY_FINANCE", "PLATFORM_OPERATOR"));
 
     private final WalletAccountRepository walletAccountRepository;
     private final WalletTransactionRepository walletTransactionRepository;
@@ -137,13 +149,7 @@ public class WalletPlatformService {
     }
 
     private void assertMoneyRole(TrustContext ctx, String action) {
-        String actorType = ctx.actorType();
-        if (actorType == null || actorType.isBlank()) {
-            return; // permissive when unset, matching the estate idiom (ext_authz already gated the call)
-        }
-        if (!PLATFORM_MONEY_ROLES.contains(actorType)) {
-            throw new SecurityException("Actor type " + actorType + " cannot " + action + " a custodial wallet");
-        }
+        ActorTypeGuard.require(ctx, OPERATE_CUSTODIAL_WALLET);
     }
 
     private WalletAccountEntity loadWallet(String walletId, UUID tenantId) {

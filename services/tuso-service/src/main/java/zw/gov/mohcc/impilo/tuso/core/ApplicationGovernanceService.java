@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 
 /**
  * Application governance companions: the request-for-information cycle and the
@@ -37,10 +38,34 @@ public class ApplicationGovernanceService {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationGovernanceService.class);
 
-    private static final Set<String> REGULATOR_ROLES = Set.of(
-            "HPA_REGISTRAR", "HPA_ADMIN", "COUNCIL_REVIEWER", "SYSTEM_ADMIN", "DEVELOPER");
-    private static final Set<String> APPLICANT_ROLES = Set.of(
-            "FACILITY_APPLICANT", "FACILITY_MANAGER", "FACILITY_ADMIN", "HPA_REGISTRAR", "SYSTEM_ADMIN", "DEVELOPER");
+    /**
+     * Regulator-side acts on an application: opening, closing an information request, recording a
+     * council review.
+     *
+     * <p>Was {@code {HPA_REGISTRAR, HPA_ADMIN, COUNCIL_REVIEWER, SYSTEM_ADMIN, DEVELOPER}} — none
+     * emittable — and {@code assertRole} returned early when the actor type was absent, so the only
+     * way through was to send no X-Actor-Type header. Now fails closed.</p>
+     */
+    private static final ActorTypeGuard.Duty ACT_AS_REGULATOR = new ActorTypeGuard.Duty(
+            "acting as regulator on a facility application",
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            Set.of("HPA_REGISTRAR", "HPA_ADMIN", "COUNCIL_REVIEWER", "SYSTEM_ADMIN", "DEVELOPER"));
+
+    /**
+     * Applicant-side acts: responding to an information request.
+     *
+     * <p>Does not include {@code PROVIDER}. See the audit recorded on
+     * {@code FacilityRegulatoryService.ACT_AS_APPLICANT}: the practitioner-facing regulatory
+     * applicant flow lives in varapi, this RFI surface is reached only from the registry console
+     * ({@code HpaRegulatoryOperationsController} via {@code HpaRegulatoryBffController}), and where
+     * a practitioner does act for themselves the estate uses an identity check rather than an
+     * actor-type widening.</p>
+     */
+    private static final ActorTypeGuard.Duty ACT_AS_APPLICANT = new ActorTypeGuard.Duty(
+            "responding as the applicant on a facility application",
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            Set.of("FACILITY_APPLICANT", "FACILITY_MANAGER", "FACILITY_ADMIN", "HPA_REGISTRAR",
+                    "SYSTEM_ADMIN", "DEVELOPER"));
 
     private final ApplicationInformationRequestRepository rfiRepository;
     private final ExternalCouncilReviewRepository councilReviewRepository;
@@ -73,7 +98,7 @@ public class ApplicationGovernanceService {
     public ApplicationInformationRequestEntity openInformationRequest(UUID applicationId, String message,
                                                                       LocalDate dueDate) {
         TrustContext ctx = TrustContextHolder.require();
-        assertRole(ctx, REGULATOR_ROLES, "request information on an application");
+        assertRole(ctx, ACT_AS_REGULATOR);
         FacilityApplicationEntity application = requireApplication(applicationId, ctx);
         if (message == null || message.isBlank()) {
             throw new IllegalArgumentException("An information request must say what is required");
@@ -104,7 +129,7 @@ public class ApplicationGovernanceService {
     public ApplicationInformationRequestEntity respondToInformationRequest(UUID rfiId, String responseNotes,
                                                                            UUID responseDocumentId) {
         TrustContext ctx = TrustContextHolder.require();
-        assertRole(ctx, APPLICANT_ROLES, "respond to an information request");
+        assertRole(ctx, ACT_AS_APPLICANT);
         ApplicationInformationRequestEntity rfi = requireRfi(rfiId, ctx);
         if (!"OPEN".equals(rfi.getStatus())) {
             throw new IllegalStateException("Information request is " + rfi.getStatus() + " — no response expected");
@@ -125,7 +150,7 @@ public class ApplicationGovernanceService {
     @Transactional
     public ApplicationInformationRequestEntity closeInformationRequest(UUID rfiId, boolean satisfied) {
         TrustContext ctx = TrustContextHolder.require();
-        assertRole(ctx, REGULATOR_ROLES, "close an information request");
+        assertRole(ctx, ACT_AS_REGULATOR);
         ApplicationInformationRequestEntity rfi = requireRfi(rfiId, ctx);
         rfi.setStatus("CLOSED");
         rfi.setClosedBy(ctx.actorId());
@@ -160,7 +185,7 @@ public class ApplicationGovernanceService {
     @Transactional
     public ExternalCouncilReviewEntity recordCouncilReview(RecordCouncilReviewRequest request) {
         TrustContext ctx = TrustContextHolder.require();
-        assertRole(ctx, REGULATOR_ROLES, "record an external council review");
+        assertRole(ctx, ACT_AS_REGULATOR);
         FacilityApplicationEntity application = requireApplication(request.applicationId(), ctx);
         if (request.reviewingAuthority() == null || request.reviewingAuthority().isBlank()) {
             throw new IllegalArgumentException("reviewingAuthority (canonical council code) is required");
@@ -252,14 +277,8 @@ public class ApplicationGovernanceService {
         return rfi;
     }
 
-    private static void assertRole(TrustContext ctx, Set<String> allowed, String action) {
-        String actorType = ctx.actorType();
-        if (actorType == null || actorType.isBlank()) {
-            return;
-        }
-        if (!allowed.contains(actorType)) {
-            throw new SecurityException("Actor type " + actorType + " cannot " + action);
-        }
+    private static void assertRole(TrustContext ctx, ActorTypeGuard.Duty duty) {
+        ActorTypeGuard.require(ctx, duty);
     }
 
     private void publishEvent(TrustContext ctx, FacilityApplicationEntity application,

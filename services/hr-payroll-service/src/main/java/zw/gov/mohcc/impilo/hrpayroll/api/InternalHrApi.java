@@ -15,6 +15,7 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 
 @RestController
 public class InternalHrApi {
@@ -24,7 +25,8 @@ public class InternalHrApi {
      * back-office (OPERATOR) or platform (SYSTEM) function; clinicians (PROVIDER) and
      * citizens (CITIZEN) must never write payroll/leave/attendance data (G021).
      */
-    private static final Set<String> WRITE_ACTOR_TYPES = Set.of("OPERATOR", "SYSTEM");
+    private static final ActorTypeGuard.Duty WRITE_HR_RECORDS =
+            ActorTypeGuard.Duty.of("mutating HR/payroll records", Set.of("OPERATOR", "SYSTEM"));
 
     private final EmployeeRepository employeeRepository;
     private final ContractRepository contractRepository;
@@ -62,7 +64,11 @@ public class InternalHrApi {
             throw new AccessDeniedException("HR/payroll mutations are not permitted for EXTERNAL callers");
         }
         String actorType = ctx.actorType();
-        if (actorType == null || !WRITE_ACTOR_TYPES.contains(actorType.toUpperCase())) {
+        // Already correct and already fail-closed — this gate named only emittable actor types.
+        // Migrated for the shared vocabulary and the emittable invariant, deliberately keeping both
+        // its exact set (SERVICE is not added: no reason to widen a gate that was right) and its
+        // AccessDeniedException, so the response mapping does not change.
+        if (!ActorTypeGuard.permits(actorType, WRITE_HR_RECORDS)) {
             throw new AccessDeniedException(
                     "HR/payroll mutations require an OPERATOR or SYSTEM actor; got actorType=" + actorType);
         }

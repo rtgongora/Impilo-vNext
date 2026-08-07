@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.auditledger.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,6 +9,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import zw.gov.mohcc.impilo.shared.auth.TrustContextFilter;
 
 /**
  * Authentication for the audit ledger.
@@ -53,13 +56,23 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     @Bean
+    public TrustContextFilter trustContextFilter(ObjectMapper objectMapper) {
+        return new TrustContextFilter(objectMapper);
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
+            TrustContextFilter trustContextFilter,
             @Value("${impilo.security.disable-oauth-for-tests:false}") boolean disableOauthForTests)
             throws Exception {
 
         http.csrf(csrf -> csrf.disable())
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // The controller's actor-type guard reads TrustContextHolder; without this filter it
+                // would see an empty context on every request and refuse everything, which is the
+                // safe direction to fail but not a working service.
+                .addFilterAfter(trustContextFilter, UsernamePasswordAuthenticationFilter.class);
 
         if (!disableOauthForTests) {
             http.authorizeHttpRequests(auth -> auth
@@ -80,6 +93,25 @@ public class SecurityConfig {
             // Preview smoke and integration tests only. Note this branch is what
             // IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS selects, and it must never be set in an
             // environment holding real audit records.
+            //
+            // What enables it, established rather than assumed (Phase 0 workstream A):
+            //   - The property defaults to FALSE, so absence of configuration is fail-CLOSED. A
+            //     service that is never told about the flag runs the authenticated chain.
+            //   - deploy/helm/impilo-vnext/values-full-preview.yaml gives audit-ledger-service an
+            //     env block (issuer-uri, jwk-set-uri) and does NOT set the flag, so the deployed
+            //     preview runs the authenticated branch. The two services that do pin it —
+            //     tshepo-audit-service and tshepo-authz-service — pin it to "false".
+            //   - It is set "true" only in compose/*-e2e and compose/experience/docker-compose
+            //     .sovereign.yml, and in src/test resources.
+            // So this is the estate's standard test switch, not a fail-open fallback reachable in
+            // the deployed estate. It is worth stating explicitly because a permitAll escape hatch
+            // in a security config is exactly the kind of thing that should never be taken on
+            // trust — including this one, which is why the list above is a measurement and not a
+            // reassurance.
+            //
+            // AuditLedgerAuthenticationTest overrides the flag back to false for that reason: the
+            // 'test' profile sets it TRUE, and every assertion in that class would otherwise pass
+            // against a wide-open service.
             http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
         }
 

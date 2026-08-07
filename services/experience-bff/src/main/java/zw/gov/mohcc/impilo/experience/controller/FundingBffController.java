@@ -12,6 +12,7 @@ import zw.gov.mohcc.impilo.experience.client.MusheWalletServiceClient;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 
 /**
  * Wallet funding routes — the citizen cash-in surface. These paths were called
@@ -31,8 +32,16 @@ public class FundingBffController {
     private static final Logger log = LoggerFactory.getLogger(FundingBffController.class);
 
     /** Actor types that may take physical cash over a counter. */
-    static final Set<String> CASHIER_ROLES = Set.of(
-            "CASHIER", "FACILITY_FINANCE", "FINANCE_ADMIN", "SYSTEM", "SYSTEM_ADMIN");
+    /**
+     * Cashier actions on funding.
+     *
+     * <p>Was {@code {CASHIER, FACILITY_FINANCE, FINANCE_ADMIN, SYSTEM, SYSTEM_ADMIN}}; only SYSTEM
+     * is emittable, so no cashier could act.</p>
+     */
+    static final ActorTypeGuard.Duty ACT_AS_CASHIER = new ActorTypeGuard.Duty(
+            "acting as cashier on funding",
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            java.util.Set.of("CASHIER", "FACILITY_FINANCE", "FINANCE_ADMIN", "SYSTEM_ADMIN"));
 
     private final MusheWalletServiceClient musheClient;
 
@@ -118,7 +127,7 @@ public class FundingBffController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
             @RequestBody Map<String, Object> body) {
-        if (actorType == null || !CASHIER_ROLES.contains(actorType)) {
+        if (!ActorTypeGuard.permits(actorType, ACT_AS_CASHIER)) {
             return error(HttpStatus.FORBIDDEN, "CASHIER_ROLE_REQUIRED",
                     "Cash deposits are taken by a facility cashier", requestId, correlationId);
         }

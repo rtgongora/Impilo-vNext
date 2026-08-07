@@ -32,6 +32,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 
 /**
  * Provider bootstrap chain (L3 W6): bulk preload + self-claim.
@@ -55,6 +56,38 @@ import java.util.UUID;
  */
 @Service
 public class ProviderBootstrapService {
+
+    /**
+     * Bulk-preloading provider records. Was
+     * {@code {SYSTEM, NATIONAL_ADMIN, ORG_REPRESENTATIVE, OPERATOR, REGISTRY_ADMIN}} — the only one
+     * of the five drifted varapi sets that already carried OPERATOR, so this is the one that worked.
+     */
+    private static final ActorTypeGuard.Duty BULK_PRELOAD_PROVIDERS = new ActorTypeGuard.Duty(
+            "bulk-preloading provider records",
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            java.util.Set.of("NATIONAL_ADMIN", "ORG_REPRESENTATIVE", "REGISTRY_ADMIN"));
+
+    /**
+     * The machine-only override on claiming a provider profile: who may claim a profile that is not
+     * their own. Everyone else must be the claimant themselves.
+     *
+     * <h2>Audited, and deliberately NOT widened to admit an operator</h2>
+     * <p>Unlike the recovery override, this one is <b>unreachable over HTTP</b>. The single route
+     * into {@link #claimProfile} is {@code ProviderBootstrapController#claim}, which refuses
+     * unconditionally unless {@code ctx.actorId()} equals the requested {@code claimantHealthId} —
+     * with no actor-type escape at all, because "a token can never be redeemed onto an arbitrary
+     * anchor (provider-as-person separation, defence in depth)". So widening this set could not
+     * enable an assisted desk; it could only make the guard read as though a bypass existed.</p>
+     *
+     * <p>Kept at exactly {@code {SYSTEM}} for governed migrations, matching the original effective
+     * behaviour, since REGISTRY_ADMIN never matched. The single-use token is a genuine possession
+     * factor here — unlike recovery, nothing in this path issues it to the caller — but a control
+     * that cannot be reached is not a reason to loosen the one in front of it.</p>
+     */
+    private static final ActorTypeGuard.Duty ASSISTED_DESK_CLAIM = new ActorTypeGuard.Duty(
+            "claiming a provider profile on someone else's behalf",
+            java.util.Set.of("SYSTEM"),
+            java.util.Set.of("REGISTRY_ADMIN"));
 
     private static final Logger log = LoggerFactory.getLogger(ProviderBootstrapService.class);
 
@@ -108,11 +141,7 @@ public class ProviderBootstrapService {
         // capacities may bulk-preload provider skeletons (defense-in-depth
         // behind the ext_authz gate).
         String actorType = ctx.actorType() != null ? ctx.actorType().trim().toUpperCase(java.util.Locale.ROOT) : "";
-        if (!java.util.Set.of("SYSTEM", "NATIONAL_ADMIN", "ORG_REPRESENTATIVE", "OPERATOR", "REGISTRY_ADMIN").contains(actorType)) {
-            throw new org.springframework.web.server.ResponseStatusException(
-                    org.springframework.http.HttpStatus.FORBIDDEN,
-                    "Bulk preload requires national-admin or organisation-representative capacity");
-        }
+        ActorTypeGuard.require(actorType, ctx.actorId(), BULK_PRELOAD_PROVIDERS);
         UUID batchId = UUID.randomUUID();
         List<BulkPreloadResponse.PreloadResult> results = new ArrayList<>();
         int created = 0, skipped = 0, failed = 0;
@@ -275,7 +304,7 @@ public class ProviderBootstrapService {
         // claims at a registry desk) are excepted; the single-use token remains
         // the possession factor in those flows.
         String claimActorType = ctx.actorType() != null ? ctx.actorType().trim().toUpperCase(java.util.Locale.ROOT) : "";
-        if (!java.util.Set.of("SYSTEM", "REGISTRY_ADMIN").contains(claimActorType)
+        if (!ActorTypeGuard.permits(claimActorType, ASSISTED_DESK_CLAIM)
                 && (ctx.actorId() == null || !claimantHealthId.toString().equalsIgnoreCase(ctx.actorId().trim()))) {
             throw new org.springframework.web.server.ResponseStatusException(
                     org.springframework.http.HttpStatus.FORBIDDEN,

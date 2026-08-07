@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 
 /**
  * Governance + resolution for the regulatory fee schedule (SI 78 of 2017).
@@ -31,7 +32,16 @@ public class RegulatoryFeeScheduleService {
     private static final Logger log = LoggerFactory.getLogger(RegulatoryFeeScheduleService.class);
 
     /** Only these actor types may author/approve fee schedule rows. */
-    static final Set<String> FEE_ADMIN_ROLES = Set.of("HPA_REGISTRAR", "HPA_ADMIN", "SYSTEM_ADMIN");
+    /**
+     * Administering the regulatory fee schedule.
+     *
+     * <p>Was {@code {HPA_REGISTRAR, HPA_ADMIN, SYSTEM_ADMIN}}, none of them emittable, and skipped
+     * when the actor type was absent. Now fails closed.</p>
+     */
+    static final ActorTypeGuard.Duty ADMINISTER_FEE_SCHEDULE = new ActorTypeGuard.Duty(
+            "administering the regulatory fee schedule",
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            Set.of("HPA_REGISTRAR", "HPA_ADMIN", "SYSTEM_ADMIN"));
 
     public enum Kind { NOT_REQUIRED, CONFIGURED, NOT_CONFIGURED }
 
@@ -129,10 +139,7 @@ public class RegulatoryFeeScheduleService {
 
     private TrustContext assertRole(String action) {
         TrustContext ctx = TrustContextHolder.require();
-        String actorType = ctx.actorType();
-        if (actorType != null && !actorType.isBlank() && !FEE_ADMIN_ROLES.contains(actorType)) {
-            throw new SecurityException("Actor type " + actorType + " cannot " + action);
-        }
+        ActorTypeGuard.require(ctx, ADMINISTER_FEE_SCHEDULE);
         return ctx;
     }
 

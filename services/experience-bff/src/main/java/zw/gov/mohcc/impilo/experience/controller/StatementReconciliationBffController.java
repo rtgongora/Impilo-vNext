@@ -10,6 +10,7 @@ import zw.gov.mohcc.impilo.experience.client.MusheWalletServiceClient;
 
 import java.util.Map;
 import java.util.Set;
+import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 
 /**
  * Bank→wallet cash-in reconciliation — the finance/ops surface. A back-office
@@ -24,8 +25,16 @@ public class StatementReconciliationBffController {
     private static final Logger log = LoggerFactory.getLogger(StatementReconciliationBffController.class);
 
     /** Actor types permitted to reconcile the collection account. */
-    static final Set<String> RECON_ROLES = Set.of(
-            "FINANCE", "FINANCE_ADMIN", "FACILITY_FINANCE", "PAYER_OPS", "SYSTEM", "SYSTEM_ADMIN");
+    /**
+     * Statement reconciliation.
+     *
+     * <p>Was {@code {FINANCE, FINANCE_ADMIN, FACILITY_FINANCE, PAYER_OPS, SYSTEM, SYSTEM_ADMIN}};
+     * only SYSTEM is emittable.</p>
+     */
+    static final ActorTypeGuard.Duty RECONCILE_STATEMENTS = new ActorTypeGuard.Duty(
+            "reconciling a statement",
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            java.util.Set.of("FINANCE", "FINANCE_ADMIN", "FACILITY_FINANCE", "PAYER_OPS", "SYSTEM_ADMIN"));
 
     private final MusheWalletServiceClient musheClient;
 
@@ -39,7 +48,7 @@ public class StatementReconciliationBffController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
             @RequestBody Map<String, Object> body) {
-        if (actorType == null || !RECON_ROLES.contains(actorType)) {
+        if (!ActorTypeGuard.permits(actorType, RECONCILE_STATEMENTS)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
                     "error", Map.of("code", "FINANCE_ROLE_REQUIRED",
                             "message", "Statement reconciliation is a finance-ops action"),

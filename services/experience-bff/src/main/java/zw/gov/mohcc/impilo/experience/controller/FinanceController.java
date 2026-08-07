@@ -13,6 +13,7 @@ import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
 
 import java.util.Map;
+import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 
 /**
  * Finance BFF Controller — bridges Experience UI finance pages to the
@@ -565,8 +566,18 @@ public class FinanceController {
     // ── Failed money events (dead-letter replay) ─────────────────────
 
     /** Actor types permitted to run finance-ops actions (dead-letter replay, plan terms). */
-    static final java.util.Set<String> FINANCE_OPS_ROLES = java.util.Set.of(
-            "FINANCE", "FINANCE_ADMIN", "FACILITY_FINANCE", "PAYER_OPS", "SYSTEM", "SYSTEM_ADMIN");
+    /**
+     * Finance-ops actions: dead-letter replay, plan terms.
+     *
+     * <p>Was {@code {FINANCE, FINANCE_ADMIN, FACILITY_FINANCE, PAYER_OPS, SYSTEM, SYSTEM_ADMIN}}.
+     * Only SYSTEM is an actor type any client emits, so no finance operator could run a finance-ops
+     * action — the five role names never matched. Read with {@code permits} rather than
+     * {@code require} so the existing structured refusal envelope is preserved.</p>
+     */
+    static final ActorTypeGuard.Duty RUN_FINANCE_OPS = new ActorTypeGuard.Duty(
+            "running a finance-ops action",
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            java.util.Set.of("FINANCE", "FINANCE_ADMIN", "FACILITY_FINANCE", "PAYER_OPS", "SYSTEM_ADMIN"));
 
     /**
      * GET /internal/v1/finance/failed-money-events?status=DEAD
@@ -579,7 +590,7 @@ public class FinanceController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
             @RequestParam(required = false) String status) {
-        if (!FINANCE_OPS_ROLES.contains(actorType)) {
+        if (!ActorTypeGuard.permits(actorType, RUN_FINANCE_OPS)) {
             return financeRoleRequired(requestId, correlationId);
         }
         try {
@@ -611,7 +622,7 @@ public class FinanceController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
             @PathVariable long id) {
-        if (!FINANCE_OPS_ROLES.contains(actorType)) {
+        if (!ActorTypeGuard.permits(actorType, RUN_FINANCE_OPS)) {
             return financeRoleRequired(requestId, correlationId);
         }
         try {
@@ -646,7 +657,7 @@ public class FinanceController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
             @RequestParam(required = false) String status) {
-        if (!FINANCE_OPS_ROLES.contains(actorType)) {
+        if (!ActorTypeGuard.permits(actorType, RUN_FINANCE_OPS)) {
             return financeRoleRequired(requestId, correlationId);
         }
         try {
@@ -679,7 +690,7 @@ public class FinanceController {
             @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
             @PathVariable String planCode,
             @RequestBody Map<String, Object> body) {
-        if (!FINANCE_OPS_ROLES.contains(actorType)) {
+        if (!ActorTypeGuard.permits(actorType, RUN_FINANCE_OPS)) {
             return financeRoleRequired(requestId, correlationId);
         }
         try {

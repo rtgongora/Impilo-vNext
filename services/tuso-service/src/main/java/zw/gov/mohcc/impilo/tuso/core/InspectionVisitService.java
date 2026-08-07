@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 
 /**
  * Inspection visits and structured per-item responses (HPA-2017-V1 §10-13).
@@ -47,8 +48,17 @@ public class InspectionVisitService {
 
     private static final Set<String> VALID_RESPONSES = Set.of(
             "COMPLIANT", "NON_COMPLIANT", "NOT_APPLICABLE", "NOT_OBSERVED", "UNABLE_TO_VERIFY");
-    private static final Set<String> INSPECTOR_ROLES = Set.of(
-            "HPA_INSPECTOR", "HPA_REGISTRAR", "HPA_ADMIN", "SYSTEM_ADMIN", "DEVELOPER");
+    /**
+     * Scheduling, recording or completing an inspection visit.
+     *
+     * <p>Was {@code {HPA_INSPECTOR, HPA_REGISTRAR, HPA_ADMIN, SYSTEM_ADMIN, DEVELOPER}} — none
+     * emittable — and returned early when the actor type was absent, so omitting the header was
+     * the only way to pass. Now fails closed.</p>
+     */
+    private static final ActorTypeGuard.Duty CONDUCT_INSPECTION_VISIT = new ActorTypeGuard.Duty(
+            "conducting an inspection visit",
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            Set.of("HPA_INSPECTOR", "HPA_REGISTRAR", "HPA_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"));
 
     private final InspectionVisitRepository visitRepository;
     private final InspectionResponseRepository responseRepository;
@@ -357,12 +367,6 @@ public class InspectionVisitService {
     }
 
     private static void assertInspector(TrustContext ctx, String action) {
-        String actorType = ctx.actorType();
-        if (actorType == null || actorType.isBlank()) {
-            return;
-        }
-        if (!INSPECTOR_ROLES.contains(actorType)) {
-            throw new SecurityException("Actor type " + actorType + " cannot " + action);
-        }
+        ActorTypeGuard.require(ctx, CONDUCT_INSPECTION_VISIT);
     }
 }
