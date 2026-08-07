@@ -63,9 +63,43 @@ Corroborating the whole log:
 > gate is wrong, but because every clinical request is refused one step earlier, for want of a
 > matching ALLOW rule.
 
-This is consistent with the known finding that no role-bearing rule fires for browser users. **The
-blocker is policy-rule seeding, not the consent gate**, and widening `CLINICAL_RESOURCE_TYPES` would
-not move it by a single decision. Left as-is, per scope.
+### Why no rule matches — measured, because the answer is not what it looks like
+
+`NO_ALLOW_RULE` is only returned when the rule list came back **non-empty** and nothing in it
+matched (`PolicyEngine:674`); an empty list yields `NO_MATCHING_RULES` instead. So rules were found
+and rejected. Three plausible causes, all eliminated:
+
+- **Not tenancy.** All 575 rules live in the REGISTRY tenant `…0000-0000…0001`, and 18 of the 19
+  clinical decisions came from the CARE tenant `…4000-8000…0001`, which owns zero rules. But
+  `PolicyCacheService.mergeGovernanceRules` merges the governance tenant's rules into every tenant
+  precisely for this reason, so the CARE tenant sees all 575.
+- **Not a matching defect.** 590 CARE-tenant `TREATMENT` requests matched ALLOW rules successfully
+  on experience-plane resources (`visibility`, `appointments`, `notifications`, `affiliations`).
+  The same actor types (`OPERATOR`, `CITIZEN`) are allowed elsewhere.
+- **Not absent rows.** The rules exist. What is absent is their subject matter.
+
+**Of 575 rules, exactly two name a clinical resource type:**
+
+| resource_type | effect | role | actor_type | action |
+|---|---|---|---|---|
+| `observations` | ALLOW | CLINICIAN | PROVIDER | POST |
+| `observations` | ALLOW | NURSE | PROVIDER | POST |
+
+Both are writes. **No rule permits READING `patients` or `encounters` — for any role, any actor
+type, any action.** The 575 rules cover experience, admin, asset, and regulatory surfaces; clinical
+read authorization has never been written.
+
+So `NO_ALLOW_RULE` on a clinical read is **correct behaviour, not a defect**. Consent is unreachable
+because the thing consent exists to gate — reading a patient record — is currently authorized for
+nobody.
+
+> ⚠️ **The remedy is not to add a rule so that consent becomes reachable.** Doing that would
+> manufacture the gate's own precondition: the estate would demonstrate "a revoked consent blocks a
+> read" only because a rule had been written to make the read reachable in the first place, with no
+> clinical authorization model behind it. Deciding who may read a patient record — under which role,
+> duty, subject relationship and purpose — is the 10-dimension access design, and it is substantive
+> work, not a data load. Widening `CLINICAL_RESOURCE_TYPES` would not move a single decision either.
+> Both left alone, per scope.
 
 It also updates the last row of `CP5_CONSENT_CONVERGENCE.md`, which reads "the PDP is not on the
 ingress path (ext_authz off)". ext_authz is now live and the PDP is deciding — the disconnect has
@@ -143,8 +177,14 @@ The third break leaves the error-envelope test green, correctly: that path retur
 | Consent service unreachable ⇒ DENY | **PROVEN**, red-proved |
 | Consent gate reachable by derived resource type | **YES** — `patients`, `encounters` |
 | Consent ever evaluated in the live estate | **NO** — 0 of 1,952; all clinical requests die at `NO_ALLOW_RULE` |
+| Clinical **read** authorization exists at all | **NO** — 0 of 575 rules permit reading `patients`/`encounters` |
 | Consent for non-`Patient` clinical resources | **GAP** — unchanged, see `CP5_CONSENT_CONVERGENCE.md` |
 
-The gate condition is met in the code path. The honest boundary is the fifth row: the estate cannot
-yet demonstrate it end-to-end, because no ALLOW rule lets a clinical request reach Step 5. That is
-policy-rule seeding work, and it is a separate Phase 0 item.
+The gate condition is met in the code path. The honest boundary is the fifth and sixth rows: the
+estate cannot demonstrate it end-to-end, and the reason is not that consent is misconfigured but
+that **no clinical read is authorized for anyone**, so nothing ever gets far enough to have its
+consent checked.
+
+That is missing functionality, and it should be named as such rather than closed by writing a rule
+to make the gate demonstrable. A green end-to-end proof obtained that way would be evidence about
+the rule someone added, not about whether the estate governs clinical access.
