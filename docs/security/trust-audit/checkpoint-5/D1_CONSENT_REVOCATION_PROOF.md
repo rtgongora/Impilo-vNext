@@ -42,8 +42,12 @@ The remaining eight literals (`Patient`, `Encounter`, `Observation`, `Diagnostic
 observed. A relaxed `ilike` sweep for patient/encounter/observation/medication/diagnosis substrings
 returns the same two rows and nothing else — so this is not a naming near-miss.
 
-**Answer: the gate is reachable.** Derivation produces types in the set, so the literal list is not
-mis-specified for the paths the BFF actually calls. A chained test is worth writing.
+**Answer: the gate is reachable — but only for collection paths and UUID-identified records.**
+Derivation produces types in the set, so the literal list is not mis-specified for the paths the BFF
+actually calls, and a chained test is worth writing. The qualification matters and is measured in
+§2: `/v1/patients` and `/v1/patients/{uuid}` both derive `patients`, whereas
+`/v1/patients/{non-uuid-cpid}` derives the identifier itself and never reaches the gate. All four
+`patients` rows above carry a null `resource_id`, i.e. they were collection reads.
 
 ## 2. The finding that outranks the test
 
@@ -89,9 +93,52 @@ Both are writes. **No rule permits READING `patients` or `encounters` — for an
 type, any action.** The 575 rules cover experience, admin, asset, and regulatory surfaces; clinical
 read authorization has never been written.
 
-So `NO_ALLOW_RULE` on a clinical read is **correct behaviour, not a defect**. Consent is unreachable
-because the thing consent exists to gate — reading a patient record — is currently authorized for
-nobody.
+So `NO_ALLOW_RULE` on a clinical read is **correct behaviour, not a defect** for a role-bearing
+caller: no rule grants that read, so every such caller is refused.
+
+### ⚠️ But "authorized for nobody" is false — two bypasses reach the read without a rule
+
+Both were proved against the running PDP (`tshepo-authz-service`, port 8081), not inferred.
+
+**1. `X-Purpose-Of-Use: SYSTEM` skips both the rule check and consent.** Step 4 returns
+`continueWith(null)` for SYSTEM in *both* its no-rules and no-matching-rule branches
+(`PolicyEngine:622`, `PolicyEngine:673`), and `requiresConsent` returns false for SYSTEM
+(`PolicyEngine:1781`). There are exactly three references to `PurposeOfUse.SYSTEM` in all of
+`src/main` — those three. **No guard restricts who may declare it**, and `purposeOfUse` is read
+straight from the request header at `AuthorizeController:103`. The estate's own Envoy config
+records that `x-purpose-of-use` "remain[s] client-supplied — a retained gap in
+checkpoint-4/HEADER_CONTAINMENT.md".
+
+Identical requests, one header changed:
+
+| `x-purpose-of-use` | HTTP | verdict |
+|---|---|---|
+| `TREATMENT` | 403 | DENY `NO_ALLOW_RULE` |
+| `SYSTEM` | 200 | **ALLOW** — `piiAccess: FULL`, `clinicalAccess: FULL`, `exportPolicy: FULL_AUDITED`, `drillDownAllowed: true` |
+
+Both rows are in `policy_decision_log` under `actor_id='probe-d1'`. The actor id was invented and no
+bearer token was sent; the probe went directly to the PDP, so it proves the **decision logic**, not
+that Envoy would admit an unauthenticated caller. What it does establish is that the verdict is
+role-independent and consent-independent — any request that reaches the PDP with this header gets it.
+
+**2. A per-record read derives the identifier as its own resource type, so consent never applies.**
+`deriveResourceType` walks segments from the right, skipping only blanks, `v1`, `api`, and
+**36-character UUIDs**:
+
+| path | derived `resource_type` | `resource_id` | consent evaluated? |
+|---|---|---|---|
+| `/v1/patients/0f8fad5b-…-70867728950e` | `patients` | the UUID | **yes** |
+| `/v1/patients/cpid-12345` | `cpid-12345` | *null* | **no** |
+
+A non-UUID identifier is indistinguishable from a collection segment to this function, so it becomes
+the resource type — which is not in `CLINICAL_RESOURCE_TYPES`, so `requiresConsent` returns false.
+Every `patient_ref` currently in `tshepo_consent.consent_directive` is `cpid-…` form, i.e. non-UUID.
+
+This one composes badly with the rule gap: **writing the missing clinical read rules would not make
+consent engage on per-record reads** — it would authorize them while consent stays skipped. The two
+findings must be fixed together or the second becomes a silent hole behind the first.
+
+Neither is in scope here. Both are recorded rather than touched.
 
 > ⚠️ **The remedy is not to add a rule so that consent becomes reachable.** Doing that would
 > manufacture the gate's own precondition: the estate would demonstrate "a revoked consent blocks a
@@ -178,13 +225,19 @@ The third break leaves the error-envelope test green, correctly: that path retur
 | Consent gate reachable by derived resource type | **YES** — `patients`, `encounters` |
 | Consent ever evaluated in the live estate | **NO** — 0 of 1,952; all clinical requests die at `NO_ALLOW_RULE` |
 | Clinical **read** authorization exists at all | **NO** — 0 of 575 rules permit reading `patients`/`encounters` |
+| `X-Purpose-Of-Use: SYSTEM` bypasses rule + consent | 🔴 **PROVEN LIVE** — 403→200 on one header, FULL PII/clinical |
+| Per-record read (non-UUID id) reaches consent | 🔴 **NO** — the id becomes the resource type; consent skipped |
 | Consent for non-`Patient` clinical resources | **GAP** — unchanged, see `CP5_CONSENT_CONVERGENCE.md` |
 
-The gate condition is met in the code path. The honest boundary is the fifth and sixth rows: the
-estate cannot demonstrate it end-to-end, and the reason is not that consent is misconfigured but
-that **no clinical read is authorized for anyone**, so nothing ever gets far enough to have its
-consent checked.
+The gate condition is met in the code path, and the chained test proves it. The honest boundary is
+everything below row four.
 
-That is missing functionality, and it should be named as such rather than closed by writing a rule
-to make the gate demonstrable. A green end-to-end proof obtained that way would be evidence about
-the rule someone added, not about whether the estate governs clinical access.
+An earlier revision of this document said clinical reads were "authorized for nobody". That was
+wrong, and wrong in the direction that understates risk: no *role-bearing* caller is authorized, but
+the SYSTEM purpose walks past both the rule check and consent, and per-record reads skip consent on
+identifier format alone. The estate does not fail closed on clinical reads — it fails closed only on
+the paths that declare an honest purpose and carry a UUID.
+
+Neither hole should be closed by making the D1 gate demonstrable. Writing the missing clinical read
+rules while the derivation bug stands would authorize per-record reads *and* leave consent skipped
+on them — strictly worse than today's blanket refusal.
