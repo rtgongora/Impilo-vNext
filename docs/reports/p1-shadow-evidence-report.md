@@ -1,6 +1,6 @@
 # P1 Shadow Evidence Report
 
-**Estate:** `impilo-full-preview` · **Commit:** `921b60f54` · **Date:** 2026-08-07
+**Estate:** `impilo-full-preview` · **Commit:** `020dc3853` · **Date:** 2026-08-07
 **Enforcement changed:** none. **Production:** untouched. **Flag:** on in preview only.
 
 ---
@@ -39,26 +39,41 @@ tried to use the path. Both are now fixed and deployed.
 
 ### 2a. The PDP could not validate *any* bearer
 
-`KeycloakAdapter` derived its JWKS URL from `issuer-uri`, one value doing two incompatible jobs: it
-must equal the token's `iss` claim — which Keycloak mints as the **public** realm URL — and it was
-also used to **fetch** keys, which must be reachable from inside the cluster. Measured from a pod:
+`KeycloakAdapter` derived its JWKS URL from `issuer-uri` — which must equal the token's `iss` claim,
+and which Keycloak mints as the **public** realm URL. Measured from a pod:
 
 ```
 https://impilo.mohcc.gov.zw/realms/impilo/…/certs  ->  000   (public ingress, pods do not hairpin)
 http://keycloak:8080/realms/impilo/…/certs         ->  200
 ```
 
-JWKS initialisation threw, `jwtProcessor` stayed null, and every presented bearer was rejected.
+**The estate was already configured correctly.** `tshepo-authz-service` has carried
+`SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/…` in
+`values-full-preview.yaml` all along — the operator applied that internal-JWKS pattern to six
+services and wrote a comment saying so. It had no effect here because this adapter is **not** a
+Spring resource server: it hand-rolls a Nimbus processor and ignored the property every other
+service honours. The configuration was right; the code did not read it.
+
+**Corrected mechanism.** An earlier revision of this report said initialisation threw and
+`jwtProcessor` stayed null. That was wrong. `JWKSourceBuilder` is **lazy** — startup resolved
+nothing and logged `"Keycloak adapter initialized"`, reassuringly. The fetch then failed on *every*
+validation, and the catch-all flattened it into `TOKEN_VALIDATION_FAILED`, indistinguishable from a
+malformed or expired token. Three disguises: **startup said fine, runtime said bad token, and no
+browser traffic exercised it at all.**
 
 **This makes the headline gap worse, not better.** The known finding was *"489 of 525 rules cannot
-match a signed-in human because no bearer reaches the PDP."* It is now measured that until
-`impilo.trust.keycloak.jwks-uri` is set, **a bearer that did reach the PDP could not be validated
-either.** Any plan that assumed attaching the bearer was sufficient rested on an untested
-assumption.
+match a signed-in human because no bearer reaches the PDP."* It is now measured that a bearer that
+*did* reach the PDP could not be validated either. Any plan assuming *attach the bearer and the
+rules start matching* rested on an untested assumption.
 
-It survived unnoticed because the failure logged at `WARN`, without the URL, describing itself as
-*"deferred"* — so an estate rejecting every bearer read exactly like an estate where no bearer ever
-arrived. It is now `ERROR`, names the endpoint, and states the consequence.
+Fixed by reading the standard property, plus a startup probe that fetches the JWKS once so the
+misconfiguration is loud immediately, and a distinct `JWKS_UNREACHABLE` outcome that says the token
+was never actually checked. The probe warns rather than refusing to start: this PDP is on the
+request path, and crashlooping it during a Keycloak restart would be worse than the bug it guards.
+
+**No chart change is required, and none was made.** Verified live: with the hand-applied env
+removed, the adapter reads the estate's own value, logs `JWKS endpoint verified reachable … (200)`,
+and personas still resolve `CLINICIAN` and `CITIZEN`.
 
 ### 2b. Shadow could starve the connection pool it promised never to contend for
 
@@ -146,8 +161,10 @@ because 15% coverage with zero work personas cannot support the claim that would
 
 In order:
 
-1. Set `impilo.trust.keycloak.jwks-uri` **wherever this PDP runs**, including production. §2a is not
-   a preview quirk; it is a split-horizon deployment that one config value could not express.
+1. **Check production's `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI` for this service.**
+   Preview already had it; the code now honours it. If production sets only `issuer-uri`, the PDP
+   there still cannot validate a bearer — and the new startup line says so in one grep:
+   `JWKS endpoint verified reachable` vs `JWKS endpoint … is UNREACHABLE`.
 2. Raise the PDP connection pool, then re-run for a census rather than a sample.
 3. Mint a duty token in at least one journey so work personas are exercised.
 4. Only then revisit enforcement, and separately for `DENY_TO_PERMIT`, which needs an observation
