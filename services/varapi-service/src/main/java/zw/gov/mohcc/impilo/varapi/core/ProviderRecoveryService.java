@@ -58,18 +58,36 @@ import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 public class ProviderRecoveryService {
 
     /**
-     * The assisted-desk override on provider profile recovery: who may recover a profile that is
-     * not their own. Everyone else must be the person the profile belongs to.
+     * The machine-only override on provider profile recovery: who may initiate recovery of a
+     * profile that is not their own. Everyone else must be the person the profile belongs to.
      *
-     * <p>Was {@code Set.of("SYSTEM", "REGISTRY_ADMIN")}. REGISTRY_ADMIN is not an actor type any
-     * client emits, so "assisted desk recovery" was in practice machine-only and no desk operator
-     * could perform it. Adding OPERATOR widens who can recover another person's profile, which is
-     * the point of an assisted desk — but it is a widening, and it is the reason this constant is
-     * named for the override rather than for a role.</p>
+     * <h2>Audited, and deliberately NOT widened to admit an operator</h2>
+     * <p>This briefly enforced {@code BACK_OFFICE_WRITERS}, on the reasoning that "assisted desk
+     * recovery" is exactly what a desk operator does and the old set was machine-only in practice.
+     * Measured, that widening was wrong, and it was the most dangerous thing in the migration:</p>
+     *
+     * <ul>
+     *   <li><b>There is no second factor.</b> {@link #initiate} mints a recovery token and
+     *       <em>returns it to the caller</em>. {@link #complete} then re-binds the provider profile
+     *       to whoever redeems it. So one actor, in two calls, can move another practitioner's
+     *       profile — with its registrations and licences — onto themselves. Token possession is
+     *       not a compensating control when the same call issues the token.</li>
+     *   <li><b>Nothing exercises it.</b> The only route is
+     *       {@code ProviderRecoveryController:50}, and its only consumer is experience-bff's
+     *       {@code ProviderClaimController#recover}, which passes {@code "healthId", actorId} — the
+     *       session's own id. That controller states it directly: "every downstream call binds to
+     *       that session identity — the body can never redirect a claim or recovery onto another
+     *       person." The self-branch below already permits it. No desk surface exists.</li>
+     * </ul>
+     *
+     * <p>So it stays at exactly {@code {SYSTEM}} — the original effective behaviour, since
+     * REGISTRY_ADMIN never matched. Not even {@code SERVICE} is added: on an account-takeover path,
+     * the correct amount of widening without a caller asking for it is none. If an assisted desk is
+     * built, it needs a second factor that the operator does not themselves issue.</p>
      */
     private static final ActorTypeGuard.Duty ASSISTED_DESK_RECOVERY = new ActorTypeGuard.Duty(
             "recovering a provider profile on someone else's behalf",
-            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            java.util.Set.of("SYSTEM"),
             java.util.Set.of("REGISTRY_ADMIN"));
 
     private static final Logger log = LoggerFactory.getLogger(ProviderRecoveryService.class);

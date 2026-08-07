@@ -68,13 +68,25 @@ public class ProviderBootstrapService {
             java.util.Set.of("NATIONAL_ADMIN", "ORG_REPRESENTATIVE", "REGISTRY_ADMIN"));
 
     /**
-     * The assisted-desk override on claiming a provider profile: who may claim a profile that is
-     * not their own. Everyone else must be the claimant themselves. Same shape and same widening as
-     * {@code ProviderRecoveryService.ASSISTED_DESK_RECOVERY}.
+     * The machine-only override on claiming a provider profile: who may claim a profile that is not
+     * their own. Everyone else must be the claimant themselves.
+     *
+     * <h2>Audited, and deliberately NOT widened to admit an operator</h2>
+     * <p>Unlike the recovery override, this one is <b>unreachable over HTTP</b>. The single route
+     * into {@link #claimProfile} is {@code ProviderBootstrapController#claim}, which refuses
+     * unconditionally unless {@code ctx.actorId()} equals the requested {@code claimantHealthId} —
+     * with no actor-type escape at all, because "a token can never be redeemed onto an arbitrary
+     * anchor (provider-as-person separation, defence in depth)". So widening this set could not
+     * enable an assisted desk; it could only make the guard read as though a bypass existed.</p>
+     *
+     * <p>Kept at exactly {@code {SYSTEM}} for governed migrations, matching the original effective
+     * behaviour, since REGISTRY_ADMIN never matched. The single-use token is a genuine possession
+     * factor here — unlike recovery, nothing in this path issues it to the caller — but a control
+     * that cannot be reached is not a reason to loosen the one in front of it.</p>
      */
     private static final ActorTypeGuard.Duty ASSISTED_DESK_CLAIM = new ActorTypeGuard.Duty(
             "claiming a provider profile on someone else's behalf",
-            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            java.util.Set.of("SYSTEM"),
             java.util.Set.of("REGISTRY_ADMIN"));
 
     private static final Logger log = LoggerFactory.getLogger(ProviderBootstrapService.class);
