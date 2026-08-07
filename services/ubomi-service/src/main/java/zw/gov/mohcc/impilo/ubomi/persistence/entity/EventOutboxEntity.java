@@ -48,7 +48,10 @@ public class EventOutboxEntity {
 
     // v1.1 context columns (V004)
     @Column(name = "tenant_id") private UUID tenantId;
-    @Column(name = "pod_id", length = 128) private String podId;
+    // Federation context has no safe default at publish time: OutboxEventBuilder now
+    // refuses to build without it. "national" is the value FederationAuthority.isNational()
+    // recognises — "national-spine", used elsewhere in the estate, is not.
+    @Column(name = "pod_id", length = 128) private String podId = "national";
     @Column(name = "correlation_id", length = 128) private String correlationId;
     @Column(name = "causation_id", length = 128) private String causationId;
     @Column(name = "idempotency_key", length = 128) private String idempotencyKey;

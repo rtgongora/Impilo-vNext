@@ -136,7 +136,11 @@ public class EventOutboxEntity {
 
             @Override
             public String podId() {
-                return "inventory-service";
+                // Was "inventory-service" — a producer name in the pod_id field. pod_id names
+                // the federation pod, so FederationAuthority.isNational() returned false for
+                // every event inventory published, and any pod-based routing saw a pod that
+                // does not exist. "national" is the literal isNational() recognises.
+                return "national";
             }
 
             @Override

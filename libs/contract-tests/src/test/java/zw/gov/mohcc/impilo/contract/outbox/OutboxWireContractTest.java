@@ -200,6 +200,87 @@ class OutboxWireContractTest {
                 .anyMatch(v -> v.contains(field));
     }
 
+    // ─────────────────────── 2b. absent context refuses, never invents ───────────────────────
+
+    @Test
+    @DisplayName("a row with no tenant refuses to build rather than publishing 'unknown'")
+    void missingTenantRefusesToBuild() {
+        RecordingPublisher publisher = publisherIn(EmitMode.V1_1_ONLY);
+        publisher.rows.set(0, new RecordingRow() {
+            @Override public String tenantId() { return null; }
+        });
+
+        publisher.publishPendingEvents();
+
+        assertThat(publisher.sent())
+                .as("a fabricated tenant_id is indistinguishable on the wire from a real one")
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("a row with no pod refuses to build rather than publishing 'unknown'")
+    void missingPodRefusesToBuild() {
+        RecordingPublisher publisher = publisherIn(EmitMode.V1_1_ONLY);
+        publisher.rows.set(0, new RecordingRow() {
+            @Override public String podId() { return null; }
+        });
+
+        publisher.publishPendingEvents();
+
+        assertThat(publisher.sent()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("refusing a v1.1 envelope does not silently mark the row published")
+    void refusedRowIsNotMarkedPublished() {
+        RecordingPublisher publisher = publisherIn(EmitMode.V1_1_ONLY);
+        publisher.rows.set(0, new RecordingRow() {
+            @Override public String tenantId() { return null; }
+        });
+
+        assertThat(publisher.publishPendingEvents())
+                .as("counting a refused row as published loses the event permanently")
+                .isZero();
+    }
+
+    // ────────────────── 2c. multi-topic legacy fan-out survives conversion ──────────────────
+
+    @Test
+    @DisplayName("additional legacy topics still receive the raw payload")
+    void additionalLegacyTopicsArePreserved() {
+        RecordingPublisher publisher = new RecordingPublisher() {
+            @Override
+            protected List<String> additionalLegacyTopics(OutboxRow row) {
+                // A service fanning one payload to a companion and a core-transaction stream.
+                // Arrays.asList, not List.of — the trailing null is deliberate, and List.of
+                // rejects nulls outright. A null topic must be skipped, not thrown on.
+                return java.util.Arrays.asList("pharmacy.dispense.companion", "core.transaction.events",
+                        "pharmacy.dispense.complete", null);
+            }
+        };
+        System.setProperty(EMIT_MODE_PROPERTY, EmitMode.DUAL.name());
+
+        publisher.publishPendingEvents();
+
+        assertThat(publisher.topics()).containsExactlyInAnyOrder(
+                "pharmacy.dispense.complete",
+                "pharmacy.dispense.companion",
+                "core.transaction.events",
+                v11Topic());
+        assertThat(publisher.onTopic("core.transaction.events").value()).isEqualTo(STORED_PAYLOAD);
+        assertThat(publisher.onTopic("pharmacy.dispense.companion").value()).isEqualTo(STORED_PAYLOAD);
+    }
+
+    @Test
+    @DisplayName("the default fan-out is empty, so converted services are unaffected")
+    void additionalLegacyTopicsDefaultToNone() {
+        RecordingPublisher publisher = publisherIn(EmitMode.LEGACY_ONLY);
+
+        publisher.publishPendingEvents();
+
+        assertThat(publisher.topics()).containsExactly("pharmacy.dispense.complete");
+    }
+
     // ─────────────────────────── 3. the two namespaces stay apart ───────────────────────────
 
     @Test
@@ -287,7 +368,7 @@ class OutboxWireContractTest {
      * service implements. Exercising the real base class is the point: a hand-rolled sample
      * envelope would prove nothing about what publishers actually emit.
      */
-    private static final class RecordingPublisher extends CompanionOutboxPublisher {
+    private static class RecordingPublisher extends CompanionOutboxPublisher {
 
         private final List<Sent> sent = new ArrayList<>();
         private final List<RecordingRow> rows = new ArrayList<>(List.of(new RecordingRow()));
@@ -339,7 +420,7 @@ class OutboxWireContractTest {
     }
 
     /** An outbox row as a converted service maps it. */
-    private static final class RecordingRow implements CompanionOutboxPublisher.OutboxRow {
+    private static class RecordingRow implements CompanionOutboxPublisher.OutboxRow {
 
         static final String TENANT_ID = "11111111-1111-1111-1111-111111111111";
         static final String POD_ID = "national";

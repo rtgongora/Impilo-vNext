@@ -38,7 +38,10 @@ public class EventOutboxEntity {
     private UUID tenantId;
 
     @Column(name = "pod_id", length = 64)
-    private String podId;
+    // Federation context has no safe default at publish time: OutboxEventBuilder now
+    // refuses to build without it. "national" is the value FederationAuthority.isNational()
+    // recognises — "national-spine", used elsewhere in the estate, is not.
+    private String podId = "national";
 
     @Column(name = "correlation_id")
     private UUID correlationId;
