@@ -71,23 +71,66 @@ public class CacheEvictionConsumer {
         if (cpid != null) cacheService.evictPattern("patient:" + cpid + ":*");
     }
 
+    /**
+     * Reads a field from either wire shape and either naming convention.
+     *
+     * <p>Envelope-vs-root was already handled. Casing was not, and it matters: the producing
+     * services write camelCase domain payloads ({@code facilityId}) while these listeners ask
+     * for snake_case ({@code facility_id}). The mismatch stayed invisible because the topics
+     * concerned had no producer — {@code pct.journey} never existed at all (PCT routes journey
+     * events to {@code pct.journey.state_changed}), so {@link #onJourneyEvent(String)} had
+     * never once fired. Converting PCT gives {@code impilo.pct.journey} a producer, at which
+     * point a casing-only miss would evict nothing and report nothing.</p>
+     */
     private String extractField(String event, String... fieldNames) {
         try {
             JsonNode root = objectMapper.readTree(event);
+            JsonNode payload = root.path("payload");
             for (String field : fieldNames) {
-                // Check top level
-                if (root.has(field) && !root.get(field).isNull()) {
-                    return root.get(field).asText();
-                }
-                // Check inside payload
-                JsonNode payload = root.path("payload");
-                if (payload.has(field) && !payload.get(field).isNull()) {
-                    return payload.get(field).asText();
+                for (String candidate : namingVariants(field)) {
+                    if (root.has(candidate) && !root.get(candidate).isNull()) {
+                        return root.get(candidate).asText();
+                    }
+                    if (payload.has(candidate) && !payload.get(candidate).isNull()) {
+                        return payload.get(candidate).asText();
+                    }
                 }
             }
         } catch (Exception e) {
             log.trace("Failed to extract field from event: {}", e.getMessage());
         }
         return null;
+    }
+
+    /** {@code facility_id} → [facility_id, facilityId], and the reverse. */
+    private static String[] namingVariants(String field) {
+        String other = field.indexOf('_') >= 0 ? toCamelCase(field) : toSnakeCase(field);
+        return other.equals(field) ? new String[]{field} : new String[]{field, other};
+    }
+
+    private static String toCamelCase(String snake) {
+        StringBuilder out = new StringBuilder(snake.length());
+        boolean upperNext = false;
+        for (char c : snake.toCharArray()) {
+            if (c == '_') {
+                upperNext = true;
+            } else {
+                out.append(upperNext ? Character.toUpperCase(c) : c);
+                upperNext = false;
+            }
+        }
+        return out.toString();
+    }
+
+    private static String toSnakeCase(String camel) {
+        StringBuilder out = new StringBuilder(camel.length() + 4);
+        for (char c : camel.toCharArray()) {
+            if (Character.isUpperCase(c)) {
+                out.append('_').append(Character.toLowerCase(c));
+            } else {
+                out.append(c);
+            }
+        }
+        return out.toString();
     }
 }
