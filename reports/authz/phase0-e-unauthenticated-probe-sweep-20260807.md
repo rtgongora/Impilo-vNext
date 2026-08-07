@@ -153,6 +153,30 @@ Stated explicitly; a silently truncated sweep reads as a clean estate.
   swept as targets; only used for controls. `hapi-fhir` and `orthanc` accept writes and sit behind
   NetworkPolicies — they deserve their own pass.
 
+## What `refused` does and does not mean
+
+This sweep measures **authentication** — the literal ask of gate condition #2, "unauthenticated
+probes 401". It does **not** measure authorization. The two fail differently and a 401 here says
+nothing about the second.
+
+`costing-engine-service` is the worked example. It returned **401 on all four** probed endpoints and
+is marked `refused`. But its `WaiverController` and `GlJournalsController` carry **no
+`@PreAuthorize`, no actor-type check, and no `requireX()` guard** — so any caller who presents *any*
+accepted token can post to the national General Ledger or waive a patient bill. That exposure is
+untouched by this sweep and remains open.
+
+**Do not read the 85 `refused` services as 85 safe services.** Read them as: anonymous callers are
+turned away at the door. Who is allowed to do what once inside is a separate measurement, and the
+known authorization gaps are still open.
+
+Two audit services, easily confused, land differently here:
+
+- `audit-ledger-service` — `POST /internal/v1/audit/records` → **401**. Consistent with its fix.
+- `tshepo-audit-service` — a *different* service. `/v1/audit/export` and `/internal/v1/test-command`
+  refuse, but **`/v1/audit/events` and `/v1/audit/verify-chain` do not**. The `/v1/audit/**` path is
+  partially escaping authentication on the service that writes the audit trail. This is a new
+  finding, not a restatement of the audit-ledger one.
+
 ## Per-service results (103 services)
 
 | Service | Endpoints probed | Representative endpoint | Method | Status | Verdict |
