@@ -55,7 +55,7 @@ class BreakGlassGrantValidationServiceTest {
     }
 
     private BreakGlassGrantValidationRequest request(String grantToken) {
-        return new BreakGlassGrantValidationRequest(TENANT, ACTOR, grantToken, "O_NEG_EMERGENCY_RELEASE");
+        return new BreakGlassGrantValidationRequest(TENANT, grantToken, "O_NEG_EMERGENCY_RELEASE");
     }
 
     private VisibilityEscalationGrantEntity activeEscalationGrant() {
@@ -83,7 +83,7 @@ class BreakGlassGrantValidationServiceTest {
     @Test
     @DisplayName("no grant of either kind: verdict is NO_GRANT, and it is an answer rather than an error")
     void noGrantAtAll() {
-        BreakGlassGrantValidationResponse response = service.validate(request(null));
+        BreakGlassGrantValidationResponse response = service.validate(ACTOR, request(null));
 
         assertEquals(BreakGlassGrantValidationResponse.VERDICT_NO_GRANT, response.verdict());
         assertNull(response.source());
@@ -96,7 +96,7 @@ class BreakGlassGrantValidationServiceTest {
         when(escalationGrantRepository.findActiveGrant(eq(GRANT_TOKEN), eq(TENANT), eq(ACTOR), any()))
                 .thenReturn(Optional.of(activeEscalationGrant()));
 
-        BreakGlassGrantValidationResponse response = service.validate(request(GRANT_TOKEN.toString()));
+        BreakGlassGrantValidationResponse response = service.validate(ACTOR, request(GRANT_TOKEN.toString()));
 
         assertEquals(BreakGlassGrantValidationResponse.VERDICT_VALID, response.verdict());
         assertEquals(BreakGlassGrantValidationResponse.SOURCE_ESCALATION_GRANT, response.source());
@@ -109,7 +109,7 @@ class BreakGlassGrantValidationServiceTest {
         when(breakGlassRepository.findActiveByTenantIdAndActorId(eq(TENANT), eq(ACTOR), any()))
                 .thenReturn(List.of(activeBreakGlassRequest()));
 
-        BreakGlassGrantValidationResponse response = service.validate(request(null));
+        BreakGlassGrantValidationResponse response = service.validate(ACTOR, request(null));
 
         assertEquals(BreakGlassGrantValidationResponse.VERDICT_VALID, response.verdict());
         assertEquals(BreakGlassGrantValidationResponse.SOURCE_BREAK_GLASS_REQUEST, response.source());
@@ -122,7 +122,7 @@ class BreakGlassGrantValidationServiceTest {
         when(breakGlassRepository.findActiveByTenantIdAndActorId(eq(TENANT), eq(ACTOR), any()))
                 .thenReturn(List.of(activeBreakGlassRequest()));
 
-        BreakGlassGrantValidationResponse response = service.validate(request("not-a-uuid"));
+        BreakGlassGrantValidationResponse response = service.validate(ACTOR, request("not-a-uuid"));
 
         // Were a malformed token to short-circuit, a forged header would become a denial-of-care:
         // an attacker could switch off someone else's emergency access by attaching junk to it.
@@ -137,7 +137,7 @@ class BreakGlassGrantValidationServiceTest {
         when(breakGlassRepository.findActiveByTenantIdAndActorId(eq(TENANT), eq(ACTOR), any()))
                 .thenReturn(List.of(activeBreakGlassRequest()));
 
-        BreakGlassGrantValidationResponse response = service.validate(request(GRANT_TOKEN.toString()));
+        BreakGlassGrantValidationResponse response = service.validate(ACTOR, request(GRANT_TOKEN.toString()));
 
         assertEquals(BreakGlassGrantValidationResponse.VERDICT_VALID, response.verdict());
         assertEquals(BreakGlassGrantValidationResponse.SOURCE_BREAK_GLASS_REQUEST, response.source());
@@ -148,8 +148,10 @@ class BreakGlassGrantValidationServiceTest {
     void grantIsBoundToTenantAndActor() {
         UUID otherTenant = UUID.fromString("dddddddd-dddd-dddd-dddd-dddddddddddd");
 
-        service.validate(new BreakGlassGrantValidationRequest(
-                otherTenant, "someone-else", GRANT_TOKEN.toString(), "O_NEG_EMERGENCY_RELEASE"));
+        // The actor now arrives as the authenticated subject; only the tenant still comes from the
+        // body. Both must still reach the repository query.
+        service.validate("someone-else", new BreakGlassGrantValidationRequest(
+                otherTenant, GRANT_TOKEN.toString(), "O_NEG_EMERGENCY_RELEASE"));
 
         // The binding is the repository's, not this service's — assert it is actually passed
         // through, because a service that dropped either argument would silently widen every grant

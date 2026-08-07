@@ -11,7 +11,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.client.RestTemplate;
-import zw.gov.mohcc.impilo.shared.auth.WorkloadTokenProvider;
 import zw.gov.mohcc.impilo.sharedkernel.security.BreakGlassGrantCheck;
 import zw.gov.mohcc.impilo.sharedkernel.security.BreakGlassGrantClient;
 import zw.gov.mohcc.impilo.sharedkernel.security.BreakGlassGrantQuery;
@@ -44,7 +43,8 @@ import java.util.Optional;
  *
  * <h2>Which credential is presented</h2>
  *
- * <p>Preferred: this workload's own client-credentials token, via {@link WorkloadTokenProvider}.
+ * <p>The credential is always the CALLER'S token — see resolveBearer for why a workload token
+ * would silently refuse every emergency.
  * That is the correct shape for an east-west call and it works on background threads with no
  * inbound request.</p>
  *
@@ -73,19 +73,15 @@ public class HttpBreakGlassGrantClient implements BreakGlassGrantClient {
 
     private final RestTemplate restTemplate;
     private final String baseUrl;
-    private final WorkloadTokenProvider tokenProvider;
 
     /**
      * @param restTemplate  should carry short connect/read timeouts — this sits on an emergency
      *                      clinical path, where a slow answer is worse than a prompt UNREACHABLE
      * @param baseUrl       tshepo-authz base URL; blank means "not configured", which is UNREACHABLE
-     * @param tokenProvider this workload's credential source; may be null where none is wired
      */
-    public HttpBreakGlassGrantClient(RestTemplate restTemplate, String baseUrl,
-                                     WorkloadTokenProvider tokenProvider) {
+    public HttpBreakGlassGrantClient(RestTemplate restTemplate, String baseUrl) {
         this.restTemplate = restTemplate;
         this.baseUrl = baseUrl;
-        this.tokenProvider = tokenProvider;
     }
 
     @Override
@@ -161,12 +157,22 @@ public class HttpBreakGlassGrantClient implements BreakGlassGrantClient {
 
     /** This workload's own token if it has one, otherwise the token of the request being served. */
     private Optional<String> resolveBearer() {
-        if (tokenProvider != null) {
-            Optional<String> workload = tokenProvider.getAccessToken();
-            if (workload.isPresent()) {
-                return workload;
-            }
-        }
+        // THE CALLER'S TOKEN, NEVER THIS WORKLOAD'S — and the order is the whole control.
+        //
+        // The endpoint answers "does the BEARER'S SUBJECT hold a live break-glass grant". It takes
+        // the actor from the token subject precisely so it cannot be asked about someone else. So
+        // sending this workload's client-credentials token would ask "does tshepo-authz's service
+        // account hold a grant" — which it never does. The lookup would find nothing, that reads as
+        // NO_GRANT, and the guard refuses. EVERY emergency would be refused, silently, on the day
+        // `impilo.s2s.token.enabled` is turned on and not one day before.
+        //
+        // That is the same class of defect this client already fixed on the response side (a 401
+        // mapped to NO_GRANT), arriving from the opposite direction and deferred to P3, where
+        // nobody would connect it to this file.
+        //
+        // A workload token is therefore never correct here. Break-glass is always user-initiated;
+        // a background thread with no user context has no grant to validate, and resolves
+        // UNREACHABLE — which under the ruling means allow-and-record, not refuse.
         return inboundBearer();
     }
 

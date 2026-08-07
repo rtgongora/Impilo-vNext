@@ -6,7 +6,6 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
-import zw.gov.mohcc.impilo.shared.auth.WorkloadTokenProvider;
 import zw.gov.mohcc.impilo.shared.security.HttpBreakGlassGrantClient;
 import zw.gov.mohcc.impilo.sharedkernel.security.BreakGlassGrantClient;
 
@@ -30,8 +29,7 @@ public class BreakGlassGrantConfig {
             RestTemplateBuilder builder,
             @Value("${impilo.trust.tshepo-authz.base-url:${TSHEPO_AUTHZ_BASE_URL:}}") String baseUrl,
             @Value("${impilo.trust.break-glass.connect-timeout-ms:2000}") long connectTimeoutMs,
-            @Value("${impilo.trust.break-glass.read-timeout-ms:3000}") long readTimeoutMs,
-            ObjectProvider<WorkloadTokenProvider> tokenProvider) {
+            @Value("${impilo.trust.break-glass.read-timeout-ms:3000}") long readTimeoutMs) {
 
         RestTemplate restTemplate = builder
                 .setConnectTimeout(Duration.ofMillis(connectTimeoutMs))
@@ -41,6 +39,6 @@ public class BreakGlassGrantConfig {
         // Optional: most services have no per-workload Keycloak client yet. When absent the client
         // falls back to the inbound caller's own bearer, and when neither exists it reports
         // UNREACHABLE naming the misconfiguration.
-        return new HttpBreakGlassGrantClient(restTemplate, baseUrl, tokenProvider.getIfAvailable());
+        return new HttpBreakGlassGrantClient(restTemplate, baseUrl);
     }
 }

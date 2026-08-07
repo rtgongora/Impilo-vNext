@@ -1,6 +1,9 @@
 package zw.gov.mohcc.impilo.tshepo.authz.api;
 
 import jakarta.validation.Valid;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,9 +28,10 @@ import zw.gov.mohcc.impilo.tshepo.authz.service.BreakGlassGrantValidationService
  * surface to keep in agreement with the first. This one is shaped so it cannot become that:</p>
  *
  * <ul>
- *   <li><b>It takes no resource and no permission.</b> The request names a tenant, an actor and
- *       optionally a grant token. There is nowhere to put "and may they release blood", so no
- *       caller can come to depend on this endpoint for that answer.</li>
+ *   <li><b>It takes no resource and no permission.</b> The request names a tenant and optionally a
+ *       grant token; the actor is the bearer's own subject and cannot be named by the caller.
+ *       There is nowhere to put "and may they release blood", so no caller can come to depend on
+ *       this endpoint for that answer.</li>
  *   <li><b>It returns no entitlements.</b> The response is a verdict plus provenance for the audit
  *       trail — no roles, permissions, visibility ceilings, capabilities or tokens. There is
  *       nothing in the body a caller could cache and treat as authority.</li>
@@ -64,7 +68,26 @@ public class BreakGlassGrantValidationController {
      */
     @PostMapping
     public ResponseEntity<BreakGlassGrantValidationResponse> validate(
+            @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody BreakGlassGrantValidationRequest request) {
-        return ResponseEntity.ok(validationService.validate(request));
+
+        // THE ACTOR IS THE BEARER'S SUBJECT, NEVER THE BODY.
+        //
+        // This previously took actorId from the request, which made the endpoint an ORACLE: any
+        // authenticated caller could ask whether a named clinician holds a live break-glass grant.
+        // A caller may only ask about themselves.
+        //
+        // The paired half of this fix lives in HttpBreakGlassGrantClient, which must send the
+        // CALLER'S token and never this workload's own. If a service-account token were sent, the
+        // subject here would be the service, the grant lookup would find nothing, and every
+        // emergency would be refused — the exact failure the PO ruling exists to prevent, arriving
+        // silently the day s2s tokens are enabled. The two halves only work together.
+        if (jwt == null || jwt.getSubject() == null || jwt.getSubject().isBlank()) {
+            // Unauthenticated cannot reach here (anyRequest().authenticated()), but a token with no
+            // subject would otherwise validate against a null actor and match nothing silently —
+            // which reads as "no grant" and refuses.
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(validationService.validate(jwt.getSubject(), request));
     }
 }

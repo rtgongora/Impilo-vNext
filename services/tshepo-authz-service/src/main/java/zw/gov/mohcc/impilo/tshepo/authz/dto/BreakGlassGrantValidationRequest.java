@@ -15,7 +15,10 @@ import java.util.UUID;
  * request shape is what keeps the endpoint from drifting into a general authorization API.</p>
  *
  * @param tenantId   tenant the grant must belong to; a grant never crosses tenants
- * @param actorId    actor the grant must belong to; a grant never transfers between actors
+ * <p><b>There is deliberately no actorId.</b> The actor is the bearer's subject, taken server-side.
+ * An actor in the body made this an oracle: any authenticated caller could ask whether a named
+ * clinician holds a live break-glass grant. A caller may only ask about themselves.</p>
+ *
  * @param grantToken optional {@code x-escalation-grant-id} the caller was handed, if any
  * @param action     optional label for the emergency action, recorded on the query for review
  */
@@ -23,10 +26,6 @@ public record BreakGlassGrantValidationRequest(
 
         @NotNull(message = "tenantId is required")
         UUID tenantId,
-
-        @NotBlank(message = "actorId is required")
-        @Size(max = 255)
-        String actorId,
 
         @Size(max = 64)
         String grantToken,

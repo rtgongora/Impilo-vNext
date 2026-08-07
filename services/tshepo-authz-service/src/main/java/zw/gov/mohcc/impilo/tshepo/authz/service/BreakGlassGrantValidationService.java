@@ -70,15 +70,15 @@ public class BreakGlassGrantValidationService {
      *         token — that is a NO_GRANT input, not a client error.
      */
     @Transactional(readOnly = true)
-    public BreakGlassGrantValidationResponse validate(BreakGlassGrantValidationRequest request) {
+    public BreakGlassGrantValidationResponse validate(String actorId, BreakGlassGrantValidationRequest request) {
         Instant now = Instant.now();
 
         Optional<VisibilityEscalationGrantEntity> escalation =
-                resolveEscalationGrant(request.tenantId(), request.actorId(), request.grantToken(), now);
+                resolveEscalationGrant(request.tenantId(), actorId, request.grantToken(), now);
         if (escalation.isPresent()) {
             VisibilityEscalationGrantEntity g = escalation.get();
             log.info("Break-glass grant validated from escalation grant: tenant={}, actor={}, token={}, action={}",
-                    request.tenantId(), request.actorId(), g.getGrantToken(), request.action());
+                    request.tenantId(), actorId, g.getGrantToken(), request.action());
             return BreakGlassGrantValidationResponse.valid(
                     BreakGlassGrantValidationResponse.SOURCE_ESCALATION_GRANT,
                     g.getGrantToken().toString(),
@@ -87,11 +87,11 @@ public class BreakGlassGrantValidationService {
         }
 
         List<BreakGlassRequestEntity> active = breakGlassRepository
-                .findActiveByTenantIdAndActorId(request.tenantId(), request.actorId(), now);
+                .findActiveByTenantIdAndActorId(request.tenantId(), actorId, now);
         if (!active.isEmpty()) {
             BreakGlassRequestEntity b = active.get(0); // repository orders by grantedAt DESC
             log.info("Break-glass grant validated from break-glass request: tenant={}, actor={}, id={}, action={}",
-                    request.tenantId(), request.actorId(), b.getId(), request.action());
+                    request.tenantId(), actorId, b.getId(), request.action());
             return BreakGlassGrantValidationResponse.valid(
                     BreakGlassGrantValidationResponse.SOURCE_BREAK_GLASS_REQUEST,
                     b.getId().toString(),
@@ -103,7 +103,7 @@ public class BreakGlassGrantValidationService {
         // correct outcome, and it is also exactly the event an on-call reviewer needs to see.
         log.warn("Break-glass grant NOT FOUND: tenant={}, actor={}, action={} — no active escalation grant "
                         + "and no active break-glass request; the calling guard will refuse.",
-                request.tenantId(), request.actorId(), request.action());
+                request.tenantId(), actorId, request.action());
         return BreakGlassGrantValidationResponse.noGrant();
     }
 

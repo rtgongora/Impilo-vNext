@@ -7,9 +7,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.shared.auth.WorkloadTokenProperties;
-import zw.gov.mohcc.impilo.shared.auth.WorkloadTokenProvider;
 import zw.gov.mohcc.impilo.sharedkernel.security.BreakGlassGrantCheck;
 import zw.gov.mohcc.impilo.sharedkernel.security.BreakGlassGrantQuery;
 import zw.gov.mohcc.impilo.sharedkernel.security.BreakGlassGrantVerdict;
@@ -42,31 +44,29 @@ class HttpBreakGlassGrantClientTest {
     private HttpBreakGlassGrantClient client;
 
     /** A provider that never yields a token, so tests exercise the inbound-bearer fallback path. */
-    private static WorkloadTokenProvider disabledTokenProvider() {
-        WorkloadTokenProperties props = new WorkloadTokenProperties();
-        props.setEnabled(false);
-        return new WorkloadTokenProvider(new RestTemplate(), props);
-    }
 
-    private static WorkloadTokenProvider tokenProviderYielding(String token) {
-        return new WorkloadTokenProvider(new RestTemplate(), new WorkloadTokenProperties()) {
-            @Override
-            public java.util.Optional<String> getAccessToken() {
-                return java.util.Optional.of(token);
-            }
-        };
-    }
 
     private static BreakGlassGrantQuery query() {
         return new BreakGlassGrantQuery("00000000-0000-0000-4000-800000000001", "actor-1", null,
                 "EMERGENCY", "O_NEG_EMERGENCY_RELEASE", "HID-1");
     }
 
+    private static void authenticateCaller(String tokenValue) {
+        Jwt jwt = Jwt.withTokenValue(tokenValue)
+                .header("alg", "none").claim("sub", "clinician-1").build();
+        SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt));
+    }
+
     @BeforeEach
     void setUp() {
         restTemplate = new RestTemplate();
         server = MockRestServiceServer.createServer(restTemplate);
-        client = new HttpBreakGlassGrantClient(restTemplate, BASE_URL, tokenProviderYielding("workload-token"));
+        // The credential is the CALLER'S token, so the tests must establish one. Before the graft
+        // this class injected a workload token; that path was removed because a service-account
+        // subject would make the endpoint answer "does this SERVICE hold a grant" — always no —
+        // and refuse every emergency the day s2s tokens are enabled.
+        authenticateCaller("caller-token");
+        client = new HttpBreakGlassGrantClient(restTemplate, BASE_URL);
     }
 
     @AfterEach
@@ -83,7 +83,7 @@ class HttpBreakGlassGrantClientTest {
     void validResponseMapsToValid() {
         server.expect(requestTo(BASE_URL + "/v1/break-glass/validate"))
                 .andExpect(method(org.springframework.http.HttpMethod.POST))
-                .andExpect(header("Authorization", "Bearer workload-token"))
+                .andExpect(header("Authorization", "Bearer caller-token"))
                 .andRespond(withSuccess(
                         "{\"verdict\":\"VALID\",\"source\":\"BREAK_GLASS_REQUEST\",\"grantRef\":\"grant-9\"}",
                         MediaType.APPLICATION_JSON));
@@ -176,7 +176,7 @@ class HttpBreakGlassGrantClientTest {
     @DisplayName("an unconfigured base URL is UNREACHABLE and says so, without attempting a call")
     void unconfiguredBaseUrlIsUnreachable() {
         HttpBreakGlassGrantClient unconfigured =
-                new HttpBreakGlassGrantClient(restTemplate, "", tokenProviderYielding("t"));
+                new HttpBreakGlassGrantClient(restTemplate, "");
 
         BreakGlassGrantCheck check = unconfigured.check(query());
 
@@ -187,10 +187,14 @@ class HttpBreakGlassGrantClientTest {
     }
 
     @Test
-    @DisplayName("no credential at all is UNREACHABLE and names the misconfiguration")
+    @DisplayName("no authenticated caller is UNREACHABLE — never a refusal")
     void noCredentialIsUnreachable() {
+        // A background thread, a scheduled sweep, anything with no user context. Break-glass is
+        // always user-initiated, so this is a misconfiguration rather than a clinical decision —
+        // and it must resolve UNREACHABLE (allow + record), never NO_GRANT (refuse).
+        SecurityContextHolder.clearContext();
         HttpBreakGlassGrantClient noCredential =
-                new HttpBreakGlassGrantClient(restTemplate, BASE_URL, disabledTokenProvider());
+                new HttpBreakGlassGrantClient(restTemplate, BASE_URL);
 
         BreakGlassGrantCheck check = noCredential.check(query());
 
@@ -210,7 +214,7 @@ class HttpBreakGlassGrantClientTest {
                 });
 
         HttpBreakGlassGrantClient c =
-                new HttpBreakGlassGrantClient(exploding, BASE_URL, tokenProviderYielding("t"));
+                new HttpBreakGlassGrantClient(exploding, BASE_URL);
 
         // No assertThrows: the contract is that there is nothing to catch. A caller forced to
         // write a catch block would write "treat it as no grant" inside it.
