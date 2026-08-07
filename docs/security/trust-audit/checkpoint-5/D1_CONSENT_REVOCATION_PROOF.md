@@ -140,6 +140,49 @@ findings must be fixed together or the second becomes a silent hole behind the f
 
 Neither is in scope here. Both are recorded rather than touched.
 
+### How far the SYSTEM bypass actually reaches — the JWT gate, measured
+
+The probe above went straight to the PDP, so it proved the verdict, not reachability. Measured
+against the running gateway (`envoy-55b8d45db-wgcrg`, config via `/config_dump`):
+
+| Layer | Finding |
+|---|---|
+| **Envoy JWT validation** | **NONE.** The listener's HTTP filter chain is exactly `ext_authz` → `router`. No `jwt_authn` filter is configured. |
+| **ext_authz failure mode** | `failure_mode_allow` absent ⇒ **fails closed** if the PDP is unreachable. Correct. |
+| **Routing** | One catch-all route, `prefix: /` → cluster `experience_bff`. All traffic. |
+| **experience-bff authN** | Spring Security OAuth2 resource server ⇒ **401 `www-authenticate: Bearer`** with no token. |
+| **experience-bff authZ** | **0 `@PreAuthorize` across 409 `@RestController` classes.** It authenticates; it does not authorize. |
+
+> ⚠️ **Instrument note.** The Envoy pod has no `curl` or `wget`. Querying its admin endpoint from
+> inside it returns nothing, which greps as "0 occurrences of `jwt_authn`" *and* "0 occurrences of
+> `ext_authz`" — a false negative that reads exactly like a finding. Query the admin port from a
+> pod that has an HTTP client, and positive-control on `/server_info` first.
+>
+> Relatedly: the three `jwt_authn` strings that *do* appear in the dump are in the bootstrap's
+> catalogue of compiled-in extensions, not in any filter chain. Envoy supports the filter; it is
+> not using it. Grep-counting the dump would have called that a JWT gate.
+
+**End-to-end through Envoy, no bearer token:**
+
+| purpose | HTTP | where it stopped |
+|---|---|---|
+| `TREATMENT` | 403 | PDP — `NO_ALLOW_RULE` |
+| `SYSTEM` | **401** | reached the BFF (`x-envoy-upstream-service-time: 8`); refused for want of a token |
+
+**So the SYSTEM bypass is not an anonymous read path.** The PDP allows it — the ALLOW is in
+`policy_decision_log` under `actor_id='probe-jwt-gate'` — and the BFF's own token requirement is what
+stops it. That is a real control, and it is the one doing the work here, not the trust plane.
+
+**What that leaves.** Because the BFF carries no authorization of its own, the PDP's verdict *is* the
+authorization decision for every one of those 409 controllers. So the residual exposure is an
+**authenticated privilege escalation**: any caller holding a valid token — any role, or none —
+who sets `X-Purpose-Of-Use: SYSTEM` is authorized by the only component that authorizes, with
+`piiAccess: FULL` and `clinicalAccess: FULL`.
+
+**Not proven:** the end-to-end read with a valid token. That needs a test credential this session did
+not have. Everything up to it is measured; the last step is inference from "BFF authenticates but
+does not authorize" and should be confirmed before the finding is closed either way.
+
 > ⚠️ **The remedy is not to add a rule so that consent becomes reachable.** Doing that would
 > manufacture the gate's own precondition: the estate would demonstrate "a revoked consent blocks a
 > read" only because a rule had been written to make the read reachable in the first place, with no
@@ -225,7 +268,10 @@ The third break leaves the error-envelope test green, correctly: that path retur
 | Consent gate reachable by derived resource type | **YES** — `patients`, `encounters` |
 | Consent ever evaluated in the live estate | **NO** — 0 of 1,952; all clinical requests die at `NO_ALLOW_RULE` |
 | Clinical **read** authorization exists at all | **NO** — 0 of 575 rules permit reading `patients`/`encounters` |
-| `X-Purpose-Of-Use: SYSTEM` bypasses rule + consent | 🔴 **PROVEN LIVE** — 403→200 on one header, FULL PII/clinical |
+| `X-Purpose-Of-Use: SYSTEM` bypasses rule + consent | 🔴 **PROVEN LIVE** at the PDP — 403→200 on one header, FULL PII/clinical |
+| …reachable anonymously? | **NO** — the BFF's own token gate returns 401. Escalation needs a valid token, any role |
+| Envoy validates JWTs | **NO** — filter chain is `ext_authz` → `router` only; no `jwt_authn` configured |
+| BFF authorizes independently of the PDP | **NO** — 0 `@PreAuthorize` across 409 controllers |
 | Per-record read (non-UUID id) reaches consent | 🔴 **NO** — the id becomes the resource type; consent skipped |
 | Consent for non-`Patient` clinical resources | **GAP** — unchanged, see `CP5_CONSENT_CONVERGENCE.md` |
 
