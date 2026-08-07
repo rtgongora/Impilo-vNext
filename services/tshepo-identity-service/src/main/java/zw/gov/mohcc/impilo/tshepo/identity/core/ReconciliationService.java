@@ -72,7 +72,7 @@ public class ReconciliationService {
 
         ProvisionalCpidEntity saved = provisionalRepo.save(entity);
 
-        publishOutboxEvent("ProvisionalCpid", oCpid.toString(), "OCPID_CREATED",
+        publishOutboxEvent(tenantId, "ProvisionalCpid", oCpid.toString(), "OCPID_CREATED",
                 Map.of("tenantId", tenantId, "oCpid", oCpid, "facilityId", facilityId));
 
         log.info("Created provisional O-CPID: tenant={}, oCpid={}, facility={}",
@@ -122,7 +122,7 @@ public class ReconciliationService {
         provisional.setReconciledAt(now);
         provisionalRepo.save(provisional);
 
-        publishOutboxEvent("ProvisionalCpid", provisional.getOriginCpid().toString(),
+        publishOutboxEvent(request.tenantId(), "ProvisionalCpid", provisional.getOriginCpid().toString(),
                 "OCPID_RECONCILED",
                 Map.of("tenantId", request.tenantId(),
                        "oCpid", request.oCpid(),
@@ -167,13 +167,21 @@ public class ReconciliationService {
         );
     }
 
-    private void publishOutboxEvent(String aggregateType, String aggregateId,
+    private void publishOutboxEvent(java.util.UUID tenantId, String aggregateType, String aggregateId,
                                      String eventType, Object payload) {
+        // Checked before the try: the catch below swallows failures so a missing tenant would
+        // vanish into a log line, and the row would reach the envelope builder with nothing to
+        // build from. Every caller has a tenant in scope, so absence here is a coding error.
+        if (tenantId == null) {
+            throw new IllegalArgumentException(
+                    "identity outbox event requires a tenant: " + aggregateType + "/" + eventType);
+        }
         try {
             EventOutboxEntity event = new EventOutboxEntity();
             event.setAggregateType(aggregateType);
             event.setAggregateId(aggregateId);
             event.setEventType(eventType);
+            event.setTenantId(tenantId);
             event.setPayload(objectMapper.writeValueAsString(payload));
             outboxRepo.save(event);
         } catch (Exception e) {

@@ -165,7 +165,7 @@ public class IdResolutionService {
                                     "id_mapping row missing immediately after upsert"));
 
                     if (inserted == 1) {
-                        publishOutboxEvent("IdMapping", cpid.toString(), "MAPPING_CREATED",
+                        publishOutboxEvent(tenantId, "IdMapping", cpid.toString(), "MAPPING_CREATED",
                                 Map.of("tenantId", tenantId, "healthId", healthId, "cpid", cpid));
                         log.info("Created id_mapping: tenant={}, healthId={}, cpid={}",
                                 tenantId, healthId, cpid);
@@ -187,7 +187,7 @@ public class IdResolutionService {
             throw new IllegalArgumentException("x-purpose-of-use is required for reverse resolution");
         }
         MappingResponse result = getMappingByCpid(tenantId, cpid);
-        publishOutboxEvent("IdMapping", cpid.toString(), "REVERSE_RESOLVED",
+        publishOutboxEvent(tenantId, "IdMapping", cpid.toString(), "REVERSE_RESOLVED",
                 Map.of("tenantId", tenantId,
                        "cpid", cpid,
                        "purposeOfUse", purposeOfUse,
@@ -242,7 +242,7 @@ public class IdResolutionService {
             mapping.setMappingStatus("RETIRED");
             mapping.setMergedIntoCpid(survivorCpid);
             mappingRepo.save(mapping);
-            publishOutboxEvent("IdMapping", mapping.getCpid().toString(), "MAPPING_RETIRED",
+            publishOutboxEvent(tenantId, "IdMapping", mapping.getCpid().toString(), "MAPPING_RETIRED",
                     Map.of("tenantId", tenantId,
                            "retiredCpid", mapping.getCpid(),
                            "mergedIntoCpid", survivorCpid));
@@ -264,7 +264,7 @@ public class IdResolutionService {
             mapping.setMappingStatus("ACTIVE");
             mapping.setMergedIntoCpid(null);
             mappingRepo.save(mapping);
-            publishOutboxEvent("IdMapping", mapping.getCpid().toString(), "MAPPING_REACTIVATED",
+            publishOutboxEvent(tenantId, "IdMapping", mapping.getCpid().toString(), "MAPPING_REACTIVATED",
                     Map.of("tenantId", tenantId, "cpid", mapping.getCpid()));
             log.info("Reactivated id_mapping cpid={} after unmerge (tenant={})",
                     mapping.getCpid(), tenantId);
@@ -281,13 +281,21 @@ public class IdResolutionService {
         );
     }
 
-    private void publishOutboxEvent(String aggregateType, String aggregateId,
+    private void publishOutboxEvent(java.util.UUID tenantId, String aggregateType, String aggregateId,
                                      String eventType, Object payload) {
+        // Checked before the try: the catch below swallows failures so a missing tenant would
+        // vanish into a log line, and the row would reach the envelope builder with nothing to
+        // build from. Every caller has a tenant in scope, so absence here is a coding error.
+        if (tenantId == null) {
+            throw new IllegalArgumentException(
+                    "identity outbox event requires a tenant: " + aggregateType + "/" + eventType);
+        }
         try {
             EventOutboxEntity event = new EventOutboxEntity();
             event.setAggregateType(aggregateType);
             event.setAggregateId(aggregateId);
             event.setEventType(eventType);
+            event.setTenantId(tenantId);
             event.setPayload(objectMapper.writeValueAsString(payload));
             outboxRepo.save(event);
         } catch (Exception e) {

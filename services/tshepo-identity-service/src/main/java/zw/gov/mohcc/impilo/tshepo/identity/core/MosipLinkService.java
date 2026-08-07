@@ -105,7 +105,7 @@ public class MosipLinkService {
 
         MosipLinkEntity saved = mosipRepo.save(entity);
 
-        publishOutboxEvent("MosipLink", request.healthId().toString(),
+        publishOutboxEvent(request.tenantId(), "MosipLink", request.healthId().toString(),
                 "MOSIP_LINK_CREATED",
                 Map.of("tenantId", request.tenantId(),
                        "healthId", request.healthId(),
@@ -138,7 +138,7 @@ public class MosipLinkService {
             entity.setLinkedAt(Instant.now());
             mosipRepo.save(entity);
 
-            publishOutboxEvent("MosipLink", request.healthId().toString(),
+            publishOutboxEvent(request.tenantId(), "MosipLink", request.healthId().toString(),
                     "MOSIP_LINK_VERIFIED",
                     Map.of("tenantId", request.tenantId(),
                            "healthId", request.healthId(),
@@ -222,13 +222,21 @@ public class MosipLinkService {
         }
     }
 
-    private void publishOutboxEvent(String aggregateType, String aggregateId,
+    private void publishOutboxEvent(java.util.UUID tenantId, String aggregateType, String aggregateId,
                                      String eventType, Object payload) {
+        // Checked before the try: the catch below swallows failures so a missing tenant would
+        // vanish into a log line, and the row would reach the envelope builder with nothing to
+        // build from. Every caller has a tenant in scope, so absence here is a coding error.
+        if (tenantId == null) {
+            throw new IllegalArgumentException(
+                    "identity outbox event requires a tenant: " + aggregateType + "/" + eventType);
+        }
         try {
             EventOutboxEntity event = new EventOutboxEntity();
             event.setAggregateType(aggregateType);
             event.setAggregateId(aggregateId);
             event.setEventType(eventType);
+            event.setTenantId(tenantId);
             event.setPayload(objectMapper.writeValueAsString(payload));
             outboxRepo.save(event);
         } catch (Exception e) {
