@@ -21,6 +21,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+/**
+ * API behaviour of the ledger: header well-formedness, hash chaining, correlation query, outbox.
+ *
+ * <p>Every request here now carries {@code X-Actor-Type: SYSTEM}. That is not decoration — appending
+ * to the ledger is gated to machine callers ({@code ActorTypeGuard.MACHINE_ONLY}, see
+ * {@code AuditLedgerController#appendRecord}), so without it these requests are refused with 403
+ * before they reach the handler. Note the body still says {@code "actorType":"HUMAN"}: who the
+ * record is <em>about</em> and who is <em>writing</em> it are different questions, and only the
+ * second is gated.</p>
+ *
+ * <p>The missing-header case below is unaffected and still asserts 400: the companion v1.1 header
+ * filter rejects it before the controller runs, so the actor guard never sees it.</p>
+ */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -51,6 +64,7 @@ public class AuditLedgerApiMockMvcTest {
         void missingTenantId() throws Exception {
             MvcResult result = mockMvc.perform(post("/internal/v1/audit/records")
                             .header("X-Pod-ID", "national")
+                            .header("X-Actor-Type", "SYSTEM")
                             .header("X-Request-ID", "req-1")
                             .header("X-Correlation-ID", "corr-1")
                             .header("Idempotency-Key", "idem-1")
@@ -78,6 +92,7 @@ public class AuditLedgerApiMockMvcTest {
             MvcResult result = mockMvc.perform(post("/internal/v1/audit/records")
                             .header("X-Tenant-ID", freshTenant)
                             .header("X-Pod-ID", "national")
+                            .header("X-Actor-Type", "SYSTEM")
                             .header("X-Request-ID", UUID.randomUUID().toString())
                             .header("X-Correlation-ID", UUID.randomUUID().toString())
                             .header("Idempotency-Key", "chain-first-" + System.nanoTime())
@@ -106,6 +121,7 @@ public class AuditLedgerApiMockMvcTest {
             MvcResult first = mockMvc.perform(post("/internal/v1/audit/records")
                             .header("X-Tenant-ID", freshTenant)
                             .header("X-Pod-ID", "national")
+                            .header("X-Actor-Type", "SYSTEM")
                             .header("X-Request-ID", UUID.randomUUID().toString())
                             .header("X-Correlation-ID", UUID.randomUUID().toString())
                             .header("Idempotency-Key", "chain-a-" + System.nanoTime())
@@ -121,6 +137,7 @@ public class AuditLedgerApiMockMvcTest {
             MvcResult second = mockMvc.perform(post("/internal/v1/audit/records")
                             .header("X-Tenant-ID", freshTenant)
                             .header("X-Pod-ID", "national")
+                            .header("X-Actor-Type", "SYSTEM")
                             .header("X-Request-ID", UUID.randomUUID().toString())
                             .header("X-Correlation-ID", UUID.randomUUID().toString())
                             .header("Idempotency-Key", "chain-b-" + System.nanoTime())
@@ -152,6 +169,7 @@ public class AuditLedgerApiMockMvcTest {
                 mockMvc.perform(post("/internal/v1/audit/records")
                                 .header("X-Tenant-ID", freshTenant)
                                 .header("X-Pod-ID", "national")
+                                .header("X-Actor-Type", "SYSTEM")
                                 .header("X-Request-ID", UUID.randomUUID().toString())
                                 .header("X-Correlation-ID", UUID.randomUUID().toString())
                                 .header("Idempotency-Key", "verify-" + i + "-" + System.nanoTime())
@@ -164,6 +182,7 @@ public class AuditLedgerApiMockMvcTest {
             mockMvc.perform(get("/internal/v1/audit/chain/verify")
                             .header("X-Tenant-ID", freshTenant)
                             .header("X-Pod-ID", "national")
+                            .header("X-Actor-Type", "SYSTEM")
                             .header("X-Request-ID", UUID.randomUUID().toString())
                             .header("X-Correlation-ID", UUID.randomUUID().toString())
                             .param("from_seq", "1")
@@ -188,6 +207,7 @@ public class AuditLedgerApiMockMvcTest {
             mockMvc.perform(post("/internal/v1/audit/records")
                             .header("X-Tenant-ID", TENANT_ID)
                             .header("X-Pod-ID", "national")
+                            .header("X-Actor-Type", "SYSTEM")
                             .header("X-Request-ID", UUID.randomUUID().toString())
                             .header("X-Correlation-ID", UUID.randomUUID().toString())
                             .header("Idempotency-Key", "query-corr-" + System.nanoTime())
@@ -199,6 +219,7 @@ public class AuditLedgerApiMockMvcTest {
             mockMvc.perform(get("/internal/v1/audit/query")
                             .header("X-Tenant-ID", TENANT_ID)
                             .header("X-Pod-ID", "national")
+                            .header("X-Actor-Type", "SYSTEM")
                             .header("X-Request-ID", UUID.randomUUID().toString())
                             .header("X-Correlation-ID", UUID.randomUUID().toString())
                             .param("correlation_id", correlationId.toString()))
@@ -223,6 +244,7 @@ public class AuditLedgerApiMockMvcTest {
             MvcResult result = mockMvc.perform(post("/internal/v1/audit/records")
                             .header("X-Tenant-ID", TENANT_ID)
                             .header("X-Pod-ID", "national")
+                            .header("X-Actor-Type", "SYSTEM")
                             .header("X-Request-ID", UUID.randomUUID().toString())
                             .header("X-Correlation-ID", correlationId)
                             .header("Idempotency-Key", idempotencyKey)
