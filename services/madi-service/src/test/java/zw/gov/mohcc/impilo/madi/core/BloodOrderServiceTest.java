@@ -18,6 +18,8 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import zw.gov.mohcc.impilo.sharedkernel.security.EmergencyAccessGuard;
+import zw.gov.mohcc.impilo.sharedkernel.security.EscalationGrantValidator;
 
 @ExtendWith(MockitoExtension.class)
 class BloodOrderServiceTest {
@@ -41,7 +43,8 @@ class BloodOrderServiceTest {
     void setUp() {
         bloodOrderService = new BloodOrderService(orderRepository, itemRepository, sampleRepository,
                 crossmatchRequestRepository, crossmatchResultRepository, reservationRepository,
-                issueRepository, bloodUnitService, orosIntegration, eventEmitter, slaService);
+                issueRepository, bloodUnitService, orosIntegration, eventEmitter, slaService,
+                new EmergencyAccessGuard((t, a, g) -> EscalationGrantValidator.Outcome.VALID, o -> { }));
     }
 
     @Test

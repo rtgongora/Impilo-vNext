@@ -20,6 +20,8 @@ import java.util.UUID;
 @Service
 public class BloodOrderService {
 
+    private final EmergencyAccessGuard emergencyAccessGuard;
+
     private final BloodOrderRepository orderRepository;
     private final BloodOrderItemRepository itemRepository;
     private final BloodSampleRepository sampleRepository;
@@ -42,7 +44,8 @@ public class BloodOrderService {
                              BloodUnitService bloodUnitService,
                              OrosIntegration orosIntegration,
                              MadiEventEmitter eventEmitter,
-                             BloodOrderSlaService slaService) {
+                             BloodOrderSlaService slaService,
+                             EmergencyAccessGuard emergencyAccessGuard) {
         this.orderRepository = orderRepository;
         this.itemRepository = itemRepository;
         this.sampleRepository = sampleRepository;
@@ -54,6 +57,7 @@ public class BloodOrderService {
         this.orosIntegration = orosIntegration;
         this.eventEmitter = eventEmitter;
         this.slaService = slaService;
+        this.emergencyAccessGuard = emergencyAccessGuard;
     }
 
     @Transactional
@@ -230,11 +234,14 @@ public class BloodOrderService {
      */
     @Transactional
     public BloodOrderEntity emergencyRelease(UUID tenantId, UUID orderId, String purposeOfUse,
-                                             String actorId, String reason, String bloodUnitId) {
+                                             String actorId, String reason, String bloodUnitId,
+                                             String escalationGrantId) {
         BloodOrderEntity order = requireOrder(tenantId, orderId);
-        // Throws EmergencyAccessDeniedException (→ 403) unless the purpose is EMERGENCY/BREAK_GLASS.
-        EmergencyAccessGuard.requireBreakGlass(purposeOfUse, "O_NEG_EMERGENCY_RELEASE",
-                order.getPatientCpid(), actorId);
+        // Throws EmergencyAccessDeniedException (→ 403) without an emergency purpose OR without an
+        // active escalation grant. An unreachable trust plane allows and records an override.
+        emergencyAccessGuard.requireBreakGlass(new EmergencyAccessGuard.EmergencyAccessRequest(
+                tenantId == null ? null : tenantId.toString(), actorId, purposeOfUse,
+                "O_NEG_EMERGENCY_RELEASE", order.getPatientCpid(), escalationGrantId));
         order.setStatus(BloodOrderStatus.ISSUED.name());
         order.setUpdatedAt(OffsetDateTime.now());
         orderRepository.save(order);

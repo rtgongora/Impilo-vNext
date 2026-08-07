@@ -61,6 +61,45 @@ public class VisibilityEscalationController {
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NO_CONTENT).body(null));
     }
 
+    /** Request body for grant validation. The token travels in the body, never the query string. */
+    public record ValidateGrantRequest(String grantId) {}
+
+    /**
+     * Outcome of a grant validation. {@code VALID} or {@code NO_GRANT} — never "unreachable", which
+     * is not something this endpoint can report about itself. A caller that cannot reach this
+     * service learns that from the call failing, and must treat it as a third, distinct case.
+     */
+    public record ValidateGrantResponse(String outcome, String visibilityCeiling, String workflowType) {}
+
+    /**
+     * Validate an escalation grant for a downstream service. Read-only.
+     *
+     * <p><b>This is not an authorization endpoint and must not become one.</b> It answers "is this
+     * grant active for this actor in this tenant" and nothing else — no resource, no action, no
+     * decision. A service needing an access decision calls the PDP. Break-glass guards need this
+     * narrower question, and before this existed they had no way to ask it: the grant model was
+     * reachable only from inside {@code PolicyEngine}, so guards compared a caller-supplied
+     * purpose-of-use string instead.</p>
+     *
+     * <p>{@code POST} rather than {@code GET} despite being read-only, because the grant token is a
+     * credential and query strings end up in access logs — the same reason
+     * {@code ProviderBootstrapController#previewClaim} takes its token in the body.</p>
+     *
+     * <p>Always 200 with an outcome; a missing, malformed, expired, revoked or wrong-actor grant is
+     * {@code NO_GRANT}, indistinguishable from the caller's side so the endpoint cannot be used to
+     * probe which grant tokens exist.</p>
+     */
+    @PostMapping("/grants/validate")
+    public ResponseEntity<ValidateGrantResponse> validateGrant(
+            @RequestHeader("x-tenant-id") UUID tenantId,
+            @RequestHeader("x-actor-id") String actorId,
+            @RequestBody ValidateGrantRequest body) {
+        return ResponseEntity.ok(visibilityEscalationService
+                .validateGrant(tenantId, actorId, body == null ? null : body.grantId())
+                .map(g -> new ValidateGrantResponse("VALID", g.visibilityCeiling(), g.workflowType()))
+                .orElseGet(() -> new ValidateGrantResponse("NO_GRANT", null, null)));
+    }
+
     @SuppressWarnings("unchecked")
     private static List<String> realmRoles(Jwt jwt) {
         if (jwt == null) {

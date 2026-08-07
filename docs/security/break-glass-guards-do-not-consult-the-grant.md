@@ -1,10 +1,15 @@
 # Break-glass guards do not consult the grant model
 
-**Status:** OPEN. Described, not fixed.
+**Status:** **EmergencyAccessGuard CLOSED** (madi-service). **ClinicalAccessGuard still OPEN** (pct-service).
 **Found:** Phase 0 workstream A (P0 containment), 2026-08-07.
 **Measured on:** `feat/trust-domain-responsibility-foundations` @ `73cc29d27`.
 
 ## The exposure
+
+> **Read the next two sections as history.** They record the original state and why it could not be
+> fixed inside a containment sweep. What was actually built is below, under *RESOLVED*. The exposure
+> described here still stands verbatim for `ClinicalAccessGuard`.
+
 
 Two guards gate emergency clinical access on a bare purpose-of-use string comparison:
 
@@ -65,4 +70,67 @@ workstream B and was not touched.
   an ungoverned one, and the trade belongs to whoever owns the trust plane and the clinical policy —
   not to a containment sweep.
 
-Until then the exposure stands, accurately described in both the guard and here.
+---
+
+## RESOLVED for EmergencyAccessGuard — PO ruling, 2026-08-07
+
+The blocker recorded above ("closing this needs a grant-validation call that tshepo-authz does not
+expose, and the decision to fail closed on it is a patient-safety decision") was escalated and
+decided. The ruling distinguishes the two cases that the old guard could not tell apart:
+
+| Case | Outcome |
+|---|---|
+| No grant exists | **REFUSE** |
+| Grant service unreachable | **ALLOW**, with a hard audit record and a named post-hoc review obligation |
+
+"Fail closed always" was considered and rejected: the affected paths include O-negative and
+uncrossmatched blood release, and a tshepo-authz outage is not a clinical fact. Letting one block a
+transfusion trades a governance risk for a mortality risk.
+
+### What was built
+
+1. **The missing seam.** `POST /v1/visibility-escalations/grants/validate` on tshepo-authz —
+   read-only, purpose-built, and deliberately *not* an authorization endpoint: it answers "is this
+   grant active for this actor in this tenant" and nothing else. `VisibilityEscalationService
+   .validateGrant` backs it. Absent, malformed, expired, revoked and wrong-actor are all `NO_GRANT`,
+   indistinguishable from the caller's side so the endpoint cannot be used to probe which grants
+   exist. The token travels in the body, not the query string, so it stays out of access logs.
+
+2. **`EscalationGrantValidator`** (shared-kernel-java) — three outcomes, `VALID` / `NO_GRANT` /
+   `UNREACHABLE`, with the load-bearing rule stated at the seam: **an implementation must not have a
+   catch-all that turns a transport failure into `NO_GRANT`.** That single line is the difference
+   between a real control and another one that looks like validation and is not.
+
+3. **`TshepoEscalationGrantValidator`** (madi-service) — the HTTP mapping, which is where the ruling
+   is actually implemented: 200+`VALID` → VALID; 200+`NO_GRANT` → NO_GRANT; **4xx → NO_GRANT** (the
+   service answered; a malformed request is not an outage, and must not be a route to an ungoverned
+   override); **5xx / timeout / connect / DNS / unparseable → UNREACHABLE**.
+
+4. **`UngovernedOverrideRecorder`** — a *required* collaborator, so the guard writes the record
+   itself rather than returning a flag and trusting each call site. `OutboxUngovernedOverrideRecorder`
+   writes to MADI's event outbox rather than calling an audit service: this record is written
+   precisely when remote calls are failing, and a shared network fault would otherwise take out the
+   record for the same reason it took out the grant check. Event type
+   `BREAK_GLASS_UNGOVERNED_OVERRIDE`, aggregate `EMERGENCY_ACCESS`, payload carrying
+   `reviewRequired: true` / `reviewStatus: PENDING` — its own type so the review is a selection, not
+   a scan.
+
+5. **`EmergencyAccessGuard`** is now an injected component with both collaborators mandatory. There
+   is no constructor that yields a guard which can allow without recording.
+
+### What is verified
+
+All three branches red-proved by mutation:
+
+- folding `UNREACHABLE` into `NO_GRANT` — the exact defect the ruling warns about — fails 4 tests
+- allowing on `UNREACHABLE` without writing the record fails 2
+- letting `NO_GRANT` through (restoring the forged-purpose hole) fails 3
+
+Suites: shared-kernel-java 207, madi-service 61, tshepo-authz-service 399 — all green.
+
+### Still open
+
+**`ClinicalAccessGuard` in pct-service is unchanged and still gates on a bare purpose-of-use string
+compare.** It was not touched because pct-service was reserved for the parallel workstream B, which
+has it as its last remaining conversion. The pieces it needs now exist — the endpoint, the SPI and a
+reference implementation — so wiring it is no longer blocked on anything but coordination.

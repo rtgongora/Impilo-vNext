@@ -28,6 +28,7 @@ public class MhpController {
     public ResponseEntity<Map<String, Object>> activate(
             @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
             @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = "X-Escalation-Grant-Id", required = false) String escalationGrantId,
             @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
             @RequestBody(required = false) Map<String, Object> body) {
         Map<String, Object> b = body != null ? body : Map.of();
@@ -35,7 +36,7 @@ public class MhpController {
             String activatedBy = str(b, "activatedBy");
             MhpActivationEntity a = mhpService.activate(tenantId, uuid(b, "facilityId"),
                     str(b, "patientCpid"), uuid(b, "traumaEpisodeId"), uuid(b, "emergencyEpisodeId"),
-                    activatedBy != null ? activatedBy : actorId, purposeOfUse);
+                    activatedBy != null ? activatedBy : actorId, purposeOfUse, escalationGrantId);
             return ResponseEntity.status(HttpStatus.CREATED).body(activationRow(a));
         } catch (zw.gov.mohcc.impilo.sharedkernel.security.EmergencyAccessGuard.EmergencyAccessDeniedException e) {
             throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
@@ -57,6 +58,7 @@ public class MhpController {
     public ResponseEntity<Map<String, Object>> issuePack(
             @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
             @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = "X-Escalation-Grant-Id", required = false) String escalationGrantId,
             @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
             @PathVariable UUID activationId,
             @RequestBody Map<String, Object> body) {
@@ -64,7 +66,7 @@ public class MhpController {
             String issuedBy = str(body, "issuedBy");
             MhpPackEntity pack = mhpService.issuePack(activationId, tenantId,
                     intVal(body, "packNumber"), str(body, "componentType"), intVal(body, "unitsIssued"),
-                    str(body, "bloodGroup"), issuedBy != null ? issuedBy : actorId, purposeOfUse);
+                    str(body, "bloodGroup"), issuedBy != null ? issuedBy : actorId, purposeOfUse, escalationGrantId);
             return ResponseEntity.status(HttpStatus.CREATED).body(packRow(pack));
         } catch (zw.gov.mohcc.impilo.sharedkernel.security.EmergencyAccessGuard.EmergencyAccessDeniedException e) {
             throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());

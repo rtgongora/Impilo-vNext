@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import zw.gov.mohcc.impilo.sharedkernel.security.EscalationGrantValidator;
 
 /**
  * MHP activation + pack issuance (madi V200, W8a). Proves the protocol-level layer reuses
@@ -35,12 +36,21 @@ class MhpServiceTest {
     @Mock private MhpPackRepository packRepository;
     @Mock private MadiEventEmitter eventEmitter;
 
+
+    /**
+     * A guard whose trust plane confirms the grant. These tests are about MHP mechanics, not about
+     * the grant branches — those are asserted directly in {@code EmergencyAccessGuardTest}, which
+     * covers VALID / NO_GRANT / UNREACHABLE separately.
+     */
+    private final EmergencyAccessGuard grantedGuard = new EmergencyAccessGuard(
+            (t, a, g) -> EscalationGrantValidator.Outcome.VALID, o -> { });
+
     private MhpService service;
     private static final UUID TENANT_ID = UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
-        service = new MhpService(activationRepository, packRepository, eventEmitter);
+        service = new MhpService(activationRepository, packRepository, eventEmitter, grantedGuard);
     }
 
     private MhpActivationEntity activeActivation(UUID id) {
@@ -55,7 +65,7 @@ class MhpServiceTest {
     @Test
     void activate_underNonEmergencyPurpose_isDenied() {
         assertThatThrownBy(() -> service.activate(TENANT_ID, null, "CPID-1", null, null,
-                "trauma-lead-A", "ROUTINE"))
+                "trauma-lead-A", "ROUTINE", "grant-1"))
                 .isInstanceOf(EmergencyAccessGuard.EmergencyAccessDeniedException.class);
         verifyNoInteractions(activationRepository);
     }
@@ -74,7 +84,7 @@ class MhpServiceTest {
         stubSaveGeneratesId(activationRepository);
 
         MhpActivationEntity result = service.activate(TENANT_ID, null, null, null, null,
-                "trauma-lead-A", "EMERGENCY");
+                "trauma-lead-A", "EMERGENCY", "grant-1");
 
         assertThat(result.getStatus()).isEqualTo("ACTIVE");
         assertThat(result.getActivatedBy()).isEqualTo("trauma-lead-A");
@@ -85,7 +95,7 @@ class MhpServiceTest {
     void activate_toleratesAnUnidentifiedPatient() {
         stubSaveGeneratesId(activationRepository);
         MhpActivationEntity result = service.activate(TENANT_ID, null, null, null, null,
-                "trauma-lead-A", "EMERGENCY");
+                "trauma-lead-A", "EMERGENCY", "grant-1");
         assertThat(result.getPatientCpid()).isNull();
     }
 
@@ -98,7 +108,7 @@ class MhpServiceTest {
                 .thenReturn(Optional.of(stoodDown));
 
         assertThatThrownBy(() -> service.issuePack(activationId, TENANT_ID, 1, "RBC", 6, "O_NEG",
-                "blood-bank-B", "EMERGENCY"))
+                "blood-bank-B", "EMERGENCY", "grant-1"))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("not ACTIVE");
         verifyNoInteractions(packRepository);
@@ -111,7 +121,7 @@ class MhpServiceTest {
                 .thenReturn(Optional.of(activeActivation(activationId)));
 
         assertThatThrownBy(() -> service.issuePack(activationId, TENANT_ID, 1, "RBC", 6, "O_NEG",
-                "blood-bank-B", "ROUTINE"))
+                "blood-bank-B", "ROUTINE", "grant-1"))
                 .isInstanceOf(EmergencyAccessGuard.EmergencyAccessDeniedException.class);
     }
 
@@ -123,7 +133,7 @@ class MhpServiceTest {
         when(packRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         MhpPackEntity pack = service.issuePack(activationId, TENANT_ID, 1, "RBC", 6, "O_NEG",
-                "blood-bank-B", "EMERGENCY");
+                "blood-bank-B", "EMERGENCY", "grant-1");
 
         assertThat(pack.getComponentType()).isEqualTo("RBC");
         assertThat(pack.getUnitsIssued()).isEqualTo(6);
@@ -139,7 +149,7 @@ class MhpServiceTest {
                 .thenThrow(new org.springframework.dao.DataIntegrityViolationException("duplicate"));
 
         assertThatThrownBy(() -> service.issuePack(activationId, TENANT_ID, 1, "RBC", 6, "O_NEG",
-                "blood-bank-B", "EMERGENCY"))
+                "blood-bank-B", "EMERGENCY", "grant-1"))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("already issued");
     }

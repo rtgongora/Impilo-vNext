@@ -146,13 +146,14 @@ public class MadiBloodOrderController {
     public ResponseEntity<BloodOrderEntity> emergencyRelease(
             @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
             @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = "X-Escalation-Grant-Id", required = false) String escalationGrantId,
             @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
             @PathVariable UUID orderId,
             @RequestBody(required = false) Map<String, Object> body) {
         try {
             Map<String, Object> b = body != null ? body : Map.of();
             BloodOrderEntity order = bloodOrderService.emergencyRelease(tenantId, orderId, purposeOfUse,
-                    actorId, str(b, "reason"), str(b, "bloodUnitId"));
+                    actorId, str(b, "reason"), str(b, "bloodUnitId"), escalationGrantId);
             return ResponseEntity.ok(order);
         } catch (zw.gov.mohcc.impilo.sharedkernel.security.EmergencyAccessGuard.EmergencyAccessDeniedException e) {
             throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());

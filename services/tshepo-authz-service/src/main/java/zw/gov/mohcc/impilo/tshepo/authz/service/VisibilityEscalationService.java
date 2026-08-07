@@ -127,6 +127,41 @@ public class VisibilityEscalationService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Validate an escalation grant on behalf of a downstream service.
+     *
+     * <p>Purpose-built and read-only. It answers exactly one question — "is this grant token active,
+     * for this actor, in this tenant, right now" — and deliberately nothing else. It is <b>not</b> an
+     * authorization endpoint: it does not know what the caller intends to do and must never grow a
+     * resource, an action or a decision. A service that needs an access decision calls the PDP.</p>
+     *
+     * <p>It exists because the grant model had no seam. {@link #resolveActiveGrant} had exactly one
+     * caller — {@code PolicyEngine} — inside the PDP's own authorize path, and the API surface
+     * offered only the workflow for <em>obtaining</em> a grant. Break-glass guards in domain services
+     * therefore had nothing to consult, and fell back to comparing a purpose-of-use string that the
+     * caller supplies.</p>
+     *
+     * <p>Returns empty for <b>every</b> reason a grant does not hold: absent, malformed, expired,
+     * revoked, or bound to a different actor. The caller must not be able to tell those apart — the
+     * distinction that matters to a caller is "no grant" versus "could not ask", and the second is
+     * not something this method can express. It is signalled by the call failing.</p>
+     */
+    @Transactional(readOnly = true)
+    public Optional<EscalationGrantView> validateGrant(UUID tenantId, String actorId, String grantId) {
+        if (tenantId == null || actorId == null || actorId.isBlank()
+                || grantId == null || grantId.isBlank()) {
+            return Optional.empty();
+        }
+        UUID token;
+        try {
+            token = UUID.fromString(grantId.trim());
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+        return grantRepository.findActiveGrant(token, tenantId, actorId.trim(), Instant.now())
+                .map(g -> new EscalationGrantView(g.getGrantToken(), g.getVisibilityCeiling(), g.getWorkflowType()));
+    }
+
     public Optional<EscalationGrantView> resolveActiveGrant(AuthzInternalRequest request) {
         if (request.escalationGrantId() == null || request.escalationGrantId().isBlank()) {
             return Optional.empty();

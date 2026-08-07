@@ -35,21 +35,27 @@ public class MhpService {
     private final MhpActivationRepository activationRepository;
     private final MhpPackRepository packRepository;
     private final MadiEventEmitter eventEmitter;
+    private final EmergencyAccessGuard emergencyAccessGuard;
 
     public MhpService(MhpActivationRepository activationRepository,
                       MhpPackRepository packRepository,
-                      MadiEventEmitter eventEmitter) {
+                      MadiEventEmitter eventEmitter,
+                      EmergencyAccessGuard emergencyAccessGuard) {
         this.activationRepository = activationRepository;
         this.packRepository = packRepository;
         this.eventEmitter = eventEmitter;
+        this.emergencyAccessGuard = emergencyAccessGuard;
     }
 
-    /** @throws EmergencyAccessGuard.EmergencyAccessDeniedException unless purposeOfUse is EMERGENCY/BREAK_GLASS. */
+    /** @throws EmergencyAccessGuard.EmergencyAccessDeniedException without an emergency purpose OR an active grant. */
     @Transactional
     public MhpActivationEntity activate(UUID tenantId, UUID facilityId, String patientCpid,
                                         UUID traumaEpisodeId, UUID emergencyEpisodeId,
-                                        String activatedBy, String purposeOfUse) {
-        EmergencyAccessGuard.requireBreakGlass(purposeOfUse, "MHP_ACTIVATION", patientCpid, activatedBy);
+                                        String activatedBy, String purposeOfUse,
+                                        String escalationGrantId) {
+        emergencyAccessGuard.requireBreakGlass(new EmergencyAccessGuard.EmergencyAccessRequest(
+                tenantId == null ? null : tenantId.toString(), activatedBy, purposeOfUse,
+                "MHP_ACTIVATION", patientCpid, escalationGrantId));
 
         MhpActivationEntity activation = new MhpActivationEntity();
         activation.setTenantId(tenantId);
@@ -73,13 +79,16 @@ public class MhpService {
      */
     @Transactional
     public MhpPackEntity issuePack(UUID activationId, UUID tenantId, int packNumber, String componentType,
-                                   int unitsIssued, String bloodGroup, String issuedBy, String purposeOfUse) {
+                                   int unitsIssued, String bloodGroup, String issuedBy, String purposeOfUse,
+                                     String escalationGrantId) {
         MhpActivationEntity activation = loadActivation(activationId, tenantId);
         if (!"ACTIVE".equals(activation.getStatus())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "MHP activation " + activationId + " is " + activation.getStatus() + ", not ACTIVE");
         }
-        EmergencyAccessGuard.requireBreakGlass(purposeOfUse, "MHP_PACK_ISSUE", activation.getPatientCpid(), issuedBy);
+        emergencyAccessGuard.requireBreakGlass(new EmergencyAccessGuard.EmergencyAccessRequest(
+                tenantId == null ? null : tenantId.toString(), issuedBy, purposeOfUse,
+                "MHP_PACK_ISSUE", activation.getPatientCpid(), escalationGrantId));
 
         MhpPackEntity pack = new MhpPackEntity();
         pack.setTenantId(tenantId);
