@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 
 /**
  * Practitioner-in-Charge nomination workflow (HPA-2017-V1 state machine 3.5).
@@ -52,10 +53,30 @@ public class PicNominationService {
 
     private static final Logger log = LoggerFactory.getLogger(PicNominationService.class);
 
-    private static final Set<String> NOMINATOR_ROLES = Set.of(
-            "FACILITY_APPLICANT", "FACILITY_MANAGER", "FACILITY_ADMIN", "HPA_REGISTRAR", "SYSTEM_ADMIN", "DEVELOPER");
-    private static final Set<String> REVIEWER_ROLES = Set.of(
-            "HPA_REGISTRAR", "HPA_ADMIN", "COUNCIL_REVIEWER", "SYSTEM_ADMIN", "DEVELOPER");
+    /**
+     * Nominating or withdrawing a practitioner in charge. Enforces {@code PROVIDER} as well as the
+     * back-office set: the old check allowed PROVIDER and OPERATOR through an explicit escape after
+     * the role-set test, which is why this is the one tuso surface that worked for humans at all.
+     * That escape is preserved here as a real, declared part of the gate.
+     */
+    private static final ActorTypeGuard.Duty NOMINATE_PIC = new ActorTypeGuard.Duty(
+            "nominating a practitioner in charge",
+            Set.of("SYSTEM", "SERVICE", "OPERATOR", "PROVIDER"),
+            Set.of("FACILITY_APPLICANT", "FACILITY_MANAGER", "FACILITY_ADMIN", "HPA_REGISTRAR",
+                    "SYSTEM_ADMIN", "DEVELOPER"));
+
+    /**
+     * Recording a PIC regulatory review, activating an assignment, resolving a credential review.
+     *
+     * <p><b>Deliberately narrower than the old check.</b> The previous escape let any
+     * {@code PROVIDER} through, so a practitioner could record the regulatory review of their own
+     * PIC assignment. Regulatory review is a back-office act, so {@code PROVIDER} is excluded here
+     * while it stays on {@link #NOMINATE_PIC}.</p>
+     */
+    private static final ActorTypeGuard.Duty REVIEW_PIC = new ActorTypeGuard.Duty(
+            "recording a PIC regulatory decision",
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            Set.of("HPA_REGISTRAR", "HPA_ADMIN", "COUNCIL_REVIEWER", "SYSTEM_ADMIN", "DEVELOPER"));
 
     private final PicNominationRepository nominationRepository;
     private final PractitionerInChargeAssignmentRepository assignmentRepository;
@@ -85,7 +106,7 @@ public class PicNominationService {
     @Transactional
     public PicNominationEntity nominate(NominateRequest request) {
         TrustContext ctx = TrustContextHolder.require();
-        assertRole(ctx, NOMINATOR_ROLES, "nominate a practitioner in charge");
+        assertRole(ctx, NOMINATE_PIC);
         if (request.providerPublicId() == null || request.providerPublicId().isBlank()) {
             throw new IllegalArgumentException("providerPublicId is required — free-text PIC names are not accepted");
         }
@@ -180,7 +201,7 @@ public class PicNominationService {
     public PicNominationEntity recordReview(UUID nominationId, String authority, String reference,
                                             boolean approved, String notes) {
         TrustContext ctx = TrustContextHolder.require();
-        assertRole(ctx, REVIEWER_ROLES, "record a PIC regulatory review");
+        assertRole(ctx, REVIEW_PIC);
         PicNominationEntity nomination = require(nominationId, ctx);
         requireState(nomination, "REGULATOR_REVIEW_PENDING");
 
@@ -210,7 +231,7 @@ public class PicNominationService {
     @Transactional
     public PicNominationEntity activate(UUID nominationId) {
         TrustContext ctx = TrustContextHolder.require();
-        assertRole(ctx, REVIEWER_ROLES, "activate a PIC assignment");
+        assertRole(ctx, REVIEW_PIC);
         PicNominationEntity nomination = require(nominationId, ctx);
         requireState(nomination, "APPROVED");
 
@@ -274,7 +295,7 @@ public class PicNominationService {
     @Transactional
     public PicNominationEntity withdraw(UUID nominationId, String reason) {
         TrustContext ctx = TrustContextHolder.require();
-        assertRole(ctx, NOMINATOR_ROLES, "withdraw a PIC nomination");
+        assertRole(ctx, NOMINATE_PIC);
         PicNominationEntity nomination = require(nominationId, ctx);
         if ("ACTIVATED".equals(nomination.getState())) {
             throw new IllegalStateException("An activated assignment cannot be withdrawn — raise a PIC change instead");
@@ -339,7 +360,7 @@ public class PicNominationService {
     @Transactional
     public PractitionerInChargeAssignmentEntity resolveReview(Long assignmentId, boolean cleared, String notes) {
         TrustContext ctx = TrustContextHolder.require();
-        assertRole(ctx, REVIEWER_ROLES, "resolve a PIC credential review");
+        assertRole(ctx, REVIEW_PIC);
         PractitionerInChargeAssignmentEntity assignment = assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Assignment not found: " + assignmentId));
         assignment.setReviewState(cleared ? "CLEARED" : "UNDER_REVIEW");
@@ -484,14 +505,12 @@ public class PicNominationService {
         }
     }
 
-    private static void assertRole(TrustContext ctx, Set<String> allowed, String action) {
-        String actorType = ctx.actorType();
-        if (actorType == null || actorType.isBlank()) {
-            return; // internal/service calls carry no actor type — consistent with engine convention
-        }
-        if (!allowed.contains(actorType) && !"PROVIDER".equals(actorType) && !"OPERATOR".equals(actorType)) {
-            throw new SecurityException("Actor type " + actorType + " cannot " + action);
-        }
+    private static void assertRole(TrustContext ctx, ActorTypeGuard.Duty duty) {
+        // Was permissive when the actor type was absent, on the rationale that "internal/service
+        // calls carry no actor type". Measured: every caller of every guarded method here is a
+        // controller, so nothing internal relied on it — the early return only ever admitted an
+        // HTTP caller who omitted the header.
+        ActorTypeGuard.require(ctx, duty);
     }
 
     private void audit(TrustContext ctx, Long facilityId, String action, UUID targetId, Map<String, Object> after) {

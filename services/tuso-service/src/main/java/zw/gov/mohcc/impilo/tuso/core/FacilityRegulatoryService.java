@@ -17,6 +17,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
+import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 
 @Service
 public class FacilityRegulatoryService {
@@ -26,12 +27,33 @@ public class FacilityRegulatoryService {
     // HPA_REGISTRAR is the authority's registry officer: raises/administers
     // applications on behalf of applicants, schedules inspections and records
     // committee resolutions. HPA_INSPECTOR carries field verdicts only.
-    private static final Set<String> APPLICANT_ROLES = Set.of(
-            "FACILITY_APPLICANT", "FACILITY_MANAGER", "FACILITY_ADMIN", "HPA_REGISTRAR", "SYSTEM_ADMIN", "DEVELOPER");
-    private static final Set<String> INSPECTOR_ROLES = Set.of(
-            "HPA_INSPECTOR", "HPA_REGISTRAR", "HPA_ADMIN", "SYSTEM_ADMIN", "DEVELOPER");
-    private static final Set<String> COMMITTEE_ROLES = Set.of(
-            "HPA_COMMITTEE_MEMBER", "HPA_REGISTRAR", "HPA_ADMIN", "COUNCIL_REVIEWER", "SYSTEM_ADMIN", "DEVELOPER");
+    /**
+     * Applicant-side lifecycle acts: creating, submitting, uploading a document, marking ready for
+     * inspection. Enforces {@code PROVIDER} as well as the back-office set — a practitioner
+     * applying for their own practice is a real applicant.
+     *
+     * <p>All three duties below were role-name sets with no emittable member, and
+     * {@code assertAllowed} returned early on a blank actor type, so the only way through the whole
+     * facility regulatory lifecycle was to send no X-Actor-Type header. They now fail closed.</p>
+     */
+    private static final ActorTypeGuard.Duty ACT_AS_APPLICANT = new ActorTypeGuard.Duty(
+            "acting as the applicant on a facility application",
+            Set.of("SYSTEM", "SERVICE", "OPERATOR", "PROVIDER"),
+            Set.of("FACILITY_APPLICANT", "FACILITY_MANAGER", "FACILITY_ADMIN", "HPA_REGISTRAR",
+                    "SYSTEM_ADMIN", "DEVELOPER"));
+
+    /** Inspection-side acts: scheduling, recording an outcome, enforcement, compliance actions. */
+    private static final ActorTypeGuard.Duty ACT_AS_INSPECTOR = new ActorTypeGuard.Duty(
+            "acting as inspector on a facility application",
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            Set.of("HPA_INSPECTOR", "HPA_REGISTRAR", "HPA_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"));
+
+    /** Committee decisions on a facility application. */
+    private static final ActorTypeGuard.Duty ACT_AS_COMMITTEE = new ActorTypeGuard.Duty(
+            "recording a committee decision on a facility application",
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            Set.of("HPA_COMMITTEE_MEMBER", "HPA_REGISTRAR", "HPA_ADMIN", "COUNCIL_REVIEWER",
+                    "SYSTEM_ADMIN", "DEVELOPER"));
 
     private final FacilityRepository facilityRepository;
     private final FacilityGeoRepository facilityGeoRepository;
@@ -106,7 +128,7 @@ public class FacilityRegulatoryService {
     public FacilityRegulatoryDtos.FacilityRegulatoryProfileResponse createApplication(
             FacilityRegulatoryDtos.CreateFacilityApplicationRequest request) {
         TrustContext ctx = TrustContextHolder.require();
-        assertAllowed(ctx, APPLICANT_ROLES);
+        assertAllowed(ctx, ACT_AS_APPLICANT);
 
         FacilityEntity facility = request.facilityId() != null
                 ? requireFacility(request.facilityId(), ctx.tenantId())
@@ -166,7 +188,7 @@ public class FacilityRegulatoryService {
     @Transactional
     public FacilityRegulatoryDtos.FacilityRegulatoryProfileResponse submitApplication(UUID applicationId) {
         TrustContext ctx = TrustContextHolder.require();
-        assertAllowed(ctx, APPLICANT_ROLES);
+        assertAllowed(ctx, ACT_AS_APPLICANT);
 
         FacilityApplicationEntity application = requireApplication(applicationId, ctx.tenantId());
         validateApplicationSubmission(application);
@@ -195,7 +217,7 @@ public class FacilityRegulatoryService {
     @Transactional
     public FacilityRegulatoryDtos.FacilityRegulatoryProfileResponse markReadyForInspection(UUID applicationId) {
         TrustContext ctx = TrustContextHolder.require();
-        assertAllowed(ctx, INSPECTOR_ROLES);
+        assertAllowed(ctx, ACT_AS_INSPECTOR);
 
         FacilityApplicationEntity application = requireApplication(applicationId, ctx.tenantId());
         // Fee gate: an outstanding registration fee (DUE) blocks inspection until PAID or WAIVED.
@@ -217,7 +239,7 @@ public class FacilityRegulatoryService {
     @Transactional
     public FacilityRegulatoryDtos.DocumentView uploadDocument(FacilityRegulatoryDtos.UploadFacilityDocumentRequest request) {
         TrustContext ctx = TrustContextHolder.require();
-        assertAllowed(ctx, APPLICANT_ROLES);
+        assertAllowed(ctx, ACT_AS_APPLICANT);
 
         FacilityEntity facility = request.facilityId() != null ? requireFacility(request.facilityId(), ctx.tenantId()) : null;
         FacilityApplicationEntity application = request.applicationId() != null ? requireApplication(request.applicationId(), ctx.tenantId()) : null;
@@ -330,7 +352,7 @@ public class FacilityRegulatoryService {
     public FacilityRegulatoryDtos.InspectionView scheduleInspection(
             FacilityRegulatoryDtos.ScheduleFacilityInspectionRequest request) {
         TrustContext ctx = TrustContextHolder.require();
-        assertAllowed(ctx, INSPECTOR_ROLES);
+        assertAllowed(ctx, ACT_AS_INSPECTOR);
 
         FacilityEntity facility = requireFacility(request.facilityId(), ctx.tenantId());
         FacilityApplicationEntity application = request.applicationId() != null ? requireApplication(request.applicationId(), ctx.tenantId()) : null;
@@ -398,7 +420,7 @@ public class FacilityRegulatoryService {
     public FacilityRegulatoryDtos.InspectionView recordInspectionOutcome(
             UUID inspectionId, FacilityRegulatoryDtos.RecordInspectionOutcomeRequest request) {
         TrustContext ctx = TrustContextHolder.require();
-        assertAllowed(ctx, INSPECTOR_ROLES);
+        assertAllowed(ctx, ACT_AS_INSPECTOR);
 
         FacilityInspectionEntity inspection = inspectionRepository.findById(inspectionId)
                 .orElseThrow(() -> new IllegalArgumentException("Inspection not found: " + inspectionId));
@@ -518,9 +540,9 @@ public class FacilityRegulatoryService {
             UUID actionId, FacilityRegulatoryDtos.UpdateComplianceActionRequest request) {
         TrustContext ctx = TrustContextHolder.require();
         if (request.status() == RectificationStatus.VERIFIED) {
-            assertAllowed(ctx, INSPECTOR_ROLES);
+            assertAllowed(ctx, ACT_AS_INSPECTOR);
         } else {
-            assertAllowed(ctx, APPLICANT_ROLES);
+            assertAllowed(ctx, ACT_AS_APPLICANT);
         }
 
         ComplianceActionEntity action = complianceActionRepository.findById(actionId)
@@ -560,7 +582,7 @@ public class FacilityRegulatoryService {
     public FacilityRegulatoryDtos.CommitteeReviewView recordCommitteeDecision(
             FacilityRegulatoryDtos.RecordCommitteeDecisionRequest request) {
         TrustContext ctx = TrustContextHolder.require();
-        assertAllowed(ctx, COMMITTEE_ROLES);
+        assertAllowed(ctx, ACT_AS_COMMITTEE);
 
         FacilityEntity facility = requireFacility(request.facilityId(), ctx.tenantId());
         FacilityApplicationEntity application = requireApplication(request.applicationId(), ctx.tenantId());
@@ -631,7 +653,7 @@ public class FacilityRegulatoryService {
     public FacilityRegulatoryDtos.EnforcementCaseView openEnforcementCase(
             FacilityRegulatoryDtos.OpenEnforcementCaseRequest request) {
         TrustContext ctx = TrustContextHolder.require();
-        assertAllowed(ctx, INSPECTOR_ROLES);
+        assertAllowed(ctx, ACT_AS_INSPECTOR);
 
         FacilityEntity facility = requireFacility(request.facilityId(), ctx.tenantId());
         FacilityApplicationEntity application = request.applicationId() != null ? requireApplication(request.applicationId(), ctx.tenantId()) : null;
@@ -1138,13 +1160,8 @@ public class FacilityRegulatoryService {
         return out;
     }
 
-    private void assertAllowed(TrustContext ctx, Set<String> allowedRoles) {
-        if (ctx.actorType() == null || ctx.actorType().isBlank()) {
-            return;
-        }
-        if (!allowedRoles.contains(ctx.actorType())) {
-            throw new SecurityException("Actor type " + ctx.actorType() + " cannot perform this facility lifecycle action");
-        }
+    private void assertAllowed(TrustContext ctx, ActorTypeGuard.Duty duty) {
+        ActorTypeGuard.require(ctx, duty);
     }
 
     private Map<String, Object> buildRequestedChanges(FacilityRegulatoryDtos.CreateFacilityApplicationRequest request) {

@@ -29,6 +29,10 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class FacilityFeeServiceTest {
+    // Actor types here were HPA_ADMIN / HPA_REGISTRAR / DEVELOPER / FACILITY_APPLICANT — role names
+    // no client emits, so this suite was exercising the service with values no real request can
+    // carry, and would have kept passing against a gate no real operator could satisfy. See
+    // ActorTypeGuard. OPERATOR is what the admin consoles actually emit.
 
     @Mock private RegulatoryFeeScheduleService feeScheduleService;
     @Mock private RegulatoryApplicationTypeRepository applicationTypeRepository;
@@ -38,7 +42,7 @@ class FacilityFeeServiceTest {
     @Mock private zw.gov.mohcc.impilo.tuso.integration.MushexPaymentIntentClient mushexClient;
 
     private final UUID tenantId = UUID.fromString("00000000-0000-0000-0000-000000000001");
-    private final TrustContext ctx = new TrustContext(tenantId, "tester", "HPA_ADMIN", "REGULATION", null,
+    private final TrustContext ctx = new TrustContext(tenantId, "tester", "OPERATOR", "REGULATION", null,
             UUID.randomUUID(), null, null, null, AccessMode.INTERNAL);
 
     private FacilityFeeService service() {
@@ -142,6 +146,32 @@ class FacilityFeeServiceTest {
                 () -> service().createFeePaymentIntent(ctx, a));
     }
 
+    /**
+     * The gate used to be skipped entirely when the actor type was absent:
+     * {@code if (actorType != null && !actorType.isBlank() && !FEE_WAIVER_ROLES.contains(actorType))}.
+     * Since no member of FEE_WAIVER_ROLES was an actor type any client emits, <b>sending no
+     * X-Actor-Type header was the only way to waive a national registration fee</b> — the guard
+     * refused everyone who identified themselves and admitted everyone who did not.
+     *
+     * <p>Measured before changing it: every caller of every guarded method in this service and its
+     * siblings is a controller, so nothing internal depended on the omission.</p>
+     */
+    @Test
+    void anActorTypeCanNoLongerBeOmittedToWaiveAFee() {
+        var pending = app("INITIAL_REGISTRATION_PRIVATE");
+        pending.setFeeState("DUE");
+        pending.setCurrentWorkflowState(FacilityApplicationState.AWAITING_FEE);
+
+        for (String absent : new String[]{null, "", "   "}) {
+            var anonymous = new TrustContext(tenantId, "x", absent, "REGULATION", null,
+                    UUID.randomUUID(), null, null, null, AccessMode.INTERNAL);
+            org.junit.jupiter.api.Assertions.assertThrows(
+                    org.springframework.web.server.ResponseStatusException.class,
+                    () -> service().waiveFee(anonymous, pending, "hardship"),
+                    "an omitted actor type must not waive a fee (was: " + absent + ")");
+        }
+    }
+
     @Test
     void waiveFeeRequiresARegulatorAndADueFeeAndAReason() {
         var due = app("INITIAL_REGISTRATION_PRIVATE");
@@ -150,9 +180,9 @@ class FacilityFeeServiceTest {
         var s = service();
 
         // non-regulator → 403-equivalent
-        var applicant = new TrustContext(tenantId, "x", "FACILITY_APPLICANT", "REGULATION", null,
+        var applicant = new TrustContext(tenantId, "x", "CITIZEN", "REGULATION", null,
                 UUID.randomUUID(), null, null, null, AccessMode.INTERNAL);
-        org.junit.jupiter.api.Assertions.assertThrows(SecurityException.class,
+        org.junit.jupiter.api.Assertions.assertThrows(org.springframework.web.server.ResponseStatusException.class,
                 () -> s.waiveFee(applicant, due, "hardship"));
 
         // missing reason → 400-equivalent

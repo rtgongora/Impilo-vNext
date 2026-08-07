@@ -24,6 +24,10 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class RegulatoryFeeScheduleServiceTest {
+    // Actor types here were HPA_ADMIN / HPA_REGISTRAR / DEVELOPER / FACILITY_APPLICANT — role names
+    // no client emits, so this suite was exercising the service with values no real request can
+    // carry, and would have kept passing against a gate no real operator could satisfy. See
+    // ActorTypeGuard. OPERATOR is what the admin consoles actually emit.
 
     @Mock
     private RegulatoryFeeScheduleRepository repository;
@@ -88,12 +92,12 @@ class RegulatoryFeeScheduleServiceTest {
         ctx("FACILITY_APPLICANT");
         assertThatThrownBy(() -> service().create("SI_78_2017", "FEE_RENEWAL", "RENEWAL", null,
                 new BigDecimal("50"), "USD", "SI 78 of 2017", null, 1, "n"))
-                .isInstanceOf(SecurityException.class);
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
     }
 
     @Test
     void approveActivatesAndStampsProvenance() {
-        ctx("HPA_REGISTRAR");
+        ctx("OPERATOR");
         RegulatoryFeeScheduleEntity pending = row(new BigDecimal("80.00"), null);
         pending.setStatus("PENDING_REGULATOR_APPROVAL");
         when(repository.findById(pending.getFeeId())).thenReturn(java.util.Optional.of(pending));

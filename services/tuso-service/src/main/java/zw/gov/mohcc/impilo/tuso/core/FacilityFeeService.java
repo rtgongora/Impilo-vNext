@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 
 /**
  * Regulatory fee orchestration: resolve an application's fee against the governed
@@ -144,8 +145,17 @@ public class FacilityFeeService {
     }
 
     /** Actor types permitted to waive a fee. */
-    static final java.util.Set<String> FEE_WAIVER_ROLES =
-            java.util.Set.of("HPA_REGISTRAR", "HPA_ADMIN", "SYSTEM_ADMIN");
+    /**
+     * Waiving a facility registration fee.
+     *
+     * <p>Was {@code {HPA_REGISTRAR, HPA_ADMIN, SYSTEM_ADMIN}} — all role names no client emits —
+     * and was skipped entirely when the actor type was absent. The only way through was to send no
+     * X-Actor-Type header. Now fails closed.</p>
+     */
+    static final ActorTypeGuard.Duty WAIVE_REGISTRATION_FEE = new ActorTypeGuard.Duty(
+            "waiving a facility registration fee",
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            java.util.Set.of("HPA_REGISTRAR", "HPA_ADMIN", "SYSTEM_ADMIN"));
 
     /**
      * Waive a DUE fee: records WAIVED + waiver provenance, opens the gate, and
@@ -154,10 +164,7 @@ public class FacilityFeeService {
      */
     @Transactional
     public FacilityApplicationEntity waiveFee(TrustContext ctx, FacilityApplicationEntity application, String reason) {
-        String actorType = ctx.actorType();
-        if (actorType != null && !actorType.isBlank() && !FEE_WAIVER_ROLES.contains(actorType)) {
-            throw new SecurityException("Actor type " + actorType + " cannot waive a registration fee");
-        }
+        ActorTypeGuard.require(ctx, WAIVE_REGISTRATION_FEE);
         if (!"DUE".equals(application.getFeeState())) {
             throw new IllegalArgumentException("Only a DUE fee can be waived (fee_state="
                     + application.getFeeState() + ")");

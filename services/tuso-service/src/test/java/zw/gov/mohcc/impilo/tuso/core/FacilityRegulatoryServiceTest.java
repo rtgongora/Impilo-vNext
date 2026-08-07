@@ -38,6 +38,10 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class FacilityRegulatoryServiceTest {
+    // Actor types here were HPA_ADMIN / HPA_REGISTRAR / DEVELOPER / FACILITY_APPLICANT — role names
+    // no client emits, so this suite was exercising the service with values no real request can
+    // carry, and would have kept passing against a gate no real operator could satisfy. See
+    // ActorTypeGuard. OPERATOR is what the admin consoles actually emit.
 
     @Mock private FacilityRepository facilityRepository;
     @Mock private FacilityGeoRepository facilityGeoRepository;
@@ -101,7 +105,7 @@ class FacilityRegulatoryServiceTest {
         TrustContextHolder.set(new TrustContext(
                 tenantId,
                 "actor-1",
-                "DEVELOPER",
+                "OPERATOR",
                 "REGULATORY_WORKFLOW",
                 "device-1",
                 UUID.randomUUID(),
