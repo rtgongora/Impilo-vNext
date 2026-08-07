@@ -42,6 +42,17 @@ public class AuthorizeController {
 
     private static final Logger log = LoggerFactory.getLogger(AuthorizeController.class);
 
+    /** The purpose that short-circuits Step 4 and skips consent; see the guard in authorize(). */
+    static final String PURPOSE_SYSTEM = "SYSTEM";
+
+    /**
+     * Actor types that may legitimately assert {@link #PURPOSE_SYSTEM}, as documented on
+     * {@code SessionInfo.actorType} (PROVIDER, ADMIN, CITIZEN, SYSTEM, SERVICE). Only ever
+     * consulted with a value taken from a VALIDATED token — never the client's header copy.
+     */
+    private static final java.util.Set<String> WORKLOAD_ACTOR_TYPES =
+            java.util.Set.of("SYSTEM", "SERVICE");
+
     private final PolicyEngine policyEngine;
     private final SessionAssuranceRouter sessionRouter;
     private final ObjectMapper objectMapper;
@@ -130,6 +141,9 @@ public class AuthorizeController {
         List<String> roles = List.of();
         int loaLevel = 0;
         String sessionId = null;
+        // The actor type as the VALIDATED TOKEN states it — null when no token validated. Kept
+        // separate from `actorType`, which may still hold the client's own claim.
+        String sessionActorType = null;
         AuthenticationAssurance authenticationAssurance = AuthenticationAssurance.none();
 
         if (authorization != null && !authorization.isBlank()) {
@@ -159,9 +173,46 @@ public class AuthorizeController {
                 if (session.tenantId() != null) {
                     tenantId = session.tenantId();
                 }
+                sessionActorType = session.actorType();
             } catch (SessionValidationException e) {
                 log.warn("Session validation failed: {} — {}", e.getErrorCode(), e.getMessage());
             }
+        }
+
+        // ────────────────────────────────────────────────────────────────
+        // TPL-1, extended to the privileged purpose.
+        //
+        // SYSTEM is not an ordinary purpose: PolicyEngine short-circuits Step 4 for it in BOTH
+        // branches (no rules, and no matching rule), and requiresConsent returns false for it. It
+        // is therefore the one purpose that reaches a clinical resource with NO policy rule and NO
+        // consent evaluation. Until now it was read straight from x-purpose-of-use with nothing
+        // checking who may assert it, and Envoy leaves that header client-supplied by design
+        // (a retained gap in checkpoint-4/HEADER_CONTAINMENT.md).
+        //
+        // Measured 2026-08-07 on the live preview estate: sending this header alone turned a
+        // 403 DENY/NO_ALLOW_RULE into a 200 ALLOW carrying piiAccess=FULL and clinicalAccess=FULL,
+        // with an invented actor id and no bearer token.
+        //
+        // So it is treated exactly like actorId/actorType/tenantId above: a claim about the caller
+        // is worth only what the validated token says. The same reasoning as the break-glass fix —
+        // an actor-supplied field that the decision point consults ABOUT that actor is an oracle,
+        // not evidence.
+        //
+        // Safe to fail closed: across 1,952 live decisions, ZERO carried purpose SYSTEM, so no
+        // existing caller depends on it. A genuine workload presents a token whose actor type is
+        // SYSTEM or SERVICE; anything else asking for SYSTEM is refused rather than downgraded,
+        // because silently rewriting a caller's declared purpose would make the audit trail lie.
+        // ────────────────────────────────────────────────────────────────
+        if (PURPOSE_SYSTEM.equalsIgnoreCase(trim(purposeOfUse))
+                && !isWorkloadSession(sessionActorType, roles)) {
+            log.warn("ext_authz DENY: purpose SYSTEM asserted without a validated workload session "
+                            + "(sessionActorType={}, sessionRoles={}, actor={}, path={}, correlation={})",
+                    sessionActorType, roles, actorId, originalPath, correlationId);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(AuthzResponse.deny("PURPOSE_NOT_PERMITTED",
+                            "The SYSTEM purpose of use may only be asserted by a workload identity "
+                                    + "established from a validated token.",
+                            0));
         }
 
         // Validate mandatory headers
@@ -281,6 +332,37 @@ public class AuthorizeController {
             }
         }
         return null;
+    }
+
+    /** Null-safe trim; a blank header and an absent one must behave identically. */
+    private static String trim(String value) {
+        return value == null ? null : value.trim();
+    }
+
+    /**
+     * Whether the VALIDATED token describes a workload.
+     *
+     * <p>Both inputs are token-derived: {@code sessionActorType} is null unless a session
+     * validated, and {@code sessionRoles} is only ever assigned from {@code session.roles()} —
+     * it is never populated from a client header. Passing the client-supplied {@code actorType}
+     * here would reintroduce the very hole this closes, because the caller would be answering a
+     * question about themselves.
+     *
+     * <p><strong>Roles are checked, not just the actor type.</strong> A service-to-service token in
+     * this estate carries no {@code sub} and no actor-type claim — the workload identity arrives as
+     * a ROLE. Gating on actor type alone refused every legitimate s2s caller, which
+     * {@code AuthorizeControllerTest.clientHeadersUsedWhenSessionLacksClaims_serviceToken} and
+     * {@code …envoyPrefixedPathIsAuthorizedAsTheCallersOwnPath} both caught.
+     */
+    private static boolean isWorkloadSession(String sessionActorType, List<String> sessionRoles) {
+        if (sessionActorType != null
+                && WORKLOAD_ACTOR_TYPES.contains(sessionActorType.trim().toUpperCase(Locale.ROOT))) {
+            return true;
+        }
+        return sessionRoles != null && sessionRoles.stream()
+                .filter(Objects::nonNull)
+                .map(r -> r.trim().toUpperCase(Locale.ROOT))
+                .anyMatch(WORKLOAD_ACTOR_TYPES::contains);
     }
 
     private UUID parseUuid(String value) {
