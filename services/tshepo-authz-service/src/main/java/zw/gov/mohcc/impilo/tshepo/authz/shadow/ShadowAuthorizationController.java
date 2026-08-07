@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.tshepo.authz.core.PolicyEngine;
@@ -14,7 +15,10 @@ import zw.gov.mohcc.impilo.tshepo.authz.session.SessionAssuranceRouter;
 import zw.gov.mohcc.impilo.tshepo.authz.dto.AuthzInternalRequest;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.AuthzResponse;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 import java.util.Map;
 import java.util.UUID;
 
@@ -53,17 +57,86 @@ public class ShadowAuthorizationController {
     private final PolicyEngine policyEngine;
     private final SessionAssuranceRouter sessionRouter;
     private final ShadowDecisionRecorder recorder;
+    private final ShadowProbeProperties properties;
+    /** Per-instance concurrency ceiling; see gate 3. */
+    private final Semaphore capacity;
 
     public ShadowAuthorizationController(PolicyEngine policyEngine,
                                          SessionAssuranceRouter sessionRouter,
-                                         ShadowDecisionRecorder recorder) {
+                                         ShadowDecisionRecorder recorder,
+                                         ShadowProbeProperties properties) {
         this.policyEngine = policyEngine;
         this.sessionRouter = sessionRouter;
         this.recorder = recorder;
+        this.properties = properties;
+        this.capacity = new Semaphore(Math.max(1, properties.getMaxConcurrent()));
     }
 
+    /**
+     * Dedicated probe-authentication header. TEMPORARY P1 mechanism — see
+     * {@link ShadowProbeProperties}. Redacted wherever it could be rendered.
+     */
+    public static final String PROBE_KEY_HEADER = "X-Impilo-Shadow-Probe-Key";
+
     @PostMapping
-    public ResponseEntity<Map<String, String>> evaluate(@RequestBody ShadowEvaluationRequest req) {
+    public ResponseEntity<Map<String, String>> evaluate(
+            @RequestBody ShadowEvaluationRequest req,
+            @RequestHeader(value = PROBE_KEY_HEADER, required = false) String probeKey) {
+
+        // ── Gate 1: the feature itself. FIRST, and before ANY bearer processing. ─────────────
+        // Disabled means the endpoint does not exist, not "the BFF politely declines to call it".
+        // An estate with shadowing off must not expose a token-processing surface at all, so this
+        // returns 404 rather than 403 — a disabled experiment should not even advertise itself.
+        if (!properties.isEnabled()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // ── Gate 2: is the CALLER an authorised workload? ────────────────────────────────────
+        // This is not the user's bearer and must never be confused with it. The probe key answers
+        // "may this workload invoke the measurement API"; the bearer inside the DTO answers "which
+        // human is being hypothetically evaluated". Using either as the other collapses the trust
+        // boundary — the user's token is EVIDENCE BEING EVALUATED, not proof of entitlement to
+        // call an internal API.
+        //
+        // Fails closed on a blank configured key: no secret configured refuses everyone, rather
+        // than accepting anyone.
+        if (!probeKeyMatches(probeKey)) {
+            log.warn("shadow probe rejected: bad or missing {} (key value never logged)", PROBE_KEY_HEADER);
+            return ResponseEntity.status(403).build();
+        }
+
+        // ── Gate 3: capacity. Production authorization wins every contention, always. ────────
+        // Non-blocking: a saturated shadow path must never add latency to the PDP, and a bug in
+        // the BFF must not be able to make the measurement a denial-of-service amplifier against
+        // the thing being measured. A dropped probe is RECORDED, not silently lost — a dataset
+        // that quietly omits its hardest requests is worse than one that admits the gap.
+        if (!capacity.tryAcquire()) {
+            ShadowDecisionLogEntity dropped = new ShadowDecisionLogEntity();
+            dropped.setMethod(req.method());
+            dropped.setPath(req.path());
+            dropped.setRouteClass(routeClass(req.path()));
+            dropped.setProbeMode(req.probeMode());
+            dropped.setProbeOutcome(ShadowDecisionLogEntity.OUTCOME_DROPPED_CAPACITY);
+            recorder.record(dropped);
+            return ack();
+        }
+        try {
+            return evaluateInternal(req);
+        } finally {
+            capacity.release();
+        }
+    }
+
+    /** Constant-time comparison. A timing-distinguishable compare on a shared secret is a leak. */
+    private boolean probeKeyMatches(String presented) {
+        String expected = properties.getProbeKey();
+        if (expected == null || expected.isBlank() || presented == null) return false;
+        return MessageDigest.isEqual(
+                expected.getBytes(StandardCharsets.UTF_8),
+                presented.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private ResponseEntity<Map<String, String>> evaluateInternal(ShadowEvaluationRequest req) {
         ShadowDecisionLogEntity row = new ShadowDecisionLogEntity();
         row.setProbeMode(req.probeMode());
         row.setMethod(req.method());

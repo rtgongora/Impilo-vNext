@@ -38,6 +38,8 @@ public class ShadowDecisionLogEntity {
     public static final String OUTCOME_TIMEOUT = "TIMEOUT";
     public static final String OUTCOME_BEARER_UNRESOLVED = "BEARER_UNRESOLVED";
     public static final String OUTCOME_RECORDER_ERROR = "RECORDER_ERROR";
+    /** Shadow lost contention to production authorization and was deliberately not run. */
+    public static final String OUTCOME_DROPPED_CAPACITY = "DROPPED_CAPACITY";
 
     public static final String MODE_ASYNC = "ASYNC";
     public static final String MODE_INLINE_CANARY = "INLINE_CANARY";
