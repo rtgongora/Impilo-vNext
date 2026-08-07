@@ -34,11 +34,15 @@ public class ShadowProbeProperties {
     private String probeKey = "";
 
     /**
-     * Shadow evaluations allowed to run at once, per PDP instance. Shadow must always lose
-     * resource contention to production authorization: a bug in the BFF must not be able to turn
-     * a measurement into a denial-of-service amplifier against the thing being measured.
+     * Shadow evaluations allowed to run at once, per PDP instance — an UPPER BOUND, lowered
+     * further by {@link ShadowCapacityPolicy} against the actual datasource pool.
+     *
+     * <p>Was 4, which measured as a defect: the estate pins the Hikari pool to 3, so four
+     * concurrent evaluations could exhaust it before production authorization asked for a
+     * connection. Shadow must always lose resource contention to production authorization, and a
+     * ceiling chosen without reference to the contended resource does not deliver that.</p>
      */
-    private int maxConcurrent = 4;
+    private int maxConcurrent = 1;
 
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }

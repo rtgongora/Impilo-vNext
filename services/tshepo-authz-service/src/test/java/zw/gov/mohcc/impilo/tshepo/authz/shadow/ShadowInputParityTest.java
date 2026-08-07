@@ -67,7 +67,8 @@ class ShadowInputParityTest {
 
     private ShadowAuthorizationController controller() {
         return new ShadowAuthorizationController(
-                policyEngine, sessionRouter, introspectionClient, recorder, props);
+                policyEngine, sessionRouter, introspectionClient, recorder, props,
+                new ShadowCapacityPolicy(props, new org.springframework.beans.factory.support.StaticListableBeanFactory().getBeanProvider(javax.sql.DataSource.class)));
     }
 
     private AuthzInternalRequest evaluateAndCapture(Map<String, String> trustContext) {

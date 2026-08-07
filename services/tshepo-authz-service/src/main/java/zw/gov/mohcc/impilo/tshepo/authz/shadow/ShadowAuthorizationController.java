@@ -61,20 +61,26 @@ public class ShadowAuthorizationController {
     private final IdentityIntrospectionClient introspectionClient;
     private final ShadowDecisionRecorder recorder;
     private final ShadowProbeProperties properties;
-    /** Per-instance concurrency ceiling; see gate 3. */
+    private final ShadowCapacityPolicy capacityPolicy;
+    /** Per-instance concurrency ceiling; see gate 3. Sized against the DB pool, not guessed. */
     private final Semaphore capacity;
 
     public ShadowAuthorizationController(PolicyEngine policyEngine,
                                          SessionAssuranceRouter sessionRouter,
                                          IdentityIntrospectionClient introspectionClient,
                                          ShadowDecisionRecorder recorder,
-                                         ShadowProbeProperties properties) {
+                                         ShadowProbeProperties properties,
+                                         ShadowCapacityPolicy capacityPolicy) {
         this.policyEngine = policyEngine;
         this.sessionRouter = sessionRouter;
         this.introspectionClient = introspectionClient;
         this.recorder = recorder;
         this.properties = properties;
-        this.capacity = new Semaphore(Math.max(1, properties.getMaxConcurrent()));
+        this.capacityPolicy = capacityPolicy;
+        // Math.max(1, …) is deliberately NOT used here. It would floor a policy decision of
+        // "there is no headroom" back up to one permit — reintroducing the starvation the policy
+        // exists to prevent, in the estate least able to absorb it.
+        this.capacity = new Semaphore(Math.max(0, capacityPolicy.effectiveMaxConcurrent()));
     }
 
     /**
@@ -92,7 +98,10 @@ public class ShadowAuthorizationController {
         // Disabled means the endpoint does not exist, not "the BFF politely declines to call it".
         // An estate with shadowing off must not expose a token-processing surface at all, so this
         // returns 404 rather than 403 — a disabled experiment should not even advertise itself.
-        if (!properties.isEnabled()) {
+        if (!properties.isEnabled() || !capacityPolicy.permitted()) {
+            // Also 404 when the estate has no connection headroom: an experiment that cannot run
+            // without degrading production authorization does not exist, exactly as a disabled one
+            // does not. See ShadowCapacityPolicy for the live starvation this closes.
             return ResponseEntity.notFound().build();
         }
 

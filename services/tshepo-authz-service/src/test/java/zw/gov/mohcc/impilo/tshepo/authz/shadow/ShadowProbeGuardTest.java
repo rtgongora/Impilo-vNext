@@ -53,7 +53,8 @@ class ShadowProbeGuardTest {
     }
 
     private ShadowAuthorizationController controller() {
-        return new ShadowAuthorizationController(policyEngine, sessionRouter, introspectionClient, recorder, props);
+        return new ShadowAuthorizationController(policyEngine, sessionRouter, introspectionClient, recorder, props,
+                new ShadowCapacityPolicy(props, new org.springframework.beans.factory.support.StaticListableBeanFactory().getBeanProvider(javax.sql.DataSource.class)));
     }
 
     private ShadowEvaluationRequest req() {
