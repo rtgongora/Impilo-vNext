@@ -23,6 +23,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 
 /**
  * Proof-of-place cases (FJ3/FJ4, D-L6). Opening a case is an operator action
@@ -38,7 +39,15 @@ public class FacilityVerificationController {
      * explicit: a SYSTEM actor is the platform acting on its own behalf, not a person asserting a
      * role. Every human path resolves through {@link MinistryAuthorityService}.
      */
-    private static final Set<String> SYSTEM_ACTOR_TYPES = Set.of("SYSTEM");
+    /**
+     * The platform-internal bypass, not a permission set. Deliberately kept at exactly
+     * {@code {SYSTEM}} rather than widened to {@link ActorTypeGuard#MACHINE_ONLY}: this is the
+     * condition under which the Ministry-appointment check below is SKIPPED, so adding
+     * {@code SERVICE} to it would weaken the strongest guard in this controller, not strengthen it.
+     * Expressed as a Duty so the emittable-vocabulary invariant applies here too.
+     */
+    private static final ActorTypeGuard.Duty PLATFORM_INTERNAL_CALL =
+            ActorTypeGuard.Duty.of("a platform-internal verification call", Set.of("SYSTEM"));
 
     private final FacilityVerificationService verificationService;
     private final MinistryAuthorityService ministryAuthority;
@@ -95,8 +104,7 @@ public class FacilityVerificationController {
     private void requireVerifier(UUID facilityUuid, HttpServletRequest http) {
         TrustContext ctx = TrustContextHolder.require();
         String actorType = http.getHeader("X-Actor-Type");
-        if (actorType != null && SYSTEM_ACTOR_TYPES.contains(actorType.trim().toUpperCase(Locale.ROOT))
-                && ctx.actorId() == null) {
+        if (ActorTypeGuard.permits(actorType, PLATFORM_INTERNAL_CALL) && ctx.actorId() == null) {
             return; // platform-internal call, carries no person to appoint
         }
         FacilityEntity facility = facilityRepository.findByFacilityUuid(facilityUuid)

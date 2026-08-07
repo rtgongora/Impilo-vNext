@@ -176,11 +176,20 @@ public final class ActorTypeGuard {
      * @throws ResponseStatusException 403, naming what is required and what was presented
      */
     public static void require(TrustContext ctx, Duty duty) {
-        String presented = normalize(ctx == null ? null : ctx.actorType());
+        require(ctx == null ? null : ctx.actorType(), ctx == null ? null : ctx.actorId(), duty);
+    }
+
+    /**
+     * Framework-agnostic overload, for controllers that read {@code X-Actor-Type} off the request
+     * rather than through {@link TrustContextFilter}.
+     *
+     * @see #require(TrustContext, Duty)
+     */
+    public static void require(String actorType, String actorId, Duty duty) {
+        String presented = normalize(actorType);
         if (duty.actorTypes().contains(presented)) {
             return;
         }
-        String actorId = ctx == null ? null : ctx.actorId();
         log.warn("Refused {} — actor {} presents actorType '{}', which is not one of {}{}",
                 duty.description(),
                 actorId == null || actorId.isBlank() ? "<absent>" : actorId,
@@ -199,7 +208,16 @@ public final class ActorTypeGuard {
 
     /** Whether the trust context satisfies {@code duty}, without throwing. */
     public static boolean permits(TrustContext ctx, Duty duty) {
-        return duty.actorTypes().contains(normalize(ctx == null ? null : ctx.actorType()));
+        return permits(ctx == null ? null : ctx.actorType(), duty);
+    }
+
+    /**
+     * Whether {@code actorType} satisfies {@code duty}, without throwing. For callers that must
+     * branch rather than refuse — a bypass condition, for instance, where the duty describes who
+     * skips a check rather than who passes one.
+     */
+    public static boolean permits(String actorType, Duty duty) {
+        return duty.actorTypes().contains(normalize(actorType));
     }
 
     private static String capitalise(String s) {

@@ -20,6 +20,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 
 /**
  * SJ1/SJ2 self-service lanes (D-L4/D-L5). Submissions are operator/citizen
@@ -30,8 +31,16 @@ import java.util.UUID;
 @RestController
 public class SiteSelfServiceController {
 
-    private static final Set<String> STEWARD_ACTOR_TYPES =
-            Set.of("SYSTEM", "REGISTRY_ADMIN", "NATIONAL_ADMIN", "DATA_STEWARD", "INSPECTOR", "REGULATOR");
+    /**
+     * Approving a self-service submission, or reading the steward review queue.
+     *
+     * <p>Was {@code Set.of("SYSTEM", "REGISTRY_ADMIN", "NATIONAL_ADMIN", "DATA_STEWARD",
+     * "INSPECTOR", "REGULATOR")} — five role names no client emits, leaving {@code {SYSTEM}}.</p>
+     */
+    private static final ActorTypeGuard.Duty REVIEW_SITE_SUBMISSIONS = new ActorTypeGuard.Duty(
+            "reviewing site self-service submissions",
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            Set.of("REGISTRY_ADMIN", "NATIONAL_ADMIN", "DATA_STEWARD", "INSPECTOR", "REGULATOR"));
 
     private final SiteSelfServiceService selfService;
 
@@ -87,11 +96,7 @@ public class SiteSelfServiceController {
 
     private static void requireSteward(HttpServletRequest http) {
         String actorType = http.getHeader("X-Actor-Type");
-        String normalised = actorType == null ? "" : actorType.trim().toUpperCase(Locale.ROOT);
-        if (!STEWARD_ACTOR_TYPES.contains(normalised)) {
-            throw new org.springframework.web.server.ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Steward-reviewed surface");
-        }
+        ActorTypeGuard.require(actorType, http.getHeader("X-Actor-ID"), REVIEW_SITE_SUBMISSIONS);
     }
 
     private static Map<String, Object> grantView(SiteOperatorGrantEntity g) {

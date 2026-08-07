@@ -19,6 +19,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 
 /**
  * Facility governance journeys (FJ6/FJ7/FJ9). Opening a case (high-risk
@@ -30,8 +31,16 @@ import java.util.UUID;
 @RequestMapping("/v1/internal/facilities/{facilityUuid}/governance")
 public class FacilityGovernanceController {
 
-    private static final Set<String> STEWARD_ACTOR_TYPES =
-            Set.of("SYSTEM", "REGISTRY_ADMIN", "NATIONAL_ADMIN", "DATA_STEWARD");
+    /**
+     * Recording a facility governance decision.
+     *
+     * <p>Was {@code Set.of("SYSTEM", "REGISTRY_ADMIN", "NATIONAL_ADMIN", "DATA_STEWARD")}; the last
+     * three are role names no client emits.</p>
+     */
+    private static final ActorTypeGuard.Duty DECIDE_FACILITY_GOVERNANCE = new ActorTypeGuard.Duty(
+            "recording a facility governance decision",
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            Set.of("REGISTRY_ADMIN", "NATIONAL_ADMIN", "DATA_STEWARD"));
 
     private final FacilityGovernanceService governanceService;
 
@@ -88,11 +97,7 @@ public class FacilityGovernanceController {
 
     private static void requireSteward(HttpServletRequest http) {
         String actorType = http.getHeader("X-Actor-Type");
-        String normalised = actorType == null ? "" : actorType.trim().toUpperCase(Locale.ROOT);
-        if (!STEWARD_ACTOR_TYPES.contains(normalised)) {
-            throw new org.springframework.web.server.ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Governance decisions are steward-only");
-        }
+        ActorTypeGuard.require(actorType, http.getHeader("X-Actor-ID"), DECIDE_FACILITY_GOVERNANCE);
     }
 
     private static Map<String, Object> view(FacilityGovernanceCaseEntity c) {

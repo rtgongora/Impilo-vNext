@@ -24,6 +24,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 
 /**
  * Shared place anchors + Indawo site sync (D-L1). Anchor writes are stewarded
@@ -34,8 +35,16 @@ import java.util.UUID;
 @RequestMapping("/api/v1/ndila/places")
 public class NdilaPlaceAnchorController {
 
-    private static final Set<String> STEWARD_ACTOR_TYPES =
-            Set.of("SYSTEM", "REGISTRY_ADMIN", "NATIONAL_ADMIN", "DATA_STEWARD");
+    /**
+     * Writing a shared place anchor or driving the Indawo site sync.
+     *
+     * <p>Was {@code Set.of("SYSTEM", "REGISTRY_ADMIN", "NATIONAL_ADMIN", "DATA_STEWARD")}; the last
+     * three are role names no client emits.</p>
+     */
+    private static final ActorTypeGuard.Duty MAINTAIN_PLACE_ANCHORS = new ActorTypeGuard.Duty(
+            "maintaining shared place anchors",
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            Set.of("REGISTRY_ADMIN", "NATIONAL_ADMIN", "DATA_STEWARD"));
 
     private final NdilaPlaceAnchorService anchorService;
     private final NdilaSiteMasterSyncService siteSyncService;
@@ -123,10 +132,7 @@ public class NdilaPlaceAnchorController {
     private String requireSteward(HttpServletRequest http) {
         String actorType = http.getHeader("X-Actor-Type");
         String normalised = actorType == null ? "" : actorType.trim().toUpperCase(Locale.ROOT);
-        if (!STEWARD_ACTOR_TYPES.contains(normalised)) {
-            throw new org.springframework.web.server.ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Place anchors are steward-maintained");
-        }
+        ActorTypeGuard.require(actorType, http.getHeader("X-Actor-ID"), MAINTAIN_PLACE_ANCHORS);
         String actorId = http.getHeader("X-Actor-ID");
         return actorId != null ? actorId : normalised;
     }

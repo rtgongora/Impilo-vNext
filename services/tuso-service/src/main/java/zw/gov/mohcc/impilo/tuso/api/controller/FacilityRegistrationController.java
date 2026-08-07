@@ -14,6 +14,7 @@ import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityRegistrationCaseEntit
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 
 /**
  * FJ2 — self-service facility registration (D-L5). The registrant lane returns
@@ -24,6 +25,18 @@ import java.util.Map;
 @RestController
 @RequestMapping("/v1/internal/facility-registrations")
 public class FacilityRegistrationController {
+
+    /**
+     * Reading the steward review queue, which carries steward-only match context that must never
+     * reach the registrant who just submitted on the same path family.
+     *
+     * <p>Was an inline {@code Set.of("SYSTEM", "REGISTRY_ADMIN", "NATIONAL_ADMIN", "DATA_STEWARD")}
+     * at the call site; the last three are role names no client emits.</p>
+     */
+    private static final ActorTypeGuard.Duty REVIEW_REGISTRATION_CASES = new ActorTypeGuard.Duty(
+            "reading the facility registration review queue",
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            java.util.Set.of("REGISTRY_ADMIN", "NATIONAL_ADMIN", "DATA_STEWARD"));
 
     private final FacilityRegistrationService registrationService;
 
@@ -47,14 +60,8 @@ public class FacilityRegistrationController {
     public ResponseEntity<Map<String, Object>> listByOutcome(
             @RequestParam("outcome") String outcome,
             jakarta.servlet.http.HttpServletRequest http) {
-        String actorType = http.getHeader("X-Actor-Type");
-        String normalised = actorType == null ? ""
-                : actorType.trim().toUpperCase(java.util.Locale.ROOT);
-        if (!java.util.Set.of("SYSTEM", "REGISTRY_ADMIN", "NATIONAL_ADMIN", "DATA_STEWARD")
-                .contains(normalised)) {
-            throw new org.springframework.web.server.ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Registration cases are steward-reviewed");
-        }
+        ActorTypeGuard.require(http.getHeader("X-Actor-Type"), http.getHeader("X-Actor-ID"),
+                REVIEW_REGISTRATION_CASES);
         List<Map<String, Object>> cases = registrationService.listByOutcome(outcome).stream()
                 .map(FacilityRegistrationController::toStewardView)
                 .toList();
