@@ -37,12 +37,35 @@ public class KeycloakAdapter implements SessionAssurance {
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
     private String issuerUri;
 
+    /**
+     * Where to FETCH signing keys, when that is not where the issuer claim points. Blank — the
+     * default — derives it from {@link #issuerUri}, which is correct wherever the two coincide and
+     * changes nothing for those estates.
+     *
+     * <p><b>Why it has to be separable.</b> {@code issuerUri} was doing two incompatible jobs: it
+     * must equal the token's {@code iss} claim, which Keycloak mints as the PUBLIC realm URL, and
+     * it was also used to fetch JWKS, which has to be reachable from inside the cluster. Measured
+     * 2026-08-07 in preview — from a pod, {@code https://impilo.mohcc.gov.zw/realms/impilo/…certs}
+     * returns {@code 000} (the public host is served by an ingress the pods do not hairpin to),
+     * while {@code http://keycloak:8080/realms/impilo/…certs} returns 200. JWKS initialisation
+     * therefore failed, {@code jwtProcessor} stayed null, and every bearer was rejected.</p>
+     *
+     * <p>It was invisible because no bearer reaches this PDP on the browser path at all — the very
+     * defect the shadow measurement exists to size. It means the gap is worse than "489 of 525
+     * rules cannot match a signed-in human": until this is set, a bearer that did arrive could not
+     * be validated either.</p>
+     */
+    @Value("${impilo.trust.keycloak.jwks-uri:}")
+    private String configuredJwksUri;
+
     private ConfigurableJWTProcessor<SecurityContext> jwtProcessor;
 
     @PostConstruct
     public void init() {
+        String jwksUri = (configuredJwksUri == null || configuredJwksUri.isBlank())
+                ? issuerUri + "/protocol/openid-connect/certs"
+                : configuredJwksUri.trim();
         try {
-            String jwksUri = issuerUri + "/protocol/openid-connect/certs";
             JWKSource<SecurityContext> jwkSource = JWKSourceBuilder
                     .create(new URL(jwksUri))
                     .retrying(true)
@@ -54,9 +77,20 @@ public class KeycloakAdapter implements SessionAssurance {
             jwtProcessor = new DefaultJWTProcessor<>();
             jwtProcessor.setJWSKeySelector(keySelector);
 
-            log.info("Keycloak adapter initialized with issuer: {}", issuerUri);
+            // Both are logged. Where they differ that is a deliberate split-horizon deployment and
+            // the reader needs to see it; when a bearer is later rejected, the first question is
+            // always which endpoint the keys came from.
+            log.info("Keycloak adapter initialized — issuer(claim)={} jwks(fetch)={}",
+                    issuerUri, jwksUri);
         } catch (Exception e) {
-            log.warn("Keycloak adapter initialization deferred — JWKS endpoint not available: {}", e.getMessage());
+            // Deliberately ERROR. This leaves the adapter unable to validate ANY token. It
+            // previously logged at WARN, without the URL, calling it "deferred" — so an estate
+            // where every bearer was rejected read, in the logs, exactly like an estate where no
+            // bearer ever arrived. That is how this survived unnoticed.
+            log.error("Keycloak adapter DISABLED — JWKS unreachable at {} ({}). EVERY bearer "
+                            + "presented to this PDP will be rejected. Set impilo.trust.keycloak."
+                            + "jwks-uri to a cluster-reachable endpoint when the issuer is public.",
+                    jwksUri, e.toString());
             jwtProcessor = null;
         }
     }
