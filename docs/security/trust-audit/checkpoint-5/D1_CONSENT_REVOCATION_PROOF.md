@@ -151,7 +151,7 @@ against the running gateway (`envoy-55b8d45db-wgcrg`, config via `/config_dump`)
 | **ext_authz failure mode** | `failure_mode_allow` absent ⇒ **fails closed** if the PDP is unreachable. Correct. |
 | **Routing** | One catch-all route, `prefix: /` → cluster `experience_bff`. All traffic. |
 | **experience-bff authN** | Spring Security OAuth2 resource server ⇒ **401 `www-authenticate: Bearer`** with no token. |
-| **experience-bff authZ** | **0 `@PreAuthorize` across 409 `@RestController` classes.** It authenticates; it does not authorize. |
+| **experience-bff authZ** | **It does authorize** — 97 `hasAnyRole` gates across ~149 `requestMatchers` in `SecurityConfig`. But the default is `.anyRequest().authenticated()`, and **`/internal/v1/patients` has no matcher**, so patient reads get authentication only. |
 
 > ⚠️ **Instrument note.** The Envoy pod has no `curl` or `wget`. Querying its admin endpoint from
 > inside it returns nothing, which greps as "0 occurrences of `jwt_authn`" *and* "0 occurrences of
@@ -173,15 +173,34 @@ against the running gateway (`envoy-55b8d45db-wgcrg`, config via `/config_dump`)
 `policy_decision_log` under `actor_id='probe-jwt-gate'` — and the BFF's own token requirement is what
 stops it. That is a real control, and it is the one doing the work here, not the trust plane.
 
-**What that leaves.** Because the BFF carries no authorization of its own, the PDP's verdict *is* the
-authorization decision for every one of those 409 controllers. So the residual exposure is an
-**authenticated privilege escalation**: any caller holding a valid token — any role, or none —
-who sets `X-Purpose-Of-Use: SYSTEM` is authorized by the only component that authorizes, with
-`piiAccess: FULL` and `clinicalAccess: FULL`.
+**What that leaves — scoped by what the BFF actually gates.** An earlier revision of this section
+said the BFF "authenticates but does not authorize", on the strength of `@PreAuthorize` returning
+zero. That was wrong, and it is the same mistake as §2's first draft: grepping one enforcement
+idiom and reading its absence as absence of the capability. The BFF authorizes in a different
+idiom — `SecurityConfig` carries **97 `hasAnyRole` gates** across ~149 `requestMatchers`.
+
+What survives the correction is narrower and better evidenced:
+
+- The chain's default is **`.anyRequest().authenticated()`** (`SecurityConfig:606`) — a route with
+  no explicit matcher gets authentication and no role check.
+- `PatientController` is mapped at **`/internal/v1/patients`**, and **no `requestMatchers` entry
+  covers it**. The four matchers mentioning "patient" are finance patient-accounts, pharmacy
+  dispense-orders, and two patient-*shares* routes. So patient record reads fall through.
+- The role gates skew to writes: 50 `HttpMethod.POST` matchers against 20 `HttpMethod.GET`.
+- `RoleGuardInterceptor` — despite its name and a javadoc promising it "catches unauthorized access
+  as a safety net" — **`preHandle` always returns `true`** and only debug-logs. It enforces nothing.
+  A guard in name only ([[name-matching-checks-lie]]).
+- `IMPILO_SECURITY_ALLOW_ANONYMOUS=false` in the deployed BFF, so `SecurityConfig`'s `permitAll`
+  branch is dead in this estate. Confirmed, not assumed.
+
+So for the reads consent exists to govern, the PDP's verdict *is* the only role-aware authorization
+— and that is the verdict `X-Purpose-Of-Use: SYSTEM` flips to ALLOW with `piiAccess: FULL`. The
+exposure is an **authenticated privilege escalation on the fall-through routes**, not on all 409
+controllers.
 
 **Not proven:** the end-to-end read with a valid token. That needs a test credential this session did
-not have. Everything up to it is measured; the last step is inference from "BFF authenticates but
-does not authorize" and should be confirmed before the finding is closed either way.
+not have. Everything up to it is measured; the last step is inference from the routing and matcher
+analysis above, and should be confirmed before the finding is closed either way.
 
 > ⚠️ **The remedy is not to add a rule so that consent becomes reachable.** Doing that would
 > manufacture the gate's own precondition: the estate would demonstrate "a revoked consent blocks a
@@ -271,7 +290,7 @@ The third break leaves the error-envelope test green, correctly: that path retur
 | `X-Purpose-Of-Use: SYSTEM` bypasses rule + consent | 🔴 **PROVEN LIVE** at the PDP — 403→200 on one header, FULL PII/clinical |
 | …reachable anonymously? | **NO** — the BFF's own token gate returns 401. Escalation needs a valid token, any role |
 | Envoy validates JWTs | **NO** — filter chain is `ext_authz` → `router` only; no `jwt_authn` configured |
-| BFF authorizes independently of the PDP | **NO** — 0 `@PreAuthorize` across 409 controllers |
+| BFF authorizes independently of the PDP | **PARTLY** — 97 `hasAnyRole` gates, but `/internal/v1/patients` has none and falls through to `.authenticated()` |
 | Per-record read (non-UUID id) reaches consent | 🔴 **NO** — the id becomes the resource type; consent skipped |
 | Consent for non-`Patient` clinical resources | **GAP** — unchanged, see `CP5_CONSENT_CONVERGENCE.md` |
 
