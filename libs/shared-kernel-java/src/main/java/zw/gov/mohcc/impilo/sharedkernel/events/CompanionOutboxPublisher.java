@@ -84,6 +84,22 @@ public abstract class CompanionOutboxPublisher {
         return topicRegistry.v11Topic(row.aggregateType());
     }
 
+    /**
+     * Additional legacy topics this row must also reach, beyond {@link #resolveLegacyTopic}.
+     *
+     * <p>Most services publish one legacy topic per event. Some fan the same payload out to
+     * several — a canonical companion topic, a core-transaction stream — and dropping those
+     * during conversion would silently unsubscribe their consumers. Overriding this preserves
+     * the existing fan-out; the default is empty, so no already-converted service changes
+     * behaviour.</p>
+     *
+     * <p>These topics receive the raw payload, exactly as the primary legacy topic does. A
+     * null entry, or a duplicate of the primary topic, is skipped.</p>
+     */
+    protected List<String> additionalLegacyTopics(OutboxRow row) {
+        return List.of();
+    }
+
     // ── Core publishing loop ──
 
     /**
@@ -102,10 +118,15 @@ public abstract class CompanionOutboxPublisher {
                 // Legacy emit
                 if (emitPolicy.emitLegacy()) {
                     String legacyTopic = resolveLegacyTopic(row);
+                    String key = row.aggregateId();
+                    String payload = row.payloadJson();
                     if (legacyTopic != null) {
-                        String key = row.aggregateId();
-                        String payload = row.payloadJson();
                         sendToKafka(legacyTopic, key, payload);
+                    }
+                    for (String extraTopic : additionalLegacyTopics(row)) {
+                        if (extraTopic != null && !extraTopic.equals(legacyTopic)) {
+                            sendToKafka(extraTopic, key, payload);
+                        }
                     }
                 }
 

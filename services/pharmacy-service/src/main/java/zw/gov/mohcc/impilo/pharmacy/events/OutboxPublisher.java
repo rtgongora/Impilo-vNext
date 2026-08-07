@@ -9,6 +9,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.pharmacy.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.pharmacy.persistence.repository.EventOutboxRepository;
+import zw.gov.mohcc.impilo.sharedkernel.events.CompanionOutboxPublisher;
+import zw.gov.mohcc.impilo.sharedkernel.events.DualEmitPolicy;
+import zw.gov.mohcc.impilo.sharedkernel.events.EventTopicRegistry;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -41,12 +44,9 @@ import java.util.List;
  * {@code pharmacy.outbox.poll-interval-ms}) and processes events in batches of up to 100.</p>
  */
 @Service
-public class OutboxPublisher {
+public class OutboxPublisher extends CompanionOutboxPublisher {
 
     private static final Logger log = LoggerFactory.getLogger(OutboxPublisher.class);
-
-    /** Maximum number of events to process per poll cycle. */
-    private static final int BATCH_SIZE = 100;
 
     private final EventOutboxRepository outboxRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
@@ -62,7 +62,9 @@ public class OutboxPublisher {
     public OutboxPublisher(EventOutboxRepository outboxRepository,
                            KafkaTemplate<String, String> kafkaTemplate,
                            @Value("${pharmacy.outbox.dual-emit-core-transaction-enabled:true}") boolean dualEmitCoreTransactionEnabled,
-                           @Value("${pharmacy.outbox.core-transaction-topic:core.transaction.events}") String coreTransactionTopic) {
+                           @Value("${pharmacy.outbox.core-transaction-topic:core.transaction.events}") String coreTransactionTopic,
+                           @Value("${pharmacy.v11.emit-mode:#{null}}") String ymlEmitMode) {
+        super(new DualEmitPolicy(ymlEmitMode), new EventTopicRegistry("pharmacy"));
         this.outboxRepository = outboxRepository;
         this.kafkaTemplate = kafkaTemplate;
         this.dualEmitCoreTransactionEnabled = dualEmitCoreTransactionEnabled;
@@ -79,44 +81,74 @@ public class OutboxPublisher {
      */
     @Scheduled(fixedDelayString = "${pharmacy.outbox.poll-interval-ms:2000}")
     @Transactional
-    public void publishPendingEvents() {
-        List<EventOutboxEntity> pending =
-                outboxRepository.findTop100ByPublishedAtIsNullOrderByCreatedAtAsc();
-
-        if (pending.isEmpty()) {
-            return;
+    public void poll() {
+        int published = publishPendingEvents();
+        if (published > 0) {
+            log.info("Published {} pharmacy outbox events to Kafka", published);
         }
+    }
 
-        List<EventOutboxEntity> batch = pending.size() > BATCH_SIZE
-                ? pending.subList(0, BATCH_SIZE)
-                : pending;
+    @Override
+    protected List<? extends OutboxRow> fetchUnpublished() {
+        return outboxRepository.findTop100ByPublishedAtIsNullOrderByCreatedAtAsc()
+                .stream()
+                .map(EventOutboxEntity::toOutboxRow)
+                .toList();
+    }
 
-        int successCount = 0;
-        for (EventOutboxEntity event : batch) {
-            try {
-                String topic = routeTopic(event.getEventType());
-                String key = event.getAggregateId();
-                String payload = event.getPayload();
+    @Override
+    protected void sendToKafka(String topic, String key, String value) {
+        kafkaTemplate.send(topic, key, value);
+    }
 
-                kafkaTemplate.send(topic, key, payload);
-                String coreTransactionRoutedTopic = resolveCoreTransactionTopic(event.getEventType());
-                if (dualEmitCoreTransactionEnabled && coreTransactionRoutedTopic != null) {
-                    kafkaTemplate.send(coreTransactionTopic, key, payload);
-                }
+    @Override
+    protected void markPublished(OutboxRow row, OffsetDateTime publishedAt) {
+        outboxRepository.findById(row.id()).ifPresent(entity -> {
+            entity.setPublishedAt(publishedAt);
+            outboxRepository.save(entity);
+        });
+    }
 
-                event.setPublishedAt(OffsetDateTime.now());
-                outboxRepository.save(event);
-                successCount++;
+    @Override
+    protected void markFailed(OutboxRow row, String errorMessage) {
+        outboxRepository.findById(row.id()).ifPresent(entity -> {
+            entity.setPublishError(errorMessage);
+            entity.setRetryCount(row.retryCount() + 1);
+            outboxRepository.save(entity);
+        });
+    }
 
-            } catch (Exception e) {
-                log.error("Failed to publish outbox event {} (type={}) to Kafka: {}",
-                        event.getId(), event.getEventType(), e.getMessage(), e);
-            }
+    /**
+     * The routed legacy topic, unchanged by the conversion. For DISPENSE_COMPLETED this is
+     * pharmacy.dispense.complete, which InventoryEventConsumer reads at the JSON top level —
+     * it must keep receiving the raw payload, and the base class sends payloadJson verbatim.
+     */
+    @Override
+    protected String resolveLegacyTopic(OutboxRow row) {
+        return routeTopic(legacyEventType(row));
+    }
+
+    /**
+     * pharmacy also mirrors a subset of events onto the core-transaction stream. The base
+     * class routes one legacy topic, so without this the conversion would have silently
+     * unsubscribed that stream's consumers.
+     */
+    @Override
+    protected List<String> additionalLegacyTopics(OutboxRow row) {
+        if (dualEmitCoreTransactionEnabled && resolveCoreTransactionTopic(legacyEventType(row)) != null) {
+            return List.of(coreTransactionTopic);
         }
+        return List.of();
+    }
 
-        if (successCount > 0) {
-            log.info("Published {}/{} pharmacy outbox events to Kafka", successCount, batch.size());
-        }
+    /**
+     * Topic routing switches on the stored event type, not the canonical one the envelope
+     * carries — {@code row.eventType()} is the v1.1 form and would match none of the cases.
+     */
+    private static String legacyEventType(OutboxRow row) {
+        return row instanceof EventOutboxEntity.PharmacyOutboxRow pharmacyRow
+                ? pharmacyRow.legacyEventType()
+                : row.eventType();
     }
 
     /**

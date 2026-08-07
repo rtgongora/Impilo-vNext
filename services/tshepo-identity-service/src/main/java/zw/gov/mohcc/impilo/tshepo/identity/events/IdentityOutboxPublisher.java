@@ -10,7 +10,12 @@ import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.tshepo.identity.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.tshepo.identity.persistence.repository.EventOutboxRepository;
 
+import zw.gov.mohcc.impilo.sharedkernel.events.CompanionOutboxPublisher;
+import zw.gov.mohcc.impilo.sharedkernel.events.DualEmitPolicy;
+import zw.gov.mohcc.impilo.sharedkernel.events.EventTopicRegistry;
+
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 /**
@@ -21,7 +26,7 @@ import java.util.List;
  * If any event fails to publish, processing stops to maintain ordering.</p>
  */
 @Component
-public class IdentityOutboxPublisher {
+public class IdentityOutboxPublisher extends CompanionOutboxPublisher {
 
     private static final Logger log = LoggerFactory.getLogger(IdentityOutboxPublisher.class);
 
@@ -31,7 +36,9 @@ public class IdentityOutboxPublisher {
 
     public IdentityOutboxPublisher(EventOutboxRepository outboxRepo,
                                     KafkaTemplate<String, String> kafkaTemplate,
-                                    @Value("${tshepo.outbox.kafka-topic:platform.identity.events}") String topic) {
+                                    @Value("${tshepo.outbox.kafka-topic:platform.identity.events}") String topic,
+                                    @Value("${tshepo.identity.v11.emit-mode:#{null}}") String ymlEmitMode) {
+        super(new DualEmitPolicy(ymlEmitMode), new EventTopicRegistry("identity"));
         this.outboxRepo = outboxRepo;
         this.kafkaTemplate = kafkaTemplate;
         this.topic = topic;
@@ -39,17 +46,45 @@ public class IdentityOutboxPublisher {
 
     @Scheduled(fixedDelayString = "${tshepo.outbox.poll-interval-ms:1000}")
     @Transactional
-    public void publishPendingEvents() {
-        List<EventOutboxEntity> pending = outboxRepo.findUnpublished();
-        for (EventOutboxEntity event : pending) {
-            try {
-                kafkaTemplate.send(topic, event.getAggregateId(), event.getPayload());
-                event.setPublishedAt(Instant.now());
-                outboxRepo.save(event);
-            } catch (Exception e) {
-                log.error("Failed to publish outbox event id={}: {}", event.getId(), e.getMessage());
-                break; // Stop processing to maintain ordering
-            }
+    public void poll() {
+        int published = publishPendingEvents();
+        if (published > 0) {
+            log.debug("Published {} identity outbox events", published);
         }
+    }
+
+    @Override
+    protected List<? extends OutboxRow> fetchUnpublished() {
+        return outboxRepo.findUnpublished().stream()
+                .map(EventOutboxEntity::toOutboxRow)
+                .toList();
+    }
+
+    @Override
+    protected void sendToKafka(String topic, String key, String value) {
+        kafkaTemplate.send(topic, key, value);
+    }
+
+    @Override
+    protected void markPublished(OutboxRow row, OffsetDateTime publishedAt) {
+        outboxRepo.findById(row.id()).ifPresent(entity -> {
+            entity.setPublishedAt(publishedAt != null ? publishedAt.toInstant() : Instant.now());
+            outboxRepo.save(entity);
+        });
+    }
+
+    @Override
+    protected void markFailed(OutboxRow row, String errorMessage) {
+        outboxRepo.findById(row.id()).ifPresent(entity -> {
+            entity.setPublishError(errorMessage);
+            entity.setRetryCount(row.retryCount() + 1);
+            outboxRepo.save(entity);
+        });
+    }
+
+    /** Identity has always published every event to one configured topic. */
+    @Override
+    protected String resolveLegacyTopic(OutboxRow row) {
+        return topic;
     }
 }

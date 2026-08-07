@@ -141,18 +141,60 @@ class OutboxEventBuilderTest {
                 .aggregateType("CLIENT")
                 .aggregateId("cli-1")
                 .eventType("impilo.vito.client.created.v1")
+                .tenantId("t1")
+                .podId("national")
                 .payload(Map.of())
                 .build();
 
-        // Should auto-generate IDs and default to "unknown" for missing context
+        // Identifiers and timestamps are genuinely optional — they can be generated without
+        // asserting anything untrue. Tenant and pod cannot, so they are supplied.
         assertNotNull(envelope.eventId());
         assertNotNull(envelope.correlationId());
         assertNotNull(envelope.causationId());
         assertNotNull(envelope.idempotencyKey());
         assertNotNull(envelope.emittedAt());
         assertNotNull(envelope.occurredAt());
-        assertEquals("unknown", envelope.tenantId());
-        assertEquals("unknown", envelope.podId());
+    }
+
+    @Test
+    void refusesToBuildWithoutATenant() {
+        OutboxEventBuilder builder = OutboxEventBuilder.forProducer("vito")
+                .aggregateType("CLIENT")
+                .aggregateId("cli-1")
+                .eventType("impilo.vito.client.created.v1")
+                .podId("national")
+                .payload(Map.of());
+
+        // This used to yield tenant_id="unknown". A fabricated tenant is indistinguishable on
+        // the wire from a real one, so downstream routing and audit treat it as fact.
+        IllegalStateException thrown = assertThrows(IllegalStateException.class, builder::build);
+        assertTrue(thrown.getMessage().contains("tenantId"));
+    }
+
+    @Test
+    void refusesToBuildWithoutAPod() {
+        OutboxEventBuilder builder = OutboxEventBuilder.forProducer("vito")
+                .aggregateType("CLIENT")
+                .aggregateId("cli-1")
+                .eventType("impilo.vito.client.created.v1")
+                .tenantId("t1")
+                .payload(Map.of());
+
+        IllegalStateException thrown = assertThrows(IllegalStateException.class, builder::build);
+        assertTrue(thrown.getMessage().contains("podId"));
+    }
+
+    @Test
+    void refusesABlankTenantAsWellAsAMissingOne() {
+        OutboxEventBuilder builder = OutboxEventBuilder.forProducer("vito")
+                .aggregateType("CLIENT")
+                .aggregateId("cli-1")
+                .eventType("impilo.vito.client.created.v1")
+                .tenantId("   ")
+                .podId("national")
+                .payload(Map.of());
+
+        assertThrows(IllegalStateException.class, builder::build);
     }
 
     @Test

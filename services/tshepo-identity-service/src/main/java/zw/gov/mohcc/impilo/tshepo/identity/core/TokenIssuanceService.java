@@ -111,7 +111,7 @@ public class TokenIssuanceService {
         entity.setStatus("ACTIVE");
         tokenRepo.save(entity);
 
-        publishOutboxEvent("ScopedToken", jti, "TOKEN_ISSUED",
+        publishOutboxEvent(request.tenantId(), "ScopedToken", jti, "TOKEN_ISSUED",
                 Map.of("tenantId", request.tenantId(),
                        "actorId", request.actorId(),
                        "targetService", request.targetService(),
@@ -273,7 +273,7 @@ public class TokenIssuanceService {
         if (request.contextId() != null && !request.contextId().isBlank()) {
             outbox.put("contextId", request.contextId());
         }
-        publishOutboxEvent("ScopedToken", jti, "WORK_CONTEXT_TOKEN_ISSUED", outbox);
+        publishOutboxEvent(request.tenantId(), "ScopedToken", jti, "WORK_CONTEXT_TOKEN_ISSUED", outbox);
 
         log.info("Issued work-context token: jti={}, actor={}, mode={}, {}={}, workspace={}, ttl={}s",
                 jti, request.actorId(), mode.name(), orgScoped ? "org" : "facility",
@@ -434,7 +434,7 @@ public class TokenIssuanceService {
         entity.setRevokedAt(Instant.now());
         tokenRepo.save(entity);
 
-        publishOutboxEvent("ScopedToken", jti, "TOKEN_REVOKED",
+        publishOutboxEvent(entity.getTenantId(), "ScopedToken", jti, "TOKEN_REVOKED",
                 Map.of("jti", jti, "revokedAt", Instant.now().toString()));
 
         log.info("Revoked scoped token: jti={}", jti);
@@ -503,13 +503,21 @@ public class TokenIssuanceService {
         return new IntrospectResponse(false, null, null, null, null, null, null, null, null, java.util.Map.of());
     }
 
-    private void publishOutboxEvent(String aggregateType, String aggregateId,
+    private void publishOutboxEvent(java.util.UUID tenantId, String aggregateType, String aggregateId,
                                      String eventType, Object payload) {
+        // Checked before the try: the catch below swallows failures so a missing tenant would
+        // vanish into a log line, and the row would reach the envelope builder with nothing to
+        // build from. Every caller has a tenant in scope, so absence here is a coding error.
+        if (tenantId == null) {
+            throw new IllegalArgumentException(
+                    "identity outbox event requires a tenant: " + aggregateType + "/" + eventType);
+        }
         try {
             EventOutboxEntity event = new EventOutboxEntity();
             event.setAggregateType(aggregateType);
             event.setAggregateId(aggregateId);
             event.setEventType(eventType);
+            event.setTenantId(tenantId);
             event.setPayload(objectMapper.writeValueAsString(payload));
             outboxRepo.save(event);
         } catch (Exception e) {

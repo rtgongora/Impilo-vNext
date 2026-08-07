@@ -195,6 +195,9 @@ public final class OutboxEventBuilder {
      * optional fields.
      */
     public EventEnvelope build() {
+        requireFederationContext("tenantId", tenantId);
+        requireFederationContext("podId", podId);
+
         String resolvedSubjectType = subjectType != null ? subjectType : aggregateType;
         String resolvedSubjectId = subjectId != null ? subjectId : aggregateId;
         String resolvedPartitionKey = partitionKey != null ? partitionKey : resolvedSubjectId;
@@ -213,14 +216,34 @@ public final class OutboxEventBuilder {
                 .causationId(causationId != null ? causationId : UUID.randomUUID().toString())
                 .idempotencyKey(idempotencyKey != null ? idempotencyKey : UUID.randomUUID().toString())
                 .producer(producer)
-                .tenantId(tenantId != null ? tenantId : "unknown")
-                .podId(podId != null ? podId : "unknown")
+                .tenantId(tenantId)
+                .podId(podId)
                 .occurredAt(occurredAt != null ? occurredAt : OffsetDateTime.now())
                 .subjectType(resolvedSubjectType)
                 .subjectId(resolvedSubjectId)
                 .payload(payload != null ? payload : Map.of())
                 .meta(Collections.unmodifiableMap(meta))
                 .build();
+    }
+
+    /**
+     * Federation context is not optional and has no safe default.
+     *
+     * <p>This used to fall back to the literal {@code "unknown"}. That is worse than an
+     * error: an event published with {@code tenant_id="unknown"} is indistinguishable on
+     * the wire from one whose tenant genuinely is unknown, and every downstream consumer,
+     * routing rule and audit record then treats the invented value as fact. Refusing to
+     * build is recoverable; a fabricated tenant on a national topic is not.</p>
+     *
+     * @throws IllegalStateException if the value is missing or blank
+     */
+    private void requireFederationContext(String field, String value) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalStateException(
+                    "Cannot build EventEnvelope: " + field + " is required and has no default. "
+                            + "Populate it on the outbox row rather than publishing a placeholder "
+                            + "(producer=" + producer + ", eventType=" + eventType + ")");
+        }
     }
 
     private static Map<String, Object> deltaToMap(DeltaPayload delta) {

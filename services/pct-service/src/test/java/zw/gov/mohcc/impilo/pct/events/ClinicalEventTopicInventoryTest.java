@@ -91,6 +91,56 @@ class ClinicalEventTopicInventoryTest {
         put("pct.ctg.annotation.recorded", "no consumer yet");
     }};
 
+    /**
+     * Emitted, unrouted, and until now recorded in neither map above.
+     *
+     * <p>Found 2026-08-07 while converting PCT to CompanionOutboxPublisher, by parsing every
+     * {@code writeOutbox}/{@code setEventType} call in {@code src/main} and taking the set
+     * difference against {@code routeTopic} and both maps here. Nineteen came back — this file's
+     * own maintenance note predicted exactly this, since the inventory is hand-listed.</p>
+     *
+     * <p>They are kept apart from {@link #DELIBERATELY_ON_CATCH_ALL} on purpose. That map means
+     * "considered, and the catch-all is right". This one means "nobody has decided yet", and
+     * filing them as deliberate would be the tidy-looking fiction this file exists to prevent.</p>
+     *
+     * <p>{@code pct.events} is not quite a black hole, which is worse: its only subscriber is
+     * {@code TelemedicineLifecycleConsumer} in experience-bff, looking for teleconsult events and
+     * ignoring the rest. So each of these publishes successfully, marks its row published, logs a
+     * send — and reaches nobody.</p>
+     *
+     * <p><b>The death-workflow block needs a routing decision, not a rubber stamp.</b> CRVS
+     * package readiness, medico-legal flagging and a public-health signal are the kind of events
+     * other services plausibly must hear. Routing them means naming a topic and a consumer, which
+     * is a product decision rather than one to make while converting a publisher.</p>
+     */
+    private static final Map<String, String> FOUND_UNROUTED_PENDING_TRIAGE = new LinkedHashMap<>() {{
+        // Death workflow — the block most likely to need real topics.
+        put("DEATH_CONFIRMED", "PENDING: death registration; likely needs a consumer (UBOMI/CRVS)");
+        put("DEATH_COMMUNITY_REPORTED", "PENDING: community death report; surveillance may need this");
+        put("DEATH_REVIEW_REQUIRED", "PENDING: mortality review trigger");
+        put("DEATH_MEDICO_LEGAL_FLAGGED", "PENDING: medico-legal referral");
+        put("DEATH_PUBLIC_HEALTH_SIGNAL", "PENDING: surveillance signal — a consumer looks likely");
+        put("DEATH_VERBAL_AUTOPSY", "PENDING: verbal autopsy captured");
+        put("DEATH_FIELD_BODY_MANAGED", "PENDING: field body management");
+        put("CRVS_PACKAGE_READY", "PENDING: civil registration package ready — UBOMI is the likely consumer");
+
+        // Forms — read from PCT directly today; no cross-service consumer identified.
+        put("FORM_RESPONSE_DRAFTED", "PENDING: no cross-service consumer identified");
+        put("FORM_RESPONSE_SUBMITTED", "PENDING: no cross-service consumer identified");
+        put("FORM_RESPONSE_AMENDED", "PENDING: no cross-service consumer identified");
+        put("FORM_RESPONSE_COUNTERSIGNED", "PENDING: no cross-service consumer identified");
+        put("FORM_RESPONSE_VOIDED", "PENDING: no cross-service consumer identified");
+        put("FORM_RESOLUTION_RESOLVED", "PENDING: no cross-service consumer identified");
+
+        // Remaining singletons.
+        put("CADRE_DECISION_RESOLVED", "PENDING: no cross-service consumer identified");
+        put("ENCOUNTER_PATHWAY_PROTOCOL_UPDATED", "PENDING: no cross-service consumer identified");
+        put("IMAGING_LINK_CREATED", "PENDING: OROS/PACS may want this; not routed today");
+        put("JOURNEY_SORTED", "PENDING: sorting desk outcome; no consumer identified");
+        put("pct.observation.voided", "PENDING: pct.observation.recorded IS routed to BUTANO, so a "
+                + "voided observation arguably must reach the same consumer to retract the record");
+    }};
+
     @TestFactory
     @DisplayName("every emitted clinical event type is either routed or knowingly on the catch-all")
     List<DynamicTest> everyEmittedEventTypeStatesItsRoutingIntent() {
@@ -123,12 +173,40 @@ class ClinicalEventTopicInventoryTest {
                 .toList();
     }
 
+    @TestFactory
+    @DisplayName("events found unrouted are recorded, and still unrouted until someone decides")
+    List<DynamicTest> unroutedEventsAreRecordedPendingTriage() {
+        return FOUND_UNROUTED_PENDING_TRIAGE.entrySet().stream()
+                .map(e -> DynamicTest.dynamicTest(
+                        e.getKey() + " (pending: " + e.getValue() + ")",
+                        () -> {
+                            assertTrue(e.getValue() != null && e.getValue().startsWith("PENDING"),
+                                    "an unrouted event must say that its routing is undecided");
+                            assertEquals("pct.events", OutboxPublisher.routeTopic(e.getKey()),
+                                    e.getKey() + " is recorded as awaiting a routing decision but is "
+                                            + "now routed. If a consumer was added, move it to ROUTED "
+                                            + "and name the topic.");
+                        }))
+                .toList();
+    }
+
     @org.junit.jupiter.api.Test
-    @DisplayName("an event type is never listed in both maps")
+    @DisplayName("an event type is never listed in two maps with contradictory intent")
     void noEventTypeIsBothRoutedAndOnTheCatchAll() {
         Set<String> overlap = new java.util.LinkedHashSet<>(ROUTED.keySet());
         overlap.retainAll(DELIBERATELY_ON_CATCH_ALL.keySet());
         assertTrue(overlap.isEmpty(), "listed twice with contradictory intent: " + overlap);
+
+        Set<String> pendingOverlap = new java.util.LinkedHashSet<>(FOUND_UNROUTED_PENDING_TRIAGE.keySet());
+        pendingOverlap.retainAll(ROUTED.keySet());
+        assertTrue(pendingOverlap.isEmpty(),
+                "recorded as awaiting a routing decision while also declared routed: " + pendingOverlap);
+
+        Set<String> deliberateOverlap = new java.util.LinkedHashSet<>(FOUND_UNROUTED_PENDING_TRIAGE.keySet());
+        deliberateOverlap.retainAll(DELIBERATELY_ON_CATCH_ALL.keySet());
+        assertTrue(deliberateOverlap.isEmpty(),
+                "an event cannot be both a deliberate catch-all choice and an undecided one: "
+                        + deliberateOverlap);
     }
 
     @org.junit.jupiter.api.Test
