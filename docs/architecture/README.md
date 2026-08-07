@@ -63,12 +63,15 @@ capabilities and technical standards:
 1. [`hybrid-federated-target-architecture-v1.3.11.md`](./hybrid-federated-target-architecture-v1.3.11.md)
    — the complete, versioned, historically durable document (exactly one active copy).
    Convenience pointer at the legacy path: [`vnext-hybrid-federation-target-architecture.md`](./vnext-hybrid-federation-target-architecture.md).
-   Working controlling baseline for federation, trust domains, Hospital Nodes,
+   Controlling baseline for federation, trust domains, Hospital Nodes,
    deployment profiles, authority, record topology and the Experience Plane.
    This version carries the correction history of v1.3.2 through v1.3.11 and
-   remains not architecture-frozen until Product Owner sign-off. v1.3.1
-   through v1.3.5 are archived working drafts; not one of them was ever
-   frozen.
+   is **APPROVED and ARCHITECTURE-FROZEN** — ADR-0054 froze v1.3.8, ADR-0055
+   amends that freeze forward to v1.3.11. Freeze is the governing baseline
+   only: not implementation, runtime acceptance, production readiness or
+   deployment authorisation, and it decides no `[L]` matter. v1.3.1 through
+   v1.3.10 are archived; of those only v1.3.8 was ever frozen, and it was
+   superseded by the ADR-0055 correction.
 
 2. [`product-capability-architecture-v2.0.md`](./product-capability-architecture-v2.0.md)
    Defines the National Health Operating System vision, planes, capability

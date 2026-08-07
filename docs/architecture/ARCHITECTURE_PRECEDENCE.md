@@ -10,7 +10,7 @@ When two documents disagree, the higher layer prevails:
 1. **Hybrid / Federated Target Architecture v1.3.11**
    Complete active document: `docs/architecture/hybrid-federated-target-architecture-v1.3.11.md` — the versioned file is the self-contained, historically durable architecture; there is exactly **one** complete active copy.
    Convenience pointer: `docs/architecture/vnext-hybrid-federation-target-architecture.md` — a short pointer naming the active version, status and path; never a second copy.
-   Highest-precedence working architecture. It is **not architecture-frozen**; freeze requires Product Owner sign-off. Its explicit implementation gate governs what may and may not be built before freeze.
+   Highest-precedence architecture. It is **APPROVED and ARCHITECTURE-FROZEN** — ADR-0054 froze v1.3.8, and ADR-0055 amends that freeze forward to v1.3.11. Freeze establishes the governing baseline only: it is not implementation, runtime acceptance, production readiness or deployment authorisation, and it decides no `[L]` matter (the eighteen §26.2 determinations remain open). Its *Post-freeze implementation control* section governs what may and may not be built.
 2. **Product, Capability and Plane Architecture**
    `docs/architecture/product-capability-architecture-v2.0.md`
 3. **Technical Standards Catalogue**

@@ -92,6 +92,7 @@ EXPECTED_CHECKS=(
   assurance-rows no-false-passing implementation-gate acceptance-ids
   assurance-totals entailment-register register-coverage positive-controls
   frozen-baseline frozen-digest stale-acceptance-range no-blanket-backfill adr55-decisions
+  freeze-status-consistent
 )
 CHECKS_SEEN=""
 record_check() {
@@ -150,6 +151,50 @@ else
   fail "missing unversioned pointer: $pointer_rel"
 fi
 record_check pointer
+
+# 4b. No active artefact contradicts the freeze status.
+#
+# The architecture insists a version is either frozen or it is not. It stopped being able to
+# answer that about itself: v1.3.11 was frozen (ADR-0054 froze v1.3.8; ADR-0055 amends the freeze
+# forward to v1.3.11, and the digest check above locks it), while FOUR active artefacts still
+# said "not architecture-frozen" — the pointer, ARCHITECTURE_PRECEDENCE.md, README.md and
+# ADR-0055's own consequences paragraph, which named v1.3.9, a version the same ADR records as
+# REFUSED freeze. The pointer is the file a reader opens first, so the estate's most-read
+# statement of status was the wrong one.
+#
+# Editing those four fixed the instance. This fixes the class: the status now has to stay
+# consistent across every active artefact, or the pack fails.
+#
+# Scoped deliberately. `archive/` is excluded because a superseded draft SHOULD record that it was
+# never frozen — that is history, not drift. `prompts/` is excluded for the same reason: those
+# files quote the status as it stood for the version they were written against.
+freeze_scope=()
+while IFS= read -r f; do freeze_scope+=("$f"); done < <(
+  find "$root/docs/architecture" -maxdepth 2 -name '*.md' \
+       -not -path '*/archive/*' -not -path '*/prompts/*' | sort
+)
+if (( ${#freeze_scope[@]} < 3 )); then
+  # A guard that scans nothing reports OK. Assert the scan found the files it exists to check.
+  fail "freeze-status scan found only ${#freeze_scope[@]} active architecture docs — expected at least 3"
+else
+  contradictions=""
+  for f in "${freeze_scope[@]}"; do
+    if grep -Eqi 'not architecture-frozen|remains not[[:space:]]+architecture-frozen' "$f"; then
+      contradictions="$contradictions ${f#"$root/"}"
+    fi
+  done
+  # ADR-0055 must name the version it actually amends to, not the one it records as refused.
+  if [[ -s "$root/docs/architecture/adr/ADR-0055-trust-domain-membership-bootstrap.md" ]] \
+     && grep -Fq 'v1.3.9 is frozen' "$root/docs/architecture/adr/ADR-0055-trust-domain-membership-bootstrap.md"; then
+    contradictions="$contradictions docs/architecture/adr/ADR-0055-trust-domain-membership-bootstrap.md(names-v1.3.9-as-frozen)"
+  fi
+  if [[ -n "$contradictions" ]]; then
+    fail "active artefacts contradict the freeze status of v1.3.11:$contradictions"
+  else
+    echo "OK: freeze status consistent across ${#freeze_scope[@]} active architecture docs"
+  fi
+fi
+record_check freeze-status-consistent
 
 # 5. The versioned v1.3.11 file is the complete document, not a pointer/stub.
 if [[ -s "$root/$versioned_rel" ]]; then

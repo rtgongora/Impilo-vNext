@@ -53,4 +53,6 @@ The blanket backfill is rejected. **This decides no `[L]` matter.** It corrects 
 
 Bootstrap becomes slower and more honest: every organisation must be mapped deliberately, with evidence, instead of arriving pre-mapped by a migration. That cost is the point. The alternative was a database in which 100% of organisations claimed MoHCC membership and none of those claims could be traced to a decision.
 
-v1.3.8 remains the frozen baseline for the period 2026-08-05 up to this amendment, archived with a banner recording that it **was** genuinely frozen — unlike v1.3.1–v1.3.7, which were refused. v1.3.9 is frozen on the same terms and inherits every control ADR-0054 established.
+v1.3.8 remains the frozen baseline for the period 2026-08-05 up to this amendment, archived with a banner recording that it **was** genuinely frozen — unlike v1.3.1–v1.3.7, which were refused. **v1.3.11** is frozen on the same terms and inherits every control ADR-0054 established.
+
+> **Corrected 2026-08-07.** This paragraph previously named **v1.3.9** as frozen on the same terms, which contradicted this ADR's own implementation note above — v1.3.9 was *refused* freeze, v1.3.10 completed the content and v1.3.11 completed the enforcement. The version this ADR amends to, stated in its header, has always been v1.3.11, and it is the version the governance verifier digest-locks as the frozen baseline. Only the name in this sentence was wrong; no decision changed, so this is an erratum and not a new architecture version under ADR-0054's definition of a substantive change.
