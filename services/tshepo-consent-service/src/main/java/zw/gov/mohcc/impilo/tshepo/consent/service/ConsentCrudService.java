@@ -252,6 +252,12 @@ public class ConsentCrudService {
         outbox.setAggregateType("ConsentDirective");
         outbox.setAggregateId(consent.getId().toString());
         outbox.setEventType(eventType);
+        // Federation context for the v1.1 envelope. The directive already carries the
+        // tenant, so this is resolved rather than assumed — the envelope builder now
+        // refuses to publish without it instead of substituting a placeholder.
+        outbox.setTenantId(consent.getTenantId());
+        outbox.setSubjectType("PATIENT");
+        outbox.setSubjectId(consent.getPatientRef());
         try {
             Map<String, Object> payload = Map.of(
                     "consentId", consent.getId().toString(),

@@ -242,6 +242,11 @@ public class ShareLinkService {
         outbox.setAggregateType("ShareLink");
         outbox.setAggregateId(link.getId().toString());
         outbox.setEventType(eventType);
+        // Resolved from the share link itself; see ConsentCrudService for why this is
+        // set explicitly rather than defaulted.
+        outbox.setTenantId(link.getTenantId());
+        outbox.setSubjectType("SHARE_LINK");
+        outbox.setSubjectId(link.getId().toString());
         try {
             Map<String, Object> payload = Map.of(
                     "shareLinkId", link.getId().toString(),
