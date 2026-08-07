@@ -104,4 +104,87 @@ class ActorTypeGuardTest {
         assertThat(ActorTypeGuard.permits(ActorTypeGuard.MACHINE_ONLY, "OPERATOR")).isFalse();
         assertThat(ActorTypeGuard.permits(ActorTypeGuard.MACHINE_ONLY, "SYSTEM")).isTrue();
     }
+
+    // ── Duty: the enforced gate and the recorded intent ──
+
+    private static final ActorTypeGuard.Duty WAIVE_FEE = new ActorTypeGuard.Duty(
+            "waiving a facility registration fee",
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            Set.of("HPA_REGISTRAR", "HPA_ADMIN", "SYSTEM_ADMIN"));
+
+    @Test
+    void emittableIsTakenFromTheContractRatherThanRetyped() {
+        assertThat(ActorTypeGuard.EMITTABLE)
+                .containsExactlyInAnyOrderElementsOf(
+                        Arrays.stream(ActorType.values()).map(Enum::name).collect(Collectors.toSet()));
+    }
+
+    /**
+     * The invariant that stops a dead token being reintroduced. This is the whole reason Duty
+     * validates in its constructor rather than trusting review: the defect it prevents is invisible
+     * at the call site, because a guard listing an unemittable token compiles, reads correctly, and
+     * silently never matches.
+     */
+    @Test
+    void aDutyCannotEnforceATokenNoClientEmits() {
+        assertThatThrownBy(() -> new ActorTypeGuard.Duty(
+                "waiving a fee", Set.of("SYSTEM", "HPA_REGISTRAR"), Set.of()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("HPA_REGISTRAR")
+                .hasMessageContaining("no client emits");
+    }
+
+    @Test
+    void aDutyCannotEnforceNobody() {
+        assertThatThrownBy(() -> new ActorTypeGuard.Duty("waiving a fee", Set.of(), Set.of()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("closed door");
+    }
+
+    /**
+     * The mirror-image mistake: parking an emittable actor type in intendedRoles silently drops a
+     * gate the author believed they had.
+     */
+    @Test
+    void anEmittableTypeCannotHideInIntendedRoles() {
+        assertThatThrownBy(() -> new ActorTypeGuard.Duty(
+                "waiving a fee", ActorTypeGuard.MACHINE_ONLY, Set.of("OPERATOR")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("OPERATOR")
+                .hasMessageContaining("Move them to actorTypes");
+    }
+
+    @Test
+    void theRecordedIntentIsKeptAndIsNotEnforced() {
+        assertThat(WAIVE_FEE.intendedRoles()).containsExactlyInAnyOrder(
+                "HPA_REGISTRAR", "HPA_ADMIN", "SYSTEM_ADMIN");
+        // An HPA_REGISTRAR header would not satisfy the duty — that is the point of recording it.
+        assertThat(ActorTypeGuard.permits(ctx("HPA_REGISTRAR"), WAIVE_FEE)).isFalse();
+        assertThat(ActorTypeGuard.permits(ctx("OPERATOR"), WAIVE_FEE)).isTrue();
+    }
+
+    @Test
+    void requireByDutyRefusesAPersonalSessionAndNamesWhatIsRequired() {
+        assertThatThrownBy(() -> ActorTypeGuard.require(ctx("CITIZEN"), WAIVE_FEE))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Waiving a facility registration fee")
+                .hasMessageContaining("OPERATOR")
+                .hasMessageContaining("'CITIZEN'");
+    }
+
+    @Test
+    void requireByDutyFailsClosedOnAnAbsentActorType() {
+        assertThatThrownBy(() -> ActorTypeGuard.require(ctx(null), WAIVE_FEE))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("no actor type");
+        assertThatThrownBy(() -> ActorTypeGuard.require((TrustContext) null, WAIVE_FEE))
+                .isInstanceOf(ResponseStatusException.class);
+    }
+
+    @Test
+    void requireByDutyAdmitsEachEnforcedActorType() {
+        for (String t : WAIVE_FEE.actorTypes()) {
+            assertThatCode(() -> ActorTypeGuard.require(ctx(t), WAIVE_FEE)).doesNotThrowAnyException();
+        }
+    }
 }

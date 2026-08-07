@@ -4,9 +4,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+import zw.gov.mohcc.impilo.tshepo.contracts.enums.ActorType;
 
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * The one place a service asks "is this actor type allowed to do this?".
@@ -100,6 +105,106 @@ public final class ActorTypeGuard {
      * the KNOWN GAP above for what it cannot.</p>
      */
     public static final Set<String> BACK_OFFICE_WRITERS = Set.of("SYSTEM", "SERVICE", "OPERATOR");
+
+    /** Every actor type any client can put on the wire, taken from the contract rather than retyped. */
+    public static final Set<String> EMITTABLE = Arrays.stream(ActorType.values())
+            .map(Enum::name)
+            .collect(Collectors.toUnmodifiableSet());
+
+    /**
+     * A named thing a caller may be trying to do, carrying both halves of the answer: what is
+     * actually <b>enforced</b>, and what the author actually <b>meant</b>.
+     *
+     * <h2>Why both</h2>
+     * <p>The guards this class replaced were written against role names — {@code HPA_REGISTRAR},
+     * {@code DATA_STEWARD}, {@code FACILITY_FINANCE}, {@code IDENTITY_STEWARD} — that no client
+     * emits, so they enforced nothing those names describe. Deleting the names would make each
+     * guard honest and would throw away the only written record of the distinction its author was
+     * reaching for. That record is the input to the P3 workload-identity work, so it is kept here
+     * as {@link #intendedRoles()} rather than dropped: declared, visibly unenforced, and in the
+     * same object as the gate that stands in for it.</p>
+     *
+     * @param description  what the caller is trying to do, in words a refused operator can act on
+     *                     (e.g. "waiving a facility registration fee")
+     * @param actorTypes   the enforced gate. Validated at construction to contain only values some
+     *                     client actually emits, so a dead token cannot be reintroduced here.
+     * @param intendedRoles the finer role distinction this duty is really about, recorded and NOT
+     *                     enforced. Validated to hold only non-emittable names — anything emittable
+     *                     belongs in {@code actorTypes}, where it would take effect.
+     */
+    public record Duty(String description, Set<String> actorTypes, Set<String> intendedRoles) {
+
+        public Duty {
+            Objects.requireNonNull(description, "description");
+            actorTypes = Set.copyOf(actorTypes);
+            intendedRoles = intendedRoles == null ? Set.of() : Set.copyOf(intendedRoles);
+            if (actorTypes.isEmpty()) {
+                throw new IllegalArgumentException(
+                        "Duty '" + description + "' enforces an empty actor-type set, which refuses "
+                                + "every caller. A duty nobody can perform is a closed door, not a guard.");
+            }
+            Set<String> dead = actorTypes.stream().filter(t -> !EMITTABLE.contains(t))
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
+            if (!dead.isEmpty()) {
+                throw new IllegalArgumentException(
+                        "Duty '" + description + "' enforces " + dead + ", which no client emits — the "
+                                + "gate would silently never match. Emittable actor types are "
+                                + EMITTABLE.stream().sorted().toList()
+                                + "; put role names in intendedRoles instead.");
+            }
+            Set<String> misplaced = intendedRoles.stream().filter(EMITTABLE::contains)
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
+            if (!misplaced.isEmpty()) {
+                throw new IllegalArgumentException(
+                        "Duty '" + description + "' records " + misplaced + " as intended-only, but those "
+                                + "are emittable actor types — listing them there silently drops a gate "
+                                + "the author expected to have. Move them to actorTypes.");
+            }
+        }
+
+        /** Convenience for a duty with no unenforceable role distinction behind it. */
+        public static Duty of(String description, Set<String> actorTypes) {
+            return new Duty(description, actorTypes, Set.of());
+        }
+    }
+
+    /**
+     * Refuse the operation unless the trust context satisfies {@code duty}.
+     *
+     * <p>Call this before loading the target entity.</p>
+     *
+     * @throws ResponseStatusException 403, naming what is required and what was presented
+     */
+    public static void require(TrustContext ctx, Duty duty) {
+        String presented = normalize(ctx == null ? null : ctx.actorType());
+        if (duty.actorTypes().contains(presented)) {
+            return;
+        }
+        String actorId = ctx == null ? null : ctx.actorId();
+        log.warn("Refused {} — actor {} presents actorType '{}', which is not one of {}{}",
+                duty.description(),
+                actorId == null || actorId.isBlank() ? "<absent>" : actorId,
+                presented.isEmpty() ? "<absent>" : presented,
+                duty.actorTypes().stream().sorted().toList(),
+                duty.intendedRoles().isEmpty() ? ""
+                        : " (duty is really about " + duty.intendedRoles().stream().sorted().toList()
+                                + ", which no header carries)");
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                capitalise(duty.description())
+                        + " requires one of " + duty.actorTypes().stream().sorted().toList()
+                        + "; this session presents "
+                        + (presented.isEmpty() ? "no actor type" : "'" + presented + "'")
+                        + ".");
+    }
+
+    /** Whether the trust context satisfies {@code duty}, without throwing. */
+    public static boolean permits(TrustContext ctx, Duty duty) {
+        return duty.actorTypes().contains(normalize(ctx == null ? null : ctx.actorType()));
+    }
+
+    private static String capitalise(String s) {
+        return s.isEmpty() ? s : s.substring(0, 1).toUpperCase(Locale.ROOT) + s.substring(1);
+    }
 
     /**
      * Refuse the operation unless the trust context presents one of {@code allowed}.
