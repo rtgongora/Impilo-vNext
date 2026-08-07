@@ -637,6 +637,15 @@ fullBootServices:
       # to read the standard name. The value was always right; the code did not read it.
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
       IMPILO_TRUST_SHADOW_BEARER_ENABLED: "true"
+      # §22 enforcement step (1): the PDP regenerates operating-context headers from the
+      # duty token instead of forwarding whatever the browser set. The live estate has run
+      # AUTHORITATIVE since 2026-08-07, but the value was applied BY HAND — it appeared in
+      # no chart, and the service default is PASSTHROUGH, so any `helm upgrade` would have
+      # silently reverted live enforcement to trusting the browser. Charting it here makes
+      # the upgrade preserve what is already running; it changes nothing about the estate.
+      # Deliberately inside THIS env block and not a second one — see the duplicate-key
+      # note in the experienceBff block above and the rtc-gateway-service note below.
+      TSHEPO_AUTHZ_CONTEXT_HEADER_MODE: "AUTHORITATIVE"
     # P1 shadow probe key — see the experienceBff block above for why optional:true.
     secretEnv:
       IMPILO_TRUST_SHADOW_PROBE_KEY:
