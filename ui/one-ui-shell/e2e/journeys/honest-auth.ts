@@ -33,13 +33,62 @@ export async function acceptPoliciesIfGated(page: Page) {
   await gate.waitFor({ state: "hidden", timeout: 15_000 });
 }
 
-/** Real login through /auth/login. Leaves the page outside /auth on success. */
-export async function loginAs(page: Page, persona: JourneyPersona) {
+/**
+ * Real login through /auth/login. Leaves the page outside /auth on success.
+ *
+ * <h3>Two steps, two origins — the shell never sees the credential</h3>
+ * This helper used to fill `#identifier` and `#password` on `/auth/login` and submit. That flow no
+ * longer exists: {@link ProgressiveAuthForm} takes only an identifier (`#identifier-input`) and
+ * hands off to the identity service in a SEPARATE WINDOW, which is where the password, passkey,
+ * authenticator and recovery-code steps run. The shell page has no password input at all — by
+ * design, and it says so on screen.
+ *
+ * Every journey spec calling this was therefore failing at `locator('#identifier')` against the
+ * live preview, 15s per persona, with a timeout that reads like a slow page rather than a helper
+ * encoding an auth UX that had been replaced.
+ *
+ * `loginHint` pre-fills the username on the identity service, so the popup usually needs only the
+ * password — but the username is filled defensively, because a realm that ignores the hint would
+ * otherwise fail with an empty-username error that looks like a bad credential.
+ *
+ * @param intent which sign-in context to enter. `work` requests AAL2 and routes through
+ *   `/auth/resolving`; `personal` goes straight to `/home`. Defaults to `personal` because most
+ *   journeys assert on My Life surfaces — pass `work` explicitly for a duty-context journey.
+ */
+export async function loginAs(
+  page: Page,
+  persona: JourneyPersona,
+  intent: "personal" | "work" | "regulatory" = "personal",
+) {
   await page.goto(`${PREVIEW_ORIGIN}/auth/login`);
-  await page.locator("#identifier").fill(persona.username);
-  await page.locator("#password").fill(PERSONA_PASSWORD);
-  await page.locator('button[type="submit"]').click();
-  await page.waitForURL((url) => !url.pathname.startsWith("/auth"), { timeout: 30_000 });
+
+  if (intent !== "personal") {
+    await page.getByRole("tab", { name: intent === "work" ? /work & practice/i : /regulatory/i })
+      .click()
+      .catch(async () => {
+        await page.getByText(intent === "work" ? /work & practice/i : /regulatory/i).first().click();
+      });
+  }
+
+  await page.locator("#identifier-input").fill(persona.username);
+
+  // The popup is opened by the click, so it has to be awaited alongside it — waiting after the
+  // click races the window and loses it on a fast open.
+  const [signInWindow] = await Promise.all([
+    page.waitForEvent("popup", { timeout: 30_000 }),
+    page.locator('button[type="submit"]').click(),
+  ]);
+
+  await signInWindow.waitForLoadState("domcontentloaded");
+  const username = signInWindow.locator("#username");
+  if (await username.isVisible().catch(() => false)) {
+    await username.fill(persona.username);
+  }
+  await signInWindow.locator("#password").fill(PERSONA_PASSWORD);
+  await signInWindow.locator("#kc-login, button[type='submit']").first().click();
+
+  // /auth/complete signals the opener and closes itself, so the ORIGINAL page navigates.
+  await page.waitForURL((url) => !url.pathname.startsWith("/auth"), { timeout: 60_000 });
   await acceptPoliciesIfGated(page);
 }
 
