@@ -7,16 +7,60 @@ import java.util.Objects;
 
 /**
  * Shared emergency-access (break-glass) guard, modelled on PCT's {@code ClinicalAccessGuard}.
- * Framework-agnostic: a service passes the purpose-of-use that Envoy ext_authz / TSHEPO already
- * stamped into its trust context, and the guard decides whether a high-risk emergency action (e.g.
- * MADI O-negative / uncrossmatched blood release) is a governed BREAK_GLASS override or must be
- * denied.
+ * Framework-agnostic: a service passes a purpose-of-use, and the guard decides whether a high-risk
+ * emergency action (e.g. MADI O-negative / uncrossmatched blood release) may proceed.
  *
- * <p>An emergency override is NEVER a silent bypass: it is only granted under an explicit
- * {@code EMERGENCY} / {@code BREAK_GLASS} purpose-of-use, and it emits an elevated-visibility audit
- * line here — while the authoritative decision record stays upstream in the ext_authz/TSHEPO ledger
- * (this guard does not, and must not, mint its own authz). Actions NOT flagged emergency require the
- * emergency purpose and are otherwise refused.</p>
+ * <h2>What this guard actually enforces — read before relying on it</h2>
+ * <p><b>This is a string comparison, not an authorization check.</b> It compares the supplied
+ * purpose-of-use against {@code EMERGENCY} / {@code BREAK_GLASS} and nothing else. Any caller able
+ * to set {@code X-Purpose-Of-Use: BREAK_GLASS} satisfies it, so on this path break-glass unlocks
+ * emergency clinical access with no emergency, no approval and no grant.</p>
+ *
+ * <p>This javadoc previously said an override "is NEVER a silent bypass" and that "the authoritative
+ * decision record stays upstream in the ext_authz/TSHEPO ledger". Both claims were measured during
+ * Phase 0 workstream A and are false on this path:</p>
+ *
+ * <ul>
+ *   <li>Envoy's configuration defines two clusters, both experience-bff, and routes to no domain
+ *       service. madi-service — the only caller of this guard — is not behind ext_authz, so no
+ *       upstream decision is made and none is recorded.</li>
+ *   <li>The purpose-of-use it compares is therefore client-supplied on that path, not PDP-stamped.
+ *       The comparison is made against a value the caller chose.</li>
+ * </ul>
+ *
+ * <p>The {@code log.warn} below is real, and is the only artefact an override currently produces.</p>
+ *
+ * <h2>Why this was not wired to the real grant model</h2>
+ * <p>A genuine grant model does exist — {@code BreakGlassRequestEntity},
+ * {@code VisibilityEscalationGrantEntity}, {@code BreakGlassService} and
+ * {@code VisibilityEscalationService} in tshepo-authz-service — and
+ * {@code VisibilityEscalationService.resolveActiveGrant} validates a grant token properly, against
+ * tenant, actor and expiry. Consulting it was the intended fix. It could not be done honestly, for
+ * reasons worth recording rather than working around:</p>
+ *
+ * <ul>
+ *   <li><b>There is no seam to wire to.</b> {@code resolveActiveGrant} has exactly one production
+ *       caller — {@code PolicyEngine:280}, inside the PDP's own authorize path. tshepo-authz
+ *       exposes {@code /v1/visibility-escalations/requests}, {@code /requests/pending},
+ *       {@code /requests/{id}/review} and {@code /v1/break-glass}: the workflow for
+ *       <em>obtaining</em> a grant. Nothing exposes <em>validating</em> one to a downstream
+ *       service.</li>
+ *   <li><b>{@code x-escalation-grant-id} is not consumed downstream today.</b> It is PDP-stamped and
+ *       does appear in Envoy's {@code allowed_upstream_headers}, so it is trustworthy — but only on
+ *       the Envoy path, which reaches experience-bff alone. Its two uses there are copying it into
+ *       the P1 shadow-observation envelope (verdict-free by design, changes nothing) and echoing it
+ *       into a {@code /visibility-profile} response body. Neither validates it. varapi's
+ *       {@code OversightEscalationGrantEntity} is an unrelated varapi-local table for HPA oversight,
+ *       not this header.</li>
+ *   <li>So requiring the header here would check that a caller who can already forge the purpose can
+ *       also supply a well-formed UUID. That reads like validation and is not — which is exactly the
+ *       failure mode the correction above is about.</li>
+ * </ul>
+ *
+ * <p>Closing this needs a grant-validation call tshepo-authz does not expose yet, and the decision to
+ * fail closed on it is a patient-safety decision — the affected path is emergency blood release —
+ * not a refactor. Both belong with whoever owns the trust plane. The exposure is left accurately
+ * described rather than half-fixed.</p>
  */
 public final class EmergencyAccessGuard {
 
