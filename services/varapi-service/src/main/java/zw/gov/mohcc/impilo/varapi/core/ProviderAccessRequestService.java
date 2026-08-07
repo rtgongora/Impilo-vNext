@@ -2,6 +2,8 @@ package zw.gov.mohcc.impilo.varapi.core;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
@@ -170,6 +172,64 @@ public class ProviderAccessRequestService {
 
     // ── Reviewer lane (IATG Trust Console) ─────────────────────────────────────
 
+    /**
+     * Actor types permitted to read the reviewer queue or decide a request.
+     *
+     * <p>Matches the set already used for the two closest operations — claiming a preloaded
+     * profile and recovering one ({@code ProviderBootstrapService}, {@code ProviderRecoveryService},
+     * both {@code SYSTEM} + {@code REGISTRY_ADMIN}) — plus {@code NATIONAL_ADMIN}, which is the
+     * actor behind this service's own {@code NATIONAL_ADMINISTRATOR} next-actor routing and is
+     * already trusted with provider badges.</p>
+     *
+     * <p>{@code ORG_REPRESENTATIVE} and {@code OPERATOR} are deliberately excluded. An
+     * organisation representative vouching for someone joining their organisation is a different
+     * act from confirming that a person <em>is</em> the practitioner on the HPA register, and
+     * {@link #decide} is a single code path across every request type — so the narrowest set
+     * governs all of them. Letting an org representative decide organisation-scoped requests is a
+     * per-type refinement worth making deliberately, not by leaving the gate wide now.</p>
+     */
+    static final Set<String> REVIEWER_ACTOR_TYPES = Set.of("SYSTEM", "REGISTRY_ADMIN", "NATIONAL_ADMIN");
+
+    /**
+     * Defence in depth behind ext_authz, in the idiom this service already uses elsewhere.
+     *
+     * <p>Until now the reviewer lane had <b>no in-service authorisation at all</b> — not on the
+     * queue read, not on the decision. The only gate was the ext_authz policy pair
+     * ({@code trust-console-varapi-review-system-admin} / {@code -hie-admin}), and the queue
+     * endpoint's own javadoc said so. That gate is real, but it only covers traffic routed through
+     * Envoy; anything reaching this service inside the cluster arrived unchecked.</p>
+     *
+     * <p>It became urgent when approval stopped being inert. An APPROVED council-number claim now
+     * binds a provider profile to a person's Health ID, so an unauthorised decision grants a
+     * professional identity — the strongest thing this service can hand out.</p>
+     *
+     * <p><b>Known vocabulary gap, stated rather than papered over.</b> The ext_authz rules gate on
+     * <em>role</em> ({@code SYSTEM_ADMIN}, {@code HIE_ADMIN}); this check gates on
+     * <em>actor type</em>. They are different dimensions, and the service cannot see the first:
+     * {@code TrustContext} carries no roles, and no role header exists in the trust contract or in
+     * Envoy's {@code allowed_upstream_headers}. Two gates keyed on two vocabularies can drift, and
+     * closing that means carrying an authoritative role claim through to services — a trust-plane
+     * change, not a varapi one. Until then the layers are deliberately different rather than
+     * accidentally so.</p>
+     *
+     * <p>Fails closed, and says exactly what is required, because the first person to hit this
+     * will be a reviewer whose identity has not been provisioned with a matching actor type — and
+     * a bare 403 would send them looking in the wrong place.</p>
+     */
+    private static void requireReviewer(TrustContext ctx, String operation) {
+        String actorType = ctx.actorType() != null
+                ? ctx.actorType().trim().toUpperCase(Locale.ROOT) : "";
+        if (!REVIEWER_ACTOR_TYPES.contains(actorType)) {
+            log.warn("Refused {} — actor {} has actorType '{}', which is not a reviewer type",
+                    operation, ctx.actorId(), actorType.isEmpty() ? "<absent>" : actorType);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Reviewing provider access requests requires one of "
+                            + REVIEWER_ACTOR_TYPES.stream().sorted().toList()
+                            + "; this session presents "
+                            + (actorType.isEmpty() ? "no actor type" : "'" + actorType + "'"));
+        }
+    }
+
     /** Statuses a reviewer may still decide from. Terminal states are never re-decided. */
     static final Set<String> DECIDABLE_STATUSES = Set.of(
             ProviderAccessRequestStatus.SUBMITTED.name(),
@@ -194,6 +254,9 @@ public class ProviderAccessRequestService {
     @Transactional(readOnly = true)
     public List<ProviderAccessRequestEntity> listForReview(List<String> statuses) {
         TrustContext ctx = TrustContextHolder.require();
+        // The queue is tenant-wide and carries other people's applicant Health IDs, masked council
+        // numbers and evidence summaries. It is never applicant-facing.
+        requireReviewer(ctx, "read of the provider access-request review queue");
         List<String> effective = (statuses == null || statuses.isEmpty())
                 ? List.copyOf(DECIDABLE_STATUSES)
                 : statuses.stream().map(s -> s.trim().toUpperCase(Locale.ROOT)).filter(s -> !s.isEmpty()).toList();
@@ -209,6 +272,9 @@ public class ProviderAccessRequestService {
     @Transactional
     public ProviderAccessRequestEntity decide(String publicId, String decision, String note) {
         TrustContext ctx = TrustContextHolder.require();
+        // Checked before the request is even loaded: an unauthorised caller learns nothing about
+        // whether a given public id exists.
+        requireReviewer(ctx, "decision on a provider access request");
         ProviderAccessRequestEntity entity = requestRepository
                 .findByTenantIdAndPublicId(ctx.tenantId(), publicId)
                 .orElseThrow(() -> new IllegalArgumentException("No provider access request " + publicId));

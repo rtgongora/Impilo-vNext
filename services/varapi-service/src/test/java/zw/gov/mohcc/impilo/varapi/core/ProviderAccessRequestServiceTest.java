@@ -7,6 +7,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.shared.auth.AccessMode;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
@@ -25,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -45,11 +48,24 @@ class ProviderAccessRequestServiceTest {
         return new ProviderAccessRequestService(requestRepository, outboxRepository, providerRepository, bootstrapService);
     }
 
+    private static final UUID REVIEWER = UUID.randomUUID();
+
     private void withContext() {
         TrustContextHolder.set(new TrustContext(TENANT, APPLICANT.toString(), "PERSON", "TREATMENT",
                 null, UUID.randomUUID(), null, null, null, AccessMode.INTERNAL));
         when(requestRepository.existsByPublicId(anyString())).thenReturn(false);
         when(requestRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+    }
+
+    /**
+     * A reviewer session. The applicant context above is a PERSON, which is now refused on the
+     * reviewer lane — reading the queue or deciding a request requires a reviewer actor type,
+     * because an approval binds a professional identity to a person.
+     */
+    private void withReviewerContext() {
+        withContext();
+        TrustContextHolder.set(new TrustContext(TENANT, REVIEWER.toString(), "REGISTRY_ADMIN", "OPERATIONS",
+                null, UUID.randomUUID(), null, null, null, AccessMode.INTERNAL));
     }
 
     @AfterEach
@@ -130,14 +146,14 @@ class ProviderAccessRequestServiceTest {
 
     @Test
     void decideApprovesFromPendingReviewAndRecordsReviewer() {
-        withContext();
+        withReviewerContext();
         when(requestRepository.findByTenantIdAndPublicId(TENANT, "PAR-REVIEW01"))
                 .thenReturn(Optional.of(pendingRequest("PENDING_NATIONAL_REVIEW")));
 
         ProviderAccessRequestEntity e = service().decide("PAR-REVIEW01", "APPROVED", "Council registration confirmed");
 
         assertEquals("APPROVED", e.getStatus());
-        assertEquals(APPLICANT.toString(), e.getDecidedBy());
+        assertEquals(REVIEWER.toString(), e.getDecidedBy());
         assertNotNull(e.getDecidedAt());
         assertEquals("Council registration confirmed", e.getDecisionNote());
         assertNull(e.getNextActor());
@@ -146,7 +162,7 @@ class ProviderAccessRequestServiceTest {
 
     @Test
     void decideNeedsMoreInformationRoutesBackToApplicant() {
-        withContext();
+        withReviewerContext();
         when(requestRepository.findByTenantIdAndPublicId(TENANT, "PAR-REVIEW01"))
                 .thenReturn(Optional.of(pendingRequest("SUBMITTED")));
 
@@ -160,7 +176,7 @@ class ProviderAccessRequestServiceTest {
 
     @Test
     void decideRejectsUnknownDecisionValue() {
-        withContext();
+        withReviewerContext();
         when(requestRepository.findByTenantIdAndPublicId(TENANT, "PAR-REVIEW01"))
                 .thenReturn(Optional.of(pendingRequest("PENDING_COUNCIL_REVIEW")));
 
@@ -170,7 +186,7 @@ class ProviderAccessRequestServiceTest {
 
     @Test
     void decideRefusesTerminalStatuses() {
-        withContext();
+        withReviewerContext();
         when(requestRepository.findByTenantIdAndPublicId(TENANT, "PAR-REVIEW01"))
                 .thenReturn(Optional.of(pendingRequest("APPROVED")));
 
@@ -180,7 +196,7 @@ class ProviderAccessRequestServiceTest {
 
     @Test
     void decideIsTenantScoped() {
-        withContext();
+        withReviewerContext();
         // The repository lookup is tenant-keyed: another tenant's publicId resolves to empty.
         when(requestRepository.findByTenantIdAndPublicId(TENANT, "PAR-OTHERTNT"))
                 .thenReturn(Optional.empty());
@@ -191,7 +207,7 @@ class ProviderAccessRequestServiceTest {
 
     @Test
     void listForReviewDefaultsToDecidableStatusesForTenant() {
-        withContext();
+        withReviewerContext();
         when(requestRepository.findByTenantIdAndStatusInOrderByCreatedAtDesc(any(), any()))
                 .thenReturn(List.of(pendingRequest("PENDING_NATIONAL_REVIEW")));
 
@@ -207,7 +223,7 @@ class ProviderAccessRequestServiceTest {
 
     @Test
     void listForReviewNormalisesExplicitStatuses() {
-        withContext();
+        withReviewerContext();
         when(requestRepository.findByTenantIdAndStatusInOrderByCreatedAtDesc(any(), any()))
                 .thenReturn(List.of());
 
@@ -245,7 +261,7 @@ class ProviderAccessRequestServiceTest {
 
     @Test
     void approvingACouncilNumberClaimCompletesTheClaim() {
-        withContext();
+        withReviewerContext();
         when(requestRepository.findByTenantIdAndPublicId(TENANT, "PAR-CLAIM01"))
                 .thenReturn(Optional.of(councilClaim("PENDING_NATIONAL_REVIEW", "PRV-0001")));
 
@@ -259,7 +275,7 @@ class ProviderAccessRequestServiceTest {
 
     @Test
     void approvingAnUnmatchedCouncilEnquiryBindsNothing() {
-        withContext();
+        withReviewerContext();
         // HpaPractitionerClaimService leaves providerPublicId null when the number matched no
         // preloaded HPA row. Approving that is a legitimate new-registration enquiry, not a claim.
         when(requestRepository.findByTenantIdAndPublicId(TENANT, "PAR-CLAIM01"))
@@ -273,7 +289,7 @@ class ProviderAccessRequestServiceTest {
 
     @Test
     void rejectingACouncilNumberClaimBindsNothing() {
-        withContext();
+        withReviewerContext();
         when(requestRepository.findByTenantIdAndPublicId(TENANT, "PAR-CLAIM01"))
                 .thenReturn(Optional.of(councilClaim("PENDING_NATIONAL_REVIEW", "PRV-0001")));
 
@@ -284,7 +300,7 @@ class ProviderAccessRequestServiceTest {
 
     @Test
     void aFailedBindingKeepsTheVerdictAndSaysWhyInsteadOfReadingAsGranted() {
-        withContext();
+        withReviewerContext();
         when(requestRepository.findByTenantIdAndPublicId(TENANT, "PAR-CLAIM01"))
                 .thenReturn(Optional.of(councilClaim("PENDING_NATIONAL_REVIEW", "PRV-0001")));
         doThrow(new IllegalStateException("This person already has a provider profile"))
@@ -297,5 +313,55 @@ class ProviderAccessRequestServiceTest {
         assertEquals("NEEDS_MORE_INFORMATION", e.getStatus());
         assertEquals("REVIEWER", e.getNextActor());
         assertTrue(e.getReason().contains("already has a provider profile"));
+    }
+
+    // ── The reviewer lane is authorised in-service, not only at the gateway ──────────────────
+    // The ext_authz rules (trust-console-varapi-review-system-admin / -hie-admin) are real, but
+    // they only cover traffic routed through Envoy. Anything reaching this service inside the
+    // cluster arrived unchecked — and an APPROVED council-number claim now binds a provider
+    // profile to a person's Health ID, which is the strongest thing this service grants.
+
+    @Test
+    void decideRefusesAnActorWhoIsNotAReviewer() {
+        withContext();   // an ordinary signed-in PERSON — the applicant, not a reviewer
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> service().decide("PAR-REVIEW01", "APPROVED", null));
+
+        assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
+        // Refused before the request is loaded, so an unauthorised caller cannot use this to learn
+        // whether a given public id exists.
+        verify(requestRepository, never()).findByTenantIdAndPublicId(any(), anyString());
+    }
+
+    @Test
+    void decideRefusesWhenNoActorTypeIsPresentAtAll() {
+        TrustContextHolder.set(new TrustContext(TENANT, APPLICANT.toString(), null, "TREATMENT",
+                null, UUID.randomUUID(), null, null, null, AccessMode.INTERNAL));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> service().decide("PAR-REVIEW01", "APPROVED", null));
+
+        assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
+        // The message has to name what is required: the first person to hit this will be a
+        // reviewer whose identity was provisioned without a matching actor type.
+        assertTrue(ex.getReason().contains("REGISTRY_ADMIN"));
+    }
+
+    @Test
+    void theReviewQueueIsNotApplicantFacing() {
+        withContext();
+        // The queue is tenant-wide and carries other people's applicant Health IDs, masked
+        // council numbers and evidence summaries.
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> service().listForReview(null));
+
+        assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
+    }
+
+    @Test
+    void aPersonMayStillSeeAndSubmitTheirOwnRequests() {
+        withContext();
+        // The guard is on the reviewer lane only. Self-service must be untouched, or the fix
+        // would have broken the very journey it exists to protect.
+        assertDoesNotThrow(() -> service().listForApplicant());
     }
 }
