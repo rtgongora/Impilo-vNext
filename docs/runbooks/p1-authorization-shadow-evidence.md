@@ -1,7 +1,21 @@
 # P1 authorization shadow — reading the evidence
 
-**Status 2026-08-07: observer BUILT and DEPLOYED to `impilo-full-preview`; persona evidence NOT YET
-COLLECTED.** No enforcement anywhere. Nothing has gone to production.
+**Status 2026-08-07: DELIVERED.** Observer built, deployed to `impilo-full-preview`, and
+browser-proven with real personas. Results: [`docs/reports/p1-shadow-evidence-report.md`](../reports/p1-shadow-evidence-report.md)
+— 0 `PERMIT_TO_DENY`, ~15% census coverage, no work persona proven. No enforcement anywhere.
+Nothing has gone to production.
+
+**To re-run the personas**, do not drive the browser by hand — the repo's own harness signs them in
+and owns their credentials (`PERSONA_PASSWORD`, `docs/demo/persona-truth-pack.md`):
+
+```bash
+cd ui/one-ui-shell && PLAYWRIGHT_BASE_URL=https://impilo.mohcc.gov.zw \
+PLAYWRIGHT_HOST_RESOLVER_RULES="MAP impilo.mohcc.gov.zw 127.0.0.1" \
+PLAYWRIGHT_SKIP_WEBSERVER=1 PREVIEW_SANDBOX_E2E=1 \
+npx playwright test e2e/journeys/start-menu-discoverability.journey.spec.ts --project=journeys
+```
+
+The host-resolver rule is required: this VM does not hairpin to its own public ingress.
 
 ---
 
