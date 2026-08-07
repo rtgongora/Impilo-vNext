@@ -28,17 +28,48 @@ public class FacilityRegulatoryService {
     // applications on behalf of applicants, schedules inspections and records
     // committee resolutions. HPA_INSPECTOR carries field verdicts only.
     /**
-     * Applicant-side lifecycle acts: creating, submitting, uploading a document, marking ready for
-     * inspection. Enforces {@code PROVIDER} as well as the back-office set — a practitioner
-     * applying for their own practice is a real applicant.
+     * Applicant-side acts on a facility application.
      *
-     * <p>All three duties below were role-name sets with no emittable member, and
-     * {@code assertAllowed} returned early on a blank actor type, so the only way through the whole
-     * facility regulatory lifecycle was to send no X-Actor-Type header. They now fail closed.</p>
+     * <p><b>Does not include {@code PROVIDER}, and that was audited rather than assumed.</b> It
+     * briefly did, on the reasoning that a practitioner registering their own practice is a real
+     * applicant. Measured, that flow does not exist on this path:</p>
+     *
+     * <ul>
+     *   <li>Every UI consumer of the facility-application writes — {@code /registry/facilities/new},
+     *       {@code /registry/facilities}, {@code /registry/facility-lifecycle} — is
+     *       {@code zone: "registry"}. None is in the {@code professional} zone.</li>
+     *   <li>The practitioner-facing regulatory applicant surface, {@code /professional/regulatory/*},
+     *       targets <b>varapi</b> ({@code /internal/v1/me/regulatory/applications}) — a different
+     *       service that never reaches this duty.</li>
+     *   <li>{@code FacilityApplicationEntity} records the applicant as free-text
+     *       {@code applicantName / applicantEmail / applicantPhone / applicantOrganisation}. There
+     *       is no provider id and no health id: the applicant is <em>described</em>, not
+     *       authenticated as.</li>
+     *   <li>On {@code /registry/facilities/new} the practitioner appears as
+     *       {@code practitionerPublicId} — the PIC being nominated, i.e. the <em>subject</em> of the
+     *       application, typed into a form by whoever is filling it in.</li>
+     *   <li>"Set Up Your Practice" ({@code /marketplace/establishment-guide}) is read-only: inspection
+     *       compositions, modules, requirement sourcing. It tells a practitioner what they will need;
+     *       it does not create an application.</li>
+     * </ul>
+     *
+     * <p>The decisive one: where a practitioner genuinely acts on their own facility-registry
+     * business — {@code PicNominationService.respond}, accepting or declining their own PIC
+     * nomination — the control is an <b>identity check</b> ({@code ctx.actorId()} must equal the
+     * nominee's health id), not an actor-type gate. That is the estate's actual pattern for "the
+     * provider acting for themselves", and it is stronger than widening a duty. If a
+     * sole-practitioner application path is ever built, it should follow that pattern rather than
+     * add {@code PROVIDER} here.</p>
+     *
+     * <p>This set is now identical to {@link #ACT_AS_INSPECTOR} and, in
+     * {@code ApplicationGovernanceService}, to the regulator duty. <b>Do not collapse them into one
+     * constant.</b> Actor type cannot tell an applicant from a regulator — that is a role
+     * distinction, and the KNOWN GAP in {@link ActorTypeGuard}. The separate duties keep the
+     * distinction stated, and named, for when roles do reach a service.</p>
      */
     private static final ActorTypeGuard.Duty ACT_AS_APPLICANT = new ActorTypeGuard.Duty(
             "acting as the applicant on a facility application",
-            Set.of("SYSTEM", "SERVICE", "OPERATOR", "PROVIDER"),
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
             Set.of("FACILITY_APPLICANT", "FACILITY_MANAGER", "FACILITY_ADMIN", "HPA_REGISTRAR",
                     "SYSTEM_ADMIN", "DEVELOPER"));
 

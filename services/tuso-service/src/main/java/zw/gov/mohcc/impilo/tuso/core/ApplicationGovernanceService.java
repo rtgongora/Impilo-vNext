@@ -54,13 +54,16 @@ public class ApplicationGovernanceService {
     /**
      * Applicant-side acts: responding to an information request.
      *
-     * <p>Enforces {@code PROVIDER} in addition to the back-office set, because a practitioner
-     * applying for their own practice is a real applicant and is the one actor type that would
-     * otherwise be locked out of their own application.</p>
+     * <p>Does not include {@code PROVIDER}. See the audit recorded on
+     * {@code FacilityRegulatoryService.ACT_AS_APPLICANT}: the practitioner-facing regulatory
+     * applicant flow lives in varapi, this RFI surface is reached only from the registry console
+     * ({@code HpaRegulatoryOperationsController} via {@code HpaRegulatoryBffController}), and where
+     * a practitioner does act for themselves the estate uses an identity check rather than an
+     * actor-type widening.</p>
      */
     private static final ActorTypeGuard.Duty ACT_AS_APPLICANT = new ActorTypeGuard.Duty(
             "responding as the applicant on a facility application",
-            Set.of("SYSTEM", "SERVICE", "OPERATOR", "PROVIDER"),
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
             Set.of("FACILITY_APPLICANT", "FACILITY_MANAGER", "FACILITY_ADMIN", "HPA_REGISTRAR",
                     "SYSTEM_ADMIN", "DEVELOPER"));
 
