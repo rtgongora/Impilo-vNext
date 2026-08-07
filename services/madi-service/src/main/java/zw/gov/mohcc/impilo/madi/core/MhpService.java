@@ -9,7 +9,10 @@ import zw.gov.mohcc.impilo.madi.persistence.entity.MhpActivationEntity;
 import zw.gov.mohcc.impilo.madi.persistence.entity.MhpPackEntity;
 import zw.gov.mohcc.impilo.madi.persistence.repository.MhpActivationRepository;
 import zw.gov.mohcc.impilo.madi.persistence.repository.MhpPackRepository;
+import zw.gov.mohcc.impilo.sharedkernel.security.BreakGlassGrantClient;
+import zw.gov.mohcc.impilo.sharedkernel.security.BreakGlassGrantQuery;
 import zw.gov.mohcc.impilo.sharedkernel.security.EmergencyAccessGuard;
+import zw.gov.mohcc.impilo.sharedkernel.security.UngovernedOverrideRecorder;
 
 import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
@@ -35,21 +38,32 @@ public class MhpService {
     private final MhpActivationRepository activationRepository;
     private final MhpPackRepository packRepository;
     private final MadiEventEmitter eventEmitter;
+    private final BreakGlassGrantClient grantClient;
+    private final UngovernedOverrideRecorder overrideRecorder;
 
     public MhpService(MhpActivationRepository activationRepository,
                       MhpPackRepository packRepository,
-                      MadiEventEmitter eventEmitter) {
+                      MadiEventEmitter eventEmitter,
+                      BreakGlassGrantClient grantClient,
+                      UngovernedOverrideRecorder overrideRecorder) {
         this.activationRepository = activationRepository;
         this.packRepository = packRepository;
         this.eventEmitter = eventEmitter;
+        this.grantClient = grantClient;
+        this.overrideRecorder = overrideRecorder;
     }
 
-    /** @throws EmergencyAccessGuard.EmergencyAccessDeniedException unless purposeOfUse is EMERGENCY/BREAK_GLASS. */
+    /**
+     * @throws EmergencyAccessGuard.EmergencyAccessDeniedException unless the purpose is
+     *         EMERGENCY/BREAK_GLASS <em>and</em> the trust plane confirms an active break-glass
+     *         grant (or could not be reached, in which case an ungoverned override is recorded).
+     */
     @Transactional
     public MhpActivationEntity activate(UUID tenantId, UUID facilityId, String patientCpid,
                                         UUID traumaEpisodeId, UUID emergencyEpisodeId,
                                         String activatedBy, String purposeOfUse) {
-        EmergencyAccessGuard.requireBreakGlass(purposeOfUse, "MHP_ACTIVATION", patientCpid, activatedBy);
+        EmergencyAccessGuard.requireBreakGlass(grantClient, overrideRecorder, new BreakGlassGrantQuery(
+                tenantId.toString(), activatedBy, null, purposeOfUse, "MHP_ACTIVATION", patientCpid));
 
         MhpActivationEntity activation = new MhpActivationEntity();
         activation.setTenantId(tenantId);
@@ -79,7 +93,8 @@ public class MhpService {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "MHP activation " + activationId + " is " + activation.getStatus() + ", not ACTIVE");
         }
-        EmergencyAccessGuard.requireBreakGlass(purposeOfUse, "MHP_PACK_ISSUE", activation.getPatientCpid(), issuedBy);
+        EmergencyAccessGuard.requireBreakGlass(grantClient, overrideRecorder, new BreakGlassGrantQuery(
+                tenantId.toString(), issuedBy, null, purposeOfUse, "MHP_PACK_ISSUE", activation.getPatientCpid()));
 
         MhpPackEntity pack = new MhpPackEntity();
         pack.setTenantId(tenantId);

@@ -131,3 +131,25 @@ pct:
     # W14-D preview flip (PO 2026-07-31): stamp SPECIALLY_PROTECTED when policy decides protection.
     # V438 backfills existing category-stamped rows. Set false to revert to shadow category-only.
     stamp-class: ${PCT_CONFIDENTIALITY_STAMP_CLASS:true}
+
+# ── Break-glass grant validation (Phase 0 workstream A2) ──
+# ClinicalAccessGuard's emergency waiver is checked against tshepo-authz's real grant model instead
+# of a client-supplied purpose-of-use string. Timeouts are short on purpose: this sits in front of
+# an emergency clinical write, and a prompt "could not ask" (waive + recorded ungoverned override)
+# beats a long wait.
+impilo:
+  trust:
+    tshepo-authz:
+      base-url: ${TSHEPO_AUTHZ_BASE_URL:http://localhost:8081}
+    break-glass:
+      connect-timeout-ms: ${BREAK_GLASS_CONNECT_TIMEOUT_MS:2000}
+      read-timeout-ms: ${BREAK_GLASS_READ_TIMEOUT_MS:3000}
+  # Per-workload service credential. Disabled by default estate-wide; until pct is given its own
+  # Keycloak client the grant check falls back to the inbound caller's bearer token.
+  s2s:
+    token:
+      enabled: ${IMPILO_S2S_TOKEN_ENABLED:false}
+      token-uri: ${IMPILO_S2S_TOKEN_URI:${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}/protocol/openid-connect/token}
+      client-id: ${IMPILO_S2S_CLIENT_ID:}
+      client-secret: ${IMPILO_S2S_CLIENT_SECRET:}
+      scope: ${IMPILO_S2S_TOKEN_SCOPE:}

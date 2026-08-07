@@ -11,7 +11,10 @@ import zw.gov.mohcc.impilo.madi.persistence.entity.MhpActivationEntity;
 import zw.gov.mohcc.impilo.madi.persistence.entity.MhpPackEntity;
 import zw.gov.mohcc.impilo.madi.persistence.repository.MhpActivationRepository;
 import zw.gov.mohcc.impilo.madi.persistence.repository.MhpPackRepository;
+import zw.gov.mohcc.impilo.sharedkernel.security.BreakGlassGrantCheck;
+import zw.gov.mohcc.impilo.sharedkernel.security.BreakGlassGrantClient;
 import zw.gov.mohcc.impilo.sharedkernel.security.EmergencyAccessGuard;
+import zw.gov.mohcc.impilo.sharedkernel.security.UngovernedOverrideRecorder;
 
 import java.util.List;
 import java.util.Map;
@@ -34,13 +37,20 @@ class MhpServiceTest {
     @Mock private MhpActivationRepository activationRepository;
     @Mock private MhpPackRepository packRepository;
     @Mock private MadiEventEmitter eventEmitter;
+    @Mock private BreakGlassGrantClient grantClient;
+    @Mock private UngovernedOverrideRecorder overrideRecorder;
 
     private MhpService service;
     private static final UUID TENANT_ID = UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
-        service = new MhpService(activationRepository, packRepository, eventEmitter);
+        service = new MhpService(activationRepository, packRepository, eventEmitter,
+                grantClient, overrideRecorder);
+        // Default: the actor holds a real grant. Tests that care about the other two verdicts
+        // override this; the purpose-of-use alone no longer gets anything past the guard.
+        lenient().when(grantClient.check(any()))
+                .thenReturn(BreakGlassGrantCheck.valid("BREAK_GLASS_REQUEST", "grant-test"));
     }
 
     private MhpActivationEntity activeActivation(UUID id) {

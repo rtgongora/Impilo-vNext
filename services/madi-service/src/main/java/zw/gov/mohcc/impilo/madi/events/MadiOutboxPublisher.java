@@ -77,6 +77,14 @@ public class MadiOutboxPublisher extends CompanionOutboxPublisher {
     @Override
     protected String resolveLegacyTopic(OutboxRow row) {
         return switch (row.aggregateType()) {
+            // An emergency action allowed without a validated grant. Routed straight at the audit
+            // plane rather than a madi topic: this is not blood-bank domain traffic, it is the
+            // record of a control that did not run, and it needs to reach the hash chain that
+            // clinical governance actually reads. The payload is shaped as tshepo-audit's
+            // AuditEventRequest so AuditKafkaConsumer can append it without a translation step.
+            // See MadiUngovernedOverrideRecorder for what is guaranteed (the local row) versus
+            // best-effort (arrival in the chain).
+            case "BREAK_GLASS_OVERRIDE" -> "tshepo.audit.events";
             case "DONOR" -> "madi.donor";
             case "DONATION_DRIVE" -> "madi.donation.drive";
             case "BLOOD_UNIT" -> "madi.blood.unit";

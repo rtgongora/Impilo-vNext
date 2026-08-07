@@ -6,7 +6,10 @@ import zw.gov.mohcc.impilo.madi.domain.BloodOrderStatus;
 import zw.gov.mohcc.impilo.madi.domain.BloodUnitStatus;
 import zw.gov.mohcc.impilo.madi.domain.CrossmatchResultStatus;
 import zw.gov.mohcc.impilo.madi.events.MadiEventEmitter;
+import zw.gov.mohcc.impilo.sharedkernel.security.BreakGlassGrantClient;
+import zw.gov.mohcc.impilo.sharedkernel.security.BreakGlassGrantQuery;
 import zw.gov.mohcc.impilo.sharedkernel.security.EmergencyAccessGuard;
+import zw.gov.mohcc.impilo.sharedkernel.security.UngovernedOverrideRecorder;
 import zw.gov.mohcc.impilo.madi.integration.OrosIntegration;
 import zw.gov.mohcc.impilo.madi.persistence.entity.*;
 import zw.gov.mohcc.impilo.madi.persistence.repository.*;
@@ -31,6 +34,8 @@ public class BloodOrderService {
     private final OrosIntegration orosIntegration;
     private final MadiEventEmitter eventEmitter;
     private final BloodOrderSlaService slaService;
+    private final BreakGlassGrantClient grantClient;
+    private final UngovernedOverrideRecorder overrideRecorder;
 
     public BloodOrderService(BloodOrderRepository orderRepository,
                              BloodOrderItemRepository itemRepository,
@@ -42,7 +47,9 @@ public class BloodOrderService {
                              BloodUnitService bloodUnitService,
                              OrosIntegration orosIntegration,
                              MadiEventEmitter eventEmitter,
-                             BloodOrderSlaService slaService) {
+                             BloodOrderSlaService slaService,
+                             BreakGlassGrantClient grantClient,
+                             UngovernedOverrideRecorder overrideRecorder) {
         this.orderRepository = orderRepository;
         this.itemRepository = itemRepository;
         this.sampleRepository = sampleRepository;
@@ -54,6 +61,8 @@ public class BloodOrderService {
         this.orosIntegration = orosIntegration;
         this.eventEmitter = eventEmitter;
         this.slaService = slaService;
+        this.grantClient = grantClient;
+        this.overrideRecorder = overrideRecorder;
     }
 
     @Transactional
@@ -224,17 +233,21 @@ public class BloodOrderService {
     /**
      * Emergency (O-negative / uncrossmatched) blood release under break-glass (G1.14). Life-saving
      * release bypasses the RESERVED+COMPATIBLE gate, but ONLY under an EMERGENCY/BREAK_GLASS
-     * purpose-of-use (else the shared {@link EmergencyAccessGuard} DENIES it — never a silent bypass),
-     * and it writes an ELEVATED break-glass audit event carrying the trauma-episode link. The blood
+     * purpose-of-use AND a break-glass grant the trust plane confirms — the purpose alone is
+     * client-supplied and no longer sufficient (see {@link EmergencyAccessGuard}). It writes an
+     * ELEVATED break-glass audit event carrying the trauma-episode link. The blood
      * bank still reconciles crossmatch retrospectively; this only authorises the emergency issue.
      */
     @Transactional
     public BloodOrderEntity emergencyRelease(UUID tenantId, UUID orderId, String purposeOfUse,
                                              String actorId, String reason, String bloodUnitId) {
         BloodOrderEntity order = requireOrder(tenantId, orderId);
-        // Throws EmergencyAccessDeniedException (→ 403) unless the purpose is EMERGENCY/BREAK_GLASS.
-        EmergencyAccessGuard.requireBreakGlass(purposeOfUse, "O_NEG_EMERGENCY_RELEASE",
-                order.getPatientCpid(), actorId);
+        // Throws EmergencyAccessDeniedException (→ 403) unless the purpose is EMERGENCY/BREAK_GLASS
+        // AND the trust plane confirms an active break-glass grant for this actor. If tshepo-authz
+        // cannot be reached the release proceeds and an ungoverned override is recorded first.
+        EmergencyAccessGuard.requireBreakGlass(grantClient, overrideRecorder, new BreakGlassGrantQuery(
+                tenantId.toString(), actorId, null, purposeOfUse,
+                "O_NEG_EMERGENCY_RELEASE", order.getPatientCpid()));
         order.setStatus(BloodOrderStatus.ISSUED.name());
         order.setUpdatedAt(OffsetDateTime.now());
         orderRepository.save(order);
