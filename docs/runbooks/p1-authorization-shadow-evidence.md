@@ -54,8 +54,11 @@ Both services read `impilo.trust.shadow-bearer.*`.
 | `IMPILO_TRUST_SHADOW_CANARY_SAMPLE_RATE` | BFF | inline-latency canary rate; `0.02` |
 | `IMPILO_TRUST_SHADOW_MAX_CONCURRENT` | PDP | shadow evaluations at once per instance; shadow always loses contention to production |
 
-The secret is created out-of-band and referenced by `secretKeyRef` — it is not in the chart, not in
-values, and not in git:
+The secret is created out-of-band and referenced by `secretKeyRef`. **The reference is in the chart**
+(`values-full-preview.yaml`, both `experienceBff` and `fullBootServices.tshepo-authz-service`), so a
+`helm upgrade` preserves the wiring; **the value is never committed**. It is marked `optional: true`
+deliberately — a missing secret disables the measurement rather than refusing to start the pod,
+because both ends fail closed on a blank key. Create it with:
 
 ```bash
 kubectl -n impilo-full-preview create secret generic impilo-shadow-probe \
