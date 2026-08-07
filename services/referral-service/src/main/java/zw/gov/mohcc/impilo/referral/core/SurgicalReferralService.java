@@ -179,7 +179,8 @@ public class SurgicalReferralService {
         payload.put("clinicalPriority", surgical.getClinicalPriority());
         payload.put("targetSpecialty", surgical.getTargetSpecialty());
         payload.put("decision", surgical.getDecision());
-        outboxPublisher.append("SurgicalReferral", surgical.getId().toString(), eventType, payload);
+        outboxPublisher.append("SurgicalReferral", surgical.getId().toString(), eventType,
+                surgical.getTenantId(), "PATIENT", surgical.getPatientId(), payload);
     }
 
     private UUID tenantId() {

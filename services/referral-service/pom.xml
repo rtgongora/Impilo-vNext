@@ -21,6 +21,11 @@
             <artifactId>shared-core</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- CompanionOutboxPublisher / EventEnvelope: the v1.1 outbox contract. -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>shared-kernel-java</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>

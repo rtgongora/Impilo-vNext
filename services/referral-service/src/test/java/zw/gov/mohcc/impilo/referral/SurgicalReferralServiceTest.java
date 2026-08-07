@@ -84,8 +84,11 @@ class SurgicalReferralServiceTest {
         Map<String, Object> result = service.decideSurgicalReferral(surgical.getId().toString(), body);
 
         assertThat(result.get("decision")).isEqualTo("ACCEPTED");
+        // Tenant and subject are asserted rather than matched loosely: they are the federation
+        // context the v1.1 envelope is built from, and an event reaching the outbox without a
+        // tenant is now refused rather than published with a placeholder.
         verify(outbox).append(eq("SurgicalReferral"), anyString(),
-                eq("referral.surgical.accepted"), any());
+                eq("referral.surgical.accepted"), eq(TENANT), eq("PATIENT"), eq("P-1"), any());
     }
 
     @Test
@@ -95,19 +98,19 @@ class SurgicalReferralServiceTest {
 
         service.decideSurgicalReferral(surgical.getId().toString(), body);
 
-        verify(outbox).append(any(), anyString(), eq("referral.surgical.declined"), any());
-        verify(outbox, never()).append(any(), anyString(), eq("referral.surgical.accepted"), any());
+        verify(outbox).append(any(), anyString(), eq("referral.surgical.declined"), any(), any(), any(), any());
+        verify(outbox, never()).append(any(), anyString(), eq("referral.surgical.accepted"), any(), any(), any(), any());
     }
 
     @Test
     void redirectedAndInfoRequestedEmitDistinctEvents() {
         SurgicalReferralEntity a = seed(SurgicalReferralEntity.DECISION_PENDING);
         service.decideSurgicalReferral(a.getId().toString(), Map.of("decision", "redirected"));
-        verify(outbox).append(any(), anyString(), eq("referral.surgical.redirected"), any());
+        verify(outbox).append(any(), anyString(), eq("referral.surgical.redirected"), any(), any(), any(), any());
 
         SurgicalReferralEntity b = seed(SurgicalReferralEntity.DECISION_PENDING);
         service.decideSurgicalReferral(b.getId().toString(), Map.of("decision", "info_requested"));
-        verify(outbox).append(any(), anyString(), eq("referral.surgical.info_requested"), any());
+        verify(outbox).append(any(), anyString(), eq("referral.surgical.info_requested"), any(), any(), any(), any());
     }
 
     @Test
@@ -117,7 +120,7 @@ class SurgicalReferralServiceTest {
                 service.decideSurgicalReferral(surgical.getId().toString(), Map.of("decision", "accepted")))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("terminal");
-        verify(outbox, never()).append(any(), anyString(), eq("referral.surgical.accepted"), any());
+        verify(outbox, never()).append(any(), anyString(), eq("referral.surgical.accepted"), any(), any(), any(), any());
     }
 
     @Test

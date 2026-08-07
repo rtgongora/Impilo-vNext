@@ -102,6 +102,7 @@ public class ReferralService {
         payload.put("tenantId", entity.getTenantId().toString());
         payload.put("patientId", entity.getPatientId());
         payload.put("status", entity.getStatus());
-        outboxPublisher.append("Referral", entity.getId().toString(), eventType, payload);
+        outboxPublisher.append("Referral", entity.getId().toString(), eventType,
+                entity.getTenantId(), "PATIENT", entity.getPatientId(), payload);
     }
 }
