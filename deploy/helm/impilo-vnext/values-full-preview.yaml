@@ -685,6 +685,55 @@ fullBootServices:
     env:
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
+  # ── Phase 0 E cohort: services that gained an oauth2 resource server ───────────────────────
+  #
+  # Seven of these ran anyRequest().permitAll() or had no Spring Security on the classpath at
+  # all; the probe sweep found writes reaching them with no credential (jobs-service actually
+  # PERSISTED a job definition). Their chains now authenticate — which is exactly why they need
+  # an issuer HERE, and why leaving it out is not a safe default.
+  #
+  # Their application.yml falls back to ${KEYCLOAK_ISSUER:http://localhost:8080/realms/impilo},
+  # and KEYCLOAK_ISSUER is not in these pods' env. Measured on jobs-service after its rollout:
+  # anonymous writes correctly 401, but a REAL token would have been validated against localhost
+  # and rejected too — fail-closed and unusable, which reads like enforcement in a probe and is
+  # an outage for a legitimate caller.
+  #
+  # PUBLIC issuer (it is what the token's iss claim carries) with the INTERNAL JWKS route (this
+  # VM cannot reach its own public address), same pairing as the MFA and G046 cohorts above.
+  # Setting jwk-set-uri also stops Spring attempting OIDC discovery against the public address at
+  # startup, which is the G046 "no JwtDecoder bean, pod fails to start" trap.
+  jobs-service:
+    env:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
+  offline-edge-service:
+    env:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
+  offline-sync-service:
+    env:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
+  support-service:
+    env:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
+  pharmacy-elmis-adapter:
+    env:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
+  connector-fhir-adapter:
+    env:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
+  nhume-service:
+    env:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
+  # NOTE: analytics-pipeline-service is the eighth service in this cohort and is NOT configured
+  # here — it already has a block further down this file (Kafka listener autostart). A second key
+  # with the same name is silently discarded by YAML, which is how the rtc-gateway fix and two
+  # earlier attempts in this file reached nothing. Its issuer settings live in that block instead.
   llm-orchestration-service:
     env:
       LLM_SECURITY_ALLOW_INSECURE_PERMIT_ALL: "true"
@@ -807,6 +856,11 @@ fullBootServices:
   analytics-pipeline-service:
     env:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
+      # Phase 0 E cohort — see the block above for why an issuer is required here rather than
+      # optional. Deliberately in THIS env block: a second analytics-pipeline-service key would
+      # be silently discarded by YAML and the flag would reach nothing.
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
   pacs-adapter-service:
     env:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
