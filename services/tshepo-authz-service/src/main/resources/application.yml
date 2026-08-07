@@ -173,3 +173,20 @@ management:
       enabled: true
     db:
       enabled: true
+
+impilo:
+  trust:
+    # ── P1 authorization shadow (TEMPORARY) ──────────────────────────────────
+    # Measures what authorization WOULD decide if the PDP could see a browser session's
+    # roles. Measured 2026-08-07: the browser sends no Authorization header, so the PDP
+    # resolves no roles, while 489 of 525 active ALLOW rules require one. Nothing here
+    # changes a verdict; the probe runs after the decision is already final and upstream.
+    #
+    # probe-key is a Kubernetes Secret and is NEVER committed. Blank fails closed on both
+    # sides: the PDP refuses every caller, and the BFF does not dispatch at all.
+    # DELETE THIS BLOCK when the measurement has been read and acted on.
+    shadow-bearer:
+      enabled: ${IMPILO_TRUST_SHADOW_BEARER_ENABLED:false}
+      probe-key: ${IMPILO_TRUST_SHADOW_PROBE_KEY:}
+      # Shadow always loses resource contention to production authorization.
+      max-concurrent: ${IMPILO_TRUST_SHADOW_MAX_CONCURRENT:4}

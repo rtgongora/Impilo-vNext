@@ -57,6 +57,25 @@ impilo:
     decision-envelope:
       mode: ${IMPILO_TRUST_DECISION_ENVELOPE_MODE:OFF}
       jwks-uri: ${IMPILO_TRUST_DECISION_ENVELOPE_JWKS_URI:http://tshepo-keys-service:8184/v1/keys/jwks}
+    # ── P1 authorization shadow (TEMPORARY) ──────────────────────────────────
+    # Measures what authorization WOULD decide if the PDP could see a browser session's
+    # roles. Measured 2026-08-07: the browser sends no Authorization header, so the PDP
+    # resolves no roles, while 489 of 525 active ALLOW rules require one. Nothing here
+    # changes a verdict; the probe runs after the decision is already final and upstream.
+    #
+    # probe-key is a Kubernetes Secret and is NEVER committed. Blank fails closed on both
+    # sides: the PDP refuses every caller, and the BFF does not dispatch at all.
+    # DELETE THIS BLOCK when the measurement has been read and acted on.
+    shadow-bearer:
+      enabled: ${IMPILO_TRUST_SHADOW_BEARER_ENABLED:false}
+      probe-key: ${IMPILO_TRUST_SHADOW_PROBE_KEY:}
+      # 100% of preview: the deliverable is a census of which routes and personas would
+      # change, and a sample cannot establish that a rule never fires.
+      async-sample-rate: ${IMPILO_TRUST_SHADOW_ASYNC_SAMPLE_RATE:1.0}
+      # Small on purpose: this one answers "what would an inline probe cost", which needs
+      # clean samples, not volume.
+      canary-sample-rate: ${IMPILO_TRUST_SHADOW_CANARY_SAMPLE_RATE:0.02}
+      canary-timeout-millis: ${IMPILO_TRUST_SHADOW_CANARY_TIMEOUT_MS:750}
   tenancy:
     mode: ${IMPILO_TENANCY_MODE:SHADOW}
     claim: ${IMPILO_TENANCY_CLAIM:tenant_id}

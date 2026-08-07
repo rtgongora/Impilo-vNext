@@ -20,6 +20,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import zw.gov.mohcc.impilo.experience.auth.session.SessionBearerTokenResolver;
 import zw.gov.mohcc.impilo.experience.auth.session.RecoverySessionFilter;
 import zw.gov.mohcc.impilo.experience.auth.session.SessionCsrfFilter;
+import zw.gov.mohcc.impilo.experience.trust.shadow.ShadowObservationFilter;
+import zw.gov.mohcc.impilo.experience.trust.shadow.ShadowObservationProperties;
+import zw.gov.mohcc.impilo.experience.trust.shadow.ShadowProbeDispatcher;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -156,6 +159,12 @@ public class SecurityConfig {
 
     @Autowired
     private RecoverySessionFilter recoverySessionFilter;
+
+    @Autowired
+    private ShadowObservationProperties shadowObservationProperties;
+
+    @Autowired
+    private ShadowProbeDispatcher shadowProbeDispatcher;
 
     @Value("${impilo.security.allow-anonymous:false}")
     private boolean allowAnonymous;
@@ -611,6 +620,13 @@ public class SecurityConfig {
             // no longer needs to send its own Health ID.
             http.addFilterAfter(new ActorContextFilter(),
                     org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class);
+            // P1 authorization shadow. Placed AFTER authentication so the validated JWT is in the
+            // SecurityContext — the whole point is to shadow the token that actually authenticated
+            // this request, not one re-fetched from the session store a moment later. It observes
+            // and dispatches; it never touches the request, the response or the chain's outcome.
+            // Inert unless impilo.trust.shadow-bearer.enabled AND a probe key are both configured.
+            http.addFilterAfter(shadowObservationFilter(),
+                    ActorContextFilter.class);
         } else if (allowAnonymous) {
             log.warn("SECURITY: JWT validation DISABLED — impilo.security.allow-anonymous=true. "
                     + "All endpoints are open. This MUST NOT be used in production.");
@@ -622,6 +638,16 @@ public class SecurityConfig {
         }
 
         return http.build();
+    }
+
+    /**
+     * Not a {@code @Bean}: a servlet filter published as a bean is auto-registered by Boot in the
+     * plain servlet chain as well, where it would run BEFORE Spring Security and see no
+     * authenticated JWT — capturing nothing while looking like it worked. It is constructed here so
+     * it exists exactly once, inside the security chain.
+     */
+    private ShadowObservationFilter shadowObservationFilter() {
+        return new ShadowObservationFilter(shadowObservationProperties, shadowProbeDispatcher);
     }
 
     /** Spring {@code hasAnyRole} is {@code String...}; pass a single merged array for union role sets. */
