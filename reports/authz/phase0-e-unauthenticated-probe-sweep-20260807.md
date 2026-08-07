@@ -3,7 +3,13 @@
 **Date:** 2026-08-07 · **Namespace:** `impilo-full-preview` · **Branch:** `phase0/e-probe-sweep`
 **Gate condition #2 of 5:** *unauthenticated probes 401 across the estate.*
 
-## Verdict — the gate condition is NOT met
+## Verdict — NOT met when measured; **closed and re-measured the same day**
+
+> The sweep below is the original measurement. Everything it found has since been fixed
+> and re-probed — see **REMEDIATION** further down: **0 open writes, 0 unknowns, 301 of
+> 308 endpoints refusing and 7 network-contained.** The one item not closed on its merits
+> is `matcher-engine`, which is contained rather than authenticated.
+
 
 | | count |
 |---|---|
@@ -176,6 +182,115 @@ Two audit services, easily confused, land differently here:
   refuse, but **`/v1/audit/events` and `/v1/audit/verify-chain` do not**. The `/v1/audit/**` path is
   partially escaping authentication on the service that writes the audit trail. This is a new
   finding, not a restatement of the audit-ledger one.
+
+---
+
+# REMEDIATION — closed and re-measured, 2026-08-07
+
+Everything below was measured after the fixes, by re-running the same probe from the same pod.
+
+## Final estate posture
+
+The full 308-endpoint sweep, re-run at **maximum well-formedness** (v1.1 trust headers +
+idempotency key, so every pre-authz gate is satisfied) with **no credential**:
+
+| | before | after |
+|---|---|---|
+| refused (401/403) | 290 | **301** |
+| network-contained (000) | 4 | **7** |
+| **unknown — reached application code** | **20** | **0** |
+| **OPEN — 2xx with no credential** | **12** | **0** |
+
+**Zero open writes. Zero endpoints reaching application code.** The 32 endpoints previously
+classified OPEN or unknown were re-probed individually: **29 now 401, 3 network-contained, none 2xx.**
+
+The 7 × `000` are the two contained services — `matcher-engine` (3) and
+`workforce-governance-service` (4). Neither is a hole: workforce-governance answers 401 from an
+admitted pod, and matcher-engine is covered below.
+
+## One root cause, not twelve
+
+Every finding traced back to nine services, and the shape was the same in each:
+
+- **Five ran `anyRequest().permitAll()` with no `oauth2ResourceServer` at all.** Three carried a
+  javadoc justifying it — *"trust enforcement is handled upstream by Envoy ext_authz and TSHEPO"*.
+  **Envoy fronts `experience-bff` only.** The comment described a control that did not exist on
+  that path, the same phantom-control pattern already recorded on `costing-engine-service`.
+- **Four had no Spring Security on the classpath.** Each has a `SecurityBaselineConfig`, which is
+  easy to mistake for one — it supplies rate limiting and nothing else. That is why probes saw
+  `X-RateLimit-*` headers on responses that had never been authenticated, and why a scan for files
+  named `SecurityConfig*` reported "none" rather than "one that does not authenticate".
+
+## What was done, and why it differs per service
+
+| Service | Action | Why |
+|---|---|---|
+| `jobs-service` 🔴 | OAuth chain | The confirmed persisted write. **Now 401, verified live.** |
+| `analytics-pipeline-service` 🟠 | OAuth chain | The confirmed 202. |
+| `offline-edge`, `offline-sync`, `support`, `pharmacy-elmis-adapter` | OAuth chain | `permitAll`, no oauth2. |
+| `connector-fhir-adapter`, `nhume-service` | OAuth chain | No Spring Security at all. |
+| `iot-ingestion-service` | **config only** | Code default was already `oauth2`; helm set `IMPILO_SECURITY_MODE=permit-all`, which made the whole service anonymous. Now 401 on all three endpoints. |
+| `matcher-engine` | **NetworkPolicy** | Its only caller sends no token — see below. |
+| `tshepo-audit-service` | **deploy only** | Source was already fixed (`96630a9aa`, same day). A deploy-lag gap, not a code gap. |
+| 11 services | dropped `/internal/v1/test-command` | Echo-only probe path returning 201 to anonymous callers. |
+
+### `matcher-engine` is contained, not authenticated — and that is a weaker control
+
+Its sole caller, `BmeClientMatchingEngine` in `abis-service`, builds a plain `RestClient` with **no
+Authorization header**. Authenticating the engine without first minting a token there would have
+broken every biometric verification in the estate. There is no shared service-token library to
+reach for. So it is admitted only from `abis-service`, the same tier control the estate already
+applies to Orthanc and HAPI.
+
+**A permitted caller still reaches it with no credential.** Recorded as a residual, not as closed.
+Authenticating it belongs with the service-to-service token workstream.
+
+### The fix that a probe could not have caught
+
+After `jobs-service` rolled out, anonymous writes correctly returned 401 — but `KEYCLOAK_ISSUER`
+was absent from its pod, so its decoder would have validated a **real** token against `localhost`
+and rejected that too. Fail-closed and unusable. **A probe scores that green either way.** All
+eight newly-authenticated services now carry the public-issuer / internal-JWKS pairing.
+
+## Guards, so this cannot come back
+
+`check-enforcement-posture.sh` already existed and was **wired into nothing** — it had never failed
+a build in the estate it was written to protect. It is now a gate, and its baseline shrinks from
+**16 services to 7** (four documented false positives, one library, plus `iot-ingestion` and
+`matcher-engine`, whose source is still open even though the estate is closed).
+
+It also has a blind spot, found by mutation rather than by reading: it classifies `permitAll` +
+a `disable-oauth-for-tests` binding as `FLAG_IS_SEAM` **without checking which branch the estate
+runs**. A config that is `permitAll` in *both* branches passes it. Proven: `community-service` was
+mutated so its production branch terminates in `permitAll`, and the guard still printed
+`GUARD PASS ... exactly matching the reviewed baseline`.
+
+`check-production-chain-authenticates.sh` closes that. It audits the chain that configures
+`oauth2ResourceServer` — the marker separating production from test — and enforces two rules:
+the chain must end in a closed terminal, and must not permit the v1.1 probe POST. Proven green
+(94 chains), red on each rule, and red on its anchor when the scanner is broken so that
+"found nothing" can never read as "estate clean".
+
+Each of the eight also carries a `ProductionChainRefusesAnonymousWriteTest` that forces
+`disable-oauth-for-tests=false` and asserts 401 against the production chain, **sending the v1.1
+headers** so the request reaches the security layer instead of stopping at the companion filter's
+400. Proven red: reverting `jobs-service` fails it — with a *database* error, because the anonymous
+request reached the persistence layer.
+
+## What is still open
+
+- **`matcher-engine` is contained, not authenticated** (above). The only item from this sweep not
+  closed on its merits.
+- **This measured authentication, not authorization.** `costing-engine-service` returns 401
+  everywhere, yet its GL and waiver controllers still carry no `@PreAuthorize` — any caller with
+  any accepted token can post to the national GL. **Untouched by this work and still open.**
+- **`/internal/v1/health` remains permitted on 7 other services.** It is a health endpoint and
+  keeping it open is consistent with `/actuator/health`; it is a GET with no write. Noted for
+  consistency, not as a defect.
+- **Coverage is still a sample**: 308 of 4,371 discovered write endpoints. The sweep's own gap was
+  demonstrated during remediation — four services with an open `test-command` were never probed
+  because the sampler picked their business endpoints instead. They were found by source analysis.
+
 
 ## Per-service results (103 services)
 
