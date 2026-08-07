@@ -193,8 +193,3 @@ impilo:
       # to production authorization; a ceiling set without reference to the contended resource
       # does not deliver that (measured: 4 against a pinned pool of 3 starved the pool).
       max-concurrent: ${IMPILO_TRUST_SHADOW_MAX_CONCURRENT:1}
-
-  # Where to FETCH Keycloak signing keys, when the issuer claim is a public URL the pods cannot
-  # reach. Blank derives it from the issuer, which is right wherever the two coincide.
-  keycloak:
-    jwks-uri: ${IMPILO_TRUST_KEYCLOAK_JWKS_URI:}
