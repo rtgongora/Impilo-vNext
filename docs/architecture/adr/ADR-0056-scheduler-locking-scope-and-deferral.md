@@ -8,6 +8,16 @@
 - **Relates to:** `docs/architecture/hybrid-federated-target-architecture-v1.3.11.md` (frozen under
   ADR-0054)
 
+> Numbering note: per ADR-0054, the ADR sequence is **shared** across two directories — `docs/adr/`
+> for service and product decisions, `docs/architecture/adr/` for architecture-scoped ones. This ADR
+> corrects the frozen architecture document's gap register, so it is filed here alongside ADR-0054
+> and ADR-0055. **ADR-0056** is the next identifier in the shared sequence and is not reused in
+> either directory.
+>
+> *(This ADR was first filed under `docs/adr/` in commit `271116183` — an error: the cross-link from
+> the architecture document pointed here all along, so the link did not resolve. Moved with history
+> preserved.)*
+
 ## Context
 
 The frozen architecture asserted a live, active defect:
@@ -127,7 +137,7 @@ If that returns a Java workload other than `experience-bff`, this deferral has e
 **Where it goes when it does:** a `SchedulerLockService` in `libs/tech-companion`. That library is
 already a dependency of **95 of 105 service modules**, and it already owns the exact idiom the lock
 needs — `INSERT … ON CONFLICT DO NOTHING` in
-[`JdbcIdempotencyRepository`](../../libs/tech-companion/src/main/java/zw/gov/mohcc/impilo/companion/idempotency/JdbcIdempotencyRepository.java)
+[`JdbcIdempotencyRepository`](../../../libs/tech-companion/src/main/java/zw/gov/mohcc/impilo/companion/idempotency/JdbcIdempotencyRepository.java)
 (line 64). A database-backed lock is preferred over k8s leader election: it needs no new RBAC, works
 identically in Compose and Kubernetes, and fails in the same direction as the data it guards.
 
