@@ -58,15 +58,35 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 
 @Service
 public class ClientIdentityOperationsService {
 
-    private static final Set<String> FRONTLINE_ACTOR_TYPES = Set.of(
-            "REGISTRATION_CLERK", "PROVIDER_USER", "PROVIDER", "COMMUNITY_HEALTH_WORKER",
-            "VIRTUAL_CARE_USER", "REGISTRY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER", "ADMIN");
-    private static final Set<String> STEWARD_ACTOR_TYPES = Set.of(
-            "IDENTITY_STEWARD", "REGISTRY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER", "ADMIN");
+    /**
+     * Frontline registration operations — the desk and the clinician who register a person.
+     *
+     * <p>Was {@code {REGISTRATION_CLERK, PROVIDER_USER, PROVIDER, COMMUNITY_HEALTH_WORKER,
+     * VIRTUAL_CARE_USER, REGISTRY_ADMIN, SYSTEM_ADMIN, DEVELOPER, ADMIN}}, of which only
+     * {@code PROVIDER} is an actor type any client emits — plus a separate {@code SYSTEM} escape
+     * below it. So a registration clerk, the actor this gate is named for, could not pass it.</p>
+     */
+    private static final ActorTypeGuard.Duty FRONTLINE_REGISTRATION = new ActorTypeGuard.Duty(
+            "frontline registration operations",
+            Set.of("SYSTEM", "SERVICE", "OPERATOR", "PROVIDER"),
+            Set.of("REGISTRATION_CLERK", "PROVIDER_USER", "COMMUNITY_HEALTH_WORKER",
+                    "VIRTUAL_CARE_USER", "REGISTRY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER", "ADMIN"));
+    /**
+     * Identity stewardship operations.
+     *
+     * <p>Was {@code {IDENTITY_STEWARD, REGISTRY_ADMIN, SYSTEM_ADMIN, DEVELOPER, ADMIN}} — not one
+     * of them emittable — plus a separate {@code SYSTEM} escape below it. The set admitted nobody;
+     * the escape was the entire gate.</p>
+     */
+    private static final ActorTypeGuard.Duty IDENTITY_STEWARDSHIP = new ActorTypeGuard.Duty(
+            "identity stewardship operations",
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            Set.of("IDENTITY_STEWARD", "REGISTRY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER", "ADMIN"));
 
     private final ClientRepository clientRepository;
     private final ClientRegistrationRepository registrationRepository;
@@ -885,26 +905,14 @@ public class ClientIdentityOperationsService {
         if (ctx.mode() == AccessMode.EXTERNAL) {
             throw new SecurityException("This action requires an internal or governed registration context");
         }
-        if (ctx.actorType() != null && FRONTLINE_ACTOR_TYPES.contains(ctx.actorType())) {
-            return;
-        }
-        if ("SYSTEM".equalsIgnoreCase(ctx.actorType())) {
-            return;
-        }
-        throw new SecurityException("Actor is not authorized for frontline registration operations");
+        ActorTypeGuard.require(ctx, FRONTLINE_REGISTRATION);
     }
 
     private void assertSteward(TrustContext ctx) {
         if (ctx.mode() == AccessMode.EXTERNAL) {
             throw new SecurityException("This action requires an internal stewardship context");
         }
-        if (ctx.actorType() != null && STEWARD_ACTOR_TYPES.contains(ctx.actorType())) {
-            return;
-        }
-        if ("SYSTEM".equalsIgnoreCase(ctx.actorType())) {
-            return;
-        }
-        throw new SecurityException("Actor is not authorized for identity stewardship operations");
+        ActorTypeGuard.require(ctx, IDENTITY_STEWARDSHIP);
     }
 
     private ClientEntity requireClient(UUID tenantId, UUID healthId) {

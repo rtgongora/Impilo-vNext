@@ -49,7 +49,7 @@ class ProviderBadgeServiceTest {
         service = new ProviderBadgeService(providerRepository, badgeRepository,
                 signingService, projectionSupport, new ObjectMapper());
         TrustContextHolder.set(new TrustContext(
-                tenantId, "registrar-1", "REGISTRY_ADMIN", "REGISTRY_ADMIN", null,
+                tenantId, "registrar-1", "OPERATOR", "REGISTRY_ADMIN", null,
                 UUID.randomUUID(), null, null, null, AccessMode.INTERNAL));
 
         provider = new ProviderEntity();

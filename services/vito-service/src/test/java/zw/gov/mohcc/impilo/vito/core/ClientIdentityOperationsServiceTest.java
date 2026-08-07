@@ -125,7 +125,10 @@ class ClientIdentityOperationsServiceTest {
         TrustContextHolder.set(new TrustContext(
                 tenantId,
                 "actor-1",
-                "REGISTRY_ADMIN",
+                // Was "REGISTRY_ADMIN" — a role name no client emits, so this suite drove the
+                // service with an actor type no real request can carry. OPERATOR is what a
+                // registration desk actually presents. See ActorTypeGuard.
+                "OPERATOR",
                 "CLIENT_REGISTRATION",
                 "device-1",
                 UUID.randomUUID(),

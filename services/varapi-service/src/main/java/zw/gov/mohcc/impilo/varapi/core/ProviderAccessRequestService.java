@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
+import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 
 /**
  * Durable self-service provider-access requests (IATG Journey D).
@@ -188,7 +189,10 @@ public class ProviderAccessRequestService {
      * governs all of them. Letting an org representative decide organisation-scoped requests is a
      * per-type refinement worth making deliberately, not by leaving the gate wide now.</p>
      */
-    static final Set<String> REVIEWER_ACTOR_TYPES = Set.of("SYSTEM", "REGISTRY_ADMIN", "NATIONAL_ADMIN");
+    static final ActorTypeGuard.Duty REVIEW_PROVIDER_ACCESS_REQUEST = new ActorTypeGuard.Duty(
+            "reviewing provider access requests",
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            Set.of("REGISTRY_ADMIN", "NATIONAL_ADMIN"));
 
     /**
      * Defence in depth behind ext_authz, in the idiom this service already uses elsewhere.
@@ -217,17 +221,7 @@ public class ProviderAccessRequestService {
      * a bare 403 would send them looking in the wrong place.</p>
      */
     private static void requireReviewer(TrustContext ctx, String operation) {
-        String actorType = ctx.actorType() != null
-                ? ctx.actorType().trim().toUpperCase(Locale.ROOT) : "";
-        if (!REVIEWER_ACTOR_TYPES.contains(actorType)) {
-            log.warn("Refused {} — actor {} has actorType '{}', which is not a reviewer type",
-                    operation, ctx.actorId(), actorType.isEmpty() ? "<absent>" : actorType);
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Reviewing provider access requests requires one of "
-                            + REVIEWER_ACTOR_TYPES.stream().sorted().toList()
-                            + "; this session presents "
-                            + (actorType.isEmpty() ? "no actor type" : "'" + actorType + "'"));
-        }
+        ActorTypeGuard.require(ctx, REVIEW_PROVIDER_ACCESS_REQUEST);
     }
 
     /** Statuses a reviewer may still decide from. Terminal states are never re-decided. */

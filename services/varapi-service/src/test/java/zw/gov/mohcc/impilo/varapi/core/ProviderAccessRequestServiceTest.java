@@ -64,7 +64,7 @@ class ProviderAccessRequestServiceTest {
      */
     private void withReviewerContext() {
         withContext();
-        TrustContextHolder.set(new TrustContext(TENANT, REVIEWER.toString(), "REGISTRY_ADMIN", "OPERATIONS",
+        TrustContextHolder.set(new TrustContext(TENANT, REVIEWER.toString(), "OPERATOR", "OPERATIONS",
                 null, UUID.randomUUID(), null, null, null, AccessMode.INTERNAL));
     }
 
@@ -342,8 +342,10 @@ class ProviderAccessRequestServiceTest {
 
         assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
         // The message has to name what is required: the first person to hit this will be a
-        // reviewer whose identity was provisioned without a matching actor type.
-        assertTrue(ex.getReason().contains("REGISTRY_ADMIN"));
+        // reviewer whose identity was provisioned without a matching actor type. It names the
+        // ENFORCED set, not the recorded intent — REGISTRY_ADMIN is a role no client emits, so
+        // telling a refused reviewer to obtain it would send them somewhere that leads nowhere.
+        assertTrue(ex.getReason().contains("OPERATOR"), ex.getReason());
     }
 
     @Test

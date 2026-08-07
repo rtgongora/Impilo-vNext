@@ -58,7 +58,7 @@ class ProviderTrustControllerTest {
         controller = new ProviderTrustController(
                 new ProviderTrustService(providerRepository, attemptRepository, outboxRepository));
         TrustContextHolder.set(new TrustContext(
-                tenantId, "registry-admin-1", "REGISTRY_ADMIN", "REGISTRY_ADMIN", "device",
+                tenantId, "registry-admin-1", "OPERATOR", "REGISTRY_ADMIN", "device",
                 UUID.randomUUID(), null, null, null, AccessMode.INTERNAL));
 
         provider = new ProviderEntity();

@@ -26,6 +26,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 
 /**
  * Provider profile <b>recovery</b> (IATG WS-F): recover-not-reissue.
@@ -55,6 +56,21 @@ import java.util.UUID;
  */
 @Service
 public class ProviderRecoveryService {
+
+    /**
+     * The assisted-desk override on provider profile recovery: who may recover a profile that is
+     * not their own. Everyone else must be the person the profile belongs to.
+     *
+     * <p>Was {@code Set.of("SYSTEM", "REGISTRY_ADMIN")}. REGISTRY_ADMIN is not an actor type any
+     * client emits, so "assisted desk recovery" was in practice machine-only and no desk operator
+     * could perform it. Adding OPERATOR widens who can recover another person's profile, which is
+     * the point of an assisted desk — but it is a widening, and it is the reason this constant is
+     * named for the override rather than for a role.</p>
+     */
+    private static final ActorTypeGuard.Duty ASSISTED_DESK_RECOVERY = new ActorTypeGuard.Duty(
+            "recovering a provider profile on someone else's behalf",
+            ActorTypeGuard.BACK_OFFICE_WRITERS,
+            java.util.Set.of("REGISTRY_ADMIN"));
 
     private static final Logger log = LoggerFactory.getLogger(ProviderRecoveryService.class);
 
@@ -99,7 +115,7 @@ public class ProviderRecoveryService {
         // only the person themselves may initiate recovery of their own profile;
         // SYSTEM / REGISTRY_ADMIN excepted for assisted desk recovery.
         String actorType = ctx.actorType() != null ? ctx.actorType().trim().toUpperCase(Locale.ROOT) : "";
-        if (!Set.of("SYSTEM", "REGISTRY_ADMIN").contains(actorType)
+        if (!ActorTypeGuard.permits(actorType, ASSISTED_DESK_RECOVERY)
                 && (ctx.actorId() == null || !healthId.toString().equalsIgnoreCase(ctx.actorId().trim()))) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "A provider profile may only be recovered by the authenticated person it belongs to");

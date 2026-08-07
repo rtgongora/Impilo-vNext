@@ -75,7 +75,7 @@ class ProviderBootstrapServiceTest {
                 providerClaimAdjudicationService,
                 authorizationLinkService);
         TrustContextHolder.set(new TrustContext(
-                tenantId, "national-admin-1", "REGISTRY_ADMIN", "REGISTRY_ADMIN", "device",
+                tenantId, "national-admin-1", "OPERATOR", "REGISTRY_ADMIN", "device",
                 correlationId, null, null, null, AccessMode.INTERNAL));
         lenient().when(outboxRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
     }
@@ -93,7 +93,11 @@ class ProviderBootstrapServiceTest {
         org.assertj.core.api.Assertions.assertThatThrownBy(() ->
                         service.bulkPreload(new BulkPreloadRequest(java.util.List.of())))
                 .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
-                .hasMessageContaining("national-admin");
+                // The refusal used to say "requires national-admin or organisation-representative
+                // capacity" — capacities no client can present, so it named a destination that
+                // leads nowhere. It now names the actor types actually enforced.
+                .hasMessageContaining("OPERATOR")
+                .hasMessageContaining("'CITIZEN'");
     }
 
     @org.junit.jupiter.api.Test

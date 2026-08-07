@@ -48,7 +48,7 @@ class ProviderApplicationFeeWorkflowTest {
                 outboxRepository,
                 councilRepository);
         TrustContextHolder.set(new TrustContext(
-                tenantId, "actor-1", "REGISTRY_ADMIN", "REGISTRY_ADMIN", "device",
+                tenantId, "actor-1", "OPERATOR", "REGISTRY_ADMIN", "device",
                 correlationId, facilityId, null, null, AccessMode.INTERNAL));
         lenient().when(outboxRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
     }
