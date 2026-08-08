@@ -41,39 +41,20 @@ public class JobExecutionService {
     }
 
     /**
-     * Triggers a new execution for the given job definition.
+     * Triggering is <b>not implemented</b> and therefore refuses.
+     *
+     * <p>There is no executor: no scheduler, no worker, no Kafka producer, and no subscriber
+     * anywhere for {@code JOB_TRIGGERED}. The previous implementation saved a PENDING execution
+     * row, appended the outbox event and returned {@code 201 Created} — a row that could never
+     * leave PENDING because nothing existed to advance it.</p>
+     *
+     * <p>No execution row is created, so {@code job_execution} does not accumulate runs that
+     * never ran. See {@link JobExecutionNotImplementedException}.</p>
      */
-    @Transactional
     public JobExecutionEntity trigger(JobDefinitionEntity jobDefinition, TriggerJobRequest request) {
-        JobExecutionEntity execution = new JobExecutionEntity();
-        execution.setTenantId(jobDefinition.getTenantId());
-        execution.setJobDefinitionId(jobDefinition.getId());
-        execution.setStatus(JobStatus.PENDING.name());
-        execution.setStartedAt(OffsetDateTime.now());
-        execution.setCreatedAt(OffsetDateTime.now());
-
-        if (request != null && request.getIdempotencyKey() != null) {
-            execution.setIdempotencyKey(request.getIdempotencyKey());
-        } else {
-            execution.setIdempotencyKey(UUID.randomUUID().toString());
-        }
-
-        execution = executionRepository.save(execution);
-
-        Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("executionId", execution.getId());
-        payload.put("jobDefinitionId", jobDefinition.getId());
-        payload.put("tenantId", jobDefinition.getTenantId().toString());
-        payload.put("jobType", jobDefinition.getJobType());
-        payload.put("status", execution.getStatus());
-        payload.put("idempotencyKey", execution.getIdempotencyKey());
-
-        appendOutboxEvent(jobDefinition.getTenantId(), "JOB_TRIGGERED", payload);
-
-        log.info("Job triggered: executionId={}, definitionId={}, type={}",
-                execution.getId(), jobDefinition.getId(), jobDefinition.getJobType());
-
-        return execution;
+        log.warn("Job trigger REFUSED (no executor): definitionId={}, type={}",
+                jobDefinition.getId(), jobDefinition.getJobType());
+        throw new JobExecutionNotImplementedException(jobDefinition.getId());
     }
 
     private void appendOutboxEvent(UUID tenantId, String eventType, Map<String, Object> payload) {
