@@ -71,6 +71,40 @@ pipeline_gate_not_applicable() {
   _pipeline_record_gate "$phase" "$label" "$reason" "" "" "" "" "" "NOT_APPLICABLE"
 }
 
+# Record a gate an operator switched OFF. This is NOT NOT_APPLICABLE (which says the
+# gate had nothing in scope) and emphatically not PASS.
+#
+# The sub-scripts implement their skip switches by printing a warning and `exit 0`
+# — indistinguishable, to pipeline_run_phase, from a gate that ran everything and
+# passed. Measured on b1845e1be: PREVIEW_GATES_SKIP_BACKEND=1 recorded
+# `backend PASS` with PIPELINE_FAIL=0, and because `backend` is a MANDATORY gate,
+# every mandatory gate then read as passed and deploy_recommended came out true.
+# A gate that executed nothing authorised a deploy. That is the single failure mode
+# this pipeline's honesty machinery exists to remove, so a skip is now recorded as
+# what it is, and a skipped MANDATORY gate is a pipeline failure — the same claim as
+# a missing one: no evidence was produced.
+pipeline_gate_skipped() {
+  local phase="$1" label="$2" reason="${3:-skipped by operator switch}"
+  echo "SKIPPED  $label ($reason) — this gate proves NOTHING about its domain"
+  _pipeline_record_gate "$phase" "$label" "$reason" "" "" "" "" "" "SKIPPED"
+}
+
+# True when an operator switch has turned this phase off, so the pipeline can record
+# SKIPPED itself instead of invoking a sub-script that would exit 0 and read as PASS.
+# Consulted BEFORE the phase runs; the sub-script keeps its own switch as a backstop.
+pipeline_phase_switched_off() {
+  case "$1" in
+    backend)     [[ "${PREVIEW_GATES_SKIP_BACKEND:-0}" == "1" || "${PIPELINE_SKIP_BACKEND:-0}" == "1" ]] ;;
+    frontend)    [[ "${PREVIEW_GATES_SKIP_FRONTEND:-0}" == "1" || "${PIPELINE_SKIP_FRONTEND:-0}" == "1" ]] ;;
+    mobile)      [[ "${PREVIEW_GATES_SKIP_MOBILE:-0}" == "1" ]] ;;
+    web-e2e)     [[ "${PREVIEW_GATES_SKIP_E2E:-0}" == "1" ]] ;;
+    integration) [[ "${PIPELINE_SKIP_INTEGRATION:-0}" == "1" ]] ;;
+    regression)  [[ "${PIPELINE_SKIP_REGRESSION:-0}" == "1" ]] ;;
+    tools)       [[ "${PIPELINE_SKIP_TOOLCHECK:-0}" == "1" ]] ;;
+    *) return 1 ;;
+  esac
+}
+
 pipeline_run_phase() {
   local phase="$1"
   local label="$2"
@@ -79,6 +113,12 @@ pipeline_run_phase() {
   if pipeline_should_skip "$phase"; then
     echo "SKIP phase: $label ($phase)"
     pipeline_gate_not_applicable "$phase" "$label" "filtered by PIPELINE_ONLY/PIPELINE_SKIP"
+    return 0
+  fi
+  # An operator switch is not a filter: the gate is in scope and was turned off.
+  # Catch it here, before the sub-script's own switch can exit 0 and read as PASS.
+  if pipeline_phase_switched_off "$phase"; then
+    pipeline_gate_skipped "$phase" "$label" "operator switch for '$phase' is set"
     return 0
   fi
   local log="$PIPELINE_LOG_DIR/${phase}.log"
@@ -125,14 +165,32 @@ PIPELINE_MANDATORY_GATES=(
 
 pipeline_assert_mandatory_gates_ran() {
   local missing=()
-  local ids
+  local ids skipped_ids
   ids="$(printf '%s\n' "${PIPELINE_GATE_RECORDS[@]-}" \
         | python3 -c 'import sys,json; print(" ".join(json.loads(l)["gate"] for l in sys.stdin if l.strip()))' 2>/dev/null || echo "")"
+  skipped_ids="$(printf '%s\n' "${PIPELINE_GATE_RECORDS[@]-}" \
+        | python3 -c 'import sys,json; print(" ".join(json.loads(l)["gate"] for l in sys.stdin if l.strip() and json.loads(l)["status"] == "SKIPPED"))' 2>/dev/null || echo "")"
   # A gate the operator explicitly filtered out is not "missing" — it is recorded
   # NOT_APPLICABLE above and remains visible as such.
   for g in "${PIPELINE_MANDATORY_GATES[@]}"; do
     [[ " $ids " == *" $g "* ]] || missing+=("$g")
   done
+  # A mandatory gate switched OFF makes exactly the same claim as one that never
+  # ran — no evidence — so it fails the same way. Without this, PREVIEW_GATES_SKIP_BACKEND=1
+  # left every mandatory gate reading as passed.
+  local skipped_mandatory=()
+  for g in "${PIPELINE_MANDATORY_GATES[@]}"; do
+    [[ " $skipped_ids " == *" $g "* ]] && skipped_mandatory+=("$g")
+  done
+  if [[ ${#skipped_mandatory[@]} -gt 0 ]]; then
+    echo ""
+    echo "PIPELINE FAIL  mandatory gate(s) skipped by operator switch: ${skipped_mandatory[*]}"
+    echo "  A skipped gate proves nothing. It is not a pass."
+    PIPELINE_FAIL=1
+    for g in "${skipped_mandatory[@]}"; do
+      pipeline_phase_fail "$g (skipped by operator switch)"
+    done
+  fi
   if [[ ${#missing[@]} -gt 0 ]]; then
     echo ""
     echo "PIPELINE FAIL  mandatory gate(s) produced no result: ${missing[*]}"
@@ -181,6 +239,26 @@ pipeline_write_reports() {
     echo "## Advisory (${#PIPELINE_ADVISORY[@]})"
     for p in "${PIPELINE_ADVISORY[@]}"; do echo "- $p"; done
     [[ ${#PIPELINE_ADVISORY[@]} -eq 0 ]] && echo "- none"
+    echo ""
+    # Skips are reported LOUDLY and separately. A reader scanning for "what did this
+    # run actually establish" must not have to infer it from a gate's absence.
+    echo "## Skipped by operator switch — proves nothing"
+    # From the in-memory records, NOT latest-gates.jsonl — that file is written
+    # further down this same function, so reading it here would report the PREVIOUS
+    # run's skips.
+    printf '%s\n' "${PIPELINE_GATE_RECORDS[@]-}" | python3 -c '
+import json, sys
+n = 0
+for line in sys.stdin:
+    if not line.strip():
+        continue
+    g = json.loads(line)
+    if g.get("status") == "SKIPPED":
+        n += 1
+        print(f"- **{g.get(\"label\")}** — {g.get(\"applicability\")}")
+if n == 0:
+    print("- none")
+' 2>/dev/null || echo "- (skip summary unavailable)"
     echo ""
     echo "## Deploy recommendation"
     if [[ "$PIPELINE_FAIL" -ne 0 ]]; then
@@ -309,7 +387,7 @@ doc = {
   "gates": gates,
   "gate_counts": {
       s: sum(1 for g in gates if g.get("status") == s)
-      for s in ("PASS", "FAIL", "NOT_APPLICABLE", "MISSING")
+      for s in ("PASS", "FAIL", "NOT_APPLICABLE", "MISSING", "SKIPPED")
   },
 }
 open(os.environ["JSON"], "w").write(json.dumps(doc, indent=2))

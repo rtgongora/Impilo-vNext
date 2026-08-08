@@ -30,6 +30,8 @@ pipeline_run_phase workspace "Workspace verification" 1 \
 if [[ "${PIPELINE_SKIP_TOOLCHECK:-0}" != "1" ]]; then
   pipeline_run_phase tools "Dependency/tool verification" 1 \
     bash scripts/pipeline/verify-tools.sh
+else
+  pipeline_gate_skipped tools "Dependency/tool verification" "PIPELINE_SKIP_TOOLCHECK=1"
 fi
 
 # 3. Security
@@ -87,28 +89,64 @@ if [[ "${PIPELINE_CONCURRENT_CORE:-1}" == "1" \
       && "${PIPELINE_SKIP_BACKEND:-0}" != "1" && "$_be_filtered" == "0" ]]; then
   echo ""
   echo "========== PHASE: Frontend + Backend checks (concurrent) =========="
-  bash scripts/test/run-frontend-checks.sh >"$PIPELINE_LOG_DIR/frontend.log" 2>&1 &
-  _fe_pid=$!
-  bash scripts/test/run-backend-checks.sh >"$PIPELINE_LOG_DIR/backend.log" 2>&1 &
-  _be_pid=$!
+  # This branch hand-rolls what pipeline_run_phase does, and had drifted from it twice
+  # over. Both halves are fixed here because fixing either alone leaves the hole open:
+  #
+  #  1. It never called _pipeline_record_gate, so `frontend` and `backend` — both
+  #     MANDATORY — produced no gate record on the DEFAULT path
+  #     (PIPELINE_CONCURRENT_CORE defaults to 1). pipeline_assert_mandatory_gates_ran
+  #     then reported them MISSING on every concurrent run.
+  #  2. It consulted only PIPELINE_SKIP_*, never PREVIEW_GATES_SKIP_*. The sub-scripts
+  #     honour the latter by printing a warning and exiting 0, so
+  #     PREVIEW_GATES_SKIP_BACKEND=1 sailed through here as a clean PASS.
+  _fe_started="$(date -u +%Y-%m-%dT%H:%M:%SZ)"; _be_started="$_fe_started"
+  _fe_off=0; _be_off=0
+  pipeline_phase_switched_off frontend && _fe_off=1
+  pipeline_phase_switched_off backend  && _be_off=1
+
+  _fe_pid=""; _be_pid=""
+  if [[ "$_fe_off" == "0" ]]; then
+    bash scripts/test/run-frontend-checks.sh >"$PIPELINE_LOG_DIR/frontend.log" 2>&1 &
+    _fe_pid=$!
+  fi
+  if [[ "$_be_off" == "0" ]]; then
+    bash scripts/test/run-backend-checks.sh >"$PIPELINE_LOG_DIR/backend.log" 2>&1 &
+    _be_pid=$!
+  fi
   _fe_rc=0; _be_rc=0
-  wait "$_fe_pid" || _fe_rc=$?
-  wait "$_be_pid" || _be_rc=$?
+  [[ -n "$_fe_pid" ]] && { wait "$_fe_pid" || _fe_rc=$?; }
+  [[ -n "$_be_pid" ]] && { wait "$_be_pid" || _be_rc=$?; }
   # Summary bookkeeping must happen in the parent shell — background jobs
   # cannot mutate the pipeline's pass/fail arrays.
-  if [[ "$_fe_rc" -eq 0 ]]; then
+  if [[ "$_fe_off" == "1" ]]; then
+    pipeline_gate_skipped frontend "Frontend checks" "operator switch for 'frontend' is set"
+  elif [[ "$_fe_rc" -eq 0 ]]; then
     pipeline_phase_pass "Frontend checks"; echo "PASS  Frontend checks"
+    _pipeline_record_gate frontend "Frontend checks" applicable \
+      "bash scripts/test/run-frontend-checks.sh" "$_fe_started" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+      "$_fe_rc" "$PIPELINE_LOG_DIR/frontend.log" "PASS"
   else
     echo "FAIL  Frontend checks (see $PIPELINE_LOG_DIR/frontend.log)"
     tail -n 30 "$PIPELINE_LOG_DIR/frontend.log" 2>/dev/null || true
     pipeline_phase_fail "Frontend checks"
+    _pipeline_record_gate frontend "Frontend checks" applicable \
+      "bash scripts/test/run-frontend-checks.sh" "$_fe_started" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+      "$_fe_rc" "$PIPELINE_LOG_DIR/frontend.log" "FAIL"
   fi
-  if [[ "$_be_rc" -eq 0 ]]; then
+  if [[ "$_be_off" == "1" ]]; then
+    pipeline_gate_skipped backend "Backend checks" "operator switch for 'backend' is set"
+  elif [[ "$_be_rc" -eq 0 ]]; then
     pipeline_phase_pass "Backend checks"; echo "PASS  Backend checks"
+    _pipeline_record_gate backend "Backend checks" applicable \
+      "bash scripts/test/run-backend-checks.sh" "$_be_started" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+      "$_be_rc" "$PIPELINE_LOG_DIR/backend.log" "PASS"
   else
     echo "FAIL  Backend checks (see $PIPELINE_LOG_DIR/backend.log)"
     tail -n 30 "$PIPELINE_LOG_DIR/backend.log" 2>/dev/null || true
     pipeline_phase_fail "Backend checks"
+    _pipeline_record_gate backend "Backend checks" applicable \
+      "bash scripts/test/run-backend-checks.sh" "$_be_started" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+      "$_be_rc" "$PIPELINE_LOG_DIR/backend.log" "FAIL"
   fi
 else
   if [[ "${PIPELINE_SKIP_FRONTEND:-0}" != "1" ]]; then
@@ -182,8 +220,10 @@ pipeline_run_phase keycloak-realm-import "Keycloak realm import (governed realms
 preview_blocking=1
 [[ "${PREVIEW_SMOKE_BLOCKING:-1}" != "1" ]] && preview_blocking=0
 if [[ "${PREVIEW_SMOKE_SKIP:-0}" == "1" ]]; then
-  pipeline_run_phase preview-smoke "Preview sandbox smoke (skipped)" 0 \
-    bash -c 'echo "SKIP preview smoke — PREVIEW_SMOKE_SKIP=1"'
+  # Was: run `echo` as the gate command, which exits 0 and records a PASS whose only
+  # evidence is that echo works. A skip is recorded as a skip.
+  pipeline_gate_skipped preview-smoke "Preview sandbox runtime smoke" "PREVIEW_SMOKE_SKIP=1"
+  pipeline_gate_skipped preview-persistence-e2e "Preview persistence E2E" "PREVIEW_SMOKE_SKIP=1"
 else
   pipeline_run_phase preview-smoke "Preview sandbox runtime smoke" "$preview_blocking" \
     bash scripts/test/preview-sandbox-runtime-smoke.sh
@@ -210,6 +250,8 @@ pipeline_run_phase api-contracts "API contract checks" 1 \
 if [[ "${PIPELINE_SKIP_INTEGRATION:-0}" != "1" ]]; then
   pipeline_run_phase integration "Integration baseline" 1 \
     bash scripts/test/run-integration-checks.sh
+else
+  pipeline_gate_skipped integration "Integration baseline" "PIPELINE_SKIP_INTEGRATION=1"
 fi
 
 # 12. Regression
@@ -219,6 +261,9 @@ if [[ "${PIPELINE_SKIP_REGRESSION:-0}" != "1" ]]; then
     bash tests/regression/preview-http-regression.sh
   pipeline_run_phase regression-parity "Frontend parity route smoke" 1 \
     bash tests/regression/frontend-backend-parity-smoke.sh
+else
+  pipeline_gate_skipped regression "Regression checks" "PIPELINE_SKIP_REGRESSION=1"
+  pipeline_gate_skipped regression-parity "Frontend parity route smoke" "PIPELINE_SKIP_REGRESSION=1"
 fi
 
 # 12b. Session Experience multi-persona E2E (advisory; needs a live preview).
@@ -274,6 +319,8 @@ if [[ "${PIPELINE_SKIP_E2E:-1}" != "1" ]]; then
   [[ "${PIPELINE_E2E_BLOCKING:-0}" == "1" ]] && e2e_blocking=1
   pipeline_run_phase web-e2e "Web E2E" "$e2e_blocking" \
     bash scripts/test/run-web-e2e.sh
+else
+  pipeline_gate_skipped web-e2e "Web E2E" "PIPELINE_SKIP_E2E=${PIPELINE_SKIP_E2E:-1} (skipped by default)"
 fi
 
 # Summary
