@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-08-08T10:19:54.537Z",
+  "generatedAt": "2026-08-08T10:37:21.810Z",
   "summary": {
     "totalCapabilities": 3279,
     "byDisposition": {
-      "partial": 388,
-      "real": 2757,
+      "partial": 394,
+      "real": 2751,
       "real-proven": 104,
       "fixture": 30
     },
@@ -202,7 +202,7 @@
       "frontendFixtures": 0,
       "bffProxied": 5,
       "contractOps": 197,
-      "contractUnowned": 2,
+      "contractUnowned": 70,
       "samplePaths": [
         "/internal/v1"
       ],
@@ -4102,7 +4102,7 @@
       "frontendFixtures": 2,
       "bffProxied": 6,
       "contractOps": 3,
-      "contractUnowned": 0,
+      "contractUnowned": 1,
       "samplePaths": [
         "/internal/v1/coverage/eligibility",
         "/internal/v1/coverage/eligibility/enrollment",
@@ -12281,7 +12281,7 @@
       "frontendFixtures": 10,
       "bffProxied": 4,
       "contractOps": 4,
-      "contractUnowned": 0,
+      "contractUnowned": 1,
       "samplePaths": [
         "/internal/v1/core-transactions",
         "/internal/v1/core-transactions/{transactionId}"
@@ -22517,7 +22517,7 @@
       "id": "experience-bff::marketplace/activation-requests",
       "service": "experience-bff",
       "capability": "marketplace/activation-requests",
-      "disposition": "real",
+      "disposition": "partial",
       "proven": false,
       "backendRoutes": 3,
       "stubRoutes": 0,
@@ -22529,7 +22529,7 @@
       "frontendFixtures": 0,
       "bffProxied": 3,
       "contractOps": 4,
-      "contractUnowned": 0,
+      "contractUnowned": 2,
       "samplePaths": [
         "/internal/v1/marketplace/activation-requests",
         "/internal/v1/marketplace/activation-requests/{id}/decision"
@@ -22610,7 +22610,7 @@
       "id": "experience-bff::marketplace/installations",
       "service": "experience-bff",
       "capability": "marketplace/installations",
-      "disposition": "real",
+      "disposition": "partial",
       "proven": false,
       "backendRoutes": 5,
       "stubRoutes": 0,
@@ -22622,7 +22622,7 @@
       "frontendFixtures": 0,
       "bffProxied": 5,
       "contractOps": 5,
-      "contractUnowned": 0,
+      "contractUnowned": 4,
       "samplePaths": [
         "/internal/v1/marketplace/installations",
         "/internal/v1/marketplace/installations/{id}",
@@ -30621,7 +30621,7 @@
       "frontendSurfaces": 1,
       "frontendFixtures": 1,
       "bffProxied": 49,
-      "contractOps": 25,
+      "contractOps": 30,
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1/surgery/episodes",
@@ -36060,7 +36060,7 @@
       "id": "inpatient-service::admissions/transfer",
       "service": "inpatient-service",
       "capability": "admissions/transfer",
-      "disposition": "real",
+      "disposition": "partial",
       "proven": false,
       "backendRoutes": 1,
       "stubRoutes": 0,
@@ -36071,7 +36071,7 @@
       "frontendFixtures": 0,
       "bffProxied": 0,
       "contractOps": 3,
-      "contractUnowned": 0,
+      "contractUnowned": 1,
       "samplePaths": [
         "/internal/v1/admissions/{admissionRef}/transfer"
       ],
@@ -42585,7 +42585,7 @@
       "id": "msika-apps-service::marketplace/apps",
       "service": "msika-apps-service",
       "capability": "marketplace/apps",
-      "disposition": "real",
+      "disposition": "partial",
       "proven": false,
       "backendRoutes": 1,
       "stubRoutes": 0,
@@ -42596,7 +42596,7 @@
       "frontendFixtures": 0,
       "bffProxied": 0,
       "contractOps": 2,
-      "contractUnowned": 0,
+      "contractUnowned": 1,
       "samplePaths": [
         "/internal/v1/marketplace/apps"
       ],
@@ -74202,7 +74202,7 @@
       "id": "zibo-service::artifacts",
       "service": "zibo-service",
       "capability": "artifacts",
-      "disposition": "real",
+      "disposition": "partial",
       "proven": false,
       "backendRoutes": 5,
       "stubRoutes": 0,
@@ -74216,7 +74216,7 @@
       "frontendFixtures": 0,
       "bffProxied": 0,
       "contractOps": 9,
-      "contractUnowned": 0,
+      "contractUnowned": 1,
       "samplePaths": [
         "/v1/artifacts",
         "/v1/artifacts/{id}"
@@ -74332,7 +74332,7 @@
       "id": "zibo-service::artifacts/versions",
       "service": "zibo-service",
       "capability": "artifacts/versions",
-      "disposition": "real",
+      "disposition": "partial",
       "proven": false,
       "backendRoutes": 1,
       "stubRoutes": 0,
@@ -74343,7 +74343,7 @@
       "frontendFixtures": 0,
       "bffProxied": 0,
       "contractOps": 1,
-      "contractUnowned": 0,
+      "contractUnowned": 1,
       "samplePaths": [
         "/v1/artifacts/versions"
       ],

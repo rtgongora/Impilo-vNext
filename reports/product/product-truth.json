@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-08T10:19:54.546Z",
+  "generatedAt": "2026-08-08T10:37:21.819Z",
   "branch": "phase0/j-route-resolution",
   "registryDrift": {
     "unregisteredModules": [],
@@ -51,8 +51,8 @@
     "capabilities": {
       "totalCapabilities": 3279,
       "byDisposition": {
-        "partial": 388,
-        "real": 2757,
+        "partial": 394,
+        "real": 2751,
         "real-proven": 104,
         "fixture": 30
       },
@@ -8945,7 +8945,7 @@
         "controllers": 10,
         "routes": 44,
         "stubRoutes": 0,
-        "contractOperations": 29,
+        "contractOperations": 34,
         "contractViolations": 0,
         "bffClients": 8,
         "uiReferences": 44,
