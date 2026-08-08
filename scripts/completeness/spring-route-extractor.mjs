@@ -86,14 +86,84 @@ export function extractPathsFromMappingSlice(slice) {
   return [''];
 }
 
-function extractClassBase(text, mappingIndex) {
-  const before = text.slice(0, mappingIndex);
-  const classPos = before.lastIndexOf('class ');
-  const searchStart = classPos >= 0 ? before.lastIndexOf('\n', classPos) : 0;
-  const preamble = before.slice(searchStart > 0 ? searchStart : 0, mappingIndex);
-  const match = preamble.match(/@RequestMapping\s*\([\s\S]*?\)/);
-  if (!match) return '';
-  return extractPathsFromMappingSlice(match[0])[0] ?? '';
+/** Strip comments and string literals so keyword scans cannot match inside them. */
+function stripCommentsAndStrings(text) {
+  return text
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => ' '.repeat(m.length))
+    .replace(/\/\/[^\n]*/g, (m) => ' '.repeat(m.length))
+    .replace(/"(?:\\.|[^"\\])*"/g, (m) => ' '.repeat(m.length));
+}
+
+/**
+ * The base path contributed by a file's class-level `@RequestMapping`, computed ONCE
+ * per file.
+ *
+ * The original implementation began its search at the newline BEFORE the `class`
+ * keyword and ran forward to the method annotation. A class-level `@RequestMapping`
+ * sits ABOVE that keyword, so it was outside the searched window by construction:
+ * the function returned '' for essentially every handler in every controller, and
+ * each route was emitted without its prefix. Measured on AccessChannelsController:
+ * `@RequestMapping("/internal/v1/access")` on line 22, `public class` on line 23,
+ * and the extractor produced `get /landela/templates` where the real route is
+ * `/internal/v1/access/landela/templates`.
+ *
+ * Scanning BACKWARDS from each mapping to the nearest preceding `class` keyword was
+ * the obvious repair and is not reliable: WalletController carries the comment
+ * "see class javadoc" inside its body, and `\bclass\s+\w` matches it, so every
+ * handler below that line lost its prefix again. Nested records and inner classes
+ * defeat it the same way.
+ *
+ * So resolve it per FILE instead of per mapping — which is also how Spring actually
+ * behaves for the one-controller-per-file convention this repository follows: take
+ * the first `@RequestMapping` that annotates a class declaration, on text with
+ * comments and string literals blanked out.
+ */
+function fileClassBases(text) {
+  const scan = stripCommentsAndStrings(text);
+  for (const m of scan.matchAll(/@RequestMapping\s*\(/g)) {
+    const close = scan.indexOf(')', m.index);
+    if (close < 0) continue;
+    if (!classDeclFollows(scan, close)) continue;
+    // Read the paths from the ORIGINAL text: the literals were blanked in `scan`.
+    // A class mapping may declare SEVERAL prefixes —
+    // `@RequestMapping({"/internal/v1/ai", "/internal/v1/ai-governance"})` — and
+    // Spring serves every handler under each of them. Keep them all, or references
+    // to the second prefix look like routes that do not exist.
+    const paths = extractPathsFromMappingSlice(text.slice(m.index, close + 1)).filter(Boolean);
+    return paths.length ? paths : [''];
+  }
+  return [''];
+}
+
+/**
+ * True when a class declaration stands between the annotation closing at `close` and
+ * the block it annotates.
+ *
+ * The `{` must be looked for AFTER the closing paren, never from the annotation's
+ * start: `@RequestMapping({"/a", "/b"})` opens a brace for its own ARRAY literal, and
+ * searching from the start finds that one, concludes "no class here", and treats a
+ * class-level mapping as a handler — which then gets its own prefix applied to
+ * itself, producing `/internal/v1/ai/internal/v1/ai`.
+ */
+function classDeclFollows(scan, close) {
+  const after = scan.slice(close + 1);
+  const brace = after.indexOf('{');
+  if (brace < 0) return false;
+  return /\bclass\s+\w/.test(after.slice(0, brace));
+}
+
+/**
+ * True when the mapping at `mappingIndex` is the class-level `@RequestMapping`
+ * itself rather than a handler. Such an annotation is a path PREFIX, not an
+ * endpoint, so consumers counting or resolving real routes must be able to exclude
+ * it — otherwise every controller contributes one phantom route.
+ */
+function isClassLevelMapping(text, mappingIndex, annotation) {
+  if (annotation !== 'Request') return false;
+  const scan = stripCommentsAndStrings(text);
+  const close = scan.indexOf(')', mappingIndex);
+  if (close < 0) return false;
+  return classDeclFollows(scan, close);
 }
 
 function mappingMethodFromAnnotation(ann, slice) {
@@ -117,12 +187,18 @@ export function extractSpringRoutes(javaRoot, options = {}) {
     const text = fs.readFileSync(file, 'utf8');
     if (!text.includes('Mapping')) continue;
 
+    // Resolved once per file, not once per mapping — see fileClassBases.
+    const basesForFile = fileClassBases(text);
+
     const mappingRegex = /@(Get|Post|Put|Patch|Delete|Request)Mapping\b/g;
     let m;
     while ((m = mappingRegex.exec(text)) !== null) {
       const ann = m[1];
       const start = m.index;
-      const classBase = extractClassBase(text, start);
+      const classLevel = isClassLevelMapping(text, start, ann);
+      // The class-level annotation contributes the prefix; it must not be prefixed
+      // with itself.
+      const classBases = classLevel ? [''] : basesForFile;
       const afterAnn = text.slice(start + m[0].length);
       const trimmedAfter = afterAnn.trimStart();
       let slice;
@@ -138,7 +214,7 @@ export function extractSpringRoutes(javaRoot, options = {}) {
       }
       const method = mappingMethodFromAnnotation(ann, slice);
 
-      for (const sub of subPaths) {
+      for (const [classBase, sub] of classBases.flatMap((b) => subPaths.map((s) => [b, s]))) {
         const full = joinPaths(classBase, sub);
         const nextAnn = text.indexOf('@', start + 1);
         const bodySlice = text.slice(start, nextAnn > 0 ? nextAnn : start + 1200);
@@ -149,6 +225,11 @@ export function extractSpringRoutes(javaRoot, options = {}) {
           path: full || '/',
           normalized: normalizePathPattern(full || '/'),
           stubHit: stubHit ? stubHit.source : null,
+          // A class-level @RequestMapping is a path PREFIX, not an endpoint. It is
+          // still emitted (removing it would change every existing route count
+          // silently) but it is now labelled, so anything resolving real endpoints
+          // can drop it instead of treating it as an unreachable route.
+          classLevel,
         });
       }
     }
