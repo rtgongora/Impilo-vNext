@@ -64,6 +64,25 @@ nhume:
     telemetry-enabled: ${NHUME_COLDCHAIN_TELEMETRY_ENABLED:true}
 
 impilo:
+  # Nhume's OWN workload credential for service-to-service write-backs.
+  #
+  # The write-back gateway previously sent whatever bearer happened to be on the inbound
+  # sign-off request, and nothing at all on a scheduled retry — there is no request context
+  # to borrow a token from. Trust headers are context, not authentication: with no token the
+  # callee has nothing to verify, which is why msika-flow's callbacks had to be permitAll to
+  # work at all.
+  #
+  # Off until this workload is given a dedicated Keycloak client: with client-id unset no
+  # token is minted and no Authorization header is sent, so the callee decides. Deliberately
+  # per-workload — a shared client would leave every callee unable to tell one caller from
+  # another, which is the defect this replaces rather than repeats.
+  s2s:
+    token:
+      enabled: ${IMPILO_S2S_TOKEN_ENABLED:false}
+      token-uri: ${IMPILO_S2S_TOKEN_URI:${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}/protocol/openid-connect/token}
+      client-id: ${IMPILO_S2S_CLIENT_ID:}
+      client-secret: ${IMPILO_S2S_CLIENT_SECRET:}
+      scope: ${IMPILO_S2S_TOKEN_SCOPE:}
   companion:
     enabled: true
   nhume:
