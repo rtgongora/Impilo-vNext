@@ -57,8 +57,25 @@ pipeline_run_phase repo-integrity "Repository integrity" 1 \
 # to nothing until now. It also runs from an unrelated cwd, because it resolves
 # its own repo root and a path-dependent verifier is a verifier that lies.
 GOV_PATHS='^(CLAUDE\.md|docs/architecture/|docs/experience/packs/|docs/standards/|scripts/architecture/)'
+# "The diff says nothing governance-related changed" and "the diff could not be
+# computed" are different facts, and the `2>/dev/null` collapsed them into the same
+# silent skip. On the first real CI run of this workflow the checkout was shallow, so
+# `git diff HEAD~1...HEAD` failed with "unknown revision", produced no output, matched
+# nothing, and the governance pack — 719 lines and 38 assertions — was recorded
+# NOT_APPLICABLE with the reason "no governance paths changed". It had not been
+# consulted at all. An unresolvable diff now RUNS the gate rather than skipping it:
+# when scope cannot be established, the safe default is to check everything.
+_gov_diff_ok=1
+_gov_changed="$(git diff --name-only HEAD~1...HEAD 2>/dev/null)" || _gov_diff_ok=0
+if ! git rev-parse --verify --quiet 'HEAD~1' >/dev/null 2>&1; then
+  _gov_diff_ok=0
+fi
 if [[ "${PIPELINE_FORCE_GOVERNANCE:-0}" == "1" ]] \
-   || git diff --name-only HEAD~1...HEAD 2>/dev/null | grep -qE "$GOV_PATHS"; then
+   || [[ "$_gov_diff_ok" == "0" ]] \
+   || printf '%s\n' "$_gov_changed" | grep -qE "$GOV_PATHS"; then
+  if [[ "$_gov_diff_ok" == "0" ]]; then
+    echo "NOTE  governance path-selection could not resolve a diff (shallow clone or no parent commit) — running the gate rather than assuming it is out of scope"
+  fi
   pipeline_run_phase governance "Governance pack (repo root)" 1 \
     bash scripts/architecture/verify-governance-pack.sh
   pipeline_run_phase governance-cwd "Governance pack (unrelated cwd)" 1 \
@@ -345,7 +362,24 @@ echo "Passed (${#PIPELINE_PASSED[@]}): ${PIPELINE_PASSED[*]:-none}"
 echo "Failed (${#PIPELINE_FAILED[@]}): ${PIPELINE_FAILED[*]:-none}"
 echo "Advisory (${#PIPELINE_ADVISORY[@]}): ${PIPELINE_ADVISORY[*]:-none}"
 
-CHANGED="$(git diff --name-only HEAD~1...HEAD 2>/dev/null | wc -l)"
+# This line aborted the entire pipeline on the first real CI run, AFTER every gate
+# had finished and BEFORE a single report was written.
+#
+# The checkout was shallow, so `git diff HEAD~1...HEAD` exited 128 ("unknown
+# revision"). `2>/dev/null` hid the message but not the status; `pipefail` promoted
+# it past `wc -l`; and `set -e` — which this script deliberately does NOT set, but
+# inherits because sourcing _pipeline-common.sh leaks `set -euo pipefail` into the
+# parent shell — turned it into an exit. The run ended at exit code 128 with
+# pipeline_write_reports never called, so latest-summary.{json,md} and
+# latest-gates.jsonl did not exist, and the upload step's `if-no-files-found: ignore`
+# turned that silence into a green "Upload pipeline summary" step. The one artifact
+# that records what actually ran is exactly the one the failure destroyed.
+#
+# A count that cannot be computed is reported as unknown; it never ends the run.
+CHANGED="$(git diff --name-only HEAD~1...HEAD 2>/dev/null | wc -l || true)"
+if ! git rev-parse --verify --quiet 'HEAD~1' >/dev/null 2>&1; then
+  CHANGED="unknown (no parent commit — shallow clone?)"
+fi
 echo "Files changed vs HEAD~1: $CHANGED"
 echo ""
 echo "Deploy: manual only — bash scripts/deploy/manual-authorized-preview-deploy.sh"
