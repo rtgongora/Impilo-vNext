@@ -5,7 +5,6 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.springframework.http.HttpHeaders;
-import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.shared.auth.AccessMode;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
@@ -33,9 +32,8 @@ import static org.mockito.Mockito.mockStatic;
 class ButanoTrustHeaderTest {
 
     private static ButanoIntegration integration() {
-        return new ButanoIntegration(mock(RestTemplate.class),
-                mock(zw.gov.mohcc.impilo.oros.persistence.repository.OrderRepository.class),
-                "http://butano-service:8090", false);
+        return new ButanoIntegration(mock(FhirGatewayClient.class),
+                mock(zw.gov.mohcc.impilo.oros.persistence.repository.OrderRepository.class), false);
     }
 
     private static HttpHeaders headers(ButanoIntegration target) throws Exception {

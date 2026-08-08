@@ -13,15 +13,23 @@ import java.util.List;
  * NOT configured rather than silently implied. Backs the admin integration-status screen and the
  * final-report honesty requirement (§28).
  *
- * <p>Built-in, already-wired integrations (Butano FHIR DiagnosticReport writeback, VARAPI provider
- * directory) report configured when their base URLs are set. The FHIR-inbound / HL7 / DICOM-MWL
+ * <p>Built-in, already-wired integrations (SHR writeback through the governed FHIR gateway, VARAPI
+ * provider directory) report configured when their base URLs are set. The FHIR-inbound / HL7 / DICOM-MWL
  * adapters are contract seams that are NOT implemented and report not-configured unless explicitly
  * flagged in a deployment that has wired them.</p>
  */
 @Service
 public class IntegrationStatusService {
 
-    private final String butanoBaseUrl;
+    /**
+     * The SHR write path is the governed gateway, not butano-service.
+     *
+     * <p>This panel reported FHIR_DIAGNOSTIC_REPORT_OUTBOUND as configured whenever the BUTANO base
+     * URL was set — which stopped being the write target when OROS moved onto the gateway. The
+     * status would have read "endpoint configured" with the gateway URL absent and nothing capable
+     * of being written at all.</p>
+     */
+    private final String fhirGatewayBaseUrl;
     private final String varapiBaseUrl;
     private final String pacsDicomwebBaseUrl;
     private final boolean fhirServiceRequestInbound;
@@ -31,7 +39,7 @@ public class IntegrationStatusService {
     private final String dicomMwlMode;
 
     public IntegrationStatusService(
-            @Value("${oros.integration.butano.base-url:}") String butanoBaseUrl,
+            @Value("${oros.integration.fhir-gateway.base-url:}") String fhirGatewayBaseUrl,
             @Value("${oros.integration.varapi.base-url:}") String varapiBaseUrl,
             @Value("${oros.integration.pacs.dicomweb.base-url:}") String pacsDicomwebBaseUrl,
             @Value("${oros.integration.fhir.servicerequest-inbound.enabled:false}") boolean fhirServiceRequestInbound,
@@ -39,7 +47,7 @@ public class IntegrationStatusService {
             @Value("${oros.integration.hl7.orm-inbound.enabled:false}") boolean hl7OrmInbound,
             @Value("${oros.integration.hl7.oru-outbound.enabled:false}") boolean hl7OruOutbound,
             @Value("${oros.integration.dicom.mwl.mode:OFF}") String dicomMwlMode) {
-        this.butanoBaseUrl = trim(butanoBaseUrl);
+        this.fhirGatewayBaseUrl = trim(fhirGatewayBaseUrl);
         this.varapiBaseUrl = trim(varapiBaseUrl);
         this.pacsDicomwebBaseUrl = trim(pacsDicomwebBaseUrl);
         this.fhirServiceRequestInbound = fhirServiceRequestInbound;
@@ -51,8 +59,8 @@ public class IntegrationStatusService {
 
     public List<IntegrationStatusDto> statuses() {
         return List.of(
-                urlAdapter("FHIR_DIAGNOSTIC_REPORT_OUTBOUND", "FHIR", "OUTBOUND", butanoBaseUrl,
-                        "Butano SHR DiagnosticReport writeback"),
+                urlAdapter("FHIR_DIAGNOSTIC_REPORT_OUTBOUND", "FHIR", "OUTBOUND", fhirGatewayBaseUrl,
+                        "SHR writeback via the governed FHIR gateway"),
                 urlAdapter("PROVIDER_DIRECTORY", "DIRECTORY", "OUTBOUND", varapiBaseUrl,
                         "VARAPI provider directory lookup"),
                 urlAdapter("PACS_DICOMWEB", "DICOM", "OUTBOUND", pacsDicomwebBaseUrl,

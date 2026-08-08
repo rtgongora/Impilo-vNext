@@ -92,6 +92,13 @@ oros:
     default-mode: INTERNAL
   integration:
     # External interoperability adapters — honest configured/not-configured at /admin/integrations.
+    #
+    # The SHR write path. Every clinical resource OROS produces goes to the governed gateway, which
+    # runs the consent PEP, resolves the delivery target and records the decision. It does NOT go
+    # straight at butano-service any more, and there is deliberately no fallback that does: an
+    # ungoverned write is worse than a missing one.
+    fhir-gateway:
+      base-url: ${OROS_FHIR_GATEWAY_BASE_URL:http://fhir-gateway-service:8091}
     butano:
       base-url: ${OROS_BUTANO_BASE_URL:http://localhost:8090}
     varapi:

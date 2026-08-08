@@ -3,13 +3,8 @@ package zw.gov.mohcc.impilo.oros.integration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.oros.persistence.entity.OrderEntity;
 import zw.gov.mohcc.impilo.oros.persistence.entity.ResultEntity;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
@@ -20,15 +15,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Integration service for the BUTANO Shared Health Record.
+ * Builds OROS's clinical resources for the Shared Health Record and hands them to the governed
+ * seam. Uses CPID-only identifiers, per the PII-free SHR policy.
  *
- * <p>Creates FHIR resources (ServiceRequest, DiagnosticReport, DocumentReference)
- * in BUTANO when orders are placed and results are captured. Uses CPID-only
- * identifiers to comply with the PII-free SHR policy.</p>
+ * <p><b>Every write now goes through {@link FhirGatewayClient}</b> — fhir-gateway
+ * {@code POST /internal/v1/gateway/forward} → BUTANO — not straight at {@code butano-service/fhir}
+ * as it did before. The direct posts reached the record without a consent decision and left no row
+ * in {@code fhir_audit_log}, so nothing could answer whether a patient's result had been filed
+ * against a valid legal basis, or filed at all. There is no fallback around the gateway: a write
+ * that does not happen is a visible, recoverable gap, and an ungoverned one is neither.</p>
  *
- * <p>All external calls degrade gracefully: if BUTANO is unavailable, the
- * failure is logged and a null reference is returned so that the calling
- * workflow can continue without blocking the order lifecycle.</p>
+ * <p>Calls still degrade gracefully — a null reference is returned and the order lifecycle
+ * continues — but the log now distinguishes a consent refusal from a downstream rejection from an
+ * outage, where previously all three read "BUTANO unavailable".</p>
  */
 @Service
 public class ButanoIntegration {
@@ -97,15 +96,14 @@ public class ButanoIntegration {
         resource.put("identifier", identifiers);
     }
 
-    private String subjectForOrder(String orderId) {
+    private String cpidForOrder(String orderId) {
         return orderRepository.findByOrderId(orderId)
-                .map(zw.gov.mohcc.impilo.oros.persistence.entity.OrderEntity::getPatientCpid)
+                .map(OrderEntity::getPatientCpid)
                 .filter(cpid -> cpid != null && !cpid.isBlank())
-                .map(ButanoIntegration::patientSubjectReference)
                 .orElseGet(() -> {
                     log.warn("OROS→SHR: no patient CPID for order {} — the resource is built without "
-                            + "a subject and BUTANO will refuse it, rather than filing it against "
-                            + "a guessed patient", orderId);
+                            + "a subject and is not written, rather than filed against a guessed "
+                            + "patient", orderId);
                     return null;
                 });
     }
@@ -114,19 +112,60 @@ public class ButanoIntegration {
         return "Patient?identifier=" + CPID_SYSTEM + "|" + cpid;
     }
 
-    private final RestTemplate restTemplate;
+    private final FhirGatewayClient gateway;
     private final zw.gov.mohcc.impilo.oros.persistence.repository.OrderRepository orderRepository;
-    private final String baseUrl;
     private final boolean imagingStudyOutboundEnabled;
 
-    public ButanoIntegration(RestTemplate restTemplate,
+    public ButanoIntegration(FhirGatewayClient gateway,
                              zw.gov.mohcc.impilo.oros.persistence.repository.OrderRepository orderRepository,
-                             @Value("${oros.integration.butano.base-url:http://localhost:8090}") String baseUrl,
                              @Value("${oros.integration.fhir.imagingstudy-outbound.enabled:false}") boolean imagingStudyOutboundEnabled) {
-        this.restTemplate = restTemplate;
+        this.gateway = gateway;
         this.orderRepository = orderRepository;
-        this.baseUrl = baseUrl;
         this.imagingStudyOutboundEnabled = imagingStudyOutboundEnabled;
+    }
+
+    /**
+     * Write one resource to the SHR through the governed gateway, and report honestly.
+     *
+     * <p>Every {@code create*} method below funnels through here. Nothing in OROS talks to
+     * {@code butano-service} directly any more: the gateway is where consent is evaluated and the
+     * decision recorded, and there is no fallback around it. A write that does not happen is a
+     * visible, recoverable gap; a write that happens ungoverned is neither.</p>
+     *
+     * @return the gateway's own verdict — the caller reads {@code resourceId()} for the reference
+     *         and {@code outcome()} when it needs to tell an outage from a refusal
+     */
+    private FhirGatewayClient.Result write(String resourceType, Map<String, Object> resource,
+                                           String subjectCpid, String idempotencyKey,
+                                           String context) {
+        HttpHeaders trustHeaders = buildTrustHeaders();
+        TrustContext ctx = currentContext();
+        FhirGatewayClient.Result result = gateway.forward(
+                resourceType, "CREATE", resource, subjectCpid, trustHeaders,
+                ctx != null ? ctx.tenantId() : null,
+                ctx != null && ctx.purposeOfUse() != null ? ctx.purposeOfUse() : "TREATMENT",
+                idempotencyKey);
+
+        if (result.written()) {
+            log.info("SHR {} written via gateway: {}, ref={}, audit={}",
+                    resourceType, context, result.resourceId(), result.auditRef());
+        } else {
+            // Not collapsed into one message: a consent refusal is a governance answer, a
+            // FORWARD_FAILED is a defect at the destination, and UNREACHABLE is an outage. Those
+            // need different people, and the old code told all three as "BUTANO unavailable".
+            log.warn("SHR {} NOT written: {}, outcome={} ({})",
+                    resourceType, context, result.outcome(), result.detail());
+        }
+        return result;
+    }
+
+    /** The inbound trust context, or null — never an exception; see {@link #buildTrustHeaders()}. */
+    private static TrustContext currentContext() {
+        try {
+            return TrustContextHolder.get();
+        } catch (RuntimeException e) {
+            return null;
+        }
     }
 
     /**
@@ -135,11 +174,8 @@ public class ButanoIntegration {
      * @param order the order entity to write back
      * @return the BUTANO reference (FHIR resource ID), or null if BUTANO is unavailable
      */
-    @SuppressWarnings("unchecked")
     public String createServiceRequest(OrderEntity order) {
-        try {
-            String url = baseUrl + "/fhir/ServiceRequest";
-
+        {
             Map<String, Object> fhirResource = new HashMap<>();
             fhirResource.put("resourceType", "ServiceRequest");
             fhirResource.put("status", "active");
@@ -183,27 +219,10 @@ public class ButanoIntegration {
                 fhirResource.put("note", java.util.List.of(Map.of("text", order.getClinicalNotes())));
             }
 
-            HttpHeaders headers = buildTrustHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<Map<String, Object>> request = new HttpEntity<>(fhirResource, headers);
+            addOrderIdentifier(fhirResource, order.getOrderId());
 
-            ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
-
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                String butanoRef = (String) response.getBody().get("id");
-                log.info("BUTANO ServiceRequest created: orderId={}, butanoRef={}",
-                        order.getOrderId(), butanoRef);
-                return butanoRef;
-            }
-
-            log.warn("BUTANO returned non-success status {} for ServiceRequest creation, orderId={}",
-                    response.getStatusCode(), order.getOrderId());
-            return null;
-
-        } catch (RestClientException e) {
-            log.warn("BUTANO unavailable for ServiceRequest creation, orderId={}: {}",
-                    order.getOrderId(), e.getMessage());
-            return null;
+            return write("ServiceRequest", fhirResource, order.getPatientCpid(),
+                    order.getOrderId(), "orderId=" + order.getOrderId()).resourceId();
         }
     }
 
@@ -214,11 +233,8 @@ public class ButanoIntegration {
      * @param result  the result entity
      * @return the BUTANO reference, or null if BUTANO is unavailable
      */
-    @SuppressWarnings("unchecked")
     public String createDiagnosticReport(String orderId, ResultEntity result) {
-        try {
-            String url = baseUrl + "/fhir/DiagnosticReport";
-
+        {
             Map<String, Object> fhirResource = new HashMap<>();
             fhirResource.put("resourceType", "DiagnosticReport");
             fhirResource.put("status", fhirStatus(result));
@@ -228,9 +244,9 @@ public class ButanoIntegration {
                     "value", result.getResultId() != null ? result.getResultId().toString() : orderId
             )));
 
-            String subjectRef = subjectForOrder(orderId);
-            if (subjectRef != null) {
-                fhirResource.put("subject", Map.of("reference", subjectRef));
+            String cpid = cpidForOrder(orderId);
+            if (cpid != null) {
+                fhirResource.put("subject", Map.of("reference", patientSubjectReference(cpid)));
             }
 
             // basedOn is deliberately NOT set to ServiceRequest/{orderId}. BUTANO creates no
@@ -269,27 +285,13 @@ public class ButanoIntegration {
             fhirResource.put("conclusion",
                     result.getImpression() != null ? result.getImpression() : result.getSummary());
 
-            HttpHeaders headers = buildTrustHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<Map<String, Object>> request = new HttpEntity<>(fhirResource, headers);
-
-            ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
-
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                String butanoRef = (String) response.getBody().get("id");
-                log.info("BUTANO DiagnosticReport written: orderId={}, resultId={}, status={}, butanoRef={}",
-                        orderId, result.getResultId(), fhirStatus(result), butanoRef);
-                return butanoRef;
-            }
-
-            log.warn("BUTANO returned non-success status {} for DiagnosticReport, orderId={}",
-                    response.getStatusCode(), orderId);
-            return null;
-
-        } catch (RestClientException e) {
-            log.warn("BUTANO unavailable for DiagnosticReport, orderId={}: {}",
-                    orderId, e.getMessage());
-            return null;
+            // The result id is the dedup key: a retried report forward is the same clinical fact,
+            // and the gateway replays rather than duplicating it.
+            String idempotencyKey = result.getResultId() != null
+                    ? "oros-report-" + result.getResultId() : "oros-report-" + orderId;
+            return write("DiagnosticReport", fhirResource, cpid, idempotencyKey,
+                    "orderId=" + orderId + ", resultId=" + result.getResultId()
+                            + ", status=" + fhirStatus(result)).resourceId();
         }
     }
 
@@ -300,23 +302,21 @@ public class ButanoIntegration {
      *
      * @return the count of observations successfully written
      */
-    @SuppressWarnings("unchecked")
     public int createObservations(String orderId, ResultEntity result,
                                   java.util.List<zw.gov.mohcc.impilo.oros.persistence.entity.ResultObservationEntity> observations) {
         // Resolved once, not per analyte: a lab result is many Observations for one patient.
-        final String observationSubject = subjectForOrder(orderId);
+        final String cpid = cpidForOrder(orderId);
         if (observations == null || observations.isEmpty()) {
             return 0;
         }
-        String url = baseUrl + "/fhir/Observation";
         String obsStatus = "final".equals(fhirStatus(result)) ? "final" : "preliminary";
         int written = 0;
         for (var o : observations) {
-            try {
+            {
                 Map<String, Object> fhir = new HashMap<>();
                 fhir.put("resourceType", "Observation");
-                if (observationSubject != null) {
-                    fhir.put("subject", Map.of("reference", observationSubject));
+                if (cpid != null) {
+                    fhir.put("subject", Map.of("reference", patientSubjectReference(cpid)));
                 }
                 fhir.put("status", obsStatus);
                 fhir.put("identifier", java.util.List.of(Map.of(
@@ -366,19 +366,24 @@ public class ButanoIntegration {
                             "code", interp)))));
                 }
 
-                HttpHeaders headers = buildTrustHeaders();
-                headers.setContentType(MediaType.APPLICATION_JSON);
-                ResponseEntity<Map> response = restTemplate.postForEntity(
-                        url, new HttpEntity<>(fhir, headers), Map.class);
-                if (response.getStatusCode().is2xxSuccessful()) {
+                String idempotencyKey = o.getObservationId() != null
+                        ? "oros-obs-" + o.getObservationId() : null;
+                FhirGatewayClient.Result outcome = write("Observation", fhir, cpid, idempotencyKey,
+                        "orderId=" + orderId + ", analyte=" + o.getAnalyteCode());
+                if (outcome.written()) {
                     written++;
+                } else if (outcome.outcome() == FhirGatewayClient.Outcome.UNREACHABLE) {
+                    // The gateway is down or the trust context is unusable: the next analyte will
+                    // fail identically. A full blood count is 20+ forwards, so grinding through
+                    // them all buys nothing and delays the caller. A refusal is different — that is
+                    // a per-resource verdict, and the rest still get their answer.
+                    log.warn("SHR Observations abandoned after {}/{}: {}",
+                            written, observations.size(), outcome.detail());
+                    return written;
                 }
-            } catch (RestClientException e) {
-                log.warn("BUTANO unavailable for Observation, orderId={}: {}", orderId, e.getMessage());
-                return written;
             }
         }
-        log.info("BUTANO Observations written: orderId={}, count={}/{}", orderId, written, observations.size());
+        log.info("SHR Observations written: orderId={}, count={}/{}", orderId, written, observations.size());
         return written;
     }
 
@@ -389,20 +394,21 @@ public class ButanoIntegration {
      * @param docUrl  the document URL (from Landela/MinIO)
      * @return the BUTANO reference, or null if BUTANO is unavailable
      */
-    @SuppressWarnings("unchecked")
     public String createDocumentReference(String orderId, String docUrl) {
-        try {
-            String url = baseUrl + "/fhir/DocumentReference";
-
+        {
             Map<String, Object> fhirResource = new HashMap<>();
             fhirResource.put("resourceType", "DocumentReference");
             fhirResource.put("status", "current");
 
-            fhirResource.put("context", Map.of(
-                    "related", java.util.List.of(
-                            Map.of("reference", "ServiceRequest/" + orderId)
-                    )
-            ));
+            String cpid = cpidForOrder(orderId);
+            if (cpid != null) {
+                fhirResource.put("subject", Map.of("reference", patientSubjectReference(cpid)));
+            }
+
+            // context.related pointed at ServiceRequest/{orderId} — the same dangling reference the
+            // reports and observations carried, and the same refusal. The order is the business
+            // identifier instead; nothing about the document's provenance is lost.
+            addOrderIdentifier(fhirResource, orderId);
 
             fhirResource.put("content", java.util.List.of(Map.of(
                     "attachment", Map.of(
@@ -411,27 +417,8 @@ public class ButanoIntegration {
                     )
             )));
 
-            HttpHeaders headers = buildTrustHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<Map<String, Object>> request = new HttpEntity<>(fhirResource, headers);
-
-            ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
-
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                String butanoRef = (String) response.getBody().get("id");
-                log.info("BUTANO DocumentReference created: orderId={}, butanoRef={}",
-                        orderId, butanoRef);
-                return butanoRef;
-            }
-
-            log.warn("BUTANO returned non-success status {} for DocumentReference, orderId={}",
-                    response.getStatusCode(), orderId);
-            return null;
-
-        } catch (RestClientException e) {
-            log.warn("BUTANO unavailable for DocumentReference, orderId={}: {}",
-                    orderId, e.getMessage());
-            return null;
+            return write("DocumentReference", fhirResource, cpid, null,
+                    "orderId=" + orderId).resourceId();
         }
     }
 
@@ -446,14 +433,11 @@ public class ButanoIntegration {
      * @param modality optional DICOM modality code (XR, CT, MR, US, …)
      * @return the BUTANO reference, or null if disabled / no study / unavailable
      */
-    @SuppressWarnings("unchecked")
     public String createImagingStudy(OrderEntity order, String modality) {
         if (!imagingStudyOutboundEnabled || order.getStudyUid() == null || order.getStudyUid().isBlank()) {
             return null;
         }
-        try {
-            String url = baseUrl + "/fhir/ImagingStudy";
-
+        {
             Map<String, Object> fhir = new HashMap<>();
             fhir.put("resourceType", "ImagingStudy");
             fhir.put("status", "available");
@@ -481,24 +465,12 @@ public class ButanoIntegration {
                 fhir.put("note", java.util.List.of(Map.of("text", "Viewer: " + order.getStudyViewerUrl())));
             }
 
-            HttpHeaders headers = buildTrustHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            ResponseEntity<Map> response = restTemplate.postForEntity(
-                    url, new HttpEntity<>(fhir, headers), Map.class);
-
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                String ref = (String) response.getBody().get("id");
-                log.info("BUTANO ImagingStudy written: orderId={}, studyUid={}, ref={}",
-                        order.getOrderId(), order.getStudyUid(), ref);
-                return ref;
-            }
-            log.warn("BUTANO returned non-success {} for ImagingStudy, orderId={}",
-                    response.getStatusCode(), order.getOrderId());
-            return null;
-
-        } catch (RestClientException e) {
-            log.warn("BUTANO unavailable for ImagingStudy, orderId={}: {}", order.getOrderId(), e.getMessage());
-            return null;
+            // The DICOM study UID is globally unique and stable — the natural dedup key for a
+            // study that may be linked, re-linked and re-published.
+            return write("ImagingStudy", fhir, order.getPatientCpid(),
+                    "oros-study-" + order.getStudyUid(),
+                    "orderId=" + order.getOrderId() + ", studyUid=" + order.getStudyUid())
+                    .resourceId();
         }
     }
 

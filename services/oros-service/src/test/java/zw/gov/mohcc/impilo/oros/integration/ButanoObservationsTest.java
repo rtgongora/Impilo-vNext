@@ -6,9 +6,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.oros.domain.ResultStatus;
 import zw.gov.mohcc.impilo.oros.persistence.entity.ResultEntity;
 import zw.gov.mohcc.impilo.oros.persistence.entity.ResultObservationEntity;
@@ -30,7 +27,11 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class ButanoObservationsTest {
 
-    @Mock private RestTemplate restTemplate;
+    @Mock private FhirGatewayClient gateway;
+
+    private static FhirGatewayClient.Result success(String id) {
+        return new FhirGatewayClient.Result(FhirGatewayClient.Outcome.SUCCESS, id, "1", "SUCCESS");
+    }
 
     private ResultEntity finalResult() {
         ResultEntity r = new ResultEntity();
@@ -58,34 +59,70 @@ class ButanoObservationsTest {
     }
 
     @Test
-    @DisplayName("no observations: no-op, no HTTP")
+    @DisplayName("no observations: no-op, nothing forwarded")
     void emptyNoOp() {
-        ButanoIntegration b = new ButanoIntegration(restTemplate, orderRepoWithCpid(), "http://localhost:8090", false);
+        ButanoIntegration b = new ButanoIntegration(gateway, orderRepoWithCpid(), false);
         assertThat(b.createObservations("ORD-1", finalResult(), List.of())).isZero();
-        verifyNoInteractions(restTemplate);
+        verifyNoInteractions(gateway);
     }
 
     @Test
-    @DisplayName("POSTs a FHIR Observation per analyte with value/unit/refRange/interpretation")
-    void postsObservations() {
-        ButanoIntegration b = new ButanoIntegration(restTemplate, orderRepoWithCpid(), "http://localhost:8090", false);
-        when(restTemplate.postForEntity(eq("http://localhost:8090/fhir/Observation"), any(), eq(Map.class)))
-                .thenReturn(ResponseEntity.ok(Map.of("id", "Observation/1")));
+    @DisplayName("forwards a FHIR Observation per analyte with value/unit/refRange/interpretation")
+    void forwardsObservations() {
+        ButanoIntegration b = new ButanoIntegration(gateway, orderRepoWithCpid(), false);
+        when(gateway.forward(eq("Observation"), eq("CREATE"), any(), any(), any(), any(), any(), any()))
+                .thenReturn(success("1"));
 
         int written = b.createObservations("01ARZ3NDEKTSV4RRFFQ69G5FAV", finalResult(),
                 List.of(obs("Haemoglobin", new BigDecimal("8.1"), "g/dL", "L", false)));
 
         assertThat(written).isEqualTo(1);
-        ArgumentCaptor<HttpEntity> captor = ArgumentCaptor.forClass(HttpEntity.class);
-        verify(restTemplate).postForEntity(any(String.class), captor.capture(), eq(Map.class));
         @SuppressWarnings("unchecked")
-        Map<String, Object> body = (Map<String, Object>) captor.getValue().getBody();
+        ArgumentCaptor<Map<String, Object>> captor = ArgumentCaptor.forClass(Map.class);
+        verify(gateway).forward(eq("Observation"), eq("CREATE"), captor.capture(), any(), any(),
+                any(), any(), any());
+        Map<String, Object> body = captor.getValue();
         assertThat(body).containsEntry("resourceType", "Observation").containsEntry("status", "final");
         assertThat(body.get("valueQuantity").toString()).contains("8.1").contains("g/dL")
                 .contains("http://unitsofmeasure.org");
         assertThat(body.get("referenceRange").toString()).contains("12-16");
         // Body is a Map; toString renders entries as key=value — the abnormal flag maps to interpretation.
         assertThat(body.get("interpretation").toString()).contains("code=L");
+    }
+
+    @Test
+    @DisplayName("an outage abandons the remaining analytes; a refusal does not")
+    void anOutageStopsButARefusalDoesNot() {
+        // A full blood count is 20+ forwards. If the gateway is unreachable the next analyte fails
+        // identically, so grinding through them all buys nothing. A consent refusal is a
+        // per-resource verdict, and the count must stay honest either way.
+        ButanoIntegration b = new ButanoIntegration(gateway, orderRepoWithCpid(), false);
+        var panel = List.of(
+                obs("Haemoglobin", new BigDecimal("8.1"), "g/dL", "L", false),
+                obs("Platelets", new BigDecimal("150"), "10*9/L", null, false),
+                obs("White cells", new BigDecimal("6.0"), "10*9/L", null, false));
+
+        when(gateway.forward(any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(success("1"))
+                .thenReturn(new FhirGatewayClient.Result(
+                        FhirGatewayClient.Outcome.UNREACHABLE, null, null, "gateway down"));
+
+        assertThat(b.createObservations("01ARZ3NDEKTSV4RRFFQ69G5FAV", finalResult(), panel))
+                .describedAs("one written, then abandoned — not reported as three")
+                .isEqualTo(1);
+        verify(gateway, times(2)).forward(any(), any(), any(), any(), any(), any(), any(), any());
+
+        clearInvocations(gateway);
+        when(gateway.forward(any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(new FhirGatewayClient.Result(
+                        FhirGatewayClient.Outcome.CONSENT_DENIED, null, "9", "consent=DENY"))
+                .thenReturn(success("2"))
+                .thenReturn(success("3"));
+
+        assertThat(b.createObservations("01ARZ3NDEKTSV4RRFFQ69G5FAV", finalResult(), panel))
+                .describedAs("a refusal on one analyte does not silence the rest")
+                .isEqualTo(2);
+        verify(gateway, times(3)).forward(any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     /**
