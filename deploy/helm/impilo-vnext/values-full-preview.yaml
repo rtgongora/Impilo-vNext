@@ -511,25 +511,24 @@ experienceBff:
     WORKFORCE_GOVERNANCE_BASE_URL: http://workforce-governance-service:8165
     VASHANDI_BASE_URL: http://vashandi-workforce-service:8167
     FHIR_GATEWAY_BASE_URL: http://fhir-gateway-service:8091
-    # fhir-gateway downstreams — both were unset, so the gateway used its localhost:8182
-    # / NO_ROUTE defaults and EVERY governed FHIR write failed in-cluster (consent PEP
-    # fail-closed to DENY + no delivery target). Same class as the booking/guidance/abis
-    # fixes above. CONSENT points at tshepo-consent-service; DEFAULT_TARGET_BASE lets writes
-    # route to the SHR without a per-(tenant×resource) fhir_route row.
+    # CONSENT_SERVICE_BASE_URL and FHIR_GATEWAY_DEFAULT_TARGET_BASE were set HERE, and this is
+    # the experience-bff block. templates/experience-bff.yaml is the only consumer of
+    # `experienceBff.env`; templates/microservice.yaml renders `fullBootServices.<id>.env`. So
+    # the chart delivered neither variable to fhir-gateway-service, which is the only service
+    # whose code reads them — and the BFF reads neither.
     #
-    # fhir_route holds zero rows, so this single value IS the governed write path: every
-    # forward the gateway serves lands wherever this points. It pointed at `hapi-fhir` --
-    # the stock hapiproject/hapi image, which has no authentication, no trust-header
-    # requirement, no tenant isolation and none of BUTANO's five interceptors. Measured
-    # 2026-08-08: `GET http://hapi-fhir:8090/fhir/Patient` with no credential and no headers
-    # returns 200 and a Bundle; the same request to butano-service returns 403 naming the
-    # five missing trust headers. The consent PEP ran in the gateway and then delivered the
-    # resource to an ungoverned store.
+    # The live gateway pod carries both anyway, from a hand-applied edit that exists in no
+    # committed artefact (`git log -S` finds them in no runtime values file, ever). The next
+    # `helm upgrade` would have removed them: an empty default-target-base is NO_ROUTE for every
+    # governed FHIR write, and a consent base falling back to localhost:8182 is unreachable,
+    # which ConsentEnforcementService treats as a fail-closed DENY. A total outage of the
+    # governed write path, one deploy away, invisible in the values file that appeared to fix it.
     #
-    # butano-service IS the SHR: HAPI FHIR R4 JPA with header validation, tenant enforcement,
-    # PII prevention, provenance stamping and terminology validation on the write path.
-    CONSENT_SERVICE_BASE_URL: http://tshepo-consent-service:8182
-    FHIR_GATEWAY_DEFAULT_TARGET_BASE: http://butano-service:8090/fhir
+    # Both now live in specialEnv("fhir-gateway-service") in
+    # scripts/full-boot/generate-full-preview-runtime-values.mjs, and reach the pod through
+    # values-full-preview-runtime.generated.yaml. They are NOT restored here: a correct value in
+    # a block the target service never reads is worse than an absent one, because it reads as
+    # done.
     # Booking/scheduling downstreams — unset previously, so the BFF called localhost
     # and citizen/provider appointment surfaces returned 500 (connection refused).
     BOOKING_BASE_URL: http://booking-service:8265

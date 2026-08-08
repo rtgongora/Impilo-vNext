@@ -233,6 +233,8 @@ fullBootServices:
     port: 8091
     database: fhir_gateway
     env:
+      FHIR_GATEWAY_DEFAULT_TARGET_BASE: http://butano-service:8090/fhir
+      CONSENT_SERVICE_BASE_URL: http://tshepo-consent-service:8182
       FHIR_BASE_URL: http://butano-service:8090/fhir
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo

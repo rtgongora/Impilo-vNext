@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Governed FHIR writes must land in the SHR, not in the stock HAPI server beside it.
+# Governed FHIR writes must land in the SHR, not in the stock HAPI server beside it -- and the
+# configuration that says so must reach the pod that reads it.
 #
 # The estate runs two R4 servers on port 8090. `butano-service` is the SHR: HAPI FHIR JPA with
 # header validation, tenant enforcement, PII prevention, provenance stamping and terminology
@@ -16,71 +17,124 @@
 # every forward the gateway serves. Pointing it at the stock server meant the PEP evaluated
 # consent and then handed the resource to a store any pod could read back without one.
 #
-# This guard pins the direction of that fix. It is deliberately narrow: it fails only on a FHIR
-# *target* naming hapi-fhir, not on every mention of the name -- the NetworkPolicy that contains
-# the stock server, and any document describing the split, must keep saying it.
+# ── WHY THIS GUARD ASSERTS PLACEMENT, NOT JUST VALUE ────────────────────────────────────────
+#
+# Its first version grepped values-full-preview.yaml for the right VALUE and passed. The line it
+# matched was under `experienceBff.env`, and templates/microservice.yaml renders only
+# `fullBootServices.<id>.env` -- so the gateway pod never received it, and the BFF (which reads
+# neither variable) received it instead. The guard reported a fix that was not deployed anywhere.
+#
+# A correct value in a block the target service never reads is worse than an absent one, because
+# it reads as done. So the assertions below are STRUCTURAL: parse the YAML, and require the key
+# at the path the chart actually renders for that service.
 set -uo pipefail
 cd "$(dirname "$0")/../.."
 
 FAIL=0
-CHECKED=0
 note() { printf '  %s\n' "$1"; }
 fail() { printf 'FAIL: %s\n' "$1" >&2; FAIL=1; }
 
 echo "=== SHR write-target guard ==="
 
-# The env vars that decide where a FHIR resource is written. Each is a target, not a label.
-TARGET_KEYS='FHIR_GATEWAY_DEFAULT_TARGET_BASE|FHIR_BASE_URL|HAPI_FHIR_URL'
+RUNTIME=deploy/helm/impilo-vnext/values-full-preview-runtime.generated.yaml
+PREVIEW=deploy/helm/impilo-vnext/values-full-preview.yaml
+SHR_URL="http://butano-service:8090/fhir"
 
-# Files that legitimately set them: the preview values, the generated values, and the two
-# generators that produce the generated values.
-TARGET_FILES=(
-  deploy/helm/impilo-vnext/values-full-preview.yaml
-  deploy/helm/impilo-vnext/values-full-preview-runtime.generated.yaml
-  deploy/helm/impilo-vnext/values-full-preview-bff-env.generated.yaml
-  scripts/full-boot/generate-full-preview-runtime-values.mjs
-  scripts/full-boot/generate-full-preview-bff-downstream-env.mjs
-)
+for f in "$RUNTIME" "$PREVIEW"; do
+  [ -f "$f" ] || { fail "$f is missing — this guard cannot check a file that is not there"; }
+done
+[ "$FAIL" -eq 0 ] || exit 1
 
-for f in "${TARGET_FILES[@]}"; do
-  if [ ! -f "$f" ]; then
-    fail "$f is missing — this guard cannot check a file that is not there"
-    continue
+# ── 1. Structural: the gateway's own env block carries what the gateway's code reads ─────────
+python3 - "$RUNTIME" "$PREVIEW" "$SHR_URL" <<'PY'
+import sys, yaml
+
+runtime_path, preview_path, shr_url = sys.argv[1], sys.argv[2], sys.argv[3]
+runtime = yaml.safe_load(open(runtime_path)) or {}
+preview = yaml.safe_load(open(preview_path)) or {}
+failures, notes = [], []
+
+# The env keys fhir-gateway-service's source actually reads, and the value each must carry.
+# FHIR_GATEWAY_DEFAULT_TARGET_BASE -> GatewayForwardService (the delivery target)
+# CONSENT_SERVICE_BASE_URL         -> ConsentEnforcementService (unreachable == fail-closed DENY)
+REQUIRED = {
+    "FHIR_GATEWAY_DEFAULT_TARGET_BASE": shr_url,
+    "CONSENT_SERVICE_BASE_URL": "http://tshepo-consent-service:8182",
+}
+
+svc = (runtime.get("fullBootServices") or {}).get("fhir-gateway-service")
+if not isinstance(svc, dict):
+    failures.append(f"{runtime_path}: no fullBootServices['fhir-gateway-service'] entry — "
+                    "templates/microservice.yaml renders env from there and nowhere else")
+    svc = {}
+env = svc.get("env") or {}
+
+for key, expected in REQUIRED.items():
+    actual = env.get(key)
+    if actual is None:
+        failures.append(
+            f"fullBootServices['fhir-gateway-service'].env is missing {key}. The gateway pod will "
+            f"not receive it. Set it in specialEnv('fhir-gateway-service') in "
+            f"scripts/full-boot/generate-full-preview-runtime-values.mjs and regenerate — NOT in "
+            f"experienceBff.env, which only templates/experience-bff.yaml consumes.")
+    elif actual != expected:
+        failures.append(f"fullBootServices['fhir-gateway-service'].env.{key} = {actual!r}, "
+                        f"expected {expected!r}")
+    else:
+        notes.append(f"gateway env {key} = {actual}")
+
+# ── 2. Nothing anywhere may route a FHIR write at the ungoverned stock server ────────────────
+TARGET_KEYS = set(REQUIRED) | {"FHIR_BASE_URL", "HAPI_FHIR_URL"}
+checked = 0
+
+def walk(node, path, source):
+    global checked
+    if isinstance(node, dict):
+        for k, v in node.items():
+            if k in TARGET_KEYS and isinstance(v, str):
+                checked += 1
+                if "hapi-fhir" in v:
+                    failures.append(f"{source}: {path}.{k} = {v} — that is the ungoverned stock "
+                                    "server, which answers any pod with no credential")
+            walk(v, f"{path}.{k}", source)
+    elif isinstance(node, list):
+        for i, v in enumerate(node):
+            walk(v, f"{path}[{i}]", source)
+
+walk(runtime, "", runtime_path)
+walk(preview, "", preview_path)
+
+# A guard that finds nothing to check reports success. Anchor on the count actually expected:
+# the gateway's two, its FHIR_BASE_URL, and butano-service's HAPI_FHIR_URL.
+if checked < 4:
+    failures.append(f"only {checked} FHIR target assignments found across both values files — "
+                    "expected at least 4. The keys or the file layout moved and this guard is now "
+                    "checking almost nothing.")
+else:
+    notes.append(f"{checked} FHIR target assignments checked across both values files")
+
+for n in notes:
+    print(f"  {n}")
+for f in failures:
+    print(f"FAIL: {f}", file=sys.stderr)
+sys.exit(1 if failures else 0)
+PY
+[ "$?" -eq 0 ] || FAIL=1
+
+# ── 3. The generator and the generated file must agree ──────────────────────────────────────
+# The generated file is the artefact, but it is regenerated routinely; if the generator does not
+# also carry the keys, the next regeneration silently drops them (the failure mode that produced
+# this whole finding, and the one that drops MENTAL_HEALTH_SERVICE_BASE_URL from the BFF file).
+GEN=scripts/full-boot/generate-full-preview-runtime-values.mjs
+for key in FHIR_GATEWAY_DEFAULT_TARGET_BASE CONSENT_SERVICE_BASE_URL; do
+  if grep -q "$key" "$GEN"; then
+    note "generator carries $key"
+  else
+    fail "$GEN does not set $key — the next regeneration drops it from the gateway's env"
   fi
-  # Assignments only (KEY: value / KEY = "value"), so a sentence mentioning the variable in a
-  # comment is not mistaken for a setting.
-  ASSIGNMENTS=$(grep -nE "^[^#]*\b($TARGET_KEYS)\b[[:space:]]*[:=]" "$f" || true)
-  if [ -z "$ASSIGNMENTS" ]; then
-    continue
-  fi
-  while IFS= read -r line; do
-    CHECKED=$((CHECKED + 1))
-    if printf '%s' "$line" | grep -q 'hapi-fhir'; then
-      fail "$f:${line%%:*} routes a FHIR write at the ungoverned stock server:"
-      printf '    %s\n' "${line#*:}" >&2
-    fi
-  done <<< "$ASSIGNMENTS"
 done
 
-# A guard that finds nothing to check reports success. Anchor on the assignments actually
-# expected: five files, and at least one target assignment in each of the three that carry them.
-if [ "$CHECKED" -lt 4 ]; then
-  fail "only $CHECKED FHIR target assignments found — expected at least 4. The keys or the file"
-  fail "layout moved and this guard is now checking almost nothing."
-else
-  note "$CHECKED FHIR target assignments checked"
-fi
-
-# The positive half: the preview must actually name the SHR, not merely avoid naming hapi-fhir.
-PREVIEW=deploy/helm/impilo-vnext/values-full-preview.yaml
-if grep -qE "^[^#]*FHIR_GATEWAY_DEFAULT_TARGET_BASE:[[:space:]]*http://butano-service:8090/fhir" "$PREVIEW"; then
-  note "gateway default target is butano-service (the SHR)"
-else
-  fail "$PREVIEW does not point FHIR_GATEWAY_DEFAULT_TARGET_BASE at http://butano-service:8090/fhir;"
-  fail "an empty or absent value is NO_ROUTE for every governed write, which is not the fix either"
-fi
-
 if [ "$FAIL" -eq 0 ]; then
-  echo "PASS: every governed FHIR write target is the SHR"
+  echo "PASS: the SHR is the governed write target, and the config reaches the pod that reads it"
 fi
 exit "$FAIL"

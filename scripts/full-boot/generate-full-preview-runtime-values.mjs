@@ -79,11 +79,30 @@ function specialEnv(serviceId) {
     return { HAPI_FHIR_URL: "http://butano-service:8090/fhir" };
   }
   if (serviceId === "fhir-gateway-service") {
-    // The SHR the gateway delivers to. See FHIR_GATEWAY_DEFAULT_TARGET_BASE in
-    // values-full-preview.yaml: the stock hapi-fhir server this named answers any pod in the
-    // namespace with no credential, so the gateway ran its consent PEP and then handed the
-    // resource to an ungoverned store.
-    return { FHIR_BASE_URL: "http://butano-service:8090/fhir" };
+    // The two variables the gateway's code actually reads live HERE, and nowhere else, because
+    // templates/microservice.yaml renders only `fullBootServices.<id>.env`.
+    //
+    // They were previously set under `experienceBff.env` in values-full-preview.yaml, which is
+    // consumed solely by templates/experience-bff.yaml -- so the chart never delivered either one
+    // to the gateway pod. The live pod carries them anyway, from a hand-applied edit that exists
+    // in no committed artefact (git log -S finds them in no runtime values file, ever). The next
+    // `helm upgrade` would therefore have silently removed both: `default-target-base` empty is
+    // NO_ROUTE for every governed FHIR write, and the consent base falling back to
+    // localhost:8182 is unreachable, which ConsentEnforcementService treats as fail-closed DENY.
+    // A latent total outage of the governed write path, one deploy away.
+    //
+    // check-shr-write-target.sh now asserts this placement structurally rather than grepping for
+    // the value, because the value being right somewhere is not the same as the pod receiving it.
+    return {
+      // What the gateway delivers to. `fhir_route` is empty in every environment measured, so
+      // this is not a fallback -- it is THE delivery target for every forward the gateway serves.
+      FHIR_GATEWAY_DEFAULT_TARGET_BASE: "http://butano-service:8090/fhir",
+      // The consent PEP's own upstream. Unreachable here means DENY, not degrade.
+      CONSENT_SERVICE_BASE_URL: "http://tshepo-consent-service:8182",
+      // Read by nothing in fhir-gateway-service's source; kept because it is already deployed and
+      // removing it is not this change. Repointed so no key on this service names the stock server.
+      FHIR_BASE_URL: "http://butano-service:8090/fhir",
+    };
   }
   if (serviceId === "tshepo-authz-service") {
     return {
