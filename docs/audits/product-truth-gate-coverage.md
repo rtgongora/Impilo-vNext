@@ -61,12 +61,34 @@ a clean estate.
    ("BFF exists, downstream service not wired") is therefore still structurally unreachable — the
    same class of defect as the four above, left in place because fixing it needs item 2 first.
 
-2. **BFF route paths are not reliably resolvable end-to-end.** `extractSpringRoutes` emits some
-   method-level paths *without* their class-level `@RequestMapping` prefix — e.g. `/landela/templates`
-   where the real route is `/internal/v1/access/landela/templates`. Any "does this frontend path
-   reach a real route" detector is blocked on this. A naive matcher run against these fragments
-   reported 5135 of 6294 surface path references as unmatched (82%); that number is an artifact of
-   the fragments, **not** a finding, and is recorded here only so nobody rediscovers it and believes it.
+2. **BFF route paths are not resolvable end-to-end — `extractClassBase` can never find a class-level
+   prefix.** Root-caused, not inferred. In `spring-route-extractor.mjs`:
+
+   ```js
+   const classPos = before.lastIndexOf('class ');
+   const searchStart = classPos >= 0 ? before.lastIndexOf('\n', classPos) : 0;
+   const preamble = before.slice(searchStart > 0 ? searchStart : 0, mappingIndex);
+   const match = preamble.match(/@RequestMapping\s*\([\s\S]*?\)/);
+   ```
+
+   The preamble starts at the newline *before the `class` keyword* and runs forward to the method's
+   annotation. But a class-level `@RequestMapping` sits **above** the `class` keyword, so it is
+   outside the searched window by construction. Confirmed on
+   `AccessChannelsController.java`: `@RequestMapping("/internal/v1/access")` on line 22, `public
+   class` on line 23, and the extractor emits `get /landela/templates` — the real route is
+   `/internal/v1/access/landela/templates`. Class-level `@RequestMapping` annotations are separately
+   emitted as routes in their own right (`all /internal/v1/access`), which is why the route *count*
+   looked plausible.
+
+   **Not fixed here, deliberately.** Correcting it changes every route path in the model, which
+   feeds `counts.routes`, `stubRouteCount`, contract operation matching, `capabilityKeyFor` and the
+   backend/frontend parity gates. That is its own workstream with its own red-proofs, not a
+   bolt-on. Until then, any "does this frontend path reach a real route" detector — including
+   `bffOrphanRoutes` in item 1 — is blocked.
+
+   ⚠️ A naive matcher run against these fragments reported 5135 of 6294 surface path references
+   (82%) as unmatched. That number is an **artifact of the fragments, not a finding**, and is
+   recorded here only so nobody rediscovers it and believes it.
 
 3. **`apiClient-dynamic` counts as backing, and matched 919 of 945 surfaces.** It is added when any
    *transitively imported* module contains `apiClient.get(...)`. It proves a page **can** reach the
