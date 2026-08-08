@@ -224,6 +224,12 @@ export function extractSpringRoutes(javaRoot, options = {}) {
           method,
           path: full || '/',
           normalized: normalizePathPattern(full || '/'),
+          // The method-level path on its own, WITHOUT the class-level prefix. Several
+          // OpenAPI contracts in this repo declare paths relative to the controller
+          // (`/{modelId}` rather than `/internal/v1/ai/models/{modelId}`), so a matcher
+          // needs both forms to tell a relative contract from a missing handler.
+          subPath: sub || '/',
+          subNormalized: normalizePathPattern(sub || '/'),
           stubHit: stubHit ? stubHit.source : null,
           // A class-level @RequestMapping is a path PREFIX, not an endpoint. It is
           // still emitted (removing it would change every existing route count

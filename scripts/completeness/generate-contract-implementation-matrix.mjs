@@ -164,16 +164,60 @@ function serviceJavaRoot(module) {
   return path.join(SERVICES_DIR, module, 'src/main/java');
 }
 
+/**
+ * Match an OpenAPI operation to an implemented route.
+ *
+ * This used to accept a raw-string SUFFIX match in either direction, guarded only by
+ * `length > 1`. That was a compensating hack for a broken extractor: until
+ * extractClassBase was fixed, handler routes were emitted WITHOUT their class-level
+ * prefix, so a bare `@GetMapping("/{equipment_id}")` normalised to `/{}` and
+ * suffix-matched almost any operation ending in a path variable. Contracts were
+ * reported implemented on the strength of a coincidence — asset-registry declares 11
+ * paths, none of them for /equipment, yet EquipmentOperationsController's handlers
+ * were never flagged as orphans.
+ *
+ * Paths are exact now, so matching is exact — but on whole segments and against the
+ * two forms contracts in this repo actually use, never on a raw substring:
+ *
+ *   1. the full route path;
+ *   2. the CONTROLLER-RELATIVE path. Several contracts declare `/{modelId}` or `/`
+ *      rather than `/internal/v1/ai/models/{modelId}`, with the base left to
+ *      `servers:`. Comparing those against a full route path would report a
+ *      correctly-implemented operation as missing;
+ *   3. the same path under a different transport prefix — `/external/v1/assets` for a
+ *      route served at `/internal/v1/assets`. Only a leading
+ *      `(internal|external|api)/v<n>` pair may differ; everything after must be equal.
+ *
+ * Exact forms are preferred over the tolerant ones, so a precise match always wins.
+ */
+const TRANSPORT_PREFIX = /^\/(?:internal|external|api)\/v\d+(?=\/)/;
+
+function stripTransportPrefix(p) {
+  return TRANSPORT_PREFIX.test(p) ? p.replace(TRANSPORT_PREFIX, '') : null;
+}
+
 function routeMatchesOperation(routes, httpMethod, apiPath) {
   const normOp = normalizePathPattern(apiPath);
+  const opTail = stripTransportPrefix(normOp);
   const method = httpMethod.toLowerCase();
+  let fallback = null;
   for (const r of routes) {
     if (r.method !== 'all' && r.method !== method) continue;
+    if (r.classLevel) continue; // a prefix, not an endpoint
     if (r.normalized === normOp) return r;
-    if (normOp.endsWith(r.normalized) && r.normalized.length > 1) return r;
-    if (r.normalized.endsWith(normOp) && normOp.length > 1) return r;
+    if (fallback) continue;
+    // Includes the bare-root case: a contract op declared as `/` against a handler
+    // with a bare `@GetMapping` on a class-mapped controller. Both sides are exactly
+    // `/`, the method must agree, and the candidate routes are already scoped to this
+    // module — narrow enough to mean "a root handler exists", which is the question
+    // implemented-vs-missing actually asks. 70 operations sit in this shape.
+    // `!= null`, not truthiness: normalizePathPattern strips the trailing slash, so a
+    // root path normalises to the EMPTY STRING. A truthiness guard here silently
+    // skipped every bare-root comparison and left all 70 reporting as missing.
+    if (r.subNormalized != null && r.subNormalized === normOp) fallback = r;
+    else if (opTail !== null && stripTransportPrefix(r.normalized) === opTail) fallback = r;
   }
-  return null;
+  return fallback;
 }
 
 function parseOpenApiOperations(filename) {
