@@ -76,13 +76,14 @@ public class GatewayForwardService {
 
             FhirAuditLogEntity auditLog = auditRecorder.record(
                     buildAuditLog(tenantId, resourceType, operation, sourceIp, actorId,
-                            "CONSENT_DENIED", consentOutcome, correlationId, subjectCpid, null, null),
+                            "CONSENT_DENIED", consentOutcome, correlationId, subjectCpid, null, null,
+                            null),
                     saved -> buildOutboxEvent(saved, operation, "CONSENT_DENIED", null,
                             tenantId, correlationId));
 
             return new ForwardResult(auditLog.getId(), resourceType, operation,
                     "CONSENT_DENIED", null, correlationId, consentOutcome.name(), null,
-                    "refused before any call was made");
+                    "refused before any call was made", null);
         }
 
         // ── Route lookup ──
@@ -93,6 +94,7 @@ public class GatewayForwardService {
         String targetEndpoint;
         Integer downstreamStatus = null;
         String downstreamDetail = null;
+        String downstreamResourceId = null;
 
         if (routes.isEmpty() && defaultTargetBase.isEmpty()) {
             outcome = "NO_ROUTE";
@@ -118,19 +120,21 @@ public class GatewayForwardService {
             // is not an HTTP status and must stay distinguishable from one the server actually sent.
             downstreamStatus = attempt.status() == 0 ? null : attempt.status();
             downstreamDetail = attempt.detail();
+            downstreamResourceId = attempt.resourceId();
         }
 
         final String finalOutcome = outcome;
         final String finalTarget = targetEndpoint;
         FhirAuditLogEntity auditLog = auditRecorder.record(
                 buildAuditLog(tenantId, resourceType, operation, sourceIp, actorId, outcome,
-                        consentOutcome, correlationId, subjectCpid, targetEndpoint, downstreamStatus),
+                        consentOutcome, correlationId, subjectCpid, targetEndpoint, downstreamStatus,
+                        downstreamResourceId),
                 saved -> buildOutboxEvent(saved, operation, finalOutcome, finalTarget,
                         tenantId, correlationId));
 
         return new ForwardResult(auditLog.getId(), resourceType, operation,
                 outcome, targetEndpoint, correlationId, consentOutcome.name(),
-                downstreamStatus, downstreamDetail);
+                downstreamStatus, downstreamDetail, downstreamResourceId);
     }
 
     /**
@@ -148,7 +152,8 @@ public class GatewayForwardService {
                                               String actorId, String outcome,
                                               ConsentOutcome consentOutcome,
                                               UUID correlationId, String subjectCpid,
-                                              String targetEndpoint, Integer downstreamStatus) {
+                                              String targetEndpoint, Integer downstreamStatus,
+                                              String downstreamResourceId) {
         FhirAuditLogEntity auditLog = new FhirAuditLogEntity();
         auditLog.setTenantId(tenantId);
         auditLog.setResourceType(resourceType);
@@ -161,6 +166,7 @@ public class GatewayForwardService {
         auditLog.setSubjectCpid(subjectCpid);
         auditLog.setTargetEndpoint(targetEndpoint);
         auditLog.setDownstreamStatus(downstreamStatus);
+        auditLog.setDownstreamResourceId(downstreamResourceId);
         return auditLog;
     }
 
@@ -197,6 +203,11 @@ public class GatewayForwardService {
      *                         Callers MUST be able to tell a 409 from a 422 from "unreachable":
      *                         offline-edge's conflict-review path turns on exactly that, and
      *                         collapsing them is why every 409 it saw degraded silently to FAILED.
+     * @param downstreamResourceId the logical id the destination assigned, when it reported one.
+     *                         Non-null only on SUCCESS. Without it a caller that writes through the
+     *                         governed seam cannot reference what it wrote — oros stores this
+     *                         against the order, and "written, but I cannot name it" is not a state
+     *                         a clinical record should have.
      */
     public record ForwardResult(
             Long auditLogId,
@@ -207,6 +218,7 @@ public class GatewayForwardService {
             UUID correlationId,
             String consentOutcome,
             Integer downstreamStatus,
-            String downstreamDetail
+            String downstreamDetail,
+            String downstreamResourceId
     ) {}
 }

@@ -56,6 +56,16 @@ public class FhirAuditLogEntity {
     @Column(name = "target_endpoint", length = 500)
     private String targetEndpoint;
 
+    /**
+     * The logical id the destination assigned. Non-null only on SUCCESS.
+     *
+     * <p>An audit row that records a delivery but not what was created can prove that a write
+     * happened and never prove <em>which</em> record it became — so a disputed or duplicated
+     * resource cannot be traced back to the forward that produced it.</p>
+     */
+    @Column(name = "downstream_resource_id", length = 128)
+    private String downstreamResourceId;
+
     /** Pseudonymous subject. A consent denial is unanswerable without it. CPID only, never PII. */
     @Column(name = "subject_cpid", length = 64)
     private String subjectCpid;
@@ -95,6 +105,11 @@ public class FhirAuditLogEntity {
 
     public String getTargetEndpoint() { return targetEndpoint; }
     public void setTargetEndpoint(String targetEndpoint) { this.targetEndpoint = targetEndpoint; }
+
+    public String getDownstreamResourceId() { return downstreamResourceId; }
+    public void setDownstreamResourceId(String downstreamResourceId) {
+        this.downstreamResourceId = downstreamResourceId;
+    }
 
     public String getSubjectCpid() { return subjectCpid; }
     public void setSubjectCpid(String subjectCpid) { this.subjectCpid = subjectCpid; }
