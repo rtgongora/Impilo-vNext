@@ -3,10 +3,12 @@ package zw.gov.mohcc.impilo.zibo.persistence.entity;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import zw.gov.mohcc.impilo.zibo.domain.ArtifactStatus;
 import zw.gov.mohcc.impilo.zibo.domain.ArtifactType;
+import zw.gov.mohcc.impilo.zibo.domain.VersionScheme;
 
 /**
  * Represents a FHIR terminology artifact (CodeSystem, ValueSet, ConceptMap, etc.)
@@ -90,6 +92,26 @@ public class ArtifactEntity {
     @Column(name = "effective_end")
     private OffsetDateTime effectiveEnd;
 
+    /**
+     * How {@link #version} is ordered. See {@code VersionScheme} — the publisher's version string
+     * is never rewritten; this declares how to compare it.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "version_scheme", length = 20)
+    private VersionScheme versionScheme;
+
+    /** The publisher's own release date, where they state one. Distinct from {@code created_at}. */
+    @Column(name = "release_date")
+    private LocalDate releaseDate;
+
+    /**
+     * Derived, lexicographically comparable form of {@link #version} under {@link #versionScheme}.
+     * Zero-padded so a plain {@code ORDER BY} is correct: SemVer 1.10.0 must sort above 1.9.0,
+     * which a naive string compare gets backwards.
+     */
+    @Column(name = "version_sort_key", length = 64)
+    private String versionSortKey;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -170,6 +192,15 @@ public class ArtifactEntity {
 
     public OffsetDateTime getEffectiveEnd() { return effectiveEnd; }
     public void setEffectiveEnd(OffsetDateTime effectiveEnd) { this.effectiveEnd = effectiveEnd; }
+
+    public VersionScheme getVersionScheme() { return versionScheme; }
+    public void setVersionScheme(VersionScheme versionScheme) { this.versionScheme = versionScheme; }
+
+    public LocalDate getReleaseDate() { return releaseDate; }
+    public void setReleaseDate(LocalDate releaseDate) { this.releaseDate = releaseDate; }
+
+    public String getVersionSortKey() { return versionSortKey; }
+    public void setVersionSortKey(String versionSortKey) { this.versionSortKey = versionSortKey; }
 
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
