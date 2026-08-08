@@ -42,6 +42,27 @@ public class FhirAuditLogEntity {
     @Column(name = "consent_outcome", length = 32)
     private String consentOutcome;
 
+    /**
+     * The HTTP status the destination actually returned.
+     *
+     * <p>Null when no call was made, or when the failure was transport-level — and that is the
+     * distinction: null with {@code outcome=FORWARD_FAILED} means "never reached", 422 means
+     * "reached and refused". The gateway knew this all along and discarded it, so a 403, a 409, a
+     * 422 and a 500 were the same audit row.</p>
+     */
+    @Column(name = "downstream_status")
+    private Integer downstreamStatus;
+
+    @Column(name = "target_endpoint", length = 500)
+    private String targetEndpoint;
+
+    /** Pseudonymous subject. A consent denial is unanswerable without it. CPID only, never PII. */
+    @Column(name = "subject_cpid", length = 64)
+    private String subjectCpid;
+
+    @Column(name = "idempotency_key", length = 255)
+    private String idempotencyKey;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -68,6 +89,18 @@ public class FhirAuditLogEntity {
     public void setCorrelationId(UUID correlationId) { this.correlationId = correlationId; }
     public String getConsentOutcome() { return consentOutcome; }
     public void setConsentOutcome(String consentOutcome) { this.consentOutcome = consentOutcome; }
+
+    public Integer getDownstreamStatus() { return downstreamStatus; }
+    public void setDownstreamStatus(Integer downstreamStatus) { this.downstreamStatus = downstreamStatus; }
+
+    public String getTargetEndpoint() { return targetEndpoint; }
+    public void setTargetEndpoint(String targetEndpoint) { this.targetEndpoint = targetEndpoint; }
+
+    public String getSubjectCpid() { return subjectCpid; }
+    public void setSubjectCpid(String subjectCpid) { this.subjectCpid = subjectCpid; }
+
+    public String getIdempotencyKey() { return idempotencyKey; }
+    public void setIdempotencyKey(String idempotencyKey) { this.idempotencyKey = idempotencyKey; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
 }

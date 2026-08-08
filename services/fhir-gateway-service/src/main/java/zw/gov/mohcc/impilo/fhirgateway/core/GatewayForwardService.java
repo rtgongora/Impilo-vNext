@@ -65,7 +65,8 @@ public class GatewayForwardService {
                     actorId, subjectCpid, resourceType, tenantId);
 
             FhirAuditLogEntity auditLog = buildAuditLog(tenantId, resourceType, operation,
-                    sourceIp, actorId, "CONSENT_DENIED", consentOutcome, correlationId);
+                    sourceIp, actorId, "CONSENT_DENIED", consentOutcome, correlationId,
+                    subjectCpid, null, null);
             auditLogRepository.save(auditLog);
 
             EventOutboxEntity event = buildOutboxEvent(auditLog, operation,
@@ -73,7 +74,8 @@ public class GatewayForwardService {
             outboxRepository.save(event);
 
             return new ForwardResult(auditLog.getId(), resourceType, operation,
-                    "CONSENT_DENIED", null, correlationId, consentOutcome.name());
+                    "CONSENT_DENIED", null, correlationId, consentOutcome.name(), null,
+                    "refused before any call was made");
         }
 
         // ── Route lookup ──
@@ -82,6 +84,8 @@ public class GatewayForwardService {
 
         String outcome;
         String targetEndpoint;
+        Integer downstreamStatus = null;
+        String downstreamDetail = null;
 
         if (routes.isEmpty() && defaultTargetBase.isEmpty()) {
             outcome = "NO_ROUTE";
@@ -103,10 +107,15 @@ public class GatewayForwardService {
             FhirForwarder.ForwardAttempt attempt =
                     fhirForwarder.send(targetEndpoint, resourceType, operation, payload);
             outcome = attempt.delivered() ? "SUCCESS" : "FORWARD_FAILED";
+            // The status was already known here and discarded. A transport failure reports 0, which
+            // is not an HTTP status and must stay distinguishable from one the server actually sent.
+            downstreamStatus = attempt.status() == 0 ? null : attempt.status();
+            downstreamDetail = attempt.detail();
         }
 
         FhirAuditLogEntity auditLog = buildAuditLog(tenantId, resourceType, operation,
-                sourceIp, actorId, outcome, consentOutcome, correlationId);
+                sourceIp, actorId, outcome, consentOutcome, correlationId,
+                subjectCpid, targetEndpoint, downstreamStatus);
         auditLogRepository.save(auditLog);
 
         EventOutboxEntity event = buildOutboxEvent(auditLog, operation,
@@ -114,7 +123,8 @@ public class GatewayForwardService {
         outboxRepository.save(event);
 
         return new ForwardResult(auditLog.getId(), resourceType, operation,
-                outcome, targetEndpoint, correlationId, consentOutcome.name());
+                outcome, targetEndpoint, correlationId, consentOutcome.name(),
+                downstreamStatus, downstreamDetail);
     }
 
     /**
@@ -132,7 +142,8 @@ public class GatewayForwardService {
                                               String operation, String sourceIp,
                                               String actorId, String outcome,
                                               ConsentOutcome consentOutcome,
-                                              UUID correlationId) {
+                                              UUID correlationId, String subjectCpid,
+                                              String targetEndpoint, Integer downstreamStatus) {
         FhirAuditLogEntity auditLog = new FhirAuditLogEntity();
         auditLog.setTenantId(tenantId);
         auditLog.setResourceType(resourceType);
@@ -142,6 +153,9 @@ public class GatewayForwardService {
         auditLog.setOutcome(outcome);
         auditLog.setConsentOutcome(consentOutcome != null ? consentOutcome.name() : null);
         auditLog.setCorrelationId(correlationId);
+        auditLog.setSubjectCpid(subjectCpid);
+        auditLog.setTargetEndpoint(targetEndpoint);
+        auditLog.setDownstreamStatus(downstreamStatus);
         return auditLog;
     }
 
@@ -172,6 +186,13 @@ public class GatewayForwardService {
                 + "}";
     }
 
+    /**
+     * @param downstreamStatus the HTTP status the destination returned, or null when no call was
+     *                         made (CONSENT_DENIED, NO_ROUTE) or the failure was transport-level.
+     *                         Callers MUST be able to tell a 409 from a 422 from "unreachable":
+     *                         offline-edge's conflict-review path turns on exactly that, and
+     *                         collapsing them is why every 409 it saw degraded silently to FAILED.
+     */
     public record ForwardResult(
             Long auditLogId,
             String resourceType,
@@ -179,6 +200,8 @@ public class GatewayForwardService {
             String outcome,
             String targetEndpoint,
             UUID correlationId,
-            String consentOutcome
+            String consentOutcome,
+            Integer downstreamStatus,
+            String downstreamDetail
     ) {}
 }
