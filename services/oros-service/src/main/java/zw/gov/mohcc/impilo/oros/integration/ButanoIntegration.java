@@ -50,18 +50,81 @@ public class ButanoIntegration {
      * <p>Same construct as {@code ObservationShrWriter.patientSubjectReference} in telemonitoring
      * and {@code TeleconsultController.patientSubjectReference} in the BFF.</p>
      */
+    /**
+     * The subject for a resource that only knows its order id.
+     *
+     * <p>{@code createDiagnosticReport} and {@code createObservations} receive an {@code orderId}
+     * and a {@code ResultEntity}, and the CPID is on neither — it lives on {@code OrderEntity}. So
+     * both built resources with <b>no subject at all</b>, carrying only
+     * {@code basedOn: ServiceRequest/{orderId}}. A clinical resource with no subject cannot be
+     * found for a patient even if it is stored, and BUTANO never creates a ServiceRequest, so that
+     * reference dangles and the write is refused outright.</p>
+     *
+     * <p>Resolving here rather than widening both signatures keeps the change off
+     * {@code LabResultService}, which has no order access at all, and off
+     * {@code ReportService}'s two call sites.</p>
+     *
+     * <p>Returns null when the order cannot be found. The caller omits the subject and the write
+     * will be refused by BUTANO — which is correct: a clinical resource whose subject cannot be
+     * established must not be filed against a guess.</p>
+     */
+    /** Business identifier for the originating OROS order. */
+    private static final String ORDER_IDENTIFIER_SYSTEM = "https://impilo.gov.zw/oros/order-id";
+
+    /**
+     * Carries the originating order as a business identifier rather than a resource reference.
+     *
+     * <p>These resources previously set {@code basedOn: ServiceRequest/{orderId}}. BUTANO creates
+     * no ServiceRequest — nothing in {@code ButanoEventConsumer} does, and no HTTP writer does
+     * either — and it enforces referential integrity on write, so that reference dangles and the
+     * whole resource is refused (HAPI-1094). Every lab result oros produced was rejected on it.</p>
+     *
+     * <p>An identifier loses nothing: the order is still recoverable from the record, and a
+     * consumer can find every resource for an order by searching this system. If a ServiceRequest
+     * anchor is later written into the SHR, {@code basedOn} can be restored as a match URL over
+     * this same identifier — which is why the system URI is the order id and not an internal key.</p>
+     */
+    private static void addOrderIdentifier(Map<String, Object> resource, String orderId) {
+        if (orderId == null || orderId.isBlank()) {
+            return;
+        }
+        @SuppressWarnings("unchecked")
+        java.util.List<Map<String, Object>> existing =
+                (java.util.List<Map<String, Object>>) resource.get("identifier");
+        java.util.List<Map<String, Object>> identifiers =
+                existing == null ? new java.util.ArrayList<>() : new java.util.ArrayList<>(existing);
+        identifiers.add(Map.of("system", ORDER_IDENTIFIER_SYSTEM, "value", orderId));
+        resource.put("identifier", identifiers);
+    }
+
+    private String subjectForOrder(String orderId) {
+        return orderRepository.findByOrderId(orderId)
+                .map(zw.gov.mohcc.impilo.oros.persistence.entity.OrderEntity::getPatientCpid)
+                .filter(cpid -> cpid != null && !cpid.isBlank())
+                .map(ButanoIntegration::patientSubjectReference)
+                .orElseGet(() -> {
+                    log.warn("OROS→SHR: no patient CPID for order {} — the resource is built without "
+                            + "a subject and BUTANO will refuse it, rather than filing it against "
+                            + "a guessed patient", orderId);
+                    return null;
+                });
+    }
+
     private static String patientSubjectReference(String cpid) {
         return "Patient?identifier=" + CPID_SYSTEM + "|" + cpid;
     }
 
     private final RestTemplate restTemplate;
+    private final zw.gov.mohcc.impilo.oros.persistence.repository.OrderRepository orderRepository;
     private final String baseUrl;
     private final boolean imagingStudyOutboundEnabled;
 
     public ButanoIntegration(RestTemplate restTemplate,
+                             zw.gov.mohcc.impilo.oros.persistence.repository.OrderRepository orderRepository,
                              @Value("${oros.integration.butano.base-url:http://localhost:8090}") String baseUrl,
                              @Value("${oros.integration.fhir.imagingstudy-outbound.enabled:false}") boolean imagingStudyOutboundEnabled) {
         this.restTemplate = restTemplate;
+        this.orderRepository = orderRepository;
         this.baseUrl = baseUrl;
         this.imagingStudyOutboundEnabled = imagingStudyOutboundEnabled;
     }
@@ -165,9 +228,16 @@ public class ButanoIntegration {
                     "value", result.getResultId() != null ? result.getResultId().toString() : orderId
             )));
 
-            fhirResource.put("basedOn", java.util.List.of(
-                    Map.of("reference", "ServiceRequest/" + orderId)
-            ));
+            String subjectRef = subjectForOrder(orderId);
+            if (subjectRef != null) {
+                fhirResource.put("subject", Map.of("reference", subjectRef));
+            }
+
+            // basedOn is deliberately NOT set to ServiceRequest/{orderId}. BUTANO creates no
+            // ServiceRequest, and it enforces referential integrity on write, so that reference
+            // dangles and refuses the whole resource (HAPI-1094). The order is carried as a
+            // business identifier below instead, which loses no information and resolves.
+            addOrderIdentifier(fhirResource, orderId);
 
             // Amendment/addendum lineage: link this version to the report it supersedes (§10).
             if (result.getSupersedesResultId() != null) {
@@ -233,6 +303,8 @@ public class ButanoIntegration {
     @SuppressWarnings("unchecked")
     public int createObservations(String orderId, ResultEntity result,
                                   java.util.List<zw.gov.mohcc.impilo.oros.persistence.entity.ResultObservationEntity> observations) {
+        // Resolved once, not per analyte: a lab result is many Observations for one patient.
+        final String observationSubject = subjectForOrder(orderId);
         if (observations == null || observations.isEmpty()) {
             return 0;
         }
@@ -243,11 +315,14 @@ public class ButanoIntegration {
             try {
                 Map<String, Object> fhir = new HashMap<>();
                 fhir.put("resourceType", "Observation");
+                if (observationSubject != null) {
+                    fhir.put("subject", Map.of("reference", observationSubject));
+                }
                 fhir.put("status", obsStatus);
                 fhir.put("identifier", java.util.List.of(Map.of(
                         "system", "https://impilo.gov.zw/oros/observation-id",
                         "value", o.getObservationId() != null ? o.getObservationId().toString() : orderId)));
-                fhir.put("basedOn", java.util.List.of(Map.of("reference", "ServiceRequest/" + orderId)));
+                addOrderIdentifier(fhir, orderId);
 
                 java.util.List<Map<String, Object>> coding = new java.util.ArrayList<>();
                 if (o.getAnalyteCode() != null) {
@@ -397,7 +472,7 @@ public class ButanoIntegration {
                     "reference", patientSubjectReference(order.getPatientCpid())));
             fhir.put("started", (order.getScheduledAt() != null
                     ? order.getScheduledAt() : OffsetDateTime.now()).toString());
-            fhir.put("basedOn", java.util.List.of(Map.of("reference", "ServiceRequest/" + order.getOrderId())));
+            addOrderIdentifier(fhir, order.getOrderId());
             if (modality != null && !modality.isBlank()) {
                 fhir.put("modality", java.util.List.of(Map.of(
                         "system", "http://dicom.nema.org/resources/ontology/DCM", "code", modality)));

@@ -60,7 +60,7 @@ class ButanoObservationsTest {
     @Test
     @DisplayName("no observations: no-op, no HTTP")
     void emptyNoOp() {
-        ButanoIntegration b = new ButanoIntegration(restTemplate, "http://localhost:8090", false);
+        ButanoIntegration b = new ButanoIntegration(restTemplate, orderRepoWithCpid(), "http://localhost:8090", false);
         assertThat(b.createObservations("ORD-1", finalResult(), List.of())).isZero();
         verifyNoInteractions(restTemplate);
     }
@@ -68,7 +68,7 @@ class ButanoObservationsTest {
     @Test
     @DisplayName("POSTs a FHIR Observation per analyte with value/unit/refRange/interpretation")
     void postsObservations() {
-        ButanoIntegration b = new ButanoIntegration(restTemplate, "http://localhost:8090", false);
+        ButanoIntegration b = new ButanoIntegration(restTemplate, orderRepoWithCpid(), "http://localhost:8090", false);
         when(restTemplate.postForEntity(eq("http://localhost:8090/fhir/Observation"), any(), eq(Map.class)))
                 .thenReturn(ResponseEntity.ok(Map.of("id", "Observation/1")));
 
@@ -86,5 +86,22 @@ class ButanoObservationsTest {
         assertThat(body.get("referenceRange").toString()).contains("12-16");
         // Body is a Map; toString renders entries as key=value — the abnormal flag maps to interpretation.
         assertThat(body.get("interpretation").toString()).contains("code=L");
+    }
+
+    /**
+     * An order repository that resolves the subject, so these tests exercise the real path.
+     *
+     * <p>DiagnosticReport and Observation used to carry no subject at all — the CPID is on
+     * OrderEntity and neither method received it. It is resolved from the order id now.</p>
+     */
+    private static zw.gov.mohcc.impilo.oros.persistence.repository.OrderRepository orderRepoWithCpid() {
+        zw.gov.mohcc.impilo.oros.persistence.repository.OrderRepository repo = org.mockito.Mockito.mock(zw.gov.mohcc.impilo.oros.persistence.repository.OrderRepository.class);
+        zw.gov.mohcc.impilo.oros.persistence.entity.OrderEntity order =
+                new zw.gov.mohcc.impilo.oros.persistence.entity.OrderEntity();
+        order.setPatientCpid("c08ba747-26ff-4f19-b712-76561505e274");
+        org.mockito.Mockito.lenient()
+                .when(repo.findByOrderId(org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(java.util.Optional.of(order));
+        return repo;
     }
 }

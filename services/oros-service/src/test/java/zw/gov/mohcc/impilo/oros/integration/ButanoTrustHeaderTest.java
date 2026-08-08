@@ -34,6 +34,7 @@ class ButanoTrustHeaderTest {
 
     private static ButanoIntegration integration() {
         return new ButanoIntegration(mock(RestTemplate.class),
+                mock(zw.gov.mohcc.impilo.oros.persistence.repository.OrderRepository.class),
                 "http://butano-service:8090", false);
     }
 
