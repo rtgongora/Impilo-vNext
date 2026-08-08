@@ -32,6 +32,7 @@ import zw.gov.mohcc.impilo.experience.telemedicine.TelemedicineGovernanceService
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -372,6 +373,16 @@ class TeleconsultControllerTest {
                 java.util.List.of("Encounter", "DiagnosticReport", "Composition")));
         // The real conclusion flows into the projected resources.
         assertTrue(payload.getAllValues().stream().anyMatch(p -> p.contains("done")));
+        // Every projected resource names its subject as a match URL against the SHR's CPID
+        // identifier system. "Patient/CPID-9" is a dangling reference in BUTANO — a CPID is not a
+        // FHIR logical id — and BUTANO enforces referential integrity on write, so the literal
+        // form is rejected with HAPI-1094 and the summary never lands.
+        for (String projected : payload.getAllValues()) {
+            assertTrue(projected.contains("Patient?identifier=https://impilo.gov.zw/cpid|CPID-9"),
+                    "projected resource must carry a resolvable subject match URL: " + projected);
+            assertFalse(projected.contains("\"reference\":\"Patient/CPID-9\""),
+                    "a literal Patient/<cpid> subject does not resolve in the SHR: " + projected);
+        }
         // Honesty flag reflects successful SHR delivery.
         JsonNode data = (JsonNode) response.getBody().get("data");
         assertTrue(data.path("clinicalSummaryWritten").asBoolean());

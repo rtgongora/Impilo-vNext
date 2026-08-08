@@ -258,8 +258,15 @@ class ObservationShrWriterTest {
         JsonNode obs = objectMapper.readTree(payloadCaptor.getValue());
         assertThat(obs.get("resourceType").asText()).isEqualTo("Observation");
         assertThat(obs.get("status").asText()).isEqualTo("final");
-        // CPID-only subject — no name, no demographics, nothing but the reference.
-        assertThat(obs.get("subject").get("reference").asText()).isEqualTo("Patient/" + plan.getPatientCpid());
+        // CPID-only subject — no name, no demographics, nothing but the reference. It is a match
+        // URL, not "Patient/<cpid>": a CPID is not a FHIR logical id, and BUTANO enforces
+        // referential integrity on write, so the literal form is a dangling reference the SHR
+        // rejects with HAPI-1094. See ObservationShrWriter.patientSubjectReference.
+        assertThat(obs.get("subject").get("reference").asText())
+                .isEqualTo("Patient?identifier=https://impilo.gov.zw/cpid|" + plan.getPatientCpid());
+        assertThat(obs.get("subject").get("reference").asText())
+                .describedAs("a literal Patient/<cpid> reference does not resolve in the SHR")
+                .doesNotStartWith("Patient/");
         assertThat(payloadCaptor.getValue()).doesNotContain("name").doesNotContain("birthDate");
         // Governed LOINC coding for a known metric.
         JsonNode coding = obs.get("code").get("coding").get(0);

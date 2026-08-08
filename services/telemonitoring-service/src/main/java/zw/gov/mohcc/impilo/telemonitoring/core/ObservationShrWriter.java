@@ -53,6 +53,29 @@ public class ObservationShrWriter {
     static final String EXT_PLAN_ID = "https://impilo.mohcc.gov.zw/fhir/StructureDefinition/telemonitoring-plan-id";
     static final String IDENTIFIER_SYSTEM = "https://impilo.mohcc.gov.zw/fhir/NamingSystem/telemonitoring-reading";
 
+    /** The SHR's CPID identifier system. Must stay identical to BUTANO's {@code CPID_SYSTEM}. */
+    static final String CPID_SYSTEM = "https://impilo.gov.zw/cpid";
+
+    /**
+     * The subject reference for a monitoring-band Observation, as a FHIR conditional reference.
+     *
+     * <p>A CPID is not a FHIR logical id. {@code "Patient/" + cpid} resolved only against the
+     * stock HAPI server the gateway used to default to; against BUTANO, whose Patients carry
+     * server-assigned ids with the CPID in {@code Patient.identifier}, it is a dangling reference
+     * and BUTANO rejects it on write (measured 2026-08-08: HTTP 400,
+     * {@code HAPI-1094: Resource ... not found}).</p>
+     *
+     * <p>The match URL binds the Observation to the Patient the SHR actually holds, and fails
+     * closed for a CPID it does not: an unknown subject yields HTTP 404
+     * {@code HAPI-1091 ... No resources match this search}, which the gateway reports as a
+     * non-delivery and {@link zw.gov.mohcc.impilo.telemonitoring.integration.FhirGatewayClient}
+     * maps away from SUCCESS. A reading is never filed against a subject the record cannot
+     * identify.</p>
+     */
+    static String patientSubjectReference(String cpid) {
+        return "Patient?identifier=" + CPID_SYSTEM + "|" + cpid;
+    }
+
     private final TelemetryReadingRepository readingRepository;
     private final MonitoringPlanRepository planRepository;
     private final FhirGatewayClient fhirGatewayClient;
@@ -184,8 +207,8 @@ public class ObservationShrWriter {
         codeCoding.put("display", coding.display());
         code.put("text", reading.getMetricCode());
 
-        // CPID-only subject (No-PII-in-SHR rule).
-        obs.putObject("subject").put("reference", "Patient/" + reading.getPatientCpid());
+        // CPID-only subject (No-PII-in-SHR rule), as a match URL the SHR can actually resolve.
+        obs.putObject("subject").put("reference", patientSubjectReference(reading.getPatientCpid()));
         obs.put("effectiveDateTime", reading.getMeasuredAt().toString());
 
         ObjectNode value = obs.putObject("valueQuantity");

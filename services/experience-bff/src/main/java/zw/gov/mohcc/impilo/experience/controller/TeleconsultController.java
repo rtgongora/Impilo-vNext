@@ -2358,6 +2358,31 @@ public class TeleconsultController {
      */
     private static final String TELECONSULT_REFERRAL_SYSTEM = "http://impilo.mohcc.gov.zw/fhir/teleconsult-referral";
 
+    /** The SHR's CPID identifier system. Must stay identical to BUTANO's {@code CPID_SYSTEM}. */
+    private static final String CPID_SYSTEM = "https://impilo.gov.zw/cpid";
+
+    /**
+     * The subject reference for a teleconsult projection, as a FHIR conditional reference.
+     *
+     * <p>A CPID is not a FHIR logical id. {@code "Patient/" + cpid} only ever resolved against the
+     * stock HAPI server the gateway used to default to, where a proof script had created Patients
+     * with the CPID as their logical id. Against BUTANO — where Patients carry server-assigned ids
+     * and the CPID lives in {@code Patient.identifier} — the same string is a dangling reference:
+     * measured 2026-08-08, {@code POST /fhir/Observation} with {@code Patient/<cpid>} returns
+     * HTTP 400 {@code HAPI-1094: Resource ... not found}, because BUTANO enforces referential
+     * integrity on write.</p>
+     *
+     * <p>A match URL resolves at write time against the identifier BUTANO actually stores, so the
+     * reference lands bound to the real Patient rather than to a string that happens to look like
+     * one. It also fails closed: a CPID with no Patient in the SHR yields HTTP 404
+     * {@code HAPI-1091 ... No resources match this search} and the caller reports the summary as
+     * NOT written, rather than filing a clinical record against a subject the record does not
+     * know.</p>
+     */
+    private static String patientSubjectReference(String cpid) {
+        return "Patient?identifier=" + CPID_SYSTEM + "|" + cpid;
+    }
+
     /**
      * Project a completed teleconsult to the SHR (TM-B6): a virtual-class {@code Encounter}, the
      * {@code DiagnosticReport} summary, and a response {@code Composition} document — each routed
@@ -2388,7 +2413,7 @@ public class TeleconsultController {
             encClass.put("system", "http://terminology.hl7.org/CodeSystem/v3-ActCode");
             encClass.put("code", "VR");
             encClass.put("display", "virtual");
-            encounter.putObject("subject").put("reference", "Patient/" + patientRef);
+            encounter.putObject("subject").put("reference", patientSubjectReference(patientRef));
             encounter.putObject("period").put("end", now);
             encounter.putArray("identifier").addObject()
                     .put("system", TELECONSULT_REFERRAL_SYSTEM).put("value", referralId);
@@ -2405,7 +2430,7 @@ public class TeleconsultController {
                     .put("code", "teleconsult-summary")
                     .put("display", "Teleconsultation summary");
             code.put("text", "Teleconsultation summary");
-            report.putObject("subject").put("reference", "Patient/" + patientRef);
+            report.putObject("subject").put("reference", patientSubjectReference(patientRef));
             report.put("effectiveDateTime", now);
             report.put("issued", now);
             report.put("conclusion", conclusion);
@@ -2425,7 +2450,7 @@ public class TeleconsultController {
                     .put("code", "teleconsult-summary")
                     .put("display", "Teleconsultation summary");
             compType.put("text", "Teleconsultation summary");
-            composition.putObject("subject").put("reference", "Patient/" + patientRef);
+            composition.putObject("subject").put("reference", patientSubjectReference(patientRef));
             composition.put("date", now);
             composition.putArray("author").addObject().put("display", defaultString(actorId, "unknown"));
             composition.put("title", "Teleconsultation Summary");
