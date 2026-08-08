@@ -297,12 +297,47 @@ public class ValidationEngine {
         log.debug("Processing {} pending validation jobs", pendingJobs.size());
 
         for (ValidationJobEntity job : pendingJobs) {
+            // Every path below reaches TrustContextHolder.require(), which throws when unset. On a
+            // scheduler thread there is no inbound request and therefore no context, so before this
+            // block EVERY queued job threw, was caught, and landed in FAILED — the async validation
+            // path could not have worked, and zibo_validation_jobs sitting at zero rows is why
+            // nobody noticed.
+            //
+            // The context is built from the JOB's own tenant, not a single service-wide one.
+            // findByStatus(PENDING) is deliberately not tenant-scoped, so a shared context would
+            // process one tenant's payload under another's authority and write the result — and the
+            // artifacts it resolved against — into the wrong plane.
+            TrustContextHolder.set(systemContextFor(job));
             try {
                 processJobInternal(job);
             } catch (Exception e) {
                 log.error("Failed to process validation job {}: {}", job.getId(), e.getMessage(), e);
+            } finally {
+                TrustContextHolder.clear();
             }
         }
+    }
+
+    /**
+     * The authority a scheduled validation job runs under.
+     *
+     * <p>Mirrors {@code ObservationDefinitionSeeder.systemContext()} — the estate's existing idiom
+     * for background work that must still be tenant-scoped. Purpose is GOVERNANCE, not TREATMENT:
+     * this is conformance checking of an already-recorded payload, not care delivery, and the audit
+     * trail should say so.</p>
+     */
+    private static TrustContext systemContextFor(ValidationJobEntity job) {
+        return new TrustContext(
+                job.getTenantId(),
+                "zibo-validation-scheduler",
+                "SERVICE",
+                "GOVERNANCE",
+                null,
+                UUID.randomUUID(),
+                null,
+                null,
+                null,
+                zw.gov.mohcc.impilo.shared.auth.AccessMode.INTERNAL);
     }
 
     /**
@@ -569,9 +604,16 @@ public class ValidationEngine {
         outbox.setEventType(eventType);
         outbox.setPayload(payloadJson);
         TrustContext ctx = TrustContextHolder.get();
-        if (ctx != null) {
-            outbox.setTenantId(ctx.tenantId());
+        if (ctx == null || ctx.tenantId() == null) {
+            // zibo_event_outbox.tenant_id is NOT NULL, so saving here would fail the insert and
+            // take the surrounding transaction with it — losing the job result to protect an event
+            // nobody can route anyway. Refusing the event and keeping the result is the better
+            // trade, and it is logged rather than swallowed.
+            log.warn("ZIBO: no tenant in context — dropping {} outbox event for {} rather than "
+                    + "failing the transaction that produced it", eventType, aggregateId);
+            return;
         }
+        outbox.setTenantId(ctx.tenantId());
         outboxRepository.save(outbox);
     }
 
