@@ -63,6 +63,13 @@ class SystemPurposeRequiresWorkloadIdentityTest {
     void setUp() {
         controller = new AuthorizeController(
                 policyEngine, sessionRouter, new ObjectMapper(), introspectionClient);
+        // recordPrePolicyDenial returns the refusal the controller hands back. An unstubbed mock
+        // would return null, the controller would answer with a null body, and every assertion on
+        // errorCode() would NPE — the suite would be exercising a degraded path rather than the
+        // guard. Answer with the real deny it is contracted to produce.
+        lenient().when(policyEngine.recordPrePolicyDenial(
+                        any(AuthzInternalRequest.class), anyString(), anyString()))
+                .thenAnswer(inv -> AuthzResponse.deny(inv.getArgument(1), inv.getArgument(2), 0));
     }
 
     // ════════════════════════════════════════════════════════════════════
@@ -81,10 +88,13 @@ class SystemPurposeRequiresWorkloadIdentityTest {
                 .isEqualTo(403);
         assertThat(response.getBody().errorCode()).isEqualTo("PURPOSE_NOT_PERMITTED");
 
-        // The decisive assertion. PolicyEngine short-circuits Step 4 for SYSTEM, so if the request
-        // reaches the engine at all the bypass is already live — refusing afterwards would be too
-        // late and would depend on engine internals staying as they are.
-        verifyNoInteractions(policyEngine);
+        // The decisive pair. PolicyEngine short-circuits Step 4 for SYSTEM, so the request must
+        // never reach evaluate() — refusing afterwards would be refusing after the bypass. But the
+        // refusal must still be RECORDED, or the control works invisibly and a detection query on
+        // purpose_of_use='SYSTEM' falls silent once this guard ships.
+        verify(policyEngine, never()).evaluate(any(AuthzInternalRequest.class));
+        verify(policyEngine).recordPrePolicyDenial(
+                any(AuthzInternalRequest.class), eq("PURPOSE_NOT_PERMITTED"), anyString());
     }
 
     @Test
@@ -98,7 +108,9 @@ class SystemPurposeRequiresWorkloadIdentityTest {
 
         assertThat(response.getStatusCode().value()).isEqualTo(403);
         assertThat(response.getBody().errorCode()).isEqualTo("PURPOSE_NOT_PERMITTED");
-        verifyNoInteractions(policyEngine);
+        verify(policyEngine, never()).evaluate(any(AuthzInternalRequest.class));
+        verify(policyEngine).recordPrePolicyDenial(
+                any(AuthzInternalRequest.class), eq("PURPOSE_NOT_PERMITTED"), anyString());
     }
 
     @Test
@@ -114,7 +126,9 @@ class SystemPurposeRequiresWorkloadIdentityTest {
                 .as("a valid token for a person must not unlock the workload purpose")
                 .isEqualTo(403);
         assertThat(response.getBody().errorCode()).isEqualTo("PURPOSE_NOT_PERMITTED");
-        verifyNoInteractions(policyEngine);
+        verify(policyEngine, never()).evaluate(any(AuthzInternalRequest.class));
+        verify(policyEngine).recordPrePolicyDenial(
+                any(AuthzInternalRequest.class), eq("PURPOSE_NOT_PERMITTED"), anyString());
     }
 
     // ════════════════════════════════════════════════════════════════════
@@ -175,7 +189,7 @@ class SystemPurposeRequiresWorkloadIdentityTest {
         stubHeaders("  system  ", null);
 
         assertThat(controller.authorize(request).getStatusCode().value()).isEqualTo(403);
-        verifyNoInteractions(policyEngine);
+        verify(policyEngine, never()).evaluate(any(AuthzInternalRequest.class));
     }
 
     // ════════════════════════════════════════════════════════════════════
