@@ -60,7 +60,14 @@ public class BookingOutboxCommsPoller {
                 String eventType = row.path("eventType").asText("");
                 Map<String, Object> payload = new com.fasterxml.jackson.databind.ObjectMapper()
                         .convertValue(row.path("payload"), Map.class);
-                commsWorkflow.processOutboxEvent(eventType, payload, eventId);
+                if (!commsWorkflow.processOutboxEvent(eventType, payload, eventId)) {
+                    // No cross-replica claim could be made, so this event was NOT handled. Stop the
+                    // batch here and leave the cursor behind it: advancing past an unhandled event
+                    // would drop its comms permanently. The next poll re-offers it from this point.
+                    log.warn("Booking outbox comms paused at event {} — dedup unavailable; cursor "
+                            + "held at {} and the event will be retried.", eventId, nextCursor);
+                    break;
+                }
                 nextCursor = Math.max(nextCursor, eventId);
             }
             if (nextCursor > afterId) {

@@ -42,7 +42,11 @@ class AppointmentCommsWorkflowServiceTest {
         AppointmentProviderRecipientResolver recipients =
                 new AppointmentProviderRecipientResolver(stubVashandiClient());
         TshepoAuditServiceClient audit = stubAuditClient();
-        AppointmentReminderReceiptStore reminders = new AppointmentReminderReceiptStore(mock(org.springframework.data.redis.core.StringRedisTemplate.class));
+        // A working shared keyspace. This previously passed a bare mock(StringRedisTemplate.class),
+        // whose opsForValue() returns null — so every claim NPE'd into the store's catch block and
+        // these tests silently exercised the unavailable path, not the dedup they appear to exercise.
+        AppointmentReminderReceiptStore reminders =
+                new AppointmentReminderReceiptStore(FakeRedis.shared().template());
         service = new AppointmentCommsWorkflowService(
                 notify, facilityNames, recipients, audit, reminders, "Africa/Harare");
     }
