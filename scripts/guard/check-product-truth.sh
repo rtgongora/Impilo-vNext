@@ -63,22 +63,39 @@ else
   guard_pass "product-truth gate — violations=$VIOLATIONS at/below baseline=$THRESHOLD (blockers=$BLOCKERS/$BLOCKER_BASELINE). TRUE count is reported, not zero; ratchet baseline down as fixes land."
 fi
 
-# Specific blocking checks (always fail on new regressions in changed files)
-BLOCKERS=$(python3 - <<'PY'
+# Dedicated UI-without-backend check (category E at blocker severity).
+#
+# This check was incapable of firing for three independent reasons, each of which
+# had to be fixed for it to mean anything:
+#   1. it read only `services`, while UI surfaces live in `frontendSurfaces`;
+#   2. the surface-level E gap was emitted at severity 'high', so no record could
+#      ever match blocker+E (the service-level E requires a UI surface with NO
+#      detected backend at all, which no service has);
+#   3. it was gated behind PRODUCT_TRUTH_BLOCK_UI_WITHOUT_BACKEND, default 0.
+# Red-proved by adding an unbacked page and confirming this goes RED.
+UI_BLOCKERS=$(python3 - <<'PY'
 import json
 with open("reports/product/product-truth.json") as f:
     d = json.load(f)
 n = 0
-for s in d.get("services", []):
-    for g in s.get("gaps", []):
-        if g.get("severity") == "blocker" and g.get("category") == "E":
-            n += 1
+for coll in ("services", "frontendSurfaces"):
+    for s in d.get(coll, []):
+        for g in s.get("gaps", []):
+            if g.get("severity") == "blocker" and g.get("category") == "E":
+                n += 1
 print(n)
 PY
 )
 
-if [[ "$BLOCKERS" -gt 0 && "${PRODUCT_TRUTH_BLOCK_UI_WITHOUT_BACKEND:-0}" == "1" ]]; then
-  guard_fail "UI-without-backend blockers=$BLOCKERS"
+UI_BLOCKER_BASELINE="${PRODUCT_TRUTH_UI_BLOCKER_BASELINE:-0}"
+if [[ "$UI_BLOCKERS" -gt "$UI_BLOCKER_BASELINE" ]]; then
+  if [[ "${PRODUCT_TRUTH_BLOCK_UI_WITHOUT_BACKEND:-1}" == "1" ]]; then
+    guard_fail "UI-without-backend blockers=$UI_BLOCKERS > baseline=$UI_BLOCKER_BASELINE. A UI surface reaches no BFF/API route. Fix the wiring or, if the surface is legitimately backend-free (legal/info shell), add it to SURFACE_ALLOWLIST_PREFIXES with a rationale."
+  else
+    guard_warn "UI-without-backend blockers=$UI_BLOCKERS > baseline=$UI_BLOCKER_BASELINE (advisory)"
+  fi
+else
+  guard_pass "UI-without-backend blockers=$UI_BLOCKERS at/below baseline=$UI_BLOCKER_BASELINE"
 fi
 
 exit 0

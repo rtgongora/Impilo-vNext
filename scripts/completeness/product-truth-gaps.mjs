@@ -347,19 +347,36 @@ export function classifySurfaceGaps(surface) {
     (surface.bffPaths?.length ?? 0) > 0 ||
     (surface.gatewayPaths?.length ?? 0) > 0 ||
     (surface.backingSignals?.length ?? 0) > 0;
+  // UI without backend is the flagship condition this gate is named for, and the
+  // service-level equivalent (category E in classifyServiceGaps) has always been a
+  // blocker. This one said 'high' — while check-product-truth.sh blocks on
+  // severity=='blocker' && category=='E'. No surface could ever satisfy both halves,
+  // so the dedicated UI-without-backend check guarded a combination the scanner was
+  // incapable of producing. Same category, same doctrine, same severity.
   if (!hasBacking && surface.pageFile) {
-    gaps.push({ category: 'E', severity: 'high', description: `${surface.path}: no BFF/API backing detected`, impactScore: 4 });
+    gaps.push({ category: 'E', severity: 'blocker', description: `${surface.path}: no BFF/API backing detected`, impactScore: 4 });
   }
   if (surface.hasMutation && !surface.hasPersistHint && !surface.readsRealData) {
     gaps.push({ category: 'G', severity: 'medium', description: `${surface.path}: form/mutation without persist hint`, impactScore: 2 });
   }
-  if (surface.deadActionHints?.length > 0) {
+  // buildFrontendSurface stores these two as COUNTS, not arrays (`deadActionHints:
+  // deadActionHints.length`). `(5)?.length > 0` is false for every number, so both
+  // detectors were dead on arrival: measured on b1845e1be, 3 surfaces carried
+  // hardcodedDataHints > 0 and not one F-medium gap was emitted. Accept either shape
+  // — a count from the surface builder, or an array from a caller that kept the hits.
+  if (hintCount(surface.deadActionHints) > 0) {
     gaps.push({ category: 'H', severity: 'medium', description: `${surface.path}: possible dead actions`, impactScore: 2 });
   }
-  if (surface.hardcodedDataHints?.length > 0) {
+  if (hintCount(surface.hardcodedDataHints) > 0) {
     gaps.push({ category: 'F', severity: 'medium', description: `${surface.path}: hardcoded dashboard/data`, impactScore: 2 });
   }
   return gaps;
+}
+
+/** Hint fields are emitted as counts by the surface builder and as arrays by some callers. */
+export function hintCount(v) {
+  if (typeof v === 'number') return Number.isFinite(v) ? v : 0;
+  return Array.isArray(v) ? v.length : 0;
 }
 
 export function sortGapsByPriority(gaps) {

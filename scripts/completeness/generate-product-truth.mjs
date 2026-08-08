@@ -543,16 +543,24 @@ function scanServiceModule(svc, contractMatrix, bffClientMap, probeEvidence = {}
   const authzReadiness = exists ? scanAuthzAuditReadiness(modulePath, svc.id) : { status: 'absent', checks: {}, missing: ['missing-module'], isTrustPlane: false };
   const authzDim = authzDimFromReadiness(authzReadiness);
 
+  // triState(count, thinThreshold) returns 'thin' for `count <= thinThreshold`. A
+  // threshold of 0 therefore makes 'thin' UNREACHABLE — `count <= 0` is false for
+  // every count that is not already 'absent' — so these five dimensions were binary:
+  // one migration file, one test file or one BFF client scored the same 'real' as a
+  // hundred. That is why `tests: real` held for 104/104 services and the
+  // datasource-less experience-bff scored `database: real` off 45 migration files
+  // with 0 entities. Restored to the function's own default of 1, so a single-file
+  // dimension reads 'thin' (present but minimal) rather than 'real'.
   const dimensions = applyCompletionDimensions(svc, {
-    database: triState(migrationCount, 0),
+    database: triState(migrationCount, 1),
     entitiesRepos: triState(entityCount + repoCount, 1),
-    serviceLayer: triState(serviceLayerCount, 0),
+    serviceLayer: triState(serviceLayerCount, 1),
     controllers: triState(controllerCount + routes.length, 1),
     contract: hasContract ? (contractViolations > 0 ? 'thin' : 'real') : 'absent',
-    bffWiring: triState(bffClients.length, 0),
+    bffWiring: triState(bffClients.length, 1),
     frontendUi: triState(uiHits.length, 1),
-    mobileUi: triState(mobileHits.length, 0),
-    tests: triState(testCount, 0),
+    mobileUi: triState(mobileHits.length, 1),
+    tests: triState(testCount, 1),
     authzAudit: authzDim,
   });
 
