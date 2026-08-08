@@ -3,6 +3,35 @@
 **Date:** 2026-08-08 · **From:** the FHIR/SHR session (branch `phase0/g-fhir-split`)
 **Status:** ZIBO is now its own programme. This is the entry point.
 
+> ## ⚠️ Corrections, measured 2026-08-08 after the deploy
+>
+> Five claims below were wrong or incomplete. Read these first; the body is otherwise sound.
+>
+> 1. **The governing text is now in the repo.** The Master Specification v0.3, Addendum A and
+>    Addendum B are committed at `docs/architecture/zibo-master-specification-v0.3.md`,
+>    `…-addendum-a-national-semantic-standards.md`, `…-addendum-b-standards-acquisition.md`. They
+>    previously existed only in a session transcript.
+> 2. **"Deploy `V400`+ and Z1's criterion is provable" was false.** Deploying created
+>    `zibo_concept` and left it at **0 rows**. The projection had one trigger —
+>    `ArtifactService.publish` — and every vocabulary in this service was inserted by a migration or
+>    a seed script, which never call it. `$expand` on the flagship 31-concept ValueSet returned
+>    `"total": 0, "contains": []` with `"success": true`. Fixed by `POST /v1/concepts/rebuild`.
+> 3. **Six vocabularies were formally unresolvable**, including ICD10ZW, EDLIZ, LabTestsZW and
+>    ProviderSpecialtiesZW. They were seeded `ACTIVE` — a review state — while resolution filters to
+>    `PUBLISHED`. Fixed by `V402`.
+> 4. **The WHO DAK figures are wrong, and the content is licence-gated.** "ICF 1450 / ICHI 466+431"
+>    are *cell-presence* counts; the real distinct-code totals are **ICF 82** and **ICHI 91**. The
+>    genuine value there is **SNOMED ~1,100** and **LOINC ~413**, which this brief undersells. All of
+>    it is `CC BY-NC-SA 3.0 IGO (assumed; not verified)` with `licenceReviewed: false`, and
+>    `LICENCE-NOTICE.md` says an engineer must not flip that flag. Status is **`LICENCE_REQUIRED`**,
+>    not "cheapest real win".
+> 5. **Four dead terminology routes, not two.** Besides oros and butano: **tuso** `GET`s a
+>    `@PostMapping` (405, swallowed into "auto-approved, `zibo_validated=false`") and **varapi**
+>    calls `/v1/internal/validate/code`, which ZIBO has never served.
+>
+> **The alert-contract session id in §6 does not exist.** The live SHR session is
+> `local_9ba5279a-6cb5-43bd-bb6b-c8b9721d9b2e`.
+
 ## Why this exists
 
 ZIBO started as one item inside the SHR programme — "P3 is blocked because there is no vaccine
@@ -75,6 +104,19 @@ library and write their output into `zibo_concept`. ZIBO stays the terminology a
 schema stays ours. **Spike this first** — confirm the parsers are usable without the full JPA stack.
 If they are not, fall back to native adapters and say so; do not let a failed spike become a silent
 rewrite.
+
+> **Spike result (2026-08-08): PASSES.** `hapi-fhir-jpaserver-base:7.4.0` is already in `~/.m2`
+> (4.17 MB), holding `TermLoaderSvcImpl`, 31 LOINC handlers, 3 SNOMED RF2 handlers, `Icd10Loader`,
+> `Icd10CmLoader` and all five `TermVersionAdapterSvc*`. `TermLoaderSvcImpl` takes **two
+> interfaces** and exposes a public static `withoutProxyCheck(...)` factory that exists precisely to
+> skip the Spring-proxy assertion; across 46 KB of bytecode it calls only **four methods** on them,
+> and only one matters — `storeNewCodeSystemVersion`. The ICD loaders need no service at all. **No
+> JPA stack, no EntityManager, no ApplicationContext.**
+>
+> The cost is footprint: the pom has 75 dependency blocks, dragging in Jena, JScience, GraphQL-Java,
+> Elasticsearch and Thymeleaf. So add it **with aggressive exclusions** and implement a ZIBO-side
+> `ITermCodeSystemStorageSvc` writing into `zibo_concept` + `zibo_concept_relationship`, rather than
+> adopting the artifact wholesale. Nothing needs downloading — the full closure is already resolved.
 
 **Rejected:** making BUTANO's HAPI the terminology server. It would split terminology across two
 services and make BUTANO the semantic authority — recreating exactly the FHIR-split problem the SHR
