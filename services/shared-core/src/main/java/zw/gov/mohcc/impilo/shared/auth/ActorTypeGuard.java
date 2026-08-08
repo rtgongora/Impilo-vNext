@@ -106,6 +106,32 @@ public final class ActorTypeGuard {
      */
     public static final Set<String> BACK_OFFICE_WRITERS = Set.of("SYSTEM", "SERVICE", "OPERATOR");
 
+    /**
+     * The ceiling for <b>point-of-care charge capture</b> — raising a draft bill or pricing an
+     * estimate at the moment care is given. {@link #BACK_OFFICE_WRITERS} plus {@code PROVIDER}.
+     *
+     * <p>This exists because charge capture is not back-office work and gating it as if it were
+     * would break real care. {@code POST /costa/v1/bills/draft} is called by
+     * {@code EncounterController}, {@code MobileEncounterController},
+     * {@code MobileProviderExtendedController}, {@code MobileDischargeController} and
+     * {@code TeleconsultController} — every one of them a clinician-facing surface — and
+     * experience-bff forwards the caller's {@code X-Actor-Type} unchanged
+     * ({@code forwardHeaderIfAbsent(..., ACTOR_TYPE)}), so a clinician arrives here as
+     * {@code PROVIDER}. Gating that path to {@code BACK_OFFICE_WRITERS} would 403 every bill raised
+     * at the bedside, which is an outage dressed as a hardening.</p>
+     *
+     * <p><b>Still excludes {@code CITIZEN} and {@code CAREGIVER}</b>, which is the whole point: the
+     * person whose bill it is — or their guardian — must not be able to create or price the charge
+     * against themselves. That is the same exclusion {@code BACK_OFFICE_WRITERS} makes for waivers,
+     * and it is the exposure P0 named.</p>
+     *
+     * <p>Use {@code BACK_OFFICE_WRITERS} for anything that <em>decides</em> money — approving,
+     * finalising, waiving, posting to a ledger, closing a period. Use this only for <em>capturing</em>
+     * what was done. When in doubt, the stricter set is the correct default; this one is the
+     * exception and should stay small enough to read.</p>
+     */
+    public static final Set<String> CHARGE_CAPTURE = Set.of("SYSTEM", "SERVICE", "OPERATOR", "PROVIDER");
+
     /** Every actor type any client can put on the wire, taken from the contract rather than retyped. */
     public static final Set<String> EMITTABLE = Arrays.stream(ActorType.values())
             .map(Enum::name)

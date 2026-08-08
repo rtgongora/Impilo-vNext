@@ -30,4 +30,18 @@ gate_run "bff-yml-no-literal-passwords" bash -c '
   test -z "$bad"
 ' || FAIL=1
 
+# Authentication posture. check-enforcement-posture.sh was wired into NOTHING until 2026-08-07,
+# so it had never failed a build in the estate it was written to protect. A guard nobody runs is
+# a guard nobody has.
+#
+# The two are complementary and neither subsumes the other:
+#   enforcement-posture            services with NO enforcement at all, frozen against a baseline
+#   production-chain-authenticates services that enforce on the TEST chain but not the production
+#                                 one — which the first guard classifies as FLAG_IS_SEAM and
+#                                 passes. Proven by mutation on 2026-08-07: a community-service
+#                                 production branch reopened to permitAll left the first guard
+#                                 printing GUARD PASS and turned the second red.
+gate_run "enforcement-posture-baseline" bash scripts/guard/check-enforcement-posture.sh || FAIL=1
+gate_run "production-chain-authenticates" bash scripts/guard/check-production-chain-authenticates.sh || FAIL=1
+
 exit "$FAIL"

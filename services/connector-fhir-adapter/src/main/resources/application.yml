@@ -2,6 +2,14 @@ server:
   port: ${SERVER_PORT:8151}
 
 spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # PUBLIC issuer -- it is what the token's iss claim carries. The deployed estate also
+          # supplies JWK_SET_URI (internal route) so no OIDC discovery is attempted against an
+          # address this VM cannot reach.
+          issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8080/realms/impilo}
   application:
     name: connector-fhir-adapter
   datasource:

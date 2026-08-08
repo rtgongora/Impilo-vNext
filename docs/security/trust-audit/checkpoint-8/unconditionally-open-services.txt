@@ -1,4 +1,4 @@
-# Services that are open regardless of any bypass flag — CP8 baseline, 2026-08-02.
+# Services that are open regardless of any bypass flag — CP8 baseline.
 #
 # These declare NO bypass flag, so retiring the estate's 95 declared bypasses leaves every
 # one of them untouched while the report reads 'bypasses retired'. Each needs a real
@@ -6,36 +6,60 @@
 #
 # Enforced by scripts/guard/check-enforcement-posture.sh in BOTH directions.
 #
-# ⚠️ 2026-08-03: THIS FILE IS A SOURCE-LEVEL HYPOTHESIS LIST, NOT A MEASUREMENT.
+# ⚠️ THIS FILE IS A SOURCE-LEVEL HYPOTHESIS LIST, NOT A MEASUREMENT.
 # It is the output of audit-enforcement-posture.py, which reads services/*/src/main/java and
-# never touches a running pod. Probing all 16 names live found FOUR FALSE POSITIVES —
+# never touches a running pod. Probing the original 16 names live found FOUR FALSE POSITIVES —
 # abis-service, indawo-service, ndila-service and wellness-service all return 401 to an
 # unauthenticated business request — and one entry, shared-core, is a library that is not
-# deployed and cannot be probed at all. abis-service matters most: CP8 headlines it as the
-# biometric-identity case.
+# deployed and cannot be probed at all.
 #
-# Eleven names are confirmed open by probe. Do not quote any row of this file as an exposure
-# without probing it first. Evidence and method:
+# Do not quote any row of this file as an exposure without probing it first. Evidence and method:
 #   docs/security/trust-audit/checkpoint-10/CP10_MEASURED_ENFORCEMENT_POSTURE.md
 #
-# The names are deliberately NOT edited: the guard diffs this file against the script's output,
-# so removing a false positive here would turn the guard red without changing the estate. The
-# fix is to correct the classifier, then this baseline. Until then, read it as "the script says
-# these are open", not "these are open".
+# ── 2026-08-07, Phase 0 E: NINE NAMES REMOVED ───────────────────────────────────────────────
+#
+# Eight were given real filter chains (oauth2ResourceServer + anyRequest().authenticated(),
+# actuator still anonymous so readiness survives), and audit-ledger-service was closed earlier
+# the same day by the break-glass lane:
+#
+#   analytics-pipeline-service   connector-fhir-adapter   jobs-service    nhume-service
+#   offline-edge-service         offline-sync-service     support-service pharmacy-elmis-adapter
+#   audit-ledger-service
+#
+# jobs-service was the one confirmed by measurement rather than inference: POST /internal/v1/jobs
+# returned 201 and PERSISTED a row (jobs.job_definition id=1 — the table had never been written
+# to). Each of the eight now carries a ProductionChainRefusesAnonymousWriteTest that forces
+# disable-oauth-for-tests=false and asserts 401 against the chain the estate actually runs.
+#
+# ── THE SEVEN THAT REMAIN, AND WHY ──────────────────────────────────────────────────────────
+#
+#   abis-service, indawo-service, ndila-service, wellness-service
+#       The documented false positives. The names are deliberately NOT edited: the guard diffs
+#       this file against the script's output, so removing them here would turn the guard red
+#       without changing the estate. The fix is to correct the classifier, then this baseline.
+#
+#   shared-core
+#       A library, not a deployed service. Same reasoning as above.
+#
+#   iot-ingestion-service
+#       CLOSED IN THE ESTATE, still open in source. It gates on its own impilo.security.mode
+#       knob; values-full-preview.yaml set that to permit-all, which made the whole service
+#       anonymous. That is now oauth2 with a valid issuer/JWKS pair. The source still contains
+#       the permit-all branch, so the classifier still names it — correctly, because the branch
+#       is one env var away from being live again.
+#
+#   matcher-engine
+#       CONTAINED, NOT AUTHENTICATED. Its sole caller (BmeClientMatchingEngine in abis-service)
+#       sends no Authorization header, so authenticating it would have broken every biometric
+#       verification in the estate. It is instead admitted only from abis-service by
+#       deploy/networkpolicy/matcher-engine-ingress.yaml — the same tier control already applied
+#       to Orthanc and HAPI. It stays on this list because the source really is open: a pod that
+#       lands inside abis-service still reaches it with no credential.
 
 abis-service
-analytics-pipeline-service
-audit-ledger-service
-connector-fhir-adapter
 indawo-service
 iot-ingestion-service
-jobs-service
 matcher-engine
 ndila-service
-nhume-service
-offline-edge-service
-offline-sync-service
-pharmacy-elmis-adapter
 shared-core
-support-service
 wellness-service

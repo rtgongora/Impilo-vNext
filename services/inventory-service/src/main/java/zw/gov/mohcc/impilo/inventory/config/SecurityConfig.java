@@ -98,8 +98,6 @@ public class SecurityConfig {
                 // API documentation
                 .requestMatchers("/swagger-ui/**").permitAll()
                 .requestMatchers("/v3/api-docs/**").permitAll()
-                // v1.1 tech-companion probes (no JWT in harness)
-                .requestMatchers("/internal/v1/health", "/internal/v1/test-command").permitAll()
                 // All inventory business endpoints require authentication
                 .requestMatchers("/v1/**").authenticated()
                 // Everything else requires authentication

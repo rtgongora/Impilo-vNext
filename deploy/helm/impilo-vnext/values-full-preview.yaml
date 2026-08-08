@@ -637,6 +637,15 @@ fullBootServices:
       # to read the standard name. The value was always right; the code did not read it.
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
       IMPILO_TRUST_SHADOW_BEARER_ENABLED: "true"
+      # §22 enforcement step (1): the PDP regenerates operating-context headers from the
+      # duty token instead of forwarding whatever the browser set. The live estate has run
+      # AUTHORITATIVE since 2026-08-07, but the value was applied BY HAND — it appeared in
+      # no chart, and the service default is PASSTHROUGH, so any `helm upgrade` would have
+      # silently reverted live enforcement to trusting the browser. Charting it here makes
+      # the upgrade preserve what is already running; it changes nothing about the estate.
+      # Deliberately inside THIS env block and not a second one — see the duplicate-key
+      # note in the experienceBff block above and the rtc-gateway-service note below.
+      TSHEPO_AUTHZ_CONTEXT_HEADER_MODE: "AUTHORITATIVE"
     # P1 shadow probe key — see the experienceBff block above for why optional:true.
     secretEnv:
       IMPILO_TRUST_SHADOW_PROBE_KEY:
@@ -676,6 +685,55 @@ fullBootServices:
     env:
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
+  # ── Phase 0 E cohort: services that gained an oauth2 resource server ───────────────────────
+  #
+  # Seven of these ran anyRequest().permitAll() or had no Spring Security on the classpath at
+  # all; the probe sweep found writes reaching them with no credential (jobs-service actually
+  # PERSISTED a job definition). Their chains now authenticate — which is exactly why they need
+  # an issuer HERE, and why leaving it out is not a safe default.
+  #
+  # Their application.yml falls back to ${KEYCLOAK_ISSUER:http://localhost:8080/realms/impilo},
+  # and KEYCLOAK_ISSUER is not in these pods' env. Measured on jobs-service after its rollout:
+  # anonymous writes correctly 401, but a REAL token would have been validated against localhost
+  # and rejected too — fail-closed and unusable, which reads like enforcement in a probe and is
+  # an outage for a legitimate caller.
+  #
+  # PUBLIC issuer (it is what the token's iss claim carries) with the INTERNAL JWKS route (this
+  # VM cannot reach its own public address), same pairing as the MFA and G046 cohorts above.
+  # Setting jwk-set-uri also stops Spring attempting OIDC discovery against the public address at
+  # startup, which is the G046 "no JwtDecoder bean, pod fails to start" trap.
+  jobs-service:
+    env:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
+  offline-edge-service:
+    env:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
+  offline-sync-service:
+    env:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
+  support-service:
+    env:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
+  pharmacy-elmis-adapter:
+    env:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
+  connector-fhir-adapter:
+    env:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
+  nhume-service:
+    env:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
+  # NOTE: analytics-pipeline-service is the eighth service in this cohort and is NOT configured
+  # here — it already has a block further down this file (Kafka listener autostart). A second key
+  # with the same name is silently discarded by YAML, which is how the rtc-gateway fix and two
+  # earlier attempts in this file reached nothing. Its issuer settings live in that block instead.
   llm-orchestration-service:
     env:
       LLM_SECURITY_ALLOW_INSECURE_PERMIT_ALL: "true"
@@ -730,10 +788,23 @@ fullBootServices:
   # OF-C M4 gate finding: iot-ingestion gates on its own impilo.security.mode knob
   # (ignores the platform disable-oauth flag) and its issuer defaulted to localhost —
   # no in-cluster JWT could ever validate. Preview parity + a valid issuer for defence.
+  #
+  # Phase 0 E: permit-all was the workaround for that localhost issuer, and it made the
+  # WHOLE service anonymous — the probe sweep found /internal/v1/telemetry/ingest and
+  # /internal/v1/devices/register reaching application code with no credential. The issuer
+  # is fixed below, so the workaround is retired: mode goes to oauth2 and the chain's
+  # anyRequest().authenticated() branch applies.
+  #
+  # PUBLIC issuer (it is what the token's iss claim carries) with the INTERNAL JWKS route
+  # (this VM cannot reach its own public address) — the same pairing as the MFA and G046
+  # cohorts above. Setting KEYCLOAK_ISSUER alone would have validated against
+  # http://keycloak:8080/... and rejected every real token as an issuer mismatch: a
+  # fail-closed 401 for legitimate callers, which reads like enforcement but is a break.
   iot-ingestion-service:
     env:
-      IMPILO_SECURITY_MODE: "permit-all"
-      KEYCLOAK_ISSUER: "http://keycloak:8080/realms/impilo"
+      IMPILO_SECURITY_MODE: "oauth2"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
   msika-flow-service:
     env:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
@@ -785,6 +856,11 @@ fullBootServices:
   analytics-pipeline-service:
     env:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
+      # Phase 0 E cohort — see the block above for why an issuer is required here rather than
+      # optional. Deliberately in THIS env block: a second analytics-pipeline-service key would
+      # be silently discarded by YAML and the flag would reach nothing.
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
   pacs-adapter-service:
     env:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
@@ -793,6 +869,24 @@ fullBootServices:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
       MUSHEX_BASE_URL: http://mushex-service:8102
       COVERAGE_BASE_URL: http://coverage-service:8140
+      # PRE-EXISTING DEFECT, found while proving the money-write authorization gate and fixed
+      # here: costa rejected EVERY real token with
+      #   401 invalid_token — "The iss claim is not valid"
+      # Its application.yml derives BOTH the JWKS route and the issuer from ${KEYCLOAK_URL}, so
+      # the issuer resolved to the INTERNAL http://keycloak:8080/realms/impilo while tokens carry
+      # the PUBLIC iss https://impilo.mohcc.gov.zw/realms/impilo. The JWKS half was right; only
+      # the issuer half was wrong, which is why nothing failed to start and the fault only shows
+      # on a request that actually presents a bearer.
+      #
+      # Consequence while it stood: no authenticated caller could reach any costa endpoint, and
+      # the authorization gate behind it was unreachable. A probe without a token sees 401 and
+      # reads it as enforcement, which is how this survived — the same "a 401 is not proof of a
+      # working gate" trap as the issuer fix for the Phase 0 E cohort.
+      #
+      # PUBLIC issuer (matches the iss claim) with the INTERNAL JWKS route (this VM cannot reach
+      # its own public address), the estate idiom used by the MFA and G046 cohorts above.
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
   mushex-service:
     env:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"

@@ -32,8 +32,7 @@ public class SecurityConfig {
         if (!disableOauthForTests) {
             http.authorizeHttpRequests(a -> a.requestMatchers(
                     "/actuator/health", "/actuator/health/**", "/actuator/info",
-                    "/actuator/prometheus", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
-                    "/internal/v1/health", "/internal/v1/test-command"
+                    "/actuator/prometheus", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"
             ).permitAll().anyRequest().authenticated()).oauth2ResourceServer(o -> o.jwt(Customizer.withDefaults()));
         } else {
             http.authorizeHttpRequests(a -> a.anyRequest().permitAll());

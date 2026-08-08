@@ -1,0 +1,91 @@
+# Containment for the biometric matching engine, 2026-08-07 (Phase 0 E).
+#
+# WHY: the estate-wide unauthenticated probe sweep found `POST http://matcher-engine:9200/v1/engine/
+# {extract,verify,identify}` reaching application code from an unrelated pod with no credential.
+# matcher-engine has no Spring Security on its classpath at all, so there is nothing to
+# authenticate against. It compares biometric templates: the request body IS the biometric
+# material, and the response is an identity assertion.
+#
+# ── WHY A NETWORK POLICY AND NOT AUTHENTICATION ─────────────────────────────────────────────
+#
+# The other eight services this sweep found open got OAuth resource-server chains instead. This one
+# did not, deliberately:
+#
+#   - Its sole caller, `BmeClientMatchingEngine` in abis-service, builds a plain `RestClient` with
+#     NO Authorization header. Adding authentication here without also minting a token there would
+#     have broken every biometric verification in the estate. There is no shared service-token
+#     library to reach for -- `ServiceTokenProvider` lives inside experience-bff, and mvumo-service
+#     hand-rolls its own `ClientCredentialsTokenProvider`. Wiring one into the biometric path is a
+#     larger change than a containment policy and belongs with the s2s token workstream.
+#   - The registry classifies it as infra-tier compute: `plane: trust`, `consumes_from: []`,
+#     `exposes_to: [abis-service]` -- a single consumer. `templates/matcher-engine.yaml` says the
+#     same in prose: "Reached only by the abis-service adapter via MATCHER_ENGINE_URL."
+#   - That is exactly the tier the estate already contains this way: `pacs-orthanc-ingress` and
+#     `shr-hapi-fhir-ingress`. The source comment on BmeClientMatchingEngine names the pattern
+#     itself -- "the exact pacs-adapter -> Orthanc / rtc-gateway -> LiveKit pattern".
+#
+# CONTAINMENT IS NOT AUTHENTICATION, and this is a weaker control than the eight services got. A
+# permitted caller still reaches the engine with no credential, and anything that lands in the
+# abis-service pod inherits that reach. Recorded as a residual in the Phase 0 E report rather than
+# counted as closed.
+#
+# ── CALLER: ONE, VERIFIED BY DIRECTION ──────────────────────────────────────────────────────
+#
+#   abis-service   MATCHER_ENGINE_URL = http://matcher-engine:9200   (values-full-preview.yaml)
+#
+# Checked in source, not inferred from an env name -- the SHR policy initially admitted
+# butano-service on exactly that mistake, where the URL was a self-advertised server address rather
+# than a client target. Here `BmeClientMatchingEngine` constructs
+# `builder.baseUrl(${abis.matcher.base-url}).build()` and POSTs to it: an outbound client.
+#
+# experience-bff is NOT admitted. It appears in a grep for "matcher-engine" only because
+# `AbisBiometricBffController`'s javadoc mentions it; the controller injects `AbisBiometricClient`
+# and calls abis-service, which delegates onward. Admitting the BFF on a comment would have widened
+# this policy for a call that does not exist.
+#
+# ── PORTS ARE THE POD'S PORTS ───────────────────────────────────────────────────────────────
+#
+# The Service maps 9200->9200 so the numbers coincide, but the pod port is what is named here. See
+# the SHR policy, where the Service maps 8090->8080 and using the Service port partitioned every
+# legitimate caller while the negative control still passed.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: matcher-engine-ingress
+  namespace: impilo-full-preview
+  labels:
+    impilo.io/trust-cohort: "biometric"
+  annotations:
+    impilo.io/rollback: "kubectl -n impilo-full-preview delete networkpolicy matcher-engine-ingress"
+    impilo.io/caller-evidence: "BmeClientMatchingEngine builds a RestClient on MATCHER_ENGINE_URL and POSTs to it; verified by call-direction, not env name-match (2026-08-07)"
+spec:
+  podSelector:
+    matchLabels:
+      app: matcher-engine
+  policyTypes:
+    - Ingress
+  ingress:
+    # The single enumerated caller.
+    - from:
+        - podSelector:
+            matchLabels:
+              app: abis-service
+      ports:
+        - protocol: TCP
+          port: 9200
+
+    # Kubelet liveness/readiness probes arrive from the NODE, not from a pod, so no podSelector can
+    # match them. Both probes are httpGet /actuator/health on 9200 (verified against the live
+    # Deployment), so omitting this would fail them, mark the engine unready and take biometric
+    # matching down while the policy looked like a hardening.
+    #
+    # SINGLE ADDRESSES ONLY, never the pod CIDR -- 10.42.0.1 is the cni0 bridge the probe actually
+    # arrives from, plus the node's own address. Same pair as the three existing policies.
+    - from:
+        - ipBlock:
+            cidr: 10.42.0.1/32
+        - ipBlock:
+            cidr: 10.50.1.67/32
+      ports:
+        - protocol: TCP
+          port: 9200
