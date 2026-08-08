@@ -106,24 +106,8 @@ a clean estate.
      of unprefixed paths that `capabilityKeyFor` could not collapse. No guard gates on that number
      (only a `> 0` test assertion).
 
-   - 🔴 **Contract-implementation violations rose 76 → 1413**, and this one needs a decision.
-     `implemented` actually **improved** to 4904 of 4936; the rise is almost entirely
-     `orphanHandlers`, which went from at most 76 to **1320** — handlers with no OpenAPI operation.
-     `routeMatchesOperation` matches on **suffix** in both directions
-     (`normOp.endsWith(r.normalized)`), which was a compensating hack for the broken extractor:
-     bare fragments like `/{equipment_id}` suffix-matched unrelated operations and reported a
-     contract as implemented when it was not.
-
-     Verified by hand: `asset-registry.openapi.yaml` declares 11 paths, **none** mentioning
-     `/equipment`, while `EquipmentOperationsController` maps `/internal/v1/equipment` with several
-     handlers. Before, that produced no orphan; now it does. The 1320 are real contract gaps, and
-     the gate's own remediation text agrees — *"add OpenAPI operation — complete contract; do not
-     delete handler"*.
-
-     **Not addressed in this workstream.** The `api-contracts` gate was already failing on `main`
-     at 76, so this does not turn a green gate red — but retuning `routeMatchesOperation` now that
-     paths are exact, and setting a threshold against 1320 real gaps, is a separate decision with
-     its own baseline. Do not "fix" it by loosening the matcher back.
+   - **Contract-implementation violations 76 → 1399** — matcher retuned and baselined; see the
+     dedicated section below.
 
    ⚠️ A naive matcher run against the old fragments reported 5135 of 6294 surface path references
    (82%) as unmatched. That number was an **artifact of the fragments, not a finding**, and is
@@ -175,3 +159,94 @@ precedent set by the 2026-06-27 hermeticity re-anchor: when detection is *repair
 invisible pre-existing debt becomes visible, and the ledger records it rather than hiding it. The
 doctrine forbids raising the baseline to absorb **new** debt, and no source was weakened to reach
 this number. Every one of the 8 is itemised in `knownDebt`. **Ratchet them down.**
+
+---
+
+# Contract implementation — matcher retuned, debt baselined
+
+**Measured 2026-08-08** on `phase0/j-route-resolution`.
+
+## The gate was permanently red AND permanently ignored
+
+Two independent wiring defects, either of which alone would have hidden the number:
+
+- `check-contract-implementation.sh` defaulted its threshold to **0**, so it always failed.
+- `run-api-contract-checks.sh` tried to set `999999` — but **assigned it inside `bash -c` without
+  exporting it**, so the child guard never saw the override and every run reported `threshold=0`.
+  Then `|| gate_warn` downgraded the failure to a warning, so the phase passed regardless.
+
+A gate that is always red and never blocking teaches people to scroll past it. It now ratchets
+against `reports/product/contract-implementation-baseline.json` and **blocks regressions**.
+
+## The old matcher was a compensating hack
+
+`routeMatchesOperation` accepted a raw-string **suffix** match in either direction, guarded only by
+`length > 1`. That existed to paper over the broken extractor: while handler routes were bare
+fragments, `/{equipment_id}` suffix-matched almost any operation ending in a path variable, and
+contracts were reported implemented on a coincidence.
+
+Two mechanisms were hiding orphans, not one — `findOrphanHandlers` also skips any route not starting
+with `/internal|/v1|/api`, which every unprefixed fragment failed.
+
+## What it matches now
+
+Exact and segment-aligned, against the three forms contracts in this repo actually use:
+
+1. the **full route path**;
+2. the **controller-relative** path — many contracts declare `/{modelId}` or `/` and leave the base
+   to `servers:`. 70 operations are the bare-`/` shape alone;
+3. the same path under a **different transport prefix** (`/external/v1/x` for a route served at
+   `/internal/v1/x`).
+
+Raw substring suffixes never match again. Exact forms win over tolerant ones.
+
+⚠️ **Exact-full-path-only was measured first and rejected**: it reported implemented 2015 / missing
+2982, because it cannot see the relative-path convention. That number was an **artifact of the
+matcher, not a finding**.
+
+⚠️ A truthiness bug in my own first attempt (`if (r.subNormalized && …)`) silently skipped every
+bare-root comparison, because `normalizePathPattern('/')` returns the **empty string**. It left all
+70 root operations reading as missing.
+
+## The numbers
+
+| Matcher | implemented | missing | orphanHandlers | violations |
+|---|---:|---:|---:|---:|
+| old suffix hack, broken extractor | 4904 | 93 | ≤76 | **76** |
+| old suffix hack, fixed extractor | 4904 | 93 | 1320 | **1413** |
+| exact-only (rejected — artifact) | 2015 | 2982 | 1896 | 4878 |
+| **retuned (shipped)** | **4903** | **94** | **1305** | **1399** |
+
+Baselined at **1399**. Validated in both directions rather than trusted:
+
+- **Positive control** — asset-registry's **33** `/equipment` orphan handlers are still caught. Its
+  contract declares 11 paths, none for `/equipment`, while `EquipmentOperationsController` maps
+  `/internal/v1/equipment`.
+- **Negative control** — its 14 real operations still match the **correct handler files**
+  (`AssetController`, `InternalHealthController`), so matches are attribution, not coincidence.
+- **Red-proved** — adding one undocumented handler took violations 1399 → 1400 and the guard exited
+  **1**; reverting returned it to exit 0.
+  ⚠️ My first probe was invalid and quietly passed: I added `/zz-redproof` to `AssetController`,
+  which has **no class-level `@RequestMapping`**, so the route had no prefix and
+  `findOrphanHandlers` skipped it. A probe that fails to trip the guard is not evidence the guard is
+  broken — check the probe first.
+
+## Known contamination, deliberately counted rather than tolerated
+
+`experience-bff.openapi.yaml` contains **unprefixed fragment paths** — `/landela/templates`,
+`/landela/documents/publish` — which look generated by the handler-sync scripts *while the extractor
+was broken*. Those contract entries are wrong at source and should be regenerated. The matcher does
+not bend to accommodate them.
+
+## Still not covered
+
+1. `orphanHandlers` is gated by `contractPathPrefixes`: a controller in a wholly undocumented
+   namespace shares no `/a/b` prefix with any operation and is **skipped entirely** rather than
+   reported.
+2. `experience-bff` is in `ORPHAN_CHECK_SKIP_MODULES` — its handlers are **never** checked for orphan
+   status.
+3. The controller-relative fallback is **module**-scoped, not controller-scoped: within one module a
+   `/{id}` operation can match a root handler in a different controller. It answers "an
+   implementation exists", not "this handler implements it".
+4. A transport-prefix swap treats `/external/v1/x` and `/internal/v1/x` as the same endpoint, so a
+   service exposing only the internal variant still reads as implementing the external contract.

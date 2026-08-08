@@ -32,9 +32,16 @@ gate_run "contract-implementation-matrix" bash -c '
   test -f ../../reports/product/contract-implementation-matrix.json
 ' || FAIL=1
 
-gate_run "contract-implementation-gate-advisory" bash -c '
-  CONTRACT_IMPLEMENTATION_VIOLATION_THRESHOLD="${CONTRACT_IMPLEMENTATION_VIOLATION_THRESHOLD:-999999}"
-  bash scripts/guard/check-contract-implementation.sh
-' || gate_warn "contract implementation violations present — see CONTRACT_IMPLEMENTATION_MATRIX.md"
+# Was "advisory" in two independent ways, neither of which worked as intended:
+#   - the threshold was ASSIGNED but never EXPORTED inside `bash -c`, so the child
+#     guard never saw 999999 and fell back to its own default of 0 — every run
+#     reported "threshold=0" and failed;
+#   - `|| gate_warn` then downgraded that failure to a warning, so the phase passed
+#     regardless of the number.
+# Permanently red and permanently ignored. The guard now ratchets against a recorded
+# baseline (reports/product/contract-implementation-baseline.json), so at-or-below
+# baseline is a genuine pass and a regression is a genuine failure. No export is
+# needed: absent an explicit override the guard reads that baseline itself.
+gate_run "contract-implementation" bash scripts/guard/check-contract-implementation.sh || FAIL=1
 
 exit "$FAIL"
