@@ -869,6 +869,24 @@ fullBootServices:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
       MUSHEX_BASE_URL: http://mushex-service:8102
       COVERAGE_BASE_URL: http://coverage-service:8140
+      # PRE-EXISTING DEFECT, found while proving the money-write authorization gate and fixed
+      # here: costa rejected EVERY real token with
+      #   401 invalid_token — "The iss claim is not valid"
+      # Its application.yml derives BOTH the JWKS route and the issuer from ${KEYCLOAK_URL}, so
+      # the issuer resolved to the INTERNAL http://keycloak:8080/realms/impilo while tokens carry
+      # the PUBLIC iss https://impilo.mohcc.gov.zw/realms/impilo. The JWKS half was right; only
+      # the issuer half was wrong, which is why nothing failed to start and the fault only shows
+      # on a request that actually presents a bearer.
+      #
+      # Consequence while it stood: no authenticated caller could reach any costa endpoint, and
+      # the authorization gate behind it was unreachable. A probe without a token sees 401 and
+      # reads it as enforcement, which is how this survived — the same "a 401 is not proof of a
+      # working gate" trap as the issuer fix for the Phase 0 E cohort.
+      #
+      # PUBLIC issuer (matches the iss claim) with the INTERNAL JWKS route (this VM cannot reach
+      # its own public address), the estate idiom used by the MFA and G046 cohorts above.
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://impilo.mohcc.gov.zw/realms/impilo"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
   mushex-service:
     env:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"

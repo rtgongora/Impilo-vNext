@@ -122,6 +122,27 @@ class MoneyWriteGuardInterceptorTest {
         assertRefused("/costa/v1/waivers", null);
     }
 
+    /**
+     * Regression: the guard must not run on the ERROR dispatch. TrustContextFilter clears its
+     * thread-local in a finally block, so on re-entry the guard sees no actor type, refuses, and
+     * rewrites whatever really happened as a bare 403.
+     *
+     * <p>Found live: a bill draft posted as PROVIDER passed the gate, reached
+     * {@code BillService.createDraft}, failed a {@code facility_id} not-null constraint, and
+     * returned 403 with an empty body while the log showed the insert. The guard was hiding the
+     * real fault and impersonating an authorization failure.</p>
+     */
+    @Test
+    @DisplayName("the ERROR dispatch is not re-guarded, so a downstream fault is not masked as 403")
+    void errorDispatchIsNotReGuarded() {
+        TrustContextHolder.clear(); // exactly what the filter has done by the time ERROR re-enters
+        var req = new MockHttpServletRequest("POST", "/costa/v1/waivers");
+        req.setRequestURI("/costa/v1/waivers");
+        req.setDispatcherType(jakarta.servlet.DispatcherType.ERROR);
+        assertDoesNotThrow(() -> interceptor.preHandle(req, new MockHttpServletResponse(), new Object()),
+                "the ERROR dispatch must pass through; re-guarding it masks the real failure");
+    }
+
     @Test
     @DisplayName("reads are untouched and the v1.1 probe stays exempt")
     void readsAndProbeAreNotGated() {

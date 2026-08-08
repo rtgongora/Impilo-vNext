@@ -41,6 +41,19 @@ public class MoneyWriteGuardInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+        // Guard the ORIGINAL request only. Spring re-runs the interceptor chain on the ERROR
+        // dispatch, and by then TrustContextFilter has cleared its thread-local in a finally
+        // block — so the guard would see no actor type, refuse, and rewrite the real outcome as a
+        // bare 403.
+        //
+        // Found live, not reasoned about: a bill draft posted as PROVIDER passed this gate,
+        // reached BillService.createDraft, failed a facility_id not-null constraint, and came back
+        // 403 with an empty body while the log showed the insert. A guard that turns every
+        // downstream error into "forbidden" hides the actual fault and looks like an authorization
+        // bug in code that is working.
+        if (request.getDispatcherType() != jakarta.servlet.DispatcherType.REQUEST) {
+            return true;
+        }
         if (!isWrite(request.getMethod())) {
             return true;
         }
