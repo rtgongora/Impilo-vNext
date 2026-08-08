@@ -203,17 +203,8 @@ public class AuthorizeController {
         // SYSTEM or SERVICE; anything else asking for SYSTEM is refused rather than downgraded,
         // because silently rewriting a caller's declared purpose would make the audit trail lie.
         // ────────────────────────────────────────────────────────────────
-        if (PURPOSE_SYSTEM.equalsIgnoreCase(trim(purposeOfUse))
-                && !isWorkloadSession(sessionActorType, roles)) {
-            log.warn("ext_authz DENY: purpose SYSTEM asserted without a validated workload session "
-                            + "(sessionActorType={}, sessionRoles={}, actor={}, path={}, correlation={})",
-                    sessionActorType, roles, actorId, originalPath, correlationId);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(AuthzResponse.deny("PURPOSE_NOT_PERMITTED",
-                            "The SYSTEM purpose of use may only be asserted by a workload identity "
-                                    + "established from a validated token.",
-                            0));
-        }
+        boolean systemPurposeRefused = PURPOSE_SYSTEM.equalsIgnoreCase(trim(purposeOfUse))
+                && !isWorkloadSession(sessionActorType, roles);
 
         // Validate mandatory headers
         if (tenantId == null || actorId == null || actorId.isBlank()
@@ -230,6 +221,42 @@ public class AuthorizeController {
         String action = AuthzInternalRequest.deriveAction(originalMethod, originalPath);
         String resourceType = AuthzInternalRequest.deriveResourceType(originalPath);
         String resourceId = AuthzInternalRequest.deriveResourceId(originalPath);
+
+        // ────────────────────────────────────────────────────────────────
+        // Refuse the SYSTEM purpose here — before the engine, and audited.
+        //
+        // Decided above (while the session was in scope) but acted on here, for two reasons.
+        // First, tenant_id and actor_id are NOT NULL in policy_decision_log, so a decision can only
+        // be recorded once the mandatory-header check has passed. Second, the refusal must still
+        // land BEFORE PolicyEngine.evaluate: SYSTEM short-circuits Step 4 in both branches and
+        // skips consent, so refusing after evaluation would be refusing after the bypass.
+        //
+        // recordPrePolicyDenial writes policy_decision_log + the audit outbox WITHOUT evaluating
+        // anything. Without it this refusal left no decision row, so a detection query on
+        // purpose_of_use='SYSTEM' would fall silent once the guard shipped — and silence would mean
+        // "blocked", not "not attempted".
+        //
+        // The duty-token introspection below is deliberately not reached: a refused request should
+        // not cause an outbound call.
+        // ────────────────────────────────────────────────────────────────
+        if (systemPurposeRefused) {
+            log.warn("ext_authz DENY: purpose SYSTEM asserted without a validated workload session "
+                            + "(sessionActorType={}, sessionRoles={}, actor={}, path={}, correlation={})",
+                    sessionActorType, roles, actorId, originalPath, correlationId);
+            AuthzResponse refusal = policyEngine.recordPrePolicyDenial(
+                    new AuthzInternalRequest(
+                            tenantId, actorId, actorType, roles, purposeOfUse,
+                            deviceFingerprint, correlationId, facilityId, workspaceId,
+                            shiftId, originalMethod, originalPath, action, resourceType,
+                            resourceId, loaLevel, sessionId, "",
+                            providerId, departmentId, wardId, programmeId,
+                            subjectId, assuranceLevel, escalationGrantId, workflowContext,
+                            zw.gov.mohcc.impilo.tshepo.authz.dto.DutyContext.absent()),
+                    "PURPOSE_NOT_PERMITTED",
+                    "The SYSTEM purpose of use may only be asserted by a workload identity "
+                            + "established from a validated token.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(refusal);
+        }
 
         // Resolve the WORK_CONTEXT duty token (Vashandi-proven context) via introspection.
         // Fail-open on error; SHADOW/ENFORCE handling is in the PolicyEngine.

@@ -1245,6 +1245,39 @@ class PolicyEngineTest {
     }
 
     // ════════════════════════════════════════════════════════════════════
+    // Pre-policy refusals must still be audited
+    // ════════════════════════════════════════════════════════════════════
+
+    @Test
+    @DisplayName("recordPrePolicyDenial writes a decision row and an audit event, without evaluating")
+    void recordPrePolicyDenial_isAudited() {
+        AuthzInternalRequest request = requestWithResourceId("patients", "cpid-12345");
+
+        AuthzResponse response = policyEngine.recordPrePolicyDenial(
+                request, "PURPOSE_NOT_PERMITTED", "refused at the trust boundary");
+
+        assertEquals(Verdict.DENY, response.verdict());
+        assertEquals("PURPOSE_NOT_PERMITTED", response.errorCode());
+
+        // The whole point of the method: the refusal is visible to anyone querying decisions.
+        // Without this row a detection query on purpose_of_use='SYSTEM' falls silent once the
+        // controller guard ships, and silence would read as "not attempted" rather than "blocked".
+        ArgumentCaptor<PolicyDecisionLogEntity> captor =
+                ArgumentCaptor.forClass(PolicyDecisionLogEntity.class);
+        verify(decisionLogRepository).save(captor.capture());
+        assertEquals("DENY", captor.getValue().getVerdict());
+        assertEquals("PURPOSE_NOT_PERMITTED", captor.getValue().getDenyReason());
+        assertEquals("TREATMENT", captor.getValue().getPurposeOfUse());
+
+        verify(auditPublisher).queueAuditEvent(
+                any(AuthzInternalRequest.class), eq("DENY"), anyInt(), eq("PURPOSE_NOT_PERMITTED"));
+
+        // It records; it must never evaluate. No rule lookup, no consent call.
+        verifyNoInteractions(policyCacheService);
+        verifyNoInteractions(consentClient);
+    }
+
+    // ════════════════════════════════════════════════════════════════════
     // Step 5: Consent evaluation
     // ════════════════════════════════════════════════════════════════════
 

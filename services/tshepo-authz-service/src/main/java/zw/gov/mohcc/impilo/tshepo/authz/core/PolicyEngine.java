@@ -1989,6 +1989,29 @@ public class PolicyEngine {
         return AuthzResponse.deny(errorCode, errorMessage, riskScore);
     }
 
+    /**
+     * Record a refusal decided at the trust boundary, BEFORE policy evaluation runs.
+     *
+     * <p>Some refusals cannot wait for {@link #evaluate}. The SYSTEM purpose-of-use guard in
+     * {@code AuthorizeController} is the case this exists for: SYSTEM short-circuits Step 4 in both
+     * branches and skips consent, so a request carrying it must be turned away before it reaches
+     * the engine — refusing afterwards would be refusing after the bypass had already happened.</p>
+     *
+     * <p>The problem with refusing that early is that the refusal left no decision row: the
+     * controller returned directly, so {@code policy_decision_log} never saw it and the only trace
+     * was an application log line. A detection query on {@code purpose_of_use='SYSTEM'} would then
+     * go quiet after the guard shipped, and quiet would mean "blocked", not "not attempted" — the
+     * control would be working and invisible at the same time.</p>
+     *
+     * <p>So the refusal is written through exactly the same path as any other denial:
+     * {@code policy_decision_log} plus the audit outbox. It does NOT evaluate anything and cannot
+     * grant anything — it only records that a decision was taken and returns the DENY.</p>
+     */
+    public AuthzResponse recordPrePolicyDenial(AuthzInternalRequest request, String errorCode,
+                                               String errorMessage) {
+        return denyAndLog(request, errorCode, errorMessage, 0, System.nanoTime());
+    }
+
     private AuthzResponse stepUpAndLog(AuthzInternalRequest request, int riskScore, long startTime) {
         List<String> methods = properties.getStepUpMethods();
         String methodsStr = String.join(",", methods);
