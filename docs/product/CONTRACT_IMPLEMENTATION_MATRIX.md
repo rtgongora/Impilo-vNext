@@ -1,19 +1,19 @@
 # Contract Implementation Matrix
 
-> Generated: 2026-07-29T19:36:18.604Z
-> OpenAPI operations: **4931** | AsyncAPI channels: **84**
+> Generated: 2026-08-08T10:33:19.371Z
+> OpenAPI operations: **4936** | AsyncAPI channels: **84**
 
 ## Summary
 
 | Status | Count |
 |--------|------:|
-| implemented | 4981 |
+| implemented | 4904 |
 | partial | 0 |
-| missing | 11 |
+| missing | 93 |
 | unowned-contract | 23 |
-| contract-gap (handler exists — extend OpenAPI) | 65 |
+| contract-gap (handler exists — extend OpenAPI) | 1320 |
 | contract-parse-errors | 0 |
-| **violations (partial + missing + orphan + invalid contract)** | **76** |
+| **violations (partial + missing + orphan + invalid contract)** | **1413** |
 
 ## Remediation doctrine: complete — never delete
 
@@ -31,26 +31,45 @@ Forbidden: deleting controllers, removing routes, or trimming contracts to make 
 
 ## Sample violations (first 40)
 
+- `missing` aimodelregistry_post__ (ai-model-registry.openapi.yaml)
+- `missing` aimodelregistry_get__ (ai-model-registry.openapi.yaml)
+- `missing` booking_get__ (booking.openapi.yaml)
+- `missing` booking_post__ (booking.openapi.yaml)
+- `missing` campaigns_post__ (campaigns.openapi.yaml)
+- `missing` campaigns_get__ (campaigns.openapi.yaml)
+- `missing` cardprintagent_post__ (card-print.openapi.yaml)
+- `missing` cardprintagent_get__ (card-print.openapi.yaml)
+- `missing` channels_post__ (channels.openapi.yaml)
+- `missing` channels_get__ (channels.openapi.yaml)
+- `missing` costingengine_get__ (costa.openapi.yaml)
+- `missing` costingengine_post__ (costa.openapi.yaml)
+- `missing` coverageEligibilityCheckAlias (coverage.openapi.yaml)
+- `missing` coverage_post__ (coverage.openapi.yaml)
+- `missing` coverage_get__ (coverage.openapi.yaml)
+- `missing` credentialverification_post__ (credential-verification.openapi.yaml)
+- `missing` credentialverification_get__ (credential-verification.openapi.yaml)
+- `missing` daidzai_get_root (daidzai.openapi.yaml)
+- `missing` daidzai_post_root (daidzai.openapi.yaml)
+- `missing` dataaccessgovernance_post__ (data-access-governance.openapi.yaml)
+- `missing` dataaccessgovernance_get__ (data-access-governance.openapi.yaml)
+- `missing` document_post__ (document-store.openapi.yaml)
+- `missing` bffCoreTransactionPostCompatibility (experience-bff.openapi.yaml)
+- `missing` bffClinicalTimelinePatient (experience-bff.openapi.yaml)
 - `missing` experiencebff_get__clients_healthId_identity_summary (experience-bff.openapi.yaml)
+- `missing` forms_post__ (forms.openapi.yaml)
+- `missing` forms_get__ (forms.openapi.yaml)
+- `missing` generalledger_get__ (general-ledger.openapi.yaml)
+- `missing` generalledger_post__ (general-ledger.openapi.yaml)
 - `missing` hrLeaveTypes (hr-payroll.openapi.yaml)
-- `missing` hrpayroll_post__internal_v1_hr_leave_types (hr-payroll.openapi.yaml)
-- `missing` hrLeaveRequests (hr-payroll.openapi.yaml)
-- `missing` hrpayroll_post__internal_v1_hr_leave_requests (hr-payroll.openapi.yaml)
-- `missing` hrAttendance (hr-payroll.openapi.yaml)
-- `missing` hrpayroll_post__internal_v1_hr_attendance (hr-payroll.openapi.yaml)
-- `missing` hrpayroll_get__internal_v1_hr_leave_balances (hr-payroll.openapi.yaml)
-- `missing` hrpayroll_post__internal_v1_hr_leave_balances (hr-payroll.openapi.yaml)
-- `missing` indawo_get__ (indawo.openapi.yaml)
-- `missing` indawo_post__ (indawo.openapi.yaml)
-- `contract-gap` GET /internal/v1/governance/decision-audit (data-governance-service)
-- `contract-gap` POST /internal/v1/governance/data-subject-requests (data-governance-service)
-- `contract-gap` GET /internal/v1/governance/data-subject-requests (data-governance-service)
-- `contract-gap` POST /internal/v1/governance/data-subject-requests/cancel (data-governance-service)
-- `contract-gap` GET /internal/v1/governance/privacy-preferences (data-governance-service)
-- `contract-gap` PUT /internal/v1/governance/privacy-preferences (data-governance-service)
-- `contract-gap` GET /internal/v1/governance/display-settings (data-governance-service)
-- `contract-gap` PUT /internal/v1/governance/display-settings (data-governance-service)
-- `contract-gap` POST /internal/v1/deid/datasets (data-governance-service)
-- `contract-gap` GET /internal/v1/deid/datasets (data-governance-service)
+- `contract-gap` GET /internal/v1/equipment (asset-registry-service)
+- `contract-gap` POST /internal/v1/equipment (asset-registry-service)
+- `contract-gap` GET /internal/v1/equipment/{equipment_id} (asset-registry-service)
+- `contract-gap` GET /internal/v1/equipment/{equipment_id}/detail (asset-registry-service)
+- `contract-gap` POST /internal/v1/equipment/{equipment_id}/metadata (asset-registry-service)
+- `contract-gap` POST /internal/v1/equipment/{equipment_id}/status (asset-registry-service)
+- `contract-gap` POST /internal/v1/equipment/{equipment_id}/transfers (asset-registry-service)
+- `contract-gap` POST /internal/v1/equipment/transfers/{transfer_id}/approve (asset-registry-service)
+- `contract-gap` POST /internal/v1/equipment/transfers/{transfer_id}/receive (asset-registry-service)
+- `contract-gap` POST /internal/v1/equipment/{equipment_id}/maintenance (asset-registry-service)
 
 _Regenerate: `npm run contract-matrix --prefix scripts/completeness`_

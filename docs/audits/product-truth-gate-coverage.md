@@ -98,11 +98,32 @@ a clean estate.
    BFF handler routes carrying a versioned prefix went from ~0% to **100%**, with **0**
    double-prefixed.
 
-   **Measured blast radius** (before → after): gap categories D/F unchanged, `byProductStatus`
-   unchanged, phase6 unchanged, `contractViolations` unchanged — but **capability buckets fell
-   5677 → 3279**, because roughly 2,400 "capabilities" were phantom fragments of unprefixed paths.
-   No guard gates on that number (only a `> 0` test assertion), and the collapsed figure is the
-   more plausible one.
+   **Measured blast radius** (before → after, isolated by swapping only the extractor on this same
+   branch): gap categories D/F unchanged, `byProductStatus` unchanged, phase6 unchanged — but two
+   downstream consumers move a long way, and both moves are toward the truth.
+
+   - **Capability buckets fell 5677 → 3279.** Roughly 2,400 "capabilities" were phantom fragments
+     of unprefixed paths that `capabilityKeyFor` could not collapse. No guard gates on that number
+     (only a `> 0` test assertion).
+
+   - 🔴 **Contract-implementation violations rose 76 → 1413**, and this one needs a decision.
+     `implemented` actually **improved** to 4904 of 4936; the rise is almost entirely
+     `orphanHandlers`, which went from at most 76 to **1320** — handlers with no OpenAPI operation.
+     `routeMatchesOperation` matches on **suffix** in both directions
+     (`normOp.endsWith(r.normalized)`), which was a compensating hack for the broken extractor:
+     bare fragments like `/{equipment_id}` suffix-matched unrelated operations and reported a
+     contract as implemented when it was not.
+
+     Verified by hand: `asset-registry.openapi.yaml` declares 11 paths, **none** mentioning
+     `/equipment`, while `EquipmentOperationsController` maps `/internal/v1/equipment` with several
+     handlers. Before, that produced no orphan; now it does. The 1320 are real contract gaps, and
+     the gate's own remediation text agrees — *"add OpenAPI operation — complete contract; do not
+     delete handler"*.
+
+     **Not addressed in this workstream.** The `api-contracts` gate was already failing on `main`
+     at 76, so this does not turn a green gate red — but retuning `routeMatchesOperation` now that
+     paths are exact, and setting a threshold against 1320 real gaps, is a separate decision with
+     its own baseline. Do not "fix" it by loosening the matcher back.
 
    ⚠️ A naive matcher run against the old fragments reported 5135 of 6294 surface path references
    (82%) as unmatched. That number was an **artifact of the fragments, not a finding**, and is
