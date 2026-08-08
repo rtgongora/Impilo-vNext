@@ -13,12 +13,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import zw.gov.mohcc.impilo.zibo.domain.ArtifactStatus;
 import zw.gov.mohcc.impilo.zibo.domain.ArtifactType;
 import zw.gov.mohcc.impilo.zibo.domain.AuthorityScope;
 import zw.gov.mohcc.impilo.zibo.persistence.entity.ArtifactEntity;
 import zw.gov.mohcc.impilo.zibo.persistence.entity.ConceptEntity;
-import zw.gov.mohcc.impilo.zibo.persistence.repository.ArtifactRepository;
 import zw.gov.mohcc.impilo.zibo.persistence.repository.ConceptRepository;
 
 /**
@@ -39,69 +37,23 @@ public class ConceptProjectionService {
     private static final int FLUSH_EVERY = 500;
 
     private final ConceptRepository conceptRepository;
-    private final ArtifactRepository artifactRepository;
     private final ObjectMapper objectMapper;
     private final EntityManager entityManager;
     private final UUID nationalPlane;
 
+    /** Resolved once on first projection; see {@link #searchVectorSupported()}. */
+    private Boolean searchVectorSupported;
+
     public ConceptProjectionService(
             ConceptRepository conceptRepository,
-            ArtifactRepository artifactRepository,
             ObjectMapper objectMapper,
             EntityManager entityManager,
             @Value("${zibo.terminology.national-plane-tenant-id:00000000-0000-0000-0000-000000000001}")
             String nationalPlaneTenantId) {
         this.conceptRepository = conceptRepository;
-        this.artifactRepository = artifactRepository;
         this.objectMapper = objectMapper;
         this.entityManager = entityManager;
         this.nationalPlane = UUID.fromString(nationalPlaneTenantId);
-    }
-
-    /**
-     * Reprojects every servable CodeSystem in the estate, across all tenant planes.
-     *
-     * <p>Without this the index is empty on any database whose content arrived through migrations.
-     * Every seeded artifact is {@code INSERT}ed directly at {@code PUBLISHED}/{@code ACTIVE} and
-     * never passes through {@code ArtifactService.publish}, which was the only thing that called
-     * {@link #rebuild}. So a freshly migrated ZIBO answers {@code $lookup} and {@code $expand} with
-     * nothing at all, for every vocabulary it demonstrably holds — the table exists, the content
-     * exists, and the two have never been introduced.</p>
-     *
-     * <p>{@code DRAFT} artifacts are skipped: they project when they are published. Reprojection is
-     * idempotent — {@link #rebuild} replaces an artifact's rows wholesale.</p>
-     *
-     * @return per-artifact concept counts, keyed by artifact id
-     */
-    public ReprojectionResult reprojectAll() {
-        List<ArtifactEntity> targets = artifactRepository.findByFhirTypeAndStatusIn(
-                ArtifactType.CODE_SYSTEM,
-                List.of(ArtifactStatus.PUBLISHED, ArtifactStatus.ACTIVE,
-                        ArtifactStatus.DEPRECATED, ArtifactStatus.RETIRED));
-
-        int artifacts = 0;
-        int concepts = 0;
-        int failed = 0;
-        for (ArtifactEntity artifact : targets) {
-            try {
-                concepts += rebuild(artifact);
-                artifacts++;
-            } catch (Exception e) {
-                // One unparseable artifact must not abandon the other forty.
-                failed++;
-                log.error("ZIBO: reprojection failed for {} v{} ({}): {}",
-                        artifact.getCanonicalUrl(), artifact.getVersion(),
-                        artifact.getArtifactId(), e.getMessage(), e);
-            }
-        }
-        log.info("ZIBO: reprojected {} of {} CodeSystems, {} concepts, {} failed",
-                artifacts, targets.size(), concepts, failed);
-        return new ReprojectionResult(targets.size(), artifacts, concepts, failed);
-    }
-
-    /** Outcome of a full reprojection. {@code failed} is reported, never swallowed. */
-    public record ReprojectionResult(int codeSystemsFound, int codeSystemsProjected,
-                                     int conceptsWritten, int failed) {
     }
 
     /**
@@ -222,13 +174,15 @@ public class ConceptProjectionService {
     private void persist(List<ConceptEntity> batch) {
         conceptRepository.saveAll(batch);
         entityManager.flush();
-        for (ConceptEntity c : batch) {
-            entityManager.createNativeQuery(
-                            "UPDATE zibo_concept SET search_vector = "
-                            + "to_tsvector('simple', coalesce(:text, '')) WHERE concept_id = :id")
-                    .setParameter("text", searchableText(c))
-                    .setParameter("id", c.getConceptId())
-                    .executeUpdate();
+        if (searchVectorSupported()) {
+            for (ConceptEntity c : batch) {
+                entityManager.createNativeQuery(
+                                "UPDATE zibo_concept SET search_vector = "
+                                + "to_tsvector('simple', coalesce(:text, '')) WHERE concept_id = :id")
+                        .setParameter("text", searchableText(c))
+                        .setParameter("id", c.getConceptId())
+                        .executeUpdate();
+            }
         }
         // Detach only what this batch created. entityManager.clear() emptied the whole persistence
         // context, which also detached the caller's ArtifactEntity mid-publish — the batching was
@@ -236,6 +190,38 @@ public class ConceptProjectionService {
         for (ConceptEntity c : batch) {
             entityManager.detach(c);
         }
+    }
+
+    /**
+     * Whether this database can maintain {@code search_vector}.
+     *
+     * <p>{@code tsvector} and {@code to_tsvector} are PostgreSQL features, and {@code search_vector}
+     * is created by {@code V401} rather than mapped on {@link ConceptEntity} — so on the H2 test
+     * profile, whose schema comes from {@code ddl-auto: create-drop}, the column does not exist and
+     * the function is unknown.</p>
+     *
+     * <p>Stated rather than caught. Silently swallowing the failure would make a genuine
+     * production outage of concept search look identical to running on H2, and this service exists
+     * because a silent empty answer went unnoticed for months. Production is PostgreSQL 16; if this
+     * ever returns false there, the warning is the symptom to chase.</p>
+     */
+    private boolean searchVectorSupported() {
+        if (searchVectorSupported == null) {
+            String product;
+            try {
+                product = entityManager.getEntityManagerFactory()
+                        .getProperties().getOrDefault("hibernate.dialect", "").toString();
+            } catch (Exception e) {
+                product = "";
+            }
+            searchVectorSupported = product.toLowerCase().contains("postgres");
+            if (!searchVectorSupported) {
+                log.warn("ZIBO: search_vector maintenance is disabled — dialect '{}' is not "
+                        + "PostgreSQL, so free-text concept search will return nothing. Expected "
+                        + "only on the H2 test profile.", product);
+            }
+        }
+        return searchVectorSupported;
     }
 
     private String searchableText(ConceptEntity c) {

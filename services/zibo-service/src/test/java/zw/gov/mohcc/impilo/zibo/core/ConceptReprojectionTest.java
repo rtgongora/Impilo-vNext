@@ -58,7 +58,7 @@ class ConceptReprojectionTest {
     @Mock
     private EntityManager entityManager;
 
-    private ConceptProjectionService service;
+    private ConceptReprojectionService service;
     private List<ConceptEntity> saved;
 
     @BeforeEach
@@ -84,8 +84,9 @@ class ConceptReprojectionTest {
             return batch;
         });
 
-        service = new ConceptProjectionService(conceptRepository, artifactRepository,
-                new ObjectMapper(), entityManager, NATIONAL_PLANE.toString());
+        ConceptProjectionService projection = new ConceptProjectionService(
+                conceptRepository, new ObjectMapper(), entityManager, NATIONAL_PLANE.toString());
+        service = new ConceptReprojectionService(projection, artifactRepository);
     }
 
     @Test
@@ -98,7 +99,7 @@ class ConceptReprojectionTest {
         when(artifactRepository.findByFhirTypeAndStatusIn(eq(ArtifactType.CODE_SYSTEM), anyList()))
                 .thenReturn(List.of(seeded));
 
-        ConceptProjectionService.ReprojectionResult result = service.reprojectAll();
+        ConceptReprojectionService.ReprojectionResult result = service.reprojectAll();
 
         assertThat(result.codeSystemsFound()).isEqualTo(1);
         assertThat(result.codeSystemsProjected()).isEqualTo(1);
@@ -142,7 +143,7 @@ class ConceptReprojectionTest {
         when(artifactRepository.findByFhirTypeAndStatusIn(eq(ArtifactType.CODE_SYSTEM), anyList()))
                 .thenReturn(List.of(broken, good));
 
-        ConceptProjectionService.ReprojectionResult result = service.reprojectAll();
+        ConceptReprojectionService.ReprojectionResult result = service.reprojectAll();
 
         // Unparseable content is logged and returns 0 rather than throwing, so it counts as
         // projected-with-nothing. Either way the second artifact must still be written.
@@ -162,7 +163,7 @@ class ConceptReprojectionTest {
 
         service.reprojectAll();
         saved.clear();
-        ConceptProjectionService.ReprojectionResult second = service.reprojectAll();
+        ConceptReprojectionService.ReprojectionResult second = service.reprojectAll();
 
         assertThat(second.conceptsWritten()).isEqualTo(1);
         // Deletion before insert is what makes a second run a replacement rather than a duplicate.

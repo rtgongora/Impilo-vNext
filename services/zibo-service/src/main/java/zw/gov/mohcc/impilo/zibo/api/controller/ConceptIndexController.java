@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
-import zw.gov.mohcc.impilo.zibo.core.ConceptProjectionService;
+import zw.gov.mohcc.impilo.zibo.core.ConceptReprojectionService;
 
 /**
  * Administration of the derived concept index.
@@ -29,10 +29,10 @@ public class ConceptIndexController {
 
     private static final Logger log = LoggerFactory.getLogger(ConceptIndexController.class);
 
-    private final ConceptProjectionService conceptProjectionService;
+    private final ConceptReprojectionService conceptReprojectionService;
 
-    public ConceptIndexController(ConceptProjectionService conceptProjectionService) {
-        this.conceptProjectionService = conceptProjectionService;
+    public ConceptIndexController(ConceptReprojectionService conceptReprojectionService) {
+        this.conceptReprojectionService = conceptReprojectionService;
     }
 
     /**
@@ -41,10 +41,10 @@ public class ConceptIndexController {
      * <p>Idempotent: each artifact's rows are replaced wholesale, never merged.</p>
      */
     @PostMapping("/rebuild")
-    public ResponseEntity<ApiResponse<ConceptProjectionService.ReprojectionResult>> rebuild() {
+    public ResponseEntity<ApiResponse<ConceptReprojectionService.ReprojectionResult>> rebuild() {
         TrustContext ctx = TrustContextHolder.require();
 
-        ConceptProjectionService.ReprojectionResult result = conceptProjectionService.reprojectAll();
+        ConceptReprojectionService.ReprojectionResult result = conceptReprojectionService.reprojectAll();
 
         log.info("Concept index rebuilt by {}: {} of {} CodeSystems, {} concepts, {} failed",
                 ctx.actorId(), result.codeSystemsProjected(), result.codeSystemsFound(),
