@@ -4,9 +4,11 @@ import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
+import zw.gov.mohcc.impilo.shared.auth.DutyShadow;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 /**
@@ -30,6 +32,13 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
  */
 public class GlWriteGuardInterceptor implements HandlerInterceptor {
 
+    private final DutyShadow.Mode dutyMode;
+
+    public GlWriteGuardInterceptor(
+            @Value("${impilo.security.duty.mode:SHADOW}") String dutyMode) {
+        this.dutyMode = DutyShadow.Mode.parse(dutyMode);
+    }
+
     private static boolean isWrite(String method) {
         return "POST".equals(method) || "PUT".equals(method)
                 || "PATCH".equals(method) || "DELETE".equals(method);
@@ -48,7 +57,14 @@ public class GlWriteGuardInterceptor implements HandlerInterceptor {
             return true;
         }
         // A null trust context presents no actor type and is refused, never waved through.
-        ActorTypeGuard.require(TrustContextHolder.get(), GlWriteAuthorization.dutyFor(path));
+        var ctx = TrustContextHolder.get();
+        ActorTypeGuard.require(ctx, GlWriteAuthorization.dutyFor(path));
+
+        // Duty shadow. EVERY write here decides money, so there is no capture exception to skip.
+        // Runs after the actor-type gate so the census counts only callers that already cleared
+        // it. Changes no response in SHADOW.
+        DutyShadow.observe(dutyMode, "this general-ledger decision", path,
+                ctx == null ? null : ctx.actorType());
         return true;
     }
 }

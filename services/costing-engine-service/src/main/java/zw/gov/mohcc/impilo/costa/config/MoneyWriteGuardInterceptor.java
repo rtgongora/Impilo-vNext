@@ -3,7 +3,10 @@ package zw.gov.mohcc.impilo.costa.config;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.servlet.HandlerInterceptor;
+
+import zw.gov.mohcc.impilo.shared.auth.DutyShadow;
 
 import zw.gov.mohcc.impilo.shared.auth.ActorTypeGuard;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
@@ -34,6 +37,13 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
  */
 public class MoneyWriteGuardInterceptor implements HandlerInterceptor {
 
+    private final DutyShadow.Mode dutyMode;
+
+    public MoneyWriteGuardInterceptor(
+            @Value("${impilo.security.duty.mode:SHADOW}") String dutyMode) {
+        this.dutyMode = DutyShadow.Mode.parse(dutyMode);
+    }
+
     private static boolean isWrite(String method) {
         return "POST".equals(method) || "PUT".equals(method)
                 || "PATCH".equals(method) || "DELETE".equals(method);
@@ -63,7 +73,16 @@ public class MoneyWriteGuardInterceptor implements HandlerInterceptor {
         }
         // Throws ResponseStatusException(403) naming what was required and what was presented, so
         // the first legitimate operator refused can act on the message rather than guess.
-        ActorTypeGuard.require(TrustContextHolder.get(), MoneyWriteAuthorization.dutyFor(path));
+        var ctx = TrustContextHolder.get();
+        ActorTypeGuard.require(ctx, MoneyWriteAuthorization.dutyFor(path));
+
+        // Duty shadow. Runs AFTER the actor-type gate so the census counts only callers that
+        // already cleared it -- otherwise every citizen refusal would also appear as a duty
+        // would-deny and the rate would say nothing about duty. Changes no response in SHADOW.
+        if (MoneyWriteAuthorization.isMoneyDecision(path)) {
+            DutyShadow.observe(dutyMode, "this money decision", path,
+                    ctx == null ? null : ctx.actorType());
+        }
         return true;
     }
 }

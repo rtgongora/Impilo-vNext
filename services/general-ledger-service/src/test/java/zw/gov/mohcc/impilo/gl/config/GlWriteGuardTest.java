@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class GlWriteGuardTest {
 
-    private final GlWriteGuardInterceptor interceptor = new GlWriteGuardInterceptor();
+    private final GlWriteGuardInterceptor interceptor = new GlWriteGuardInterceptor("SHADOW");
 
     @AfterEach
     void clear() {
