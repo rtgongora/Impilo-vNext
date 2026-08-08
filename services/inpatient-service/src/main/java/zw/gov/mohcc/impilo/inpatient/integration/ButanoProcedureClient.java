@@ -24,11 +24,35 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Writes the signed operative note to the canonical clinical record (Butano FHIR layer) as a FHIR
- * Procedure + DocumentReference via {@code POST /internal/v1/fhir/resources}. Butano (HAPI FHIR) is
- * the SoR for the clinical record — inpatient only authors the resource and links the returned ref.
- * Best-effort: a Butano outage must not block signing (the operative note remains the local truth and
- * the link is reconciled later).
+ * Writes the signed operative note as a FHIR Procedure + DocumentReference via
+ * {@code POST /internal/v1/fhir/resources}. Best-effort: an outage must not block signing (the
+ * operative note remains the local truth and the link is reconciled later).
+ *
+ * <p><b>This does not reach the SHR, and never has.</b> Measured 2026-08-08:</p>
+ * <ul>
+ *   <li>The endpoint belongs to {@code butano-fhir}, which despite the name is not BUTANO and not
+ *       a FHIR server — it is a JSONB blob store with a proprietary envelope
+ *       ({@code tenantId/resourceType/resourceId/payload}) and its own {@code butano_fhir}
+ *       database. The SHR is {@code butano-service}, a HAPI FHIR R4 JPA server on database
+ *       {@code butano}. They share a prefix and nothing else.</li>
+ *   <li>The inpatient deployment sets no base-url override, so {@code baseUrl} resolves to the
+ *       {@code http://localhost:8289} default — inside the inpatient pod, where nothing listens.
+ *       Every write here fails transport and is swallowed by the best-effort catch below.</li>
+ *   <li>{@code butano_fhir.fhir_resource} holds 0 rows, consistent with that: no operative note,
+ *       specimen or pathology reference has ever been recorded anywhere by this client.</li>
+ * </ul>
+ *
+ * <p>Repointing it at the governed seam — {@code POST /internal/v1/gateway/forward}, which
+ * fhir-gateway-service now delivers to butano-service — is blocked on an open clinical-record
+ * question, not on plumbing. {@code Procedure.encounter} and
+ * {@code DocumentReference.context.encounter} here name an inpatient encounter id, and BUTANO holds
+ * no Encounter for an inpatient case: nothing in {@code ButanoEventConsumer} creates one, so the
+ * reference cannot resolve and BUTANO enforces referential integrity on write. Delivering these
+ * means first deciding how a theatre case anchors in the SHR — an Encounter written from the PCT
+ * journey, or the encounter id carried as a business identifier rather than a resolvable reference.
+ * Dropping the link quietly to make the write succeed is not one of the options. Until that is
+ * settled {@code butano-fhir} cannot be retired, because retiring it removes the only endpoint this
+ * client knows.</p>
  */
 @Service
 public class ButanoProcedureClient {
