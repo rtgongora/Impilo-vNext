@@ -2503,9 +2503,14 @@ public class TeleconsultController {
                 return;
             }
             String billId = billDraft.path("id").asText();
-            costaClient.submitForApproval(billId);
-            costaClient.approveBill(billId, "Auto-approved teleconsult completion");
-            costaClient.finalizeBill(billId);
+            // The draft is raised as the clinician — they gave the care, and COSTA admits PROVIDER
+            // for point-of-care charge capture. The approval sequence is NOT theirs: it is an
+            // automatic platform step with no human author, and COSTA gates money decisions to
+            // back-office actor types. Forwarding the clinician's PROVIDER here would 403, and the
+            // catch below would swallow it, leaving the bill silently unfinalised.
+            costaClient.submitForApprovalAsSystem(billId);
+            costaClient.approveBillAsSystem(billId, "Auto-approved teleconsult completion");
+            costaClient.finalizeBillAsSystem(billId);
         } catch (Exception ex) {
             log.warn("Teleconsult billing trigger failed: {}", ex.getMessage());
         }

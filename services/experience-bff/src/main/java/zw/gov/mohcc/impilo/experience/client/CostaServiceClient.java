@@ -483,6 +483,55 @@ public class CostaServiceClient {
         return restTemplate.exchange(url, HttpMethod.GET, null, String.class);
     }
 
+    /**
+     * POST to COSTA asserting this workload's own SYSTEM identity rather than forwarding the
+     * caller's.
+     *
+     * <p>For steps the platform performs <b>automatically</b>, where the human in the request
+     * thread is the occasion for the write and not its author. The forwarding interceptor uses
+     * {@code forwardHeaderIfAbsent} for {@code X-Actor-Type}, so a value set here is preserved and
+     * the caller's is not sent.</p>
+     *
+     * <p>Introduced for teleconsult auto-billing. COSTA now gates money decisions —
+     * submit-approval, approve, finalise — to back-office actor types, and that sequence runs in a
+     * clinician's request thread, so forwarding {@code PROVIDER} would 403 it. The 403 would then
+     * have been swallowed by the caller's catch block and the bill left unfinalised: a silent
+     * money-flow break, which is the failure mode worth designing against.</p>
+     *
+     * <p>Attributing an automatic approval to SYSTEM is also the more honest audit record. This is
+     * <b>not</b> the confused-deputy pattern this codebase warns about elsewhere: that was
+     * asserting SYSTEM while forwarding a user's bearer to a privileged external API. Here the
+     * downstream is our own service and the action genuinely has no human author.</p>
+     */
+    private JsonNode postAsSystem(String url, Object body) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("X-Actor-Type", "SYSTEM");
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url, HttpMethod.POST, new HttpEntity<>(body, headers), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** {@link #submitForApproval} as an automated platform step — see {@link #postAsSystem}. */
+    public JsonNode submitForApprovalAsSystem(String billId) {
+        log.info("COSTA: Submitting bill {} for approval (system)", billId);
+        return postAsSystem(baseUrl + "/costa/v1/bills/" + billId + "/submit-approval", Map.of());
+    }
+
+    /** {@link #approveBill} as an automated platform step — see {@link #postAsSystem}. */
+    public JsonNode approveBillAsSystem(String billId, String note) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        if (note != null) body.put("note", note);
+        log.info("COSTA: Approving bill {} (system)", billId);
+        return postAsSystem(baseUrl + "/costa/v1/bills/" + billId + "/approve", body);
+    }
+
+    /** {@link #finalizeBill} as an automated platform step — see {@link #postAsSystem}. */
+    public JsonNode finalizeBillAsSystem(String billId) {
+        log.info("COSTA: Finalizing bill {} (system)", billId);
+        return postAsSystem(baseUrl + "/costa/v1/bills/" + billId + "/finalize", Map.of());
+    }
+
     public ResponseEntity<String> costaInternalPost(String path, Object body) {
         String url = baseUrl + (path.startsWith("/") ? path : "/" + path);
         log.info("COSTA internal POST {}", url);
