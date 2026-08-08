@@ -28,6 +28,34 @@ import java.util.UUID;
  *   <li>Public-health resource types (e.g. CapabilityStatement, StructureDefinition)
  *       return NOT_APPLICABLE without calling the consent service</li>
  * </ul>
+ *
+ * <h3>Absence of a directive is not refusal</h3>
+ *
+ * <p>tshepo-consent has four ways to return {@code permitted=false}, and only one of them is a
+ * person saying no:</p>
+ *
+ * <pre>
+ *   consentId set,  reason CONSENT_DENIED      -> an explicit deny directive exists  (REFUSAL)
+ *   consentId null, reason NO_ACTIVE_CONSENT   -> the subject has no directives at all
+ *   consentId null, reason NO_MATCHING_CONSENT -> directives exist, none for this purpose
+ *   consentId null, reason NO_VALID_CONSENT    -> directives exist, all expired or out of scope
+ * </pre>
+ *
+ * <p>This service read only {@code permitted} and collapsed all four into DENY. Measured
+ * 2026-08-08 against the deployed estate, that had refused <b>22 of 22</b> non-break-glass
+ * forwards in the gateway's entire history — 20 of them telemonitoring observations — while the
+ * only three that ever succeeded did so with BREAK_GLASS. The record was empty because consent
+ * had been asked a question it could not answer, and the answer defaulted to no.</p>
+ *
+ * <p>So the decision is now operation-aware. A <b>write</b> proceeds when no directive speaks to
+ * the point, and is refused by an explicit deny or a revocation. A <b>read</b> is unchanged and
+ * fail-closed: absence still refuses. The asymmetry is the doctrine — recording care that already
+ * happened is not the moment to adjudicate consent, and consent governs who may later read it.
+ * {@code consentId != null} is the discriminator, because that is precisely "a directive exists
+ * and it says no".</p>
+ *
+ * <p>An unreachable consent service is <b>not</b> absence. It is not knowing, and it stays
+ * fail-closed for reads and writes alike.</p>
  */
 @Service
 public class ConsentEnforcementService {
@@ -67,6 +95,17 @@ public class ConsentEnforcementService {
     }
 
     /**
+     * FHIR gateway operations that record a clinical fact.
+     *
+     * <p>DELETE is deliberately absent. It removes rather than records, so the argument for
+     * proceeding without a directive does not apply to it — and BUTANO data must never be
+     * deleted. Anything not on this list is treated as a read and stays fail-closed, so an
+     * operation nobody anticipated cannot quietly acquire the relaxed treatment.</p>
+     */
+    private static final Set<String> RECORDING_OPERATIONS = Set.of(
+            "CREATE", "UPDATE", "PUT", "POST", "PATCH");
+
+    /**
      * Evaluate consent for a FHIR resource access request.
      *
      * @param actorId       the actor requesting access (Health ID)
@@ -74,11 +113,14 @@ public class ConsentEnforcementService {
      * @param resourceType  the FHIR resource type being accessed
      * @param purposeOfUse  the declared purpose of use (e.g. TREATMENT, BREAK_GLASS)
      * @param tenantId      the tenant UUID
+     * @param operation     the gateway operation (CREATE/UPDATE/... vs a read); anything not in
+     *                      {@link #RECORDING_OPERATIONS} is treated as a read and stays
+     *                      fail-closed
      * @return the consent outcome governing whether forwarding should proceed
      */
     public ConsentOutcome evaluate(String actorId, String subjectCpid,
                                    String resourceType, String purposeOfUse,
-                                   UUID tenantId) {
+                                   UUID tenantId, String operation) {
 
         // 1. Public-health / conformance resources do not require consent
         if (CONSENT_EXEMPT_RESOURCE_TYPES.contains(resourceType)) {
@@ -136,18 +178,49 @@ public class ConsentEnforcementService {
                 log.info("Consent PERMIT: actor={} subject={} resourceType={}",
                         actorId, subjectCpid, resourceType);
                 return ConsentOutcome.PERMIT;
-            } else {
-                String reason = data.has("reason") ? data.get("reason").asText("") : "DENIED";
-                log.info("Consent DENY: actor={} subject={} resourceType={} reason={}",
-                        actorId, subjectCpid, resourceType, reason);
+            }
+
+            String reason = data.has("reason") ? data.get("reason").asText("") : "DENIED";
+
+            // A consentId on a refusal means a directive exists and it says no. That is the only
+            // shape tshepo-consent gives an explicit deny; NO_ACTIVE_CONSENT, NO_MATCHING_CONSENT
+            // and NO_VALID_CONSENT all carry a null consentId and mean "nothing speaks to this".
+            boolean explicitRefusal = data.hasNonNull("consentId")
+                    && !data.get("consentId").asText("").isBlank();
+
+            if (explicitRefusal) {
+                log.info("Consent DENY (explicit directive): actor={} subject={} resourceType={} "
+                                + "operation={} reason={}",
+                        actorId, subjectCpid, resourceType, operation, reason);
                 return ConsentOutcome.DENY;
             }
+
+            if (isRecordingOperation(operation)) {
+                log.info("Consent PERMIT_NO_DIRECTIVE: no directive speaks to actor={} subject={} "
+                                + "resourceType={} operation={} reason={} — recording the fact "
+                                + "rather than losing it; reads remain fail-closed",
+                        actorId, subjectCpid, resourceType, operation, reason);
+                return ConsentOutcome.PERMIT_NO_DIRECTIVE;
+            }
+
+            log.info("Consent DENY (read, no permitting directive): actor={} subject={} "
+                            + "resourceType={} operation={} reason={}",
+                    actorId, subjectCpid, resourceType, operation, reason);
+            return ConsentOutcome.DENY;
         } catch (Exception e) {
-            // Fail-closed: if consent service is unreachable, DENY access
+            // Fail-closed for reads AND writes. An unreachable consent service is not the same as
+            // a subject with no directive: it is not knowing, and the relaxed write treatment
+            // applies only to a measured absence, never to an unanswered question.
             log.warn("Consent service unreachable — fail-closed to DENY: actor={} subject={} resourceType={} error={}",
                     actorId, subjectCpid, resourceType, e.getMessage());
             return ConsentOutcome.DENY;
         }
+    }
+
+    /** True when the operation records a clinical fact rather than reading one. */
+    private static boolean isRecordingOperation(String operation) {
+        return operation != null
+                && RECORDING_OPERATIONS.contains(operation.trim().toUpperCase());
     }
 
     /**

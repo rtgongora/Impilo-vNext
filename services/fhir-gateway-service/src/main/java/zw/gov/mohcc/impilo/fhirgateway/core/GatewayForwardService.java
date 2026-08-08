@@ -54,8 +54,11 @@ public class GatewayForwardService {
                                  String subjectCpid, String purposeOfUse) {
 
         // ── Consent enforcement (Health OS: Privacy by Architecture) ──
+        // The operation is load-bearing: a write proceeds when no directive speaks to the point,
+        // a read does not. Only DENY refuses — PERMIT_NO_DIRECTIVE proceeds and records on the
+        // audit row that it did so in the absence of a directive, not on the authority of one.
         ConsentOutcome consentOutcome = consentEnforcementService.evaluate(
-                actorId, subjectCpid, resourceType, purposeOfUse, tenantId);
+                actorId, subjectCpid, resourceType, purposeOfUse, tenantId, operation);
 
         if (consentOutcome == ConsentOutcome.DENY) {
             log.warn("Consent DENIED: actor={} subject={} resourceType={} tenant={}",

@@ -48,7 +48,7 @@ class GatewayForwardServiceTest {
         service = new GatewayForwardService(routeRepository, auditLogRepository, outboxRepository,
                 consentEnforcementService, fhirForwarder, "");
 
-        when(consentEnforcementService.evaluate(any(), any(), any(), any(), any()))
+        when(consentEnforcementService.evaluate(any(), any(), any(), any(), any(), any()))
                 .thenReturn(ConsentOutcome.PERMIT);
         FhirRouteEntity route = new FhirRouteEntity();
         route.setTenantId(tenant);
@@ -114,5 +114,49 @@ class GatewayForwardServiceTest {
 
         assertThat(result.outcome()).isEqualTo("SUCCESS");
         verify(fhirForwarder).send(eq("http://hapi-fhir:8090/fhir/Observation"), any(), any(), any());
+    }
+
+    @Test
+    void permitNoDirective_forwards_andRecordsTheBasisOnTheAuditRow() {
+        // Absence of a directive is not refusal. The write must actually be delivered — and the
+        // audit row must say it proceeded without a directive, not on the authority of one.
+        when(consentEnforcementService.evaluate(any(), any(), any(), any(), any(), any()))
+                .thenReturn(ConsentOutcome.PERMIT_NO_DIRECTIVE);
+        when(fhirForwarder.send(any(), any(), any(), any()))
+                .thenReturn(new FhirForwarder.ForwardAttempt(true, 201, "forwarded"));
+
+        GatewayForwardService.ForwardResult result = forwardPatient();
+
+        assertThat(result.outcome()).isEqualTo("SUCCESS");
+        assertThat(result.consentOutcome())
+                .describedAs("a regulator must be able to tell a directive that said yes from "
+                        + "the absence of one")
+                .isEqualTo("PERMIT_NO_DIRECTIVE");
+        verify(fhirForwarder).send(any(), any(), any(), any());
+    }
+
+    @Test
+    void consentDenied_stillRefuses_andNeverForwards() {
+        when(consentEnforcementService.evaluate(any(), any(), any(), any(), any(), any()))
+                .thenReturn(ConsentOutcome.DENY);
+
+        GatewayForwardService.ForwardResult result = forwardPatient();
+
+        assertThat(result.outcome()).isEqualTo("CONSENT_DENIED");
+        verifyNoInteractions(fhirForwarder);
+    }
+
+    @Test
+    void theOperationReachesTheConsentDecision() {
+        // The relaxed write treatment is chosen inside ConsentEnforcementService from the
+        // operation. If the gateway stopped passing it, every write would silently be judged as
+        // a read again — which is the state this change exists to end.
+        when(fhirForwarder.send(any(), any(), any(), any()))
+                .thenReturn(new FhirForwarder.ForwardAttempt(true, 201, "forwarded"));
+
+        forwardPatient();
+
+        verify(consentEnforcementService).evaluate(
+                eq("actor-1"), eq("cpid-1"), eq("Patient"), eq("TREATMENT"), eq(tenant), eq("CREATE"));
     }
 }
