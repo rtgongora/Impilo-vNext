@@ -432,20 +432,55 @@ public class ButanoIntegration {
 
     /**
      * Build HTTP headers with trust context for inter-service communication.
+     *
+     * <p><b>Every field is null-guarded, and that is not defensive padding.</b>
+     * {@code TrustContextFilter} never rejects a request — it builds a {@code TrustContext} from
+     * whatever headers arrived, with {@code parseUuid} returning null for anything missing or
+     * malformed. So {@code require()} succeeds and {@code ctx.tenantId()} is null, and
+     * {@code ctx.tenantId().toString()} throws a {@link NullPointerException}.</p>
+     *
+     * <p>That NPE is not an {@link IllegalStateException}, so the catch below never saw it, and it
+     * is not a {@code RestClientException}, so the outer catch in each {@code create*} method never
+     * saw it either. It escaped all the way out of {@code createDiagnosticReport} — which
+     * {@code ReportService.createFinal} calls <em>inside</em> {@code @Transactional}. A request
+     * arriving without {@code x-tenant-id} therefore rolled back the report the clinician had just
+     * authored, to fail a best-effort SHR write that was never going to succeed anyway.</p>
+     *
+     * <p>{@code X-Actor-Type} and {@code X-Purpose-Of-Use} are added because BUTANO's
+     * {@code HeaderValidationInterceptor} rejects with 403 unless all five mandatory trust headers
+     * are present. Without them this call could only ever have been refused.</p>
      */
     private HttpHeaders buildTrustHeaders() {
         HttpHeaders headers = new HttpHeaders();
         try {
-            TrustContext ctx = TrustContextHolder.require();
-            headers.set(TrustContext.H_TENANT_ID, ctx.tenantId().toString());
-            headers.set(TrustContext.H_ACTOR_ID, ctx.actorId());
-            headers.set(TrustContext.H_CORRELATION_ID, ctx.correlationId().toString());
-            if (ctx.facilityId() != null) {
-                headers.set(TrustContext.H_FACILITY_ID, ctx.facilityId().toString());
+            TrustContext ctx = TrustContextHolder.get();
+            if (ctx == null) {
+                log.debug("No trust context available for BUTANO call headers");
+                return headers;
             }
-        } catch (IllegalStateException e) {
-            log.debug("No trust context available for BUTANO call headers");
+            setIfPresent(headers, TrustContext.H_TENANT_ID, ctx.tenantId());
+            setIfPresent(headers, TrustContext.H_ACTOR_ID, ctx.actorId());
+            setIfPresent(headers, TrustContext.H_CORRELATION_ID, ctx.correlationId());
+            setIfPresent(headers, TrustContext.H_FACILITY_ID, ctx.facilityId());
+            // BUTANO's five mandatory trust headers. Absent these it answers 403 regardless of
+            // everything else, so omitting them made the call unconditionally refusable.
+            setIfPresent(headers, TrustContext.H_ACTOR_TYPE, ctx.actorType());
+            setIfPresent(headers, TrustContext.H_PURPOSE_OF_USE, ctx.purposeOfUse());
+        } catch (RuntimeException e) {
+            // Header assembly must never be able to fail the clinical transaction that called it.
+            log.warn("Could not assemble trust headers for the BUTANO call ({}); the clinical "
+                    + "record is unaffected", e.toString());
         }
         return headers;
+    }
+
+    private static void setIfPresent(HttpHeaders headers, String name, Object value) {
+        if (value == null) {
+            return;
+        }
+        String text = value.toString();
+        if (!text.isBlank()) {
+            headers.set(name, text);
+        }
     }
 }
