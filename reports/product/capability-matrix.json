@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-08-08T10:37:21.810Z",
+  "generatedAt": "2026-08-08T11:41:28.755Z",
   "summary": {
     "totalCapabilities": 3279,
     "byDisposition": {
-      "partial": 394,
-      "real": 2751,
+      "partial": 410,
+      "real": 2735,
       "real-proven": 104,
       "fixture": 30
     },
@@ -202,7 +202,7 @@
       "frontendFixtures": 0,
       "bffProxied": 5,
       "contractOps": 197,
-      "contractUnowned": 70,
+      "contractUnowned": 13,
       "samplePaths": [
         "/internal/v1"
       ],
@@ -286,7 +286,7 @@
       "id": "ai-model-registry-service::health",
       "service": "ai-model-registry-service",
       "capability": "health",
-      "disposition": "real",
+      "disposition": "partial",
       "proven": false,
       "backendRoutes": 1,
       "stubRoutes": 0,
@@ -297,7 +297,7 @@
       "frontendFixtures": 0,
       "bffProxied": 1,
       "contractOps": 91,
-      "contractUnowned": 0,
+      "contractUnowned": 1,
       "samplePaths": [
         "/internal/v1/health"
       ],
@@ -4102,7 +4102,7 @@
       "frontendFixtures": 2,
       "bffProxied": 6,
       "contractOps": 3,
-      "contractUnowned": 1,
+      "contractUnowned": 2,
       "samplePaths": [
         "/internal/v1/coverage/eligibility",
         "/internal/v1/coverage/eligibility/enrollment",
@@ -5068,7 +5068,7 @@
       "frontendFixtures": 5,
       "bffProxied": 1,
       "contractOps": 5,
-      "contractUnowned": 0,
+      "contractUnowned": 5,
       "samplePaths": [
         "/internal/v1/daidzai"
       ],
@@ -5125,7 +5125,7 @@
       "frontendFixtures": 1,
       "bffProxied": 9,
       "contractOps": 5,
-      "contractUnowned": 0,
+      "contractUnowned": 3,
       "samplePaths": [
         "/internal/v1/daidzai/disasters",
         "/internal/v1/daidzai/disasters/{id}/sites",
@@ -19986,7 +19986,7 @@
       "frontendFixtures": 10,
       "bffProxied": 2,
       "contractOps": 5,
-      "contractUnowned": 0,
+      "contractUnowned": 5,
       "samplePaths": [
         "/internal/v1/khuluma"
       ],
@@ -22529,7 +22529,7 @@
       "frontendFixtures": 0,
       "bffProxied": 3,
       "contractOps": 4,
-      "contractUnowned": 2,
+      "contractUnowned": 4,
       "samplePaths": [
         "/internal/v1/marketplace/activation-requests",
         "/internal/v1/marketplace/activation-requests/{id}/decision"
@@ -22622,7 +22622,7 @@
       "frontendFixtures": 0,
       "bffProxied": 5,
       "contractOps": 5,
-      "contractUnowned": 4,
+      "contractUnowned": 5,
       "samplePaths": [
         "/internal/v1/marketplace/installations",
         "/internal/v1/marketplace/installations/{id}",
@@ -22736,7 +22736,7 @@
       "id": "experience-bff::marketplace/publishers",
       "service": "experience-bff",
       "capability": "marketplace/publishers",
-      "disposition": "real",
+      "disposition": "partial",
       "proven": false,
       "backendRoutes": 1,
       "stubRoutes": 0,
@@ -22747,7 +22747,7 @@
       "frontendFixtures": 0,
       "bffProxied": 1,
       "contractOps": 1,
-      "contractUnowned": 0,
+      "contractUnowned": 1,
       "samplePaths": [
         "/internal/v1/marketplace/publishers"
       ],
@@ -31691,7 +31691,7 @@
       "id": "experience-bff::vashandi/access-risks",
       "service": "experience-bff",
       "capability": "vashandi/access-risks",
-      "disposition": "real",
+      "disposition": "partial",
       "proven": false,
       "backendRoutes": 4,
       "stubRoutes": 0,
@@ -31703,7 +31703,7 @@
       "frontendFixtures": 0,
       "bffProxied": 4,
       "contractOps": 5,
-      "contractUnowned": 0,
+      "contractUnowned": 4,
       "samplePaths": [
         "/internal/v1/vashandi/access-risks",
         "/internal/v1/vashandi/access-risks/scan",
@@ -31716,7 +31716,7 @@
       "id": "experience-bff::vashandi/analytics",
       "service": "experience-bff",
       "capability": "vashandi/analytics",
-      "disposition": "real",
+      "disposition": "partial",
       "proven": false,
       "backendRoutes": 5,
       "stubRoutes": 0,
@@ -31727,7 +31727,7 @@
       "frontendFixtures": 0,
       "bffProxied": 5,
       "contractOps": 5,
-      "contractUnowned": 0,
+      "contractUnowned": 5,
       "samplePaths": [
         "/internal/v1/vashandi/analytics/staffing",
         "/internal/v1/vashandi/analytics/roster-coverage",
@@ -31741,7 +31741,7 @@
       "id": "experience-bff::vashandi/assignments",
       "service": "experience-bff",
       "capability": "vashandi/assignments",
-      "disposition": "real",
+      "disposition": "partial",
       "proven": false,
       "backendRoutes": 9,
       "stubRoutes": 0,
@@ -31754,7 +31754,7 @@
       "frontendFixtures": 0,
       "bffProxied": 9,
       "contractOps": 5,
-      "contractUnowned": 0,
+      "contractUnowned": 3,
       "samplePaths": [
         "/internal/v1/vashandi/assignments",
         "/internal/v1/vashandi/assignments/{id}",
@@ -31769,7 +31769,7 @@
       "id": "experience-bff::vashandi/attendance",
       "service": "experience-bff",
       "capability": "vashandi/attendance",
-      "disposition": "real",
+      "disposition": "partial",
       "proven": false,
       "backendRoutes": 5,
       "stubRoutes": 0,
@@ -31781,7 +31781,7 @@
       "frontendFixtures": 0,
       "bffProxied": 5,
       "contractOps": 5,
-      "contractUnowned": 0,
+      "contractUnowned": 4,
       "samplePaths": [
         "/internal/v1/vashandi/attendance/check-in",
         "/internal/v1/vashandi/attendance/adhoc-check-in",
@@ -31957,7 +31957,7 @@
       "id": "experience-bff::vashandi/workforce-profiles",
       "service": "experience-bff",
       "capability": "vashandi/workforce-profiles",
-      "disposition": "real",
+      "disposition": "partial",
       "proven": false,
       "backendRoutes": 4,
       "stubRoutes": 0,
@@ -31969,7 +31969,7 @@
       "frontendFixtures": 0,
       "bffProxied": 4,
       "contractOps": 5,
-      "contractUnowned": 0,
+      "contractUnowned": 3,
       "samplePaths": [
         "/internal/v1/vashandi/workforce-profiles",
         "/internal/v1/vashandi/workforce-profiles/{id}",
@@ -37357,7 +37357,7 @@
       "id": "integration-hub::event-catalogue",
       "service": "integration-hub",
       "capability": "event-catalogue",
-      "disposition": "real",
+      "disposition": "partial",
       "proven": false,
       "backendRoutes": 1,
       "stubRoutes": 0,
@@ -37368,7 +37368,7 @@
       "frontendFixtures": 0,
       "bffProxied": 0,
       "contractOps": 1,
-      "contractUnowned": 0,
+      "contractUnowned": 1,
       "samplePaths": [
         "/internal/v1/event-catalogue"
       ],
@@ -37465,7 +37465,7 @@
       "id": "integration-hub::external-event-subscriptions",
       "service": "integration-hub",
       "capability": "external-event-subscriptions",
-      "disposition": "real",
+      "disposition": "partial",
       "proven": false,
       "backendRoutes": 1,
       "stubRoutes": 0,
@@ -37476,7 +37476,7 @@
       "frontendFixtures": 0,
       "bffProxied": 0,
       "contractOps": 1,
-      "contractUnowned": 0,
+      "contractUnowned": 1,
       "samplePaths": [
         "/internal/v1/external-event-subscriptions"
       ],
@@ -37507,7 +37507,7 @@
       "id": "integration-hub::integration-contracts",
       "service": "integration-hub",
       "capability": "integration-contracts",
-      "disposition": "real",
+      "disposition": "partial",
       "proven": false,
       "backendRoutes": 1,
       "stubRoutes": 0,
@@ -37518,7 +37518,7 @@
       "frontendFixtures": 0,
       "bffProxied": 0,
       "contractOps": 2,
-      "contractUnowned": 0,
+      "contractUnowned": 2,
       "samplePaths": [
         "/internal/v1/integration-contracts"
       ],
@@ -37551,7 +37551,7 @@
       "id": "integration-hub::routes",
       "service": "integration-hub",
       "capability": "routes",
-      "disposition": "real",
+      "disposition": "partial",
       "proven": false,
       "backendRoutes": 3,
       "stubRoutes": 0,
@@ -37564,7 +37564,7 @@
       "frontendFixtures": 0,
       "bffProxied": 0,
       "contractOps": 7,
-      "contractUnowned": 0,
+      "contractUnowned": 1,
       "samplePaths": [
         "/internal/v1/routes"
       ],
@@ -37574,7 +37574,7 @@
       "id": "integration-hub::s2s-contracts",
       "service": "integration-hub",
       "capability": "s2s-contracts",
-      "disposition": "real",
+      "disposition": "partial",
       "proven": false,
       "backendRoutes": 1,
       "stubRoutes": 0,
@@ -37585,7 +37585,7 @@
       "frontendFixtures": 0,
       "bffProxied": 0,
       "contractOps": 2,
-      "contractUnowned": 0,
+      "contractUnowned": 2,
       "samplePaths": [
         "/internal/v1/s2s-contracts"
       ],
@@ -37637,7 +37637,7 @@
       "id": "integration-hub::webhook-subscriptions",
       "service": "integration-hub",
       "capability": "webhook-subscriptions",
-      "disposition": "real",
+      "disposition": "partial",
       "proven": false,
       "backendRoutes": 1,
       "stubRoutes": 0,
@@ -37648,7 +37648,7 @@
       "frontendFixtures": 0,
       "bffProxied": 0,
       "contractOps": 2,
-      "contractUnowned": 0,
+      "contractUnowned": 2,
       "samplePaths": [
         "/internal/v1/webhook-subscriptions"
       ],
@@ -39830,7 +39830,7 @@
       "id": "khuluma-service::khuluma/stream",
       "service": "khuluma-service",
       "capability": "khuluma/stream",
-      "disposition": "real",
+      "disposition": "partial",
       "proven": false,
       "backendRoutes": 2,
       "stubRoutes": 0,
@@ -39842,7 +39842,7 @@
       "frontendFixtures": 0,
       "bffProxied": 0,
       "contractOps": 5,
-      "contractUnowned": 0,
+      "contractUnowned": 5,
       "samplePaths": [
         "/internal/v1/khuluma/stream",
         "/internal/v1/khuluma/stream/sse"
@@ -42596,7 +42596,7 @@
       "frontendFixtures": 0,
       "bffProxied": 0,
       "contractOps": 2,
-      "contractUnowned": 1,
+      "contractUnowned": 2,
       "samplePaths": [
         "/internal/v1/marketplace/apps"
       ],
@@ -42627,7 +42627,7 @@
       "id": "msika-apps-service::marketplace/audit-events",
       "service": "msika-apps-service",
       "capability": "marketplace/audit-events",
-      "disposition": "real",
+      "disposition": "partial",
       "proven": false,
       "backendRoutes": 1,
       "stubRoutes": 0,
@@ -42638,7 +42638,7 @@
       "frontendFixtures": 0,
       "bffProxied": 0,
       "contractOps": 1,
-      "contractUnowned": 0,
+      "contractUnowned": 1,
       "samplePaths": [
         "/internal/v1/marketplace/audit-events"
       ],
@@ -48513,7 +48513,7 @@
       "id": "notification-service::delivery-receipts",
       "service": "notification-service",
       "capability": "delivery-receipts",
-      "disposition": "real",
+      "disposition": "partial",
       "proven": false,
       "backendRoutes": 2,
       "stubRoutes": 0,
@@ -48525,7 +48525,7 @@
       "frontendFixtures": 0,
       "bffProxied": 0,
       "contractOps": 2,
-      "contractUnowned": 0,
+      "contractUnowned": 1,
       "samplePaths": [
         "/internal/v1/delivery-receipts"
       ],
@@ -63583,7 +63583,7 @@
       "frontendFixtures": 0,
       "bffProxied": 0,
       "contractOps": 2,
-      "contractUnowned": 0,
+      "contractUnowned": 1,
       "samplePaths": [
         "/v1/authorize"
       ],

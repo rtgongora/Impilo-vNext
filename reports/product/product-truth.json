@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-08T10:37:21.819Z",
+  "generatedAt": "2026-08-08T11:41:28.764Z",
   "branch": "phase0/j-route-resolution",
   "registryDrift": {
     "unregisteredModules": [],
@@ -51,8 +51,8 @@
     "capabilities": {
       "totalCapabilities": 3279,
       "byDisposition": {
-        "partial": 394,
-        "real": 2751,
+        "partial": 410,
+        "real": 2735,
         "real-proven": 104,
         "fixture": 30
       },
