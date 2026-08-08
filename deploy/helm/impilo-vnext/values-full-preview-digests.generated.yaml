@@ -260,7 +260,7 @@ fullBootServices:
       digest: sha256:3a647f04648e2dfe38ff1eeaf84b09cae9e91654a55d92dd16415f48a11c5345
   tshepo-authz-service:
     image:
-      digest: sha256:b6f5f41d5720bf3d0059e0179a5ab10551892ac3e5ffe4f4b84aba0d1490d003
+      digest: sha256:d38773ba2bdf77e5aec06d5209e88b171cc361bc3308237dad4f1057aca045da
   tshepo-consent-service:
     image:
       digest: sha256:42add39afe9af9065d160c8dbd6072025bab9a7f995708fc3f478e9bdd0229db
