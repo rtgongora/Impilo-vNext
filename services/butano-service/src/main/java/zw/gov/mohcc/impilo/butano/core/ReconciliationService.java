@@ -48,6 +48,18 @@ public class ReconciliationService {
     /**
      * Resource types whose subject/patient references need rewriting,
      * mapped to the search parameter used for patient linkage.
+     *
+     * <p>A type BUTANO ingests but omits here keeps pointing at the merged-away Patient after a
+     * reconciliation, silently and forever — the merge reports success having skipped it entirely.
+     * {@code ReconcilableResourceCoverageTest} therefore asserts that every resource type
+     * {@code ButanoEventConsumer} writes appears here, so adding an ingest path without adding the
+     * type turns the suite red instead of leaving orphaned clinical records behind.</p>
+     *
+     * <p>Membership here is only half the contract: {@link #rewriteSubjectReference} must also
+     * know how to set the reference on the type. A type present in this map but absent from that
+     * chain is worse than an omission — the resource is re-saved with a reconciliation provenance
+     * tag and counted as updated while still pointing at the old Patient. The same test pins both
+     * halves together.</p>
      */
     private static final Map<Class<? extends Resource>, String> RECONCILABLE_RESOURCES = new LinkedHashMap<>();
 
@@ -63,6 +75,17 @@ public class ReconciliationService {
         RECONCILABLE_RESOURCES.put(AllergyIntolerance.class, "patient");
         RECONCILABLE_RESOURCES.put(ServiceRequest.class, "subject");
         RECONCILABLE_RESOURCES.put(DocumentReference.class, "subject");
+        // Ingested by ButanoEventConsumer since the PACS, examination and multimorbidity paths
+        // landed, but never added here: an imaging study, an examination impression and a detected
+        // issue all survived a CPID merge still bound to the old Patient.
+        RECONCILABLE_RESOURCES.put(ImagingStudy.class, "subject");
+        RECONCILABLE_RESOURCES.put(ClinicalImpression.class, "subject");
+        RECONCILABLE_RESOURCES.put(DetectedIssue.class, "patient");
+    }
+
+    /** Package-visible for the coverage guard; never mutated after class initialisation. */
+    static Map<Class<? extends Resource>, String> reconcilableResources() {
+        return Collections.unmodifiableMap(RECONCILABLE_RESOURCES);
     }
 
     private final DaoRegistry daoRegistry;
@@ -202,7 +225,14 @@ public class ReconciliationService {
         return totalUpdated;
     }
 
-    private void rewriteSubjectReference(Resource resource, String newPatientRef, String oldCpid) {
+    /**
+     * Points a resource's patient linkage at {@code newPatientRef} and stamps the merge provenance.
+     *
+     * <p>Package-visible so {@code ReconcilableResourceCoverageTest} can prove that every type in
+     * {@link #RECONCILABLE_RESOURCES} is actually rewritten here rather than falling through the
+     * chain and being re-saved, tagged and counted while still bound to the old Patient.</p>
+     */
+    void rewriteSubjectReference(Resource resource, String newPatientRef, String oldCpid) {
         Reference newRef = new Reference(newPatientRef);
 
         // Rewrite subject/patient reference based on resource type
@@ -228,6 +258,12 @@ public class ReconciliationService {
             sr.setSubject(newRef);
         } else if (resource instanceof DocumentReference docRef) {
             docRef.setSubject(newRef);
+        } else if (resource instanceof ImagingStudy study) {
+            study.setSubject(newRef);
+        } else if (resource instanceof ClinicalImpression impression) {
+            impression.setSubject(newRef);
+        } else if (resource instanceof DetectedIssue issue) {
+            issue.setPatient(newRef);
         }
 
         // Add provenance tag: reconciled-from:{oldCpid}
