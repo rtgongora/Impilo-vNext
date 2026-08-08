@@ -130,6 +130,39 @@ spec:
             - name: SPRING_AUTOCONFIGURE_EXCLUDE
               value: "org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration"
             {{- end }}
+            {{- /* OAuth resource-server defaults. Measured 2026-08-08: THIRTY-SIX services rejected
+                   every real token with
+
+                     401 invalid_token -- "The iss claim is not valid"
+
+                   Their application.yml all carry the same line,
+                     issuer-uri: ${KEYCLOAK_URL:...}/realms/${KEYCLOAK_REALM:impilo}
+                   which resolves the issuer to the INTERNAL http://keycloak:8080/... while tokens
+                   carry the PUBLIC iss. The JWKS half of that pair is right, so every pod starts
+                   clean and the fault appears only on a request that actually presents a bearer --
+                   which is why it survived: an unauthenticated probe sees 401 and reads it as
+                   enforcement.
+
+                   Set here rather than in 36 per-service blocks so the default is correct for any
+                   service added later, and so no image rebuild is needed to fix it.
+
+                   PUBLIC issuer (it is what the iss claim carries) with the INTERNAL JWKS route
+                   (this VM cannot reach its own public address). Setting jwk-set-uri also stops
+                   Spring attempting OIDC discovery against the public address at startup, which is
+                   the G046 "no JwtDecoder bean, pod fails to start" trap.
+
+                   Guarded by hasKey and emitted BEFORE $svc.env, so a service that sets either key
+                   explicitly still wins. */}}
+            {{- if $.Values.global.keycloak }}
+            {{- if and $.Values.global.keycloak.publicIssuerUri (not (hasKey ($svc.env | default dict) "SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI")) }}
+            - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
+              value: {{ $.Values.global.keycloak.publicIssuerUri | quote }}
+            {{- end }}
+            {{- if and $.Values.global.keycloak.internalJwksUri (not (hasKey ($svc.env | default dict) "SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI")) }}
+            - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
+              value: {{ $.Values.global.keycloak.internalJwksUri | quote }}
+            {{- end }}
+            {{- end }}
             {{- range $k, $v := $svc.env }}
             - name: {{ $k }}
               value: {{ $v | quote }}
