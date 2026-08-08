@@ -35,6 +35,25 @@ public class ButanoIntegration {
 
     private static final Logger log = LoggerFactory.getLogger(ButanoIntegration.class);
 
+    /** The SHR's CPID identifier system. Must stay identical to BUTANO's {@code CPID_SYSTEM}. */
+    private static final String CPID_SYSTEM = "https://impilo.gov.zw/cpid";
+
+    /**
+     * The subject reference, as a FHIR conditional reference.
+     *
+     * <p>A CPID is not a FHIR logical id. {@code "Patient/" + cpid} is a dangling reference in
+     * BUTANO, whose Patients carry server-assigned ids with the CPID in {@code Patient.identifier},
+     * and BUTANO enforces referential integrity on write — measured 2026-08-08, that returns
+     * HTTP 400 {@code HAPI-1094}. A match URL resolves against the identifier the SHR actually
+     * stores, and fails closed for a CPID it does not know.</p>
+     *
+     * <p>Same construct as {@code ObservationShrWriter.patientSubjectReference} in telemonitoring
+     * and {@code TeleconsultController.patientSubjectReference} in the BFF.</p>
+     */
+    private static String patientSubjectReference(String cpid) {
+        return "Patient?identifier=" + CPID_SYSTEM + "|" + cpid;
+    }
+
     private final RestTemplate restTemplate;
     private final String baseUrl;
     private final boolean imagingStudyOutboundEnabled;
@@ -65,8 +84,7 @@ public class ButanoIntegration {
 
             // Subject is CPID-only (no PII in SHR)
             Map<String, String> subject = Map.of(
-                    "reference", "Patient/" + order.getPatientCpid(),
-                    "display", order.getPatientCpid()
+                    "reference", patientSubjectReference(order.getPatientCpid())
             );
             fhirResource.put("subject", subject);
 
@@ -376,7 +394,7 @@ public class ButanoIntegration {
             fhir.put("identifier", identifiers);
 
             fhir.put("subject", Map.of(
-                    "reference", "Patient/" + order.getPatientCpid(), "display", order.getPatientCpid()));
+                    "reference", patientSubjectReference(order.getPatientCpid())));
             fhir.put("started", (order.getScheduledAt() != null
                     ? order.getScheduledAt() : OffsetDateTime.now()).toString());
             fhir.put("basedOn", java.util.List.of(Map.of("reference", "ServiceRequest/" + order.getOrderId())));

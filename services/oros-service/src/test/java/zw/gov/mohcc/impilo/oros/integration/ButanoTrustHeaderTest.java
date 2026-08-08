@@ -128,4 +128,32 @@ class ButanoTrustHeaderTest {
             assertThat(headers(integration()).containsKey(TrustContext.H_ACTOR_TYPE)).isFalse();
         }
     }
+
+    // ── Subject references ────────────────────────────────────────────────────────────────────
+
+    @Test
+    void theSubjectIsAMatchUrl_notALiteralPatientReference() throws Exception {
+        // A CPID is not a FHIR logical id. BUTANO's Patients carry server-assigned ids with the
+        // CPID in Patient.identifier, and it enforces referential integrity on write — so
+        // "Patient/<cpid>" is a dangling reference and returns HTTP 400 HAPI-1094.
+        Method m = ButanoIntegration.class.getDeclaredMethod("patientSubjectReference", String.class);
+        m.setAccessible(true);
+        String ref = (String) m.invoke(null, "c08ba747-26ff-4f19-b712-76561505e274");
+
+        assertThat(ref).isEqualTo(
+                "Patient?identifier=https://impilo.gov.zw/cpid|c08ba747-26ff-4f19-b712-76561505e274");
+        assertThat(ref)
+                .describedAs("the literal form does not resolve in the SHR")
+                .doesNotStartWith("Patient/");
+    }
+
+    @Test
+    void theSubjectSystemMatchesButanosCpidSystem() throws Exception {
+        // If these two drift, every oros write silently stops resolving.
+        java.lang.reflect.Field f = ButanoIntegration.class.getDeclaredField("CPID_SYSTEM");
+        f.setAccessible(true);
+        assertThat((String) f.get(null))
+                .describedAs("BUTANO's PiiPreventionInterceptor.CPID_SYSTEM")
+                .isEqualTo("https://impilo.gov.zw/cpid");
+    }
 }
