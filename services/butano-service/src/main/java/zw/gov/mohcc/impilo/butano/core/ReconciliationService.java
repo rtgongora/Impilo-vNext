@@ -81,6 +81,10 @@ public class ReconciliationService {
         RECONCILABLE_RESOURCES.put(ImagingStudy.class, "subject");
         RECONCILABLE_RESOURCES.put(ClinicalImpression.class, "subject");
         RECONCILABLE_RESOURCES.put(DetectedIssue.class, "patient");
+        // Arrives over HTTP, not Kafka: the teleconsult projection writes a Composition through
+        // the gateway, which now delivers to BUTANO. The coverage guard reads ButanoEventConsumer
+        // and so cannot see it — HTTP-ingested types have to be added deliberately.
+        RECONCILABLE_RESOURCES.put(Composition.class, "subject");
     }
 
     /** Package-visible for the coverage guard; never mutated after class initialisation. */
@@ -264,6 +268,8 @@ public class ReconciliationService {
             impression.setSubject(newRef);
         } else if (resource instanceof DetectedIssue issue) {
             issue.setPatient(newRef);
+        } else if (resource instanceof Composition composition) {
+            composition.setSubject(newRef);
         }
 
         // Add provenance tag: reconciled-from:{oldCpid}

@@ -53,6 +53,7 @@ CHECKS=(
   check-source-text-integrity.sh
   check-migration-version-collisions.sh
   check-butano-data-durability.sh
+  check-shr-write-target.sh
   check-identity-repoint-coverage.sh
   check-no-ts-clinical-logic.sh
 )

@@ -65,10 +65,25 @@ function cumulativeWaveServices(wavesDoc, maxWave) {
 
 function specialEnv(serviceId) {
   if (serviceId === "butano-service") {
-    return { HAPI_FHIR_URL: "http://hapi-fhir:8090/fhir" };
+    // BUTANO's own address, not another server's. This is outbound advertisement -- the base
+    // URL HAPI puts in Bundle links and fullUrl fields -- and it named `hapi-fhir`, which made
+    // butano-service read as a CALLER of the stock server in every env dump. It is not, and
+    // never was: its only RestTemplate calls terminology.
+    //
+    // The variable is also inert as written. It binds to `hapi.fhir.url`; FhirRestfulServlet
+    // reads `hapi.fhir.server-address`, so the servlet still falls back to its
+    // http://localhost:8090/fhir default (visible today in the self link of any search
+    // Bundle). Correcting the property name changes every advertised link and belongs with
+    // whatever consumes those links -- fixing the value here only stops it pointing at a
+    // server BUTANO has no relationship with.
+    return { HAPI_FHIR_URL: "http://butano-service:8090/fhir" };
   }
   if (serviceId === "fhir-gateway-service") {
-    return { FHIR_BASE_URL: "http://hapi-fhir:8090/fhir" };
+    // The SHR the gateway delivers to. See FHIR_GATEWAY_DEFAULT_TARGET_BASE in
+    // values-full-preview.yaml: the stock hapi-fhir server this named answers any pod in the
+    // namespace with no credential, so the gateway ran its consent PEP and then handed the
+    // resource to an ungoverned store.
+    return { FHIR_BASE_URL: "http://butano-service:8090/fhir" };
   }
   if (serviceId === "tshepo-authz-service") {
     return {

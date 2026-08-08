@@ -58,7 +58,7 @@ fullBootServices:
     port: 8090
     database: butano
     env:
-      HAPI_FHIR_URL: http://hapi-fhir:8090/fhir
+      HAPI_FHIR_URL: http://butano-service:8090/fhir
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs
@@ -233,7 +233,7 @@ fullBootServices:
     port: 8091
     database: fhir_gateway
     env:
-      FHIR_BASE_URL: http://hapi-fhir:8090/fhir
+      FHIR_BASE_URL: http://butano-service:8090/fhir
       KEYCLOAK_ISSUER: https://impilo.mohcc.gov.zw/realms/impilo
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://impilo.mohcc.gov.zw/realms/impilo
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/impilo/protocol/openid-connect/certs

@@ -57,9 +57,14 @@ fhir-gateway:
   consent:
     base-url: ${CONSENT_SERVICE_BASE_URL:http://localhost:8182}
   # Environment-wide default FHIR base for resources with no explicit fhir_route row
-  # (e.g. http://hapi-fhir:8090/fhir). Empty preserves strict NO_ROUTE behaviour; per-tenant
-  # route rows always override. Lets governed FHIR writes work with one config value instead
-  # of a route row per (tenant × resource type).
+  # (http://butano-service:8090/fhir — the SHR). Empty preserves strict NO_ROUTE behaviour;
+  # per-tenant route rows always override. Lets governed FHIR writes work with one config value
+  # instead of a route row per (tenant × resource type).
+  #
+  # fhir_route is empty in every environment measured, so in practice this value is not a
+  # fallback — it is THE delivery target for every forward the gateway serves. Point it only at
+  # a governed store: the consent PEP above runs in this service, and whatever it decides is
+  # then handed, unaltered, to whatever this names.
   default-target-base: ${FHIR_GATEWAY_DEFAULT_TARGET_BASE:}
 
 management:

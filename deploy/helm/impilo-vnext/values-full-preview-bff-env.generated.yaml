@@ -9,10 +9,19 @@
 # diff before trusting, and this one could not even be diffed because it never ran.
 # HAND-EDITED 2026-07-28 (SB-3 reachability): added SURGERY_BASE_URL beside PROCEDURES_BASE_URL,
 # NOT regenerated, per the same law above.
+# HAND-EDITED 2026-08-08 (phase0/g): FHIR_BASE_URL repointed from hapi-fhir to butano-service.
+# The generator DOES run on this checkout now (scripts/full-boot/node_modules), and the FIXED_ENV
+# entry it emits was updated alongside — but the run was diffed and discarded rather than kept: it
+# drops MENTAL_HEALTH_SERVICE_BASE_URL (112 -> 111 vars), because the generator derives
+# MENTAL_HEALTH_BASE_URL but not the _SERVICE_ alias that application.yml carries as the fallback
+# in ${MENTAL_HEALTH_BASE_URL:${MENTAL_HEALTH_SERVICE_BASE_URL:...}}. Benign today, since the
+# primary is set; still not something a FHIR repoint gets to remove. One line edited by hand, per
+# the same law above. The generator and this file agree on FHIR_BASE_URL; they still disagree on
+# the three hand-added entries, and closing that is its own change.
 # Downstream env vars: 112
 experienceBff:
   env:
-    FHIR_BASE_URL: http://hapi-fhir:8090/fhir
+    FHIR_BASE_URL: http://butano-service:8090/fhir
     ORTHANC_BASE_URL: http://orthanc:8042
     ORTHANC_DICOMWEB_URL: http://orthanc:8042/dicom-web
     ONE_UI_SHELL_BASE_URL: http://one-ui-shell:3000

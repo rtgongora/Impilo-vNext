@@ -12,9 +12,9 @@ import java.time.LocalDate;
 import java.util.*;
 
 /**
- * Publishes FHIR R4 resources to HAPI FHIR (BUTANO) when clinical events
- * occur in the experience BFF. Follows the architecture rule: "No PII in SHR"
- * — only CPID (client patient ID) is used, never name/address/phone.
+ * Publishes FHIR R4 resources to BUTANO (the SHR) when clinical events occur in the experience
+ * BFF. Follows the architecture rule: "No PII in SHR" — only CPID (client patient ID) is used,
+ * never name/address/phone.
  *
  * <p>Resources published:
  * <ul>
@@ -24,6 +24,22 @@ import java.util.*;
  *   <li>DiagnosticReport — when lab results are available</li>
  *   <li>Observation — when vitals are recorded</li>
  * </ul>
+ *
+ * <p><b>Nothing injects this class.</b> It is a {@code @Component}, so Spring builds it, but a
+ * search for the type outside this file returns nothing and
+ * {@code ServiceClientConfig.ServiceEndpoints.fhirBaseUrl()} is never read. It is also write-only
+ * — six {@code publish*} methods, all HTTP PUT, no read path. So {@code FHIR_BASE_URL} is inert
+ * today and repointing it changes nothing observable; it is repointed anyway because the value it
+ * carried named the ungoverned stock HAPI server, and the cost of that being wrong is only paid
+ * at the moment someone wires this up.</p>
+ *
+ * <p>Two things to know before wiring it up. It bypasses fhir-gateway-service, where the consent
+ * PEP lives, so these writes are unconsented and unaudited by construction — the governed seam is
+ * {@code FhirGatewayServiceClient.forward}, which
+ * {@code TeleconsultController.writeTeleconsultSummaryToFhir} uses. And its subject references are
+ * {@code "Patient/" + cpid}, which does not resolve in BUTANO: a CPID is not a FHIR logical id,
+ * and BUTANO enforces referential integrity on write. Every publish here would be rejected with
+ * HAPI-1094 until those become match URLs, the way the two live callers now do it.</p>
  */
 @Component
 public class FhirPublisher {

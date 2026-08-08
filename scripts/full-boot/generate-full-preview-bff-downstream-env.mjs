@@ -146,7 +146,13 @@ const BFF_DOWNSTREAM_EXCLUDED = {
 
 /** Fixed URLs not tied to a single fullBootServices entry. */
 const FIXED_ENV = {
-  FHIR_BASE_URL: "http://hapi-fhir:8090/fhir",
+  // The BFF's only consumer of this is FhirPublisher, which nothing injects -- the write path
+  // is dead, and the NetworkPolicy on hapi-fhir deliberately excludes the BFF so that it fails
+  // closed if anyone wires it up. The value still pointed at the ungoverned stock server, so a
+  // future injection would have PUT clinical resources there with no consent check and no
+  // audit. It now names the SHR, where the same write meets header validation, tenant
+  // enforcement, PII prevention and provenance stamping.
+  FHIR_BASE_URL: "http://butano-service:8090/fhir",
   // Chart-deployed Orthanc (templates/orthanc.yaml) — DICOM upload/viewer proxy.
   ORTHANC_BASE_URL: "http://orthanc:8042",
   ORTHANC_DICOMWEB_URL: "http://orthanc:8042/dicom-web",

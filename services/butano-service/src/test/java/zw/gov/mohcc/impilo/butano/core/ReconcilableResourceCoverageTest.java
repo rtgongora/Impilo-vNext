@@ -40,6 +40,12 @@ import static org.assertj.core.api.Assertions.assertThat;
  * rather than from a hand-kept list, because a hand-kept list is exactly what drifted; the scan
  * carries its own anchor assertions so a regex that stops matching fails loudly instead of
  * reporting an empty ingest set as full coverage.</p>
+ *
+ * <p><b>Scope of the scan.</b> It covers the Kafka ingest path only. Resources that arrive over
+ * HTTP — the teleconsult Encounter, DiagnosticReport and Composition the gateway forwards — never
+ * touch {@code ButanoEventConsumer} and so cannot be derived from it. Those have to be added to
+ * {@code RECONCILABLE_RESOURCES} deliberately; {@link #http_ingested_types_are_reconcilable_too}
+ * pins the set the gateway's live callers actually send.</p>
  */
 class ReconcilableResourceCoverageTest {
 
@@ -126,6 +132,27 @@ class ReconcilableResourceCoverageTest {
                             type.getSimpleName())
                     .isEqualTo("Patient/new");
         }
+    }
+
+    /**
+     * The types the fhir-gateway's live callers forward, now that its default target is BUTANO.
+     *
+     * <p>{@code TeleconsultController.writeTeleconsultSummaryToFhir} sends Encounter,
+     * DiagnosticReport and Composition; telemonitoring's {@code ObservationShrWriter} sends
+     * Observation. They enter the SHR over HTTP, so the {@code ButanoEventConsumer} scan above is
+     * blind to them and would report full coverage while a merged patient's teleconsult note
+     * stayed behind.</p>
+     */
+    @Test
+    void http_ingested_types_are_reconcilable_too() {
+        Set<String> reconcilable = new LinkedHashSet<>();
+        ReconciliationService.reconcilableResources().keySet()
+                .forEach(type -> reconcilable.add(type.getSimpleName()));
+
+        assertThat(reconcilable)
+                .describedAs("resources the fhir-gateway forwards into BUTANO must survive a "
+                        + "CPID merge just as Kafka-ingested ones do")
+                .contains("Encounter", "DiagnosticReport", "Composition", "Observation");
     }
 
     @Test

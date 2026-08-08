@@ -515,9 +515,21 @@ experienceBff:
     # / NO_ROUTE defaults and EVERY governed FHIR write failed in-cluster (consent PEP
     # fail-closed to DENY + no delivery target). Same class as the booking/guidance/abis
     # fixes above. CONSENT points at tshepo-consent-service; DEFAULT_TARGET_BASE lets writes
-    # route to the SHR (HAPI) without a per-(tenant×resource) fhir_route row.
+    # route to the SHR without a per-(tenant×resource) fhir_route row.
+    #
+    # fhir_route holds zero rows, so this single value IS the governed write path: every
+    # forward the gateway serves lands wherever this points. It pointed at `hapi-fhir` --
+    # the stock hapiproject/hapi image, which has no authentication, no trust-header
+    # requirement, no tenant isolation and none of BUTANO's five interceptors. Measured
+    # 2026-08-08: `GET http://hapi-fhir:8090/fhir/Patient` with no credential and no headers
+    # returns 200 and a Bundle; the same request to butano-service returns 403 naming the
+    # five missing trust headers. The consent PEP ran in the gateway and then delivered the
+    # resource to an ungoverned store.
+    #
+    # butano-service IS the SHR: HAPI FHIR R4 JPA with header validation, tenant enforcement,
+    # PII prevention, provenance stamping and terminology validation on the write path.
     CONSENT_SERVICE_BASE_URL: http://tshepo-consent-service:8182
-    FHIR_GATEWAY_DEFAULT_TARGET_BASE: http://hapi-fhir:8090/fhir
+    FHIR_GATEWAY_DEFAULT_TARGET_BASE: http://butano-service:8090/fhir
     # Booking/scheduling downstreams — unset previously, so the BFF called localhost
     # and citizen/provider appointment surfaces returned 500 (connection refused).
     BOOKING_BASE_URL: http://booking-service:8265
