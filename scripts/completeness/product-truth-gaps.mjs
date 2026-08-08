@@ -284,11 +284,18 @@ export function classifyServiceGaps(svc) {
       impactScore: 3,
     });
   }
-  if (d.bffWiring === 'thin' && svc.bffOrphanRoutes > 0) {
+  // The `bffWiring === 'thin'` conjunct is gone. It made this gap unreachable twice
+  // over: bffOrphanRoutes was a hardcoded 0 until 2026-08-08, and every service that
+  // actually HAS orphaned downstream calls (msika-apps, dispatch, ndila, wellness)
+  // wires many BFF clients and so reads `real`, never `thin`. A BFF route that does
+  // not reach its service is a defect whether the service has one client or fifty —
+  // the number of clients says nothing about whether a given call lands.
+  if (svc.bffOrphanRoutes > 0) {
+    const sample = (svc.bffOrphanPaths || []).slice(0, 3).join(', ');
     gaps.push({
       category: 'L',
       severity: 'medium',
-      description: `${id}: BFF routes may not reach downstream service`,
+      description: `${id}: ${svc.bffOrphanRoutes} BFF downstream path(s) not served by the service${sample ? ` (${sample})` : ''}`,
       impactScore: 2,
     });
   }

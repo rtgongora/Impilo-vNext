@@ -540,6 +540,11 @@ function scanServiceModule(svc, contractMatrix, bffClientMap, probeEvidence = {}
     });
   }
 
+  const bffDownstream = bffClientMap.get('__downstream__')?.get(module);
+  const bffOrphanPaths = bffDownstream
+    ? computeBffOrphanRoutes([...bffDownstream], routes)
+    : [];
+
   const authzReadiness = exists ? scanAuthzAuditReadiness(modulePath, svc.id) : { status: 'absent', checks: {}, missing: ['missing-module'], isTrustPlane: false };
   const authzDim = authzDimFromReadiness(authzReadiness);
 
@@ -615,7 +620,11 @@ function scanServiceModule(svc, contractMatrix, bffClientMap, probeEvidence = {}
     mockStubHits: mockStubHits.slice(0, 10),
     securityPlaceholderHits: securityPlaceholderHits.slice(0, 10),
     stubRouteCount,
-    bffOrphanRoutes: 0,
+    // Was the literal `0`, assigned once and never computed — which made gap L
+    // ("BFF exists, downstream service not wired") structurally unreachable, exactly
+    // like the four detectors repaired in phase0/i-gate-truth. Now measured.
+    bffOrphanRoutes: bffOrphanPaths.length,
+    bffOrphanPaths: bffOrphanPaths.slice(0, 10),
     internalOnlyDocumented,
     frontendExpected: !isInternalOnly(svc.id) && svc.frontend_wiring_status !== 'not-applicable',
     expectsPersistence: !module.includes('adapter') && !module.includes('gateway'),
@@ -661,6 +670,36 @@ function buildBffClientMap() {
     if (!map.get(module).includes(clientName)) map.get(module).push(clientName);
   };
 
+  // Downstream paths each BFF client actually calls, per owning module. This is what
+  // makes bffOrphanRoutes computable: "the BFF calls X on this service" can now be
+  // checked against "this service serves X". It was only ever possible to ask that
+  // once extractClassBase stopped dropping class-level prefixes — before, every
+  // service route was a bare fragment with nothing to match against.
+  const downstream = new Map();
+  const addDownstream = (module, text) => {
+    if (!module) return;
+    if (!downstream.has(module)) downstream.set(module, new Set());
+    const set = downstream.get(module);
+    for (const m of text.matchAll(/["'](\/(?:internal|api)\/v\d+\/[^"'\s?]*)["']/g)) {
+      const lineStart = text.lastIndexOf('\n', m.index) + 1;
+      let lineEnd = text.indexOf('\n', m.index);
+      if (lineEnd < 0) lineEnd = text.length;
+      const line = text.slice(lineStart, lineEnd);
+      // A quoted path is not necessarily a path the BFF CALLS.
+      //  - javadoc/comments merely cite routes;
+      //  - authorization helpers take a path as the SUBJECT of a policy decision.
+      // TshepoAuthzServiceClient passes "/internal/v1/shell/workspace-state" to
+      // syntheticAuthorizeVerdict as the `:path` being authorized; tshepo-authz is
+      // right not to serve it, and counting it as a missing downstream route is a
+      // false positive. Excluding every path the BFF itself serves would also catch
+      // this one, but it is too blunt: this BFF proxies many routes at the SAME path
+      // as the downstream service, so that rule also discards genuine orphans.
+      if (/^\s*(\*|\/\/|\/\*)/.test(line)) continue;
+      if (/authoriz|verdict|policy|ext_?authz/i.test(line)) continue;
+      set.add(m[1]);
+    }
+  };
+
   walkFiles(bffJavaRoot, (p) => p.endsWith('Client.java')).forEach((f) => {
     const name = path.basename(f, '.java');
     const text = readText(f);
@@ -673,6 +712,7 @@ function buildBffClientMap() {
         .toLowerCase();
     }
     addClient(module, name);
+    addDownstream(module, text);
     // Parse javadoc @code references
     const codeRef = text.match(/@code\s+([^}]+)/)?.[1] || '';
     for (const [client, mod] of Object.entries(clientModuleOverrides)) {
@@ -711,7 +751,35 @@ function buildBffClientMap() {
 
   const bffRoutes = extractSpringRoutes(bffJavaRoot);
   map.set('__routes__', bffRoutes);
+  map.set('__downstream__', downstream);
   return map;
+}
+
+/**
+ * Downstream paths the BFF calls on a service that the service does not serve.
+ *
+ * Deliberately conservative — this feeds a blocking gap, and a noisy orphan detector
+ * would teach people to ignore it:
+ *  - only complete-looking paths are considered (>= 3 segments after the version),
+ *    because BFF clients frequently build URIs by concatenation and a fragment is
+ *    not evidence of a missing route;
+ *  - path variables are wildcarded on BOTH sides, so `{id}` matches `{patientId}`;
+ *  - a prefix match in EITHER direction counts as served, since a literal may be a
+ *    parent of the real route or vice versa;
+ * Comment and authorization-subject literals are excluded at collection time, in
+ * buildBffClientMap — see the note there.
+ * Anything still unmatched is a path the BFF calls and the service does not answer.
+ */
+export function computeBffOrphanRoutes(downstreamPaths, serviceRoutes) {
+  const norm = (p) => p.split('?')[0].replace(/\{[^}]*\}/g, '{}').replace(/\/+$/, '').toLowerCase();
+  const served = serviceRoutes.filter((r) => !r.classLevel).map((r) => norm(r.path));
+  if (!served.length) return [];
+  const matches = (p, list) => list.some((s) => s === p || s.startsWith(`${p}/`) || p.startsWith(`${s}/`));
+  return downstreamPaths.filter((raw) => {
+    const p = norm(raw);
+    if (p.split('/').filter(Boolean).length < 4) return false; // e.g. /internal/v1/x -> too coarse
+    return !matches(p, served);
+  });
 }
 
 function ingestModuleText(moduleText, visited, paths, persist, modulePath, fixtureHits = null) {
