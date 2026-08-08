@@ -1,6 +1,6 @@
 # Service Completion Blueprints
 
-> Generated: 2026-07-29T19:29:08.104Z
+> Generated: 2026-08-08T09:08:37.306Z
 > End-to-end product expectation per service for mature vNext.
 
 Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and tests required.
@@ -103,7 +103,7 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 
 **Product names:** BUTANO FHIR
 **Plane/domain:** clinical / care-delivery
-**Current status:** real
+**Current status:** unknown
 
 ### Primary personas
 - Operators and domain users for care-delivery plane capabilities

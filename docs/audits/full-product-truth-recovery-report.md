@@ -1,7 +1,7 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-07-29T19:29:08.104Z
-> Branch: `coord/merge-catchup-20260729`
+> Generated: 2026-08-08T09:08:37.306Z
+> Branch: `phase0/i-gate-truth`
 
 ## Executive summary
 
@@ -10,20 +10,20 @@
 | Total services audited | 104 |
 | Backend services | 104 |
 | Shared libraries | 17 |
-| Frontend surfaces (routes) | 922 |
-| Mobile screens | 214 |
-| BFF route handlers | 3476 |
-| OpenAPI contracts | 113 |
+| Frontend surfaces (routes) | 945 |
+| Mobile screens | 237 |
+| BFF route handlers | 3715 |
+| OpenAPI contracts | 114 |
 | Services with DB persistence | 103 |
-| **Phase 6 complete (user-facing + documented internal)** | **104** |
-| User-facing services with `real` code present (file-existence axis) | 78 / 78 |
+| **Phase 6 complete (user-facing + documented internal)** | **103** |
+| User-facing services with `real` code present (file-existence axis) | 77 / 78 |
 | — of those, **runtime-proven** (REAL_PROVEN) | **4** |
 | Services internal-only (documented) | 26 |
-| Services partially complete | 0 |
+| Services partially complete | 1 |
 | Services backend-only (no UI) | 0 |
 | Services UI-only (no backend) | 0 |
-| Services with mock/stub hits | 0 |
-| Total classified gaps | 0 |
+| Services with mock/stub hits | 1 |
+| Total classified gaps | 8 |
 | Blocker gaps | 0 |
 | High severity gaps | 0 |
 | Cross-service cohesion | 14/14 pass |
@@ -37,7 +37,8 @@
 | Maturity | Count |
 |----------|------:|
 | INTERNAL_ONLY | 26 |
-| REAL_CODE_NOT_PROBED | 74 |
+| REAL_CODE_NOT_PROBED | 73 |
+| UNKNOWN | 1 |
 | REAL_PROVEN | 4 |
 
 ## Quality gates added
@@ -60,7 +61,7 @@
 
 ## Remaining gaps by severity
 
-_None_
+- **medium:** 8
 
 ## Implementation status
 

@@ -1,6 +1,6 @@
 # Product Truth — Service Inventory
 
-> Generated: 2026-07-29T19:29:08.104Z
+> Generated: 2026-08-08T09:08:37.306Z
 > Scanner: `scripts/completeness/generate-product-truth.mjs`
 > Total services: **104** | Libraries: **17** | UI workspaces: **20**
 
@@ -9,55 +9,56 @@
 | Status | Count |
 |--------|------:|
 | internal-only | 26 |
-| real | 78 |
+| real | 77 |
+| unknown | 1 |
 
 ## Service inventory
 
 | Service | Plane | DB | API | Contract | BFF | Web UI | Mobile | Tests | Product status |
 |---------|-------|----|-----|----------|-----|--------|--------|-------|----------------|
-| ai-model-registry-service | data | real | real | real | real | absent | absent | real | internal-only |
-| analytics-pipeline-service | integration | real | real | real | real | real | absent | real | internal-only |
+| ai-model-registry-service | data | thin | real | real | real | absent | absent | real | internal-only |
+| analytics-pipeline-service | integration | thin | real | real | real | real | absent | real | internal-only |
 | asset-registry-service | integration | real | real | real | real | real | n/a | real | real |
 | audit-ledger-service | integration | real | real | real | absent | thin | absent | real | internal-only |
 | booking-service | experience | real | real | real | real | real | real | real | real |
-| butano-fhir | clinical | real | real | real | real | real | n/a | real | real |
+| butano-fhir | clinical | thin | real | real | thin | real | n/a | thin | unknown |
 | butano-service | clinical | real | real | real | real | real | n/a | real | real |
 | campaigns-service | data | real | real | real | real | real | real | real | real |
-| card-print-agent | integration | real | real | real | absent | thin | absent | real | internal-only |
-| channels-service | integration | real | real | real | real | real | n/a | real | real |
+| card-print-agent | integration | thin | real | real | absent | thin | absent | real | internal-only |
+| channels-service | integration | thin | real | real | real | real | n/a | real | real |
 | clinical-knowledge-platform-service | clinical | real | real | real | real | real | n/a | real | real |
 | community-service | experience | real | real | real | real | real | real | real | real |
 | connector-fhir-adapter | integration | real | real | real | absent | thin | absent | real | internal-only |
 | costing-engine-service | enterprise | real | real | real | real | real | n/a | real | real |
 | coverage-service | enterprise | real | real | real | real | real | real | real | real |
 | daidzai-service | experience | real | real | real | real | real | n/a | real | real |
-| credential-verification-service | enterprise | real | real | real | real | real | n/a | real | real |
+| credential-verification-service | enterprise | thin | real | real | real | real | n/a | thin | real |
 | data-access-governance-service | data | real | real | real | real | real | n/a | real | real |
 | data-governance-service | data | real | real | real | real | real | n/a | real | real |
 | data-ingestion-service | data | real | real | real | real | thin | absent | real | internal-only |
 | data-pipeline-service | data | real | real | real | real | real | absent | real | internal-only |
 | data-warehouse-service | data | real | real | real | real | thin | absent | real | internal-only |
-| developer-portal-service | integration | real | real | real | real | real | n/a | real | real |
+| developer-portal-service | integration | real | real | real | thin | real | n/a | real | real |
 | dispatch-service | integration | real | real | real | real | real | n/a | real | real |
 | document-service | clinical | real | real | real | real | real | n/a | real | real |
 | experience-bff | experience | real | real | real | n/a | real | n/a | real | real |
 | fhir-gateway-service | clinical | real | real | real | real | thin | absent | real | internal-only |
 | forms-service | clinical | real | real | real | real | real | n/a | real | real |
-| general-ledger-service | enterprise | real | real | real | real | real | n/a | real | real |
+| general-ledger-service | enterprise | thin | real | real | real | real | n/a | real | real |
 | guidance-service | clinical | real | real | real | real | real | n/a | real | real |
 | hr-payroll-service | enterprise | real | real | real | real | real | n/a | real | real |
 | identity-assurance-service | trust | real | real | real | real | real | n/a | real | real |
 | indawo-service | registry | real | real | real | real | real | n/a | real | real |
 | inpatient-service | clinical | real | real | real | real | real | n/a | real | real |
-| integration-hub | integration | real | real | real | absent | real | real | real | internal-only |
-| inventory-elmis-adapter | clinical | real | real | real | real | thin | absent | real | internal-only |
+| integration-hub | integration | real | real | real | absent | real | thin | real | internal-only |
+| inventory-elmis-adapter | clinical | thin | real | real | thin | thin | absent | real | internal-only |
 | inventory-service | clinical | real | real | real | real | real | n/a | real | real |
 | iot-ingestion-service | integration | real | real | real | real | real | absent | real | internal-only |
-| jobs-service | integration | real | real | real | absent | real | real | real | internal-only |
-| landela-adapter-service | integration | real | real | real | absent | real | absent | real | internal-only |
+| jobs-service | integration | thin | real | real | absent | real | real | real | internal-only |
+| landela-adapter-service | integration | thin | real | real | absent | real | absent | thin | internal-only |
 | learning-service | experience | real | real | real | real | real | real | real | real |
 | live-service | experience | real | real | real | real | real | real | real | real |
-| llm-orchestration-service | integration | real | real | absent | real | absent | real | real | internal-only |
+| llm-orchestration-service | integration | thin | real | absent | real | absent | thin | real | internal-only |
 | madi-service | clinical | real | real | real | real | real | n/a | real | real |
 | msika-apps-service | enterprise | real | real | real | real | real | n/a | real | real |
 | msika-flow-service | enterprise | real | real | real | real | real | n/a | real | real |
@@ -65,37 +66,37 @@
 | mushe-wallet-service | enterprise | real | real | real | real | real | n/a | real | real |
 | mushex-service | enterprise | real | real | real | real | real | n/a | real | real |
 | mvumo-service | trust | real | real | real | real | real | n/a | real | real |
-| national-data-repository-service | data | real | real | real | absent | thin | absent | real | internal-only |
+| national-data-repository-service | data | thin | real | real | absent | thin | absent | real | internal-only |
 | ndila-service | integration | real | real | real | real | real | n/a | real | real |
-| ndr-service | data | real | real | real | real | real | absent | real | internal-only |
+| ndr-service | data | real | real | real | thin | real | absent | real | internal-only |
 | nhume-service | integration | real | real | real | real | real | n/a | real | real |
 | notification-service | integration | real | real | real | real | real | real | real | real |
 | observability-service | integration | real | real | real | real | real | absent | real | internal-only |
 | offline-edge-service | integration | real | real | real | absent | real | real | real | internal-only |
-| offline-sync-service | integration | real | real | real | absent | real | real | real | internal-only |
+| offline-sync-service | integration | real | real | real | absent | real | thin | real | internal-only |
 | oros-service | clinical | real | real | real | real | real | real | real | real |
 | pacs-adapter-service | clinical | real | real | real | absent | real | real | real | internal-only |
-| patient-safety-service | clinical | real | real | real | real | real | n/a | real | real |
+| patient-safety-service | clinical | thin | real | real | real | real | n/a | thin | real |
 | pct-service | clinical | real | real | real | real | real | real | real | real |
-| pharmacy-elmis-adapter | clinical | real | real | real | absent | thin | absent | real | internal-only |
+| pharmacy-elmis-adapter | clinical | thin | real | real | absent | thin | absent | real | internal-only |
 | pharmacy-service | clinical | real | real | real | real | real | real | real | real |
-| procurement-service | enterprise | real | real | real | real | real | n/a | real | real |
-| product-registry-service | registry | real | real | real | real | real | n/a | real | real |
+| procurement-service | enterprise | thin | real | real | real | real | n/a | thin | real |
+| product-registry-service | registry | real | real | real | thin | real | n/a | real | real |
 | referral-service | integration | real | real | real | real | real | n/a | real | real |
 | reporting-service | data | real | real | real | real | real | n/a | real | real |
 | rito-quality-safety-service | experience | real | real | real | real | real | n/a | real | real |
-| participation-service | experience | real | real | real | real | real | n/a | real | real |
+| participation-service | experience | thin | real | real | real | real | n/a | real | real |
 | procedures-service | clinical | real | real | real | real | real | n/a | real | real |
 | surgery-service | clinical | real | real | real | real | real | n/a | real | real |
 | telemonitoring-service | clinical | real | real | real | real | real | n/a | real | real |
-| mental-health-service | clinical | real | real | real | real | real | n/a | real | real |
+| mental-health-service | clinical | thin | real | real | real | real | n/a | real | real |
 | rtc-gateway-service | integration | real | real | real | real | real | n/a | real | real |
 | rules-service | clinical | real | real | real | real | real | n/a | real | real |
 | scheduling-service | clinical | real | real | real | real | real | n/a | real | real |
-| schema-registry-service | integration | real | real | real | absent | thin | absent | real | internal-only |
+| schema-registry-service | integration | thin | real | real | absent | thin | absent | real | internal-only |
 | search-service | data | real | real | real | real | real | n/a | real | real |
-| security-hardening-service | integration | real | real | real | absent | thin | absent | real | internal-only |
-| share-slip-service | enterprise | real | real | real | real | real | n/a | real | real |
+| security-hardening-service | integration | thin | real | real | absent | thin | absent | real | internal-only |
+| share-slip-service | enterprise | thin | real | real | thin | real | n/a | real | real |
 | simba-service | enterprise | real | real | real | real | real | real | real | real |
 | support-service | integration | real | real | real | real | real | n/a | real | real |
 | surveillance-service | data | real | real | real | real | real | real | real | real |
@@ -105,7 +106,7 @@
 | tshepo-identity-service | trust | real | real | real | real | real | n/a | real | real |
 | tshepo-keys-service | trust | real | real | real | real | real | n/a | real | real |
 | tshepo-offline-service | trust | real | real | real | real | real | n/a | real | real |
-| abis-service | trust | real | real | real | real | real | n/a | real | real |
+| abis-service | trust | real | real | real | thin | real | n/a | real | real |
 | matcher-engine | trust | absent | real | absent | absent | thin | absent | real | internal-only |
 | tshepo-service | trust | real | real | real | real | real | n/a | real | real |
 | tuso-service | registry | real | real | real | real | real | n/a | real | real |

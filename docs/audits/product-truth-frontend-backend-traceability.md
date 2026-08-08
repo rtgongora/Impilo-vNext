@@ -1,25 +1,25 @@
 # Product Truth — Frontend-to-Backend Traceability
 
-> Generated: 2026-07-29T19:29:08.104Z
-> Web surfaces: **922** | Mobile screens: **214**
+> Generated: 2026-08-08T09:08:37.306Z
+> Web surfaces: **945** | Mobile screens: **237**
 
 ## Web routes (one-ui-shell)
 
 | Route | Title | Zone | BFF backing | Gateway | Reads real | Writes real | Mock/stub | Gaps |
 |-------|-------|------|-------------|---------|------------|-------------|-----------|------|
 | /bootstrap | Platform Bootstrap | auth | yes | no | yes | no | yes | — |
-| /auth/login | Sign In | auth | yes | no | yes | yes | yes | — |
+| /auth/login | Sign In | auth | yes | no | yes | no | yes | — |
 | /auth/login/email | Sign In with Email | auth | no | no | yes | no | no | — |
 | /auth/login/provider-id | Sign In with Provider ID | auth | yes | no | yes | yes | yes | — |
-| /auth/login/biometric | Biometric Verification | auth | yes | no | yes | yes | yes | — |
-| /auth/login/scan | Scan to sign in | auth | yes | no | yes | yes | yes | — |
-| /auth/login/passkey/callback | Completing passkey sign-in | auth | yes | no | yes | yes | yes | — |
+| /auth/login/biometric | Biometric Verification | auth | yes | no | yes | no | yes | — |
+| /auth/login/scan | Scan to sign in | auth | yes | no | yes | no | yes | — |
+| /auth/login/passkey/callback | Completing passkey sign-in | auth | yes | no | yes | no | yes | — |
 | /auth/forgot-password | Forgot Password | auth | yes | no | yes | no | yes | — |
 | /auth/reset-password | Reset Password | auth | yes | no | yes | no | yes | — |
-| /auth/mfa | Multi-Factor Authentication | auth | yes | no | yes | yes | yes | — |
+| /auth/mfa | Multi-Factor Authentication | auth | yes | no | yes | no | yes | — |
 | /auth/logout | Signing Out | auth | yes | no | yes | yes | yes | — |
 | /auth | Authentication | auth | no | no | yes | no | no | — |
-| /auth/register | Create Account | auth | yes | no | yes | yes | yes | — |
+| /auth/register | Create Account | auth | no | no | yes | no | yes | — |
 | /auth/register/contact | Create account with phone or email | auth | yes | no | yes | yes | yes | — |
 | /auth/register/assurance | Identity Assurance | auth | yes | no | yes | yes | yes | — |
 | /auth/register/status | Registration Status | auth | yes | no | yes | yes | yes | — |
@@ -63,10 +63,17 @@
 | /clinical/emergency/resus/[activationId] | Resuscitation | queue | yes | no | yes | yes | yes | — |
 | /clinical/emergency/episode/[episodeId] | Emergency Episode | queue | yes | no | yes | yes | yes | — |
 | /clinical/emergency/board | Emergency Board | queue | yes | no | yes | yes | yes | — |
+| /clinical/emergency/command | Emergency Command | queue | yes | no | yes | yes | yes | — |
+| /clinical/emergency/activation | Open Emergency Episode | queue | yes | no | yes | yes | yes | — |
+| /clinical/emergency/pre-arrival | ED Pre-Arrival | queue | yes | no | yes | yes | yes | — |
+| /clinical/emergency/analytics | Emergency Analytics | queue | yes | no | yes | yes | yes | — |
+| /clinical/emergency/spine/[episodeId]/disposition | Episode Disposition | queue | yes | no | yes | yes | yes | — |
+| /clinical/emergency/spine/[episodeId]/observation | Observation Stay | queue | yes | no | yes | yes | yes | — |
 | /clinical/emergency/spine/[episodeId] | Emergency Episode Spine | queue | yes | no | yes | yes | yes | — |
 | /clinical/emergency/[visitId] | ED Visit | queue | yes | no | yes | yes | yes | — |
 | /clinical/inpatient | Inpatient Care | queue | yes | no | yes | no | yes | — |
 | /clinical/inpatient/admissions | Inpatient Admissions | queue | yes | no | yes | yes | yes | — |
+| /clinical/inpatient/admissions/new | Admit a patient | queue | yes | no | yes | yes | yes | — |
 | /clinical/inpatient/admissions/[admissionId] | Inpatient Episode | queue | yes | no | yes | yes | yes | — |
 | /clinical/inpatient/ward-board | Ward Board | queue | yes | no | yes | yes | yes | — |
 | /clinical/inpatient/nursing | Nursing Workbench | queue | yes | no | yes | yes | yes | — |
@@ -157,19 +164,32 @@
 | /work/regulators/[regulatorId]/bulk-import | Bulk import | operations | yes | no | yes | no | yes | — |
 | /work/regulatory/[orgId]/dashboard | Regulatory dashboards | operations | yes | no | yes | no | yes | — |
 | /work/regulatory/[orgId]/configuration | Regulatory configuration | operations | yes | no | yes | no | yes | — |
+| /work/regulatory/[orgId]/registers | Professional registers | operations | yes | no | yes | yes | yes | — |
+| /work/regulatory/[orgId]/student-applications | Student applications | operations | yes | no | yes | yes | yes | — |
 | /work/regulatory/[orgId]/student-applications/[applicationId] | Student registration review | operations | yes | no | yes | yes | yes | — |
+| /work/regulatory/[orgId]/student-reports | Student registration reports | operations | yes | no | yes | yes | yes | — |
+| /work/regulatory/[orgId]/cpd-review | CPD review | operations | yes | no | yes | yes | yes | — |
+| /work/regulatory/[orgId]/restrictions | Register restrictions | operations | yes | no | yes | no | yes | — |
+| /work/regulatory/[orgId]/audit | Regulatory audit | operations | yes | no | yes | no | yes | — |
 | /work/regulatory/hpa/oversight | HPA oversight | operations | yes | no | yes | no | yes | — |
 | /share/claim | Claim Shared Documents | home | yes | no | yes | yes | no | — |
 | /collaboration/access | Provider collaboration access | home | yes | no | yes | yes | yes | — |
 | /facility | Select Facility | facility | yes | no | yes | no | yes | — |
-| /facility/[id] | Facility Details | facility | yes | no | yes | yes | yes | — |
-| /facility/[id]/configuration | Facility Configuration | facility | yes | no | yes | yes | yes | — |
 | /facility/claim | Claim facility administration | facility | yes | no | yes | yes | yes | — |
 | /facility/register | Register a facility | facility | yes | no | yes | yes | yes | — |
+| /facility/[id] | Facility Details | facility | yes | no | yes | yes | yes | — |
+| /facility/[id]/configuration | Facility Configuration | facility | yes | no | yes | yes | yes | — |
 | /facility/[id]/trust | Facility trust & governance | facility | yes | no | yes | yes | yes | — |
+| /facility/[id]/cockpit | Facility cockpit | facility | yes | no | yes | yes | yes | — |
+| /facility/[id]/control-tower | Facility control tower | facility | yes | no | yes | yes | yes | — |
+| /facility/[id]/complete-profile | Complete facility profile | facility | yes | no | yes | yes | yes | — |
+| /facility/[id]/departments | Departments & service points | facility | yes | no | yes | yes | yes | — |
+| /facility/[id]/regulators | Facility regulators | facility | yes | no | yes | yes | yes | F |
+| /facility/[id]/setup | Facility setup | facility | yes | no | yes | yes | yes | — |
 | /site/register | Register a site | facility | yes | no | yes | yes | yes | — |
 | /site/operator-access | Request site operator access | facility | yes | no | yes | yes | yes | — |
 | /workspace | Select Workspace | workspace | yes | no | yes | yes | yes | — |
+| /workspace/aggregate | Aggregate oversight | reports | yes | no | yes | no | yes | — |
 | /workspace/[id] | Workspace Details | workspace | yes | no | yes | no | yes | — |
 | /shift | Start Shift | shift | yes | no | yes | yes | yes | — |
 | /shift/active | Active Shift | shift | yes | no | yes | yes | yes | — |
@@ -181,6 +201,9 @@
 | /scheduling/booking-requests | Booking Requests | queue | yes | no | yes | yes | yes | — |
 | /scheduling/today | Today's Appointments | queue | yes | no | yes | yes | yes | — |
 | /scheduling/bookings/config | Booking Configuration | queue | yes | no | yes | yes | yes | — |
+| /scheduling/surgical-waitlist | Surgical Waitlist | queue | yes | no | yes | yes | yes | — |
+| /scheduling/theatre-lists | Theatre Lists | queue | yes | no | yes | yes | yes | — |
+| /scheduling/theatre-lists/[sessionId] | Theatre List Session | queue | yes | no | yes | yes | yes | — |
 | /communication | Communication Ops — Hub | queue | yes | no | yes | yes | yes | — |
 | /communication/secure-messaging | Communication Ops — Secure Messaging | queue | yes | no | yes | yes | yes | — |
 | /communication/approvals | Communication Ops — Approval Queue | queue | yes | no | yes | yes | yes | — |
@@ -196,6 +219,7 @@
 | /my/comms | Khuluma — Messages | home | yes | no | yes | yes | yes | — |
 | /my/orders/[requestId]/offers | Compare Offers | home | yes | no | yes | yes | yes | — |
 | /my/monitoring | My Monitoring | home | yes | no | yes | yes | yes | — |
+| /my/pregnancy | My Pregnancy | home | yes | no | yes | yes | yes | — |
 | /queue | Patient Queue | queue | yes | no | yes | yes | yes | — |
 | /queue/triage | Triage Queue | queue | yes | no | yes | yes | yes | — |
 | /queue/waiting | Waiting Room | queue | yes | no | yes | yes | yes | — |
@@ -217,6 +241,7 @@
 | /ehr/[patientId]/notes | Clinical Notes | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/documents | Documents | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/encounters | Encounters | ehr | yes | no | yes | yes | yes | — |
+| /ehr/[patientId]/emergency | Emergency | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/encounter/[encounterId] | Encounter | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/immunizations | Immunizations | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/consults | Consults & Referrals | ehr | yes | no | yes | yes | yes | — |
@@ -226,6 +251,7 @@
 | /ehr/[patientId]/discharge | Discharge | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/care-plans | Care Plans | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/procedures | Procedures | ehr | yes | no | yes | yes | yes | — |
+| /ehr/[patientId]/procedures/[episodeId] | Procedure Episode | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/paediatrics | Paediatric Workspace | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/growth-chart | Growth Chart | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/imam | Nutrition Treatment | ehr | yes | no | yes | yes | yes | — |
@@ -237,6 +263,7 @@
 | /ehr/[patientId]/preferences/communications | Communication Preferences | ehr | yes | no | yes | no | yes | — |
 | /ehr/[patientId]/goals | Goals | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/assessments | Assessments | ehr | yes | no | yes | yes | yes | — |
+| /ehr/[patientId]/imnci | IMNCI Assess & Classify | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/charts | Ward Charts | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/imaging | Imaging | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/investigations | Investigations | ehr | yes | no | yes | yes | yes | — |
@@ -303,13 +330,17 @@
 | /registry/facility-lifecycle/[facilityId] | Facility regulatory file | registry | yes | no | yes | yes | yes | — |
 | /registry/providers | Provider Registry | registry | yes | no | yes | yes | yes | — |
 | /registry/providers/verification | Provider Verification Queue | registry | yes | no | yes | yes | yes | — |
+| /registry/providers/new | Create provider | registry | yes | no | yes | yes | yes | — |
 | /registry/providers/[id] | Provider Profile | registry | yes | no | yes | yes | yes | — |
+| /registry/providers/[id]/edit | Edit provider | registry | yes | no | yes | yes | yes | — |
 | /registry/provider-council/self-service | Council self-service | registry | yes | no | yes | yes | yes | — |
 | /registry/provider-council/council-workspace | Council operations | registry | yes | no | yes | yes | yes | — |
 | /registry/facility-classification | Facility classification reconciliation | registry | yes | no | yes | yes | yes | — |
 | /registry/facilities | Facility Registry | registry | yes | no | yes | yes | yes | — |
 | /registry/facilities/worklist | Registry worklist | registry | yes | no | yes | yes | yes | — |
+| /registry/facilities/new | Register a facility | registry | yes | no | yes | yes | yes | — |
 | /registry/facilities/[id] | Facility Profile | registry | yes | no | yes | yes | yes | — |
+| /registry/facilities/[id]/edit | Edit facility | registry | yes | no | yes | yes | yes | — |
 | /registry/place-governance | Place governance | registry | yes | no | yes | yes | yes | — |
 | /registry/terminology | Terminology Browser | registry | yes | no | yes | no | yes | — |
 | /registry/terminology/[id] | Concept Details | registry | yes | no | yes | no | yes | — |
@@ -395,12 +426,12 @@
 | /erp/hr | HR & payroll | enterprise | yes | no | yes | yes | yes | — |
 | /erp/procurement | Procurement | enterprise | yes | no | yes | yes | yes | — |
 | /erp/assets | Fixed assets | enterprise | yes | no | yes | yes | yes | — |
-| /workspace/aggregate | Aggregate oversight | reports | yes | no | yes | no | yes | — |
 | /reports | Reports | reports | yes | no | yes | yes | yes | — |
 | /reports/facility | Facility Reports | reports | yes | no | yes | yes | yes | — |
 | /reports/clinical | Clinical Reports | reports | yes | no | yes | yes | yes | — |
 | /reports/operational | Operational Reports | reports | yes | no | yes | yes | yes | — |
 | /reports/custom | Custom Reports | reports | yes | no | yes | yes | yes | — |
+| /reports/theatre | Theatre Utilisation | reports | yes | no | yes | no | yes | — |
 | /reports/[id] | Report Details | reports | yes | no | yes | yes | yes | — |
 | /settings | Settings | settings | yes | no | yes | no | yes | — |
 | /settings/account | Account Settings | settings | yes | no | yes | yes | yes | — |
@@ -410,7 +441,7 @@
 | /settings/integrations | Integrations | settings | yes | no | yes | yes | yes | — |
 | /settings/privacy | Privacy & Data | settings | yes | no | yes | yes | yes | — |
 | /telemedicine | Telemedicine Hub | queue | yes | no | yes | yes | yes | — |
-| /telemedicine/new | New Teleconsultation | queue | yes | no | yes | yes | yes | — |
+| /telemedicine/new | New Teleconsultation | queue | yes | no | yes | yes | yes | F |
 | /telemedicine/session/[sessionId] | Teleconsult Session | queue | yes | no | yes | yes | yes | — |
 | /telemedicine/analytics | Telemedicine Analytics | queue | yes | no | yes | yes | yes | — |
 | /work/telemedicine/worklist | Specialist Worklist | queue | yes | no | yes | yes | yes | — |
@@ -476,37 +507,6 @@
 | /caregiving/tasks | Care Tasks | caregiving | yes | no | yes | no | yes | — |
 | /caregiving/notifications | Care Alerts | caregiving | yes | no | yes | no | yes | — |
 | /monitoring | Remote Monitoring | monitoring | yes | no | yes | no | yes | — |
-| /monitoring/devices | My Devices | monitoring | yes | no | yes | yes | yes | — |
-| /monitoring/readings | Readings & Trends | monitoring | yes | no | yes | yes | yes | — |
-| /monitoring/alerts | Monitoring Alerts | monitoring | yes | no | yes | yes | yes | — |
-| /monitoring/care-plans | Chronic Care Plans | monitoring | yes | no | yes | no | yes | — |
-| /monitoring/provider-dashboard | Patient Monitoring Dashboard | monitoring | yes | no | yes | no | yes | — |
-| /discover | Find Services | discovery | yes | no | yes | no | yes | — |
-| /discover/providers | Find a Provider | discovery | yes | no | yes | no | yes | — |
-| /discover/facilities | Find a Facility | discovery | yes | no | yes | yes | yes | — |
-| /discover/services | Browse Services | discovery | yes | no | yes | no | yes | — |
-| /discover/virtual-care | Virtual Care | discovery | yes | no | yes | yes | yes | — |
-| /lab | Laboratory | lab | yes | no | yes | yes | yes | — |
-| /lab/worklist | Lab Worklist | lab | yes | no | yes | yes | yes | — |
-| /imaging/worklist | Imaging Worklist | lab | yes | no | yes | yes | yes | — |
-| /diagnostics/orders | Diagnostics Orders | lab | yes | no | yes | yes | yes | — |
-| /diagnostics/orders/new | Create Diagnostic Order | lab | yes | no | yes | yes | yes | — |
-| /diagnostics/orders/route | Route Order | lab | yes | no | yes | yes | yes | — |
-| /diagnostics/results-inbox | Results Inbox | lab | yes | no | yes | yes | yes | — |
-| /diagnostics/critical-queue | Critical Results | lab | yes | no | yes | yes | yes | — |
-| /diagnostics/worklist | Imaging Worklist | lab | yes | no | yes | yes | yes | — |
-| /diagnostics/lab-worklist | Lab Worklist | lab | yes | no | yes | yes | yes | — |
-| /diagnostics/procedure-worklist | Procedure Worklist | lab | yes | no | yes | yes | yes | — |
-| /diagnostics/reporting | Report Authoring | lab | yes | no | yes | yes | yes | — |
-| /diagnostics/intake/qr | Claim Order QR | lab | yes | no | yes | yes | yes | — |
-| /operations/diagnostics-reconciliation | Diagnostics Reconciliation | lab | yes | no | yes | yes | yes | — |
-| /admin/integrations | Integration Status | admin | yes | no | yes | yes | yes | — |
-| /admin/diagnostics-catalogue | Diagnostics Catalogue | admin | yes | no | yes | yes | yes | — |
-| /imaging/facility | Facility Imaging Dashboard | lab | yes | no | yes | yes | yes | — |
-| /lab/results | Results Review | lab | yes | no | yes | yes | yes | — |
-| /lab/catalog | Test Catalog | lab | yes | no | yes | no | yes | — |
-| /lab/reconciliation | Lab Reconciliation | lab | yes | no | yes | yes | yes | — |
-| /operations | Operations | operations | yes | no | yes | no | yes | — |
 
 ## Mobile screens
 
@@ -576,11 +576,13 @@
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/NompiloGuidanceSection.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/PatientConsentScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/PersonalScreen.tsx | 0 | no |
+| citizen-app | apps/mobile/citizen-app/src/screens/personal/PregnancySection.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/PrescriptionsSection.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/PrivacyPolicyScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/ProductionReadinessJourneyScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/ProfileSection.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/ProgramsScreen.tsx | 0 | no |
+| citizen-app | apps/mobile/citizen-app/src/screens/personal/PublicRegulatoryExploreScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/QueueStatusSection.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/RecordSharingScreen.tsx | 1 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/RecordsScreen.tsx | 0 | no |
@@ -597,6 +599,7 @@
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/WellnessSection.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/publicHealth/PublicHealthScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/rito/FeedbackScreen.tsx | 0 | no |
+| citizen-app | apps/mobile/citizen-app/src/screens/rito/RespectfulMaternityCareScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/rito/TrackFeedbackScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/social/ClubsScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/social/CommunitiesScreen.tsx | 0 | no |
@@ -640,6 +643,7 @@
 | provider-app | apps/mobile/provider-app/src/screens/outreach/HouseholdListScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/outreach/OutreachDashboardScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/outreach/PlaceModeDashboardScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/outreach/PostnatalContactScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/outreach/ScreeningScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/APGARScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/ActivityFeedScreen.tsx | 0 | no |
@@ -650,6 +654,9 @@
 | provider-app | apps/mobile/provider-app/src/screens/provider/BillingScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/BookingRequestsScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/ChronicRegistersScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/ClerkingContinuityScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/ClinicalJourneyWorkspaces.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/ClinicalToolsScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/ConfirmDeathScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/ControlTowerScreen.tsx | 0 | yes |
@@ -662,6 +669,9 @@
 | provider-app | apps/mobile/provider-app/src/screens/provider/DischargeClearanceScreen.tsx | 1 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/EdVisitScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/EmergencyEpisodeBoardScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/EmergencyEpisodeDetailScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/EmergencyHubScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/EncounterFormsPanel.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/FacilityAdminScreen.tsx | 0 | no |
@@ -675,17 +685,24 @@
 | provider-app | apps/mobile/provider-app/src/screens/provider/LabOrderPanel.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/MarketplaceOpsScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/MaternityWorkspaces.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/MedicineCdsEvaluateScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/MedicineWorkspaceScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/MentalHealthQueueScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/MentalHealthReferralScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/MessagingScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/MyRegulatoryAffairsScreen.tsx | 0 | yes |
 | provider-app | apps/mobile/provider-app/src/screens/provider/NEWS2ScoringScreen.tsx | 1 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/NotesPanel.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/OpsReportsHubScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/PACSViewerScreen.tsx | 1 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/PaediatricWorkspaces.tsx | 0 | yes |
 | provider-app | apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/PharmacyDispensingScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/PharmacyHubScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/PrehospitalEpcrScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/PrescriptionPanel.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/ProceduresCatalogueScreen.tsx | 0 | yes |
 | provider-app | apps/mobile/provider-app/src/screens/provider/ProductionReadinessJourneyScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/ProfessionalChannelsHubScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/ProfessionalProfileScreen.tsx | 0 | no |
@@ -695,20 +712,3 @@
 | provider-app | apps/mobile/provider-app/src/screens/provider/PublicHealthFieldTasksScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/QueueDefinitionsScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/provider/ReferralPanel.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/provider/ReportsScreen.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/provider/ResuscitationScreen.tsx | 1 | no |
-| provider-app | apps/mobile/provider-app/src/screens/provider/ScheduleScreen.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/provider/ShiftHandoffScreen.tsx | 1 | no |
-| provider-app | apps/mobile/provider-app/src/screens/provider/SpecialtyWorkspacePanel.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/provider/SystemStatusScreen.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/provider/TelemedicineCallScreen.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/provider/TelemedicineScreen.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/provider/TheatreProcedureScreen.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/provider/TraumaScreen.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/provider/TriageScreen.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/provider/VashandiAttendanceScreen.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/provider/VashandiAvailabilityScreen.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/provider/VashandiFacilityStaffScreen.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/provider/VashandiRosterScreen.tsx | 0 | no |
