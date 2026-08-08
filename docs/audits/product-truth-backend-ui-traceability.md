@@ -1,6 +1,6 @@
 # Product Truth — Backend-to-UI Traceability
 
-> Generated: 2026-08-08T09:08:37.306Z
+> Generated: 2026-08-08T10:19:54.546Z
 
 For each service: backend capabilities → API → BFF → UI → mobile → persistence.
 
@@ -604,6 +604,9 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/diagnostics/lab-worklist/page.test.tsx`
 - `ui/one-ui-shell/src/app/diagnostics/lab-worklist/page.tsx`
 
+**Gaps:**
+- [L] dispatch-service: 2 BFF downstream path(s) not served by the service (/internal/v1/dispatch/tasks, /internal/v1/dispatch/tasks/) (medium)
+
 ## document-service
 
 - **Path:** `services/document-service`
@@ -638,7 +641,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 | # | Question | Answer |
 |---|----------|--------|
-| 1 | Real backend capabilities? | Yes (405 controllers, 3715 routes) |
+| 1 | Real backend capabilities? | Yes (405 controllers, 3746 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: experience-bff.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (0 clients) |
 | 4 | Visible in UI? | Yes (233 refs) |
@@ -1132,6 +1135,9 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/marketplace/apps/[itemCode]/page.tsx`
 - `ui/one-ui-shell/src/app/marketplace/apps/admin/activation/page.tsx`
 
+**Gaps:**
+- [L] msika-apps-service: 7 BFF downstream path(s) not served by the service (/internal/v1/marketplace/launcher, /internal/v1/marketplace/publishers, /internal/v1/marketplace/activation-requests) (medium)
+
 ## msika-flow-service
 
 - **Path:** `services/msika-flow-service`
@@ -1309,6 +1315,9 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/emergency/page.tsx`
 - `ui/one-ui-shell/src/app/emergency/services/page.tsx`
 - `ui/one-ui-shell/src/app/enterprise/oversight/page.tsx`
+
+**Gaps:**
+- [L] ndila-service: 2 BFF downstream path(s) not served by the service (/internal/v1/ndila/tiles/{z}/{x}/{y}.png, /internal/v1/ndila/tiles/{z}/{x}/{y}.mvt) (medium)
 
 ## ndr-service
 

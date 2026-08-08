@@ -1,7 +1,7 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-08-08T09:08:37.306Z
-> Branch: `phase0/i-gate-truth`
+> Generated: 2026-08-08T10:19:54.546Z
+> Branch: `phase0/j-route-resolution`
 
 ## Executive summary
 
@@ -12,7 +12,7 @@
 | Shared libraries | 17 |
 | Frontend surfaces (routes) | 945 |
 | Mobile screens | 237 |
-| BFF route handlers | 3715 |
+| BFF route handlers | 3746 |
 | OpenAPI contracts | 114 |
 | Services with DB persistence | 103 |
 | **Phase 6 complete (user-facing + documented internal)** | **103** |
@@ -23,7 +23,7 @@
 | Services backend-only (no UI) | 0 |
 | Services UI-only (no backend) | 0 |
 | Services with mock/stub hits | 1 |
-| Total classified gaps | 8 |
+| Total classified gaps | 11 |
 | Blocker gaps | 0 |
 | High severity gaps | 0 |
 | Cross-service cohesion | 14/14 pass |
@@ -61,7 +61,7 @@
 
 ## Remaining gaps by severity
 
-- **medium:** 8
+- **medium:** 11
 
 ## Implementation status
 

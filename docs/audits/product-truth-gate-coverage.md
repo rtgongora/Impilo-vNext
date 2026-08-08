@@ -56,10 +56,16 @@ where it previously emitted none. Scanner unit tests: **18/18**.
 Partial is fine. Silent partial is not. These are real holes, listed so nobody reads a green gate as
 a clean estate.
 
-1. **`bffOrphanRoutes` is still hardcoded to `0`.** In `generate-product-truth.mjs` the record is
-   built with the literal `bffOrphanRoutes: 0`, assigned once and never computed. Gap **L**
-   ("BFF exists, downstream service not wired") is therefore still structurally unreachable — the
-   same class of defect as the four above, left in place because fixing it needs item 2 first.
+1. ~~**`bffOrphanRoutes` is still hardcoded to `0`.**~~ **RESOLVED** on `phase0/j-route-resolution`
+   (2026-08-08). It is measured from the path literals BFF clients actually call, checked against
+   each service's own routes, and gap **L** now fires on **3 hand-verified services**: msika-apps
+   (7 paths — it serves no `/marketplace/*` route at all), dispatch (2 — no `tasks` handler), ndila
+   (2 — the BFF calls `/internal/v1/ndila/tiles/...` while the service serves them under
+   `/v1/public/` and `/api/v1/`). Gap L also had to drop its `bffWiring === 'thin'` conjunct, which
+   made it unreachable a second time: every service that actually has orphaned calls wires many
+   clients and reads `real`.
+   ⚠️ **The count is a floor, not a total** — it reads literals, so paths built by concatenation or
+   from constants are invisible to it.
 
 2. **BFF route paths are not resolvable end-to-end — `extractClassBase` can never find a class-level
    prefix.** Root-caused, not inferred. In `spring-route-extractor.mjs`:
@@ -80,14 +86,26 @@ a clean estate.
    emitted as routes in their own right (`all /internal/v1/access`), which is why the route *count*
    looked plausible.
 
-   **Not fixed here, deliberately.** Correcting it changes every route path in the model, which
-   feeds `counts.routes`, `stubRouteCount`, contract operation matching, `capabilityKeyFor` and the
-   backend/frontend parity gates. That is its own workstream with its own red-proofs, not a
-   bolt-on. Until then, any "does this frontend path reach a real route" detector — including
-   `bffOrphanRoutes` in item 1 — is blocked.
+   **RESOLVED** on `phase0/j-route-resolution` (2026-08-08). The base is now resolved **once per
+   file**, over text with comments and string literals blanked out. Scanning backwards from each
+   mapping to the nearest `class` keyword was tried and rejected: `WalletController` carries the
+   comment *"see class javadoc"* in its body, `\bclass\s+\w` matches it, and every handler below
+   that line silently lost its prefix again. Class mappings declaring several prefixes
+   (`@RequestMapping({"/internal/v1/ai", "/internal/v1/ai-governance"})`) fan out to all of them,
+   and the class-level annotation is labelled `classLevel` so consumers can drop the phantom
+   prefix-route.
 
-   ⚠️ A naive matcher run against these fragments reported 5135 of 6294 surface path references
-   (82%) as unmatched. That number is an **artifact of the fragments, not a finding**, and is
+   BFF handler routes carrying a versioned prefix went from ~0% to **100%**, with **0**
+   double-prefixed.
+
+   **Measured blast radius** (before → after): gap categories D/F unchanged, `byProductStatus`
+   unchanged, phase6 unchanged, `contractViolations` unchanged — but **capability buckets fell
+   5677 → 3279**, because roughly 2,400 "capabilities" were phantom fragments of unprefixed paths.
+   No guard gates on that number (only a `> 0` test assertion), and the collapsed figure is the
+   more plausible one.
+
+   ⚠️ A naive matcher run against the old fragments reported 5135 of 6294 surface path references
+   (82%) as unmatched. That number was an **artifact of the fragments, not a finding**, and is
    recorded here only so nobody rediscovers it and believes it.
 
 3. **`apiClient-dynamic` counts as backing, and matched 919 of 945 surfaces.** It is added when any

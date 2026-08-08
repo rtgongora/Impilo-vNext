@@ -1,7 +1,7 @@
 # Product Truth — Gap Register
 
-> Generated: 2026-08-08T09:08:37.306Z
-> Total gaps: **8**
+> Generated: 2026-08-08T10:19:54.546Z
+> Total gaps: **11**
 
 ## Gap categories (A–R)
 
@@ -18,7 +18,7 @@
 | I | API exists, database persistence missing | 0 |
 | J | Database exists, API missing | 0 |
 | K | Contract exists, implementation missing | 0 |
-| L | BFF exists, downstream service not wired | 0 |
+| L | BFF exists, downstream service not wired | 3 |
 | M | Mobile parity missing | 0 |
 | N | Auth/policy/tenant scoping missing | 0 |
 | O | Tests missing | 0 |
@@ -31,7 +31,7 @@
 
 | Severity | Count |
 |----------|------:|
-| medium | 8 |
+| medium | 11 |
 
 ## Prioritized gaps (top 100)
 
@@ -39,12 +39,15 @@
 |------|--------|----------|----------|-------------|
 | 1 | butano-fhir | D | medium | butano-fhir: partial frontend/BFF wiring |
 | 2 | developer-portal-service | D | medium | developer-portal-service: partial frontend/BFF wiring |
-| 3 | product-registry-service | D | medium | product-registry-service: partial frontend/BFF wiring |
-| 4 | share-slip-service | D | medium | share-slip-service: partial frontend/BFF wiring |
-| 5 | abis-service | D | medium | abis-service: partial frontend/BFF wiring |
-| 6 | /facility/[id]/regulators | F | medium | /facility/[id]/regulators: hardcoded dashboard/data |
-| 7 | /telemedicine/new | F | medium | /telemedicine/new: hardcoded dashboard/data |
-| 8 | /my-life/feedback/respectful-maternity | F | medium | /my-life/feedback/respectful-maternity: hardcoded dashboard/data |
+| 3 | dispatch-service | L | medium | dispatch-service: 2 BFF downstream path(s) not served by the service (/internal/v1/dispatch/tasks, /internal/v1/dispatch/tasks/) |
+| 4 | msika-apps-service | L | medium | msika-apps-service: 7 BFF downstream path(s) not served by the service (/internal/v1/marketplace/launcher, /internal/v1/marketplace/publishers, /internal/v1/marketplace/activation-requests) |
+| 5 | ndila-service | L | medium | ndila-service: 2 BFF downstream path(s) not served by the service (/internal/v1/ndila/tiles/{z}/{x}/{y}.png, /internal/v1/ndila/tiles/{z}/{x}/{y}.mvt) |
+| 6 | product-registry-service | D | medium | product-registry-service: partial frontend/BFF wiring |
+| 7 | share-slip-service | D | medium | share-slip-service: partial frontend/BFF wiring |
+| 8 | abis-service | D | medium | abis-service: partial frontend/BFF wiring |
+| 9 | /facility/[id]/regulators | F | medium | /facility/[id]/regulators: hardcoded dashboard/data |
+| 10 | /telemedicine/new | F | medium | /telemedicine/new: hardcoded dashboard/data |
+| 11 | /my-life/feedback/respectful-maternity | F | medium | /my-life/feedback/respectful-maternity: hardcoded dashboard/data |
 
 ## Services requiring product-owner decision
 
