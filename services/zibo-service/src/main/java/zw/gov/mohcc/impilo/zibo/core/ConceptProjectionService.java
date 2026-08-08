@@ -11,11 +11,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.zibo.domain.ArtifactStatus;
 import zw.gov.mohcc.impilo.zibo.domain.ArtifactType;
 import zw.gov.mohcc.impilo.zibo.domain.AuthorityScope;
 import zw.gov.mohcc.impilo.zibo.persistence.entity.ArtifactEntity;
 import zw.gov.mohcc.impilo.zibo.persistence.entity.ConceptEntity;
+import zw.gov.mohcc.impilo.zibo.persistence.repository.ArtifactRepository;
 import zw.gov.mohcc.impilo.zibo.persistence.repository.ConceptRepository;
 
 /**
@@ -36,28 +39,85 @@ public class ConceptProjectionService {
     private static final int FLUSH_EVERY = 500;
 
     private final ConceptRepository conceptRepository;
+    private final ArtifactRepository artifactRepository;
     private final ObjectMapper objectMapper;
     private final EntityManager entityManager;
     private final UUID nationalPlane;
 
     public ConceptProjectionService(
             ConceptRepository conceptRepository,
+            ArtifactRepository artifactRepository,
             ObjectMapper objectMapper,
             EntityManager entityManager,
             @Value("${zibo.terminology.national-plane-tenant-id:00000000-0000-0000-0000-000000000001}")
             String nationalPlaneTenantId) {
         this.conceptRepository = conceptRepository;
+        this.artifactRepository = artifactRepository;
         this.objectMapper = objectMapper;
         this.entityManager = entityManager;
         this.nationalPlane = UUID.fromString(nationalPlaneTenantId);
     }
 
     /**
+     * Reprojects every servable CodeSystem in the estate, across all tenant planes.
+     *
+     * <p>Without this the index is empty on any database whose content arrived through migrations.
+     * Every seeded artifact is {@code INSERT}ed directly at {@code PUBLISHED}/{@code ACTIVE} and
+     * never passes through {@code ArtifactService.publish}, which was the only thing that called
+     * {@link #rebuild}. So a freshly migrated ZIBO answers {@code $lookup} and {@code $expand} with
+     * nothing at all, for every vocabulary it demonstrably holds — the table exists, the content
+     * exists, and the two have never been introduced.</p>
+     *
+     * <p>{@code DRAFT} artifacts are skipped: they project when they are published. Reprojection is
+     * idempotent — {@link #rebuild} replaces an artifact's rows wholesale.</p>
+     *
+     * @return per-artifact concept counts, keyed by artifact id
+     */
+    public ReprojectionResult reprojectAll() {
+        List<ArtifactEntity> targets = artifactRepository.findByFhirTypeAndStatusIn(
+                ArtifactType.CODE_SYSTEM,
+                List.of(ArtifactStatus.PUBLISHED, ArtifactStatus.ACTIVE,
+                        ArtifactStatus.DEPRECATED, ArtifactStatus.RETIRED));
+
+        int artifacts = 0;
+        int concepts = 0;
+        int failed = 0;
+        for (ArtifactEntity artifact : targets) {
+            try {
+                concepts += rebuild(artifact);
+                artifacts++;
+            } catch (Exception e) {
+                // One unparseable artifact must not abandon the other forty.
+                failed++;
+                log.error("ZIBO: reprojection failed for {} v{} ({}): {}",
+                        artifact.getCanonicalUrl(), artifact.getVersion(),
+                        artifact.getArtifactId(), e.getMessage(), e);
+            }
+        }
+        log.info("ZIBO: reprojected {} of {} CodeSystems, {} concepts, {} failed",
+                artifacts, targets.size(), concepts, failed);
+        return new ReprojectionResult(targets.size(), artifacts, concepts, failed);
+    }
+
+    /** Outcome of a full reprojection. {@code failed} is reported, never swallowed. */
+    public record ReprojectionResult(int codeSystemsFound, int codeSystemsProjected,
+                                     int conceptsWritten, int failed) {
+    }
+
+    /**
      * Projects a CodeSystem artifact's concepts into the index, replacing whatever was there.
+     *
+     * <p>Runs in its own transaction. {@code ArtifactService.publish} documents — and intends —
+     * that a projection failure must not roll back the publish, but under the default
+     * {@code REQUIRED} propagation this method joined the publish transaction, so an exception
+     * here marked the shared transaction rollback-only and the caller's {@code catch} produced an
+     * {@code UnexpectedRollbackException} at commit instead of a published artifact. The artifact
+     * row is committed before this runs, so the foreign key is satisfied from the new
+     * transaction.</p>
      *
      * @return how many concepts were written
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public int rebuild(ArtifactEntity artifact) {
         if (artifact.getFhirType() != ArtifactType.CODE_SYSTEM) {
             // ValueSets are expanded from their CodeSystems at query time rather than materialised,
@@ -170,7 +230,12 @@ public class ConceptProjectionService {
                     .setParameter("id", c.getConceptId())
                     .executeUpdate();
         }
-        entityManager.clear();
+        // Detach only what this batch created. entityManager.clear() emptied the whole persistence
+        // context, which also detached the caller's ArtifactEntity mid-publish — the batching was
+        // meant to bound memory, not to evict the artifact being published.
+        for (ConceptEntity c : batch) {
+            entityManager.detach(c);
+        }
     }
 
     private String searchableText(ConceptEntity c) {

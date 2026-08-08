@@ -60,6 +60,17 @@ public interface ArtifactRepository extends JpaRepository<ArtifactEntity, UUID> 
     long countByTenantId(UUID tenantId);
 
     /**
+     * Every artifact of a type in any of the given statuses, across all tenant planes.
+     *
+     * <p>Deliberately not tenant-scoped: this backs concept reprojection, which must rebuild the
+     * index for the whole estate. Seeded terminology is split across the registry and care planes
+     * — a tenant-scoped rebuild would silently leave one plane's vocabularies unsearchable, which
+     * is the failure mode the national-plane fallback exists to prevent.</p>
+     */
+    List<ArtifactEntity> findByFhirTypeAndStatusIn(ArtifactType fhirType,
+                                                   Collection<ArtifactStatus> statuses);
+
+    /**
      * Finds all versions of an artifact identified by canonical URL.
      *
      * <p>Ordered by {@code versionSortKey} descending, <b>not</b> by creation date. Creation order
