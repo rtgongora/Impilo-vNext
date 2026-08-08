@@ -13,6 +13,7 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.zibo.domain.ArtifactStatus;
 import zw.gov.mohcc.impilo.zibo.domain.ArtifactType;
+import zw.gov.mohcc.impilo.zibo.domain.VersionScheme;
 import zw.gov.mohcc.impilo.zibo.persistence.entity.ArtifactEntity;
 import zw.gov.mohcc.impilo.zibo.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.zibo.persistence.repository.ArtifactRepository;
@@ -311,6 +312,68 @@ class ArtifactServiceTest {
             ArtifactEntity result = artifactService.retire(deprecated.getArtifactId());
 
             assertThat(result.getStatus()).isEqualTo(ArtifactStatus.RETIRED);
+        }
+    }
+
+    // -------------------------------------------------------------------------------------------
+    // Version ordering on the write path.
+    //
+    // V400 backfilled version_scheme/version_sort_key for every artifact that already existed, and
+    // ArtifactRepository orders by "versionSortKey DESC NULLS LAST". Nothing set them on create, so
+    // an artifact written through this service sorted behind every backfilled row — permanently,
+    // and silently. Every vocabulary this programme loads arrives through createDraft.
+    // -------------------------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("createDraft: a semver version gets a SEMVER scheme and a comparable sort key")
+    void test_createDraft_setsSemverOrdering() {
+        ArtifactEntity result = createDraftWithVersion("1.2.3");
+
+        assertThat(result.getVersionScheme()).isEqualTo(VersionScheme.SEMVER);
+        assertThat(result.getVersionSortKey()).isEqualTo(VersionOrdering.sortKey("1.2.3"));
+        assertThat(result.getVersionSortKey()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("createDraft: a date-style external release gets a DATE scheme, not SEMVER")
+    void test_createDraft_setsDateOrdering() {
+        ArtifactEntity result = createDraftWithVersion("2026.01");
+
+        assertThat(result.getVersionScheme()).isEqualTo(VersionScheme.DATE);
+        assertThat(result.getVersionSortKey()).isEqualTo(VersionOrdering.sortKey("2026.01"));
+    }
+
+    @Test
+    @DisplayName("createDraft: sort keys order 1.10.0 above 1.9.0, which string order would not")
+    void test_createDraft_sortKeyOrdersNumerically() {
+        String older = createDraftWithVersion("1.9.0").getVersionSortKey();
+        String newer = createDraftWithVersion("1.10.0").getVersionSortKey();
+
+        // "1.10.0" < "1.9.0" lexicographically. The sort key is the whole point.
+        assertThat(newer).isGreaterThan(older);
+    }
+
+    /** Runs createDraft under a trust context and returns the entity handed to the repository. */
+    private ArtifactEntity createDraftWithVersion(String version) {
+        try (MockedStatic<TrustContextHolder> holder = mockStatic(TrustContextHolder.class)) {
+            holder.when(TrustContextHolder::require).thenReturn(createTrustContext());
+
+            when(artifactRepository.existsByTenantIdAndCanonicalUrlAndVersion(
+                    any(UUID.class), anyString(), anyString())).thenReturn(false);
+            when(artifactRepository.save(any(ArtifactEntity.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+            when(outboxRepository.save(any(EventOutboxEntity.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+
+            return artifactService.createDraft(
+                    ArtifactType.CODE_SYSTEM,
+                    "http://example.org/CodeSystem/versioned",
+                    version,
+                    "VersionedCodeSystem",
+                    "Versioned Code System",
+                    "Ordering fixture",
+                    "{\"resourceType\":\"CodeSystem\"}",
+                    "Test Publisher");
         }
     }
 }

@@ -142,6 +142,12 @@ public class ArtifactService {
         artifact.setContentHash(computeHash(contentJson));
         artifact.setPublisher(publisher);
         artifact.setStatus(ArtifactStatus.DRAFT);
+        // V400 backfilled these for every artifact that already existed, but nothing set them on
+        // the write path — so every artifact created through the API since then has carried a null
+        // sort key and, under ORDER BY versionSortKey DESC NULLS LAST, sorted behind all of them.
+        // The content this programme is about to load arrives entirely through this method.
+        artifact.setVersionScheme(VersionOrdering.detect(version));
+        artifact.setVersionSortKey(VersionOrdering.sortKey(version));
         artifact.setEffectiveStart(effectiveStart);
         artifact.setEffectiveEnd(effectiveEnd);
         artifact.setCreatedBy(ctx.actorId());
