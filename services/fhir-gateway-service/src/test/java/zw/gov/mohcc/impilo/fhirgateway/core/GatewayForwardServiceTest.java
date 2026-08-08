@@ -46,7 +46,8 @@ class GatewayForwardServiceTest {
     void setUp() {
         // Empty default-target base → strict NO_ROUTE behaviour preserved for the existing tests.
         service = new GatewayForwardService(routeRepository, auditLogRepository, outboxRepository,
-                consentEnforcementService, fhirForwarder, "");
+                consentEnforcementService, fhirForwarder,
+                new ForwardAuditRecorder(auditLogRepository, outboxRepository), "");
 
         when(consentEnforcementService.evaluate(any(), any(), any(), any(), any(), any()))
                 .thenReturn(ConsentOutcome.PERMIT);
@@ -105,7 +106,9 @@ class GatewayForwardServiceTest {
         when(routeRepository.findByTenantIdAndResourceTypeAndEnabledTrue(any(), eq("Observation")))
                 .thenReturn(List.of());
         GatewayForwardService withDefault = new GatewayForwardService(routeRepository, auditLogRepository,
-                outboxRepository, consentEnforcementService, fhirForwarder, "http://hapi-fhir:8090/fhir/");
+                outboxRepository, consentEnforcementService, fhirForwarder,
+                new ForwardAuditRecorder(auditLogRepository, outboxRepository),
+                "http://hapi-fhir:8090/fhir/");
         when(fhirForwarder.send(eq("http://hapi-fhir:8090/fhir/Observation"), any(), any(), any()))
                 .thenReturn(new FhirForwarder.ForwardAttempt(true, 201, "forwarded"));
 

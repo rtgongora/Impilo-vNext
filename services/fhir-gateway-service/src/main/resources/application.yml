@@ -51,6 +51,26 @@ spring:
     listener:
       ack-mode: record
 
+# Rate-limit headroom for a machine-to-machine fan-in point.
+#
+# shared-core's RateLimitFilter defaults to 100 tokens refilling at 2/s, keyed by x-actor-id. Those
+# are sensible for a user-facing API and wrong for this one: every governed FHIR write in the estate
+# funnels through /internal/v1/gateway/forward, and a single lab result writes ONE OBSERVATION PER
+# ANALYTE -- a full blood count is 20+ forwards in a burst, before any retry sweep. At 2/s sustained,
+# oros alone would be throttled by its own normal output.
+#
+# The 429 is also invisible where it matters: it is returned to the CALLER of /forward, so
+# FhirForwarder never sees it and the caller reports UNREACHABLE. A throttle would look like an
+# outage. P5 routes four more services through here, so this is raised before they arrive rather
+# than after the first burst.
+#
+# Still per-actor, so a misbehaving service is bounded to its own bucket.
+impilo:
+  security:
+    rate-limit:
+      max-tokens: 2000
+      refill-per-second: 100
+
 fhir-gateway:
   outbox:
     poll-interval-ms: 2000

@@ -51,7 +51,8 @@ class ForwardDeliveryEvidenceTest {
     @BeforeEach
     void setUp() {
         service = new GatewayForwardService(routeRepository, auditLogRepository, outboxRepository,
-                consentEnforcementService, fhirForwarder, TARGET);
+                consentEnforcementService, fhirForwarder,
+                new ForwardAuditRecorder(auditLogRepository, outboxRepository), TARGET);
         when(routeRepository.findByTenantIdAndResourceTypeAndEnabledTrue(any(), any()))
                 .thenReturn(List.of());
         when(consentEnforcementService.evaluate(any(), any(), any(), any(), any(), any()))

@@ -23,6 +23,7 @@ public class GatewayForwardService {
     private final EventOutboxRepository outboxRepository;
     private final ConsentEnforcementService consentEnforcementService;
     private final FhirForwarder fhirForwarder;
+    private final ForwardAuditRecorder auditRecorder;
     /**
      * Optional environment-wide default FHIR base (e.g. {@code http://hapi-fhir:8090/fhir}). When
      * set and no explicit per-tenant {@code fhir_route} row matches, the gateway forwards to
@@ -37,6 +38,7 @@ public class GatewayForwardService {
                                  EventOutboxRepository outboxRepository,
                                  ConsentEnforcementService consentEnforcementService,
                                  FhirForwarder fhirForwarder,
+                                 ForwardAuditRecorder auditRecorder,
                                  @org.springframework.beans.factory.annotation.Value(
                                          "${fhir-gateway.default-target-base:}") String defaultTargetBase) {
         this.routeRepository = routeRepository;
@@ -44,10 +46,18 @@ public class GatewayForwardService {
         this.outboxRepository = outboxRepository;
         this.consentEnforcementService = consentEnforcementService;
         this.fhirForwarder = fhirForwarder;
+        this.auditRecorder = auditRecorder;
         this.defaultTargetBase = defaultTargetBase == null ? "" : defaultTargetBase.trim();
     }
 
-    @Transactional
+    /**
+     * Not {@code @Transactional}. This method makes two HTTP calls — consent, then the destination
+     * FHIR server — and a database transaction spanning them would hold a Postgres connection for
+     * the duration of both, on every forward. Persistence is delegated to
+     * {@link ForwardAuditRecorder}, which is a separate bean precisely because Spring does not
+     * proxy self-invocation: a {@code @Transactional} private method here would have been
+     * annotation without effect.
+     */
     public ForwardResult forward(UUID tenantId, String actorId, UUID correlationId,
                                  String sourceIp, String resourceType,
                                  String operation, String payload,
@@ -64,14 +74,11 @@ public class GatewayForwardService {
             log.warn("Consent DENIED: actor={} subject={} resourceType={} tenant={}",
                     actorId, subjectCpid, resourceType, tenantId);
 
-            FhirAuditLogEntity auditLog = buildAuditLog(tenantId, resourceType, operation,
-                    sourceIp, actorId, "CONSENT_DENIED", consentOutcome, correlationId,
-                    subjectCpid, null, null);
-            auditLogRepository.save(auditLog);
-
-            EventOutboxEntity event = buildOutboxEvent(auditLog, operation,
-                    "CONSENT_DENIED", null, tenantId, correlationId);
-            outboxRepository.save(event);
+            FhirAuditLogEntity auditLog = auditRecorder.record(
+                    buildAuditLog(tenantId, resourceType, operation, sourceIp, actorId,
+                            "CONSENT_DENIED", consentOutcome, correlationId, subjectCpid, null, null),
+                    saved -> buildOutboxEvent(saved, operation, "CONSENT_DENIED", null,
+                            tenantId, correlationId));
 
             return new ForwardResult(auditLog.getId(), resourceType, operation,
                     "CONSENT_DENIED", null, correlationId, consentOutcome.name(), null,
@@ -113,14 +120,13 @@ public class GatewayForwardService {
             downstreamDetail = attempt.detail();
         }
 
-        FhirAuditLogEntity auditLog = buildAuditLog(tenantId, resourceType, operation,
-                sourceIp, actorId, outcome, consentOutcome, correlationId,
-                subjectCpid, targetEndpoint, downstreamStatus);
-        auditLogRepository.save(auditLog);
-
-        EventOutboxEntity event = buildOutboxEvent(auditLog, operation,
-                outcome, targetEndpoint, tenantId, correlationId);
-        outboxRepository.save(event);
+        final String finalOutcome = outcome;
+        final String finalTarget = targetEndpoint;
+        FhirAuditLogEntity auditLog = auditRecorder.record(
+                buildAuditLog(tenantId, resourceType, operation, sourceIp, actorId, outcome,
+                        consentOutcome, correlationId, subjectCpid, targetEndpoint, downstreamStatus),
+                saved -> buildOutboxEvent(saved, operation, finalOutcome, finalTarget,
+                        tenantId, correlationId));
 
         return new ForwardResult(auditLog.getId(), resourceType, operation,
                 outcome, targetEndpoint, correlationId, consentOutcome.name(),
@@ -130,7 +136,6 @@ public class GatewayForwardService {
     /**
      * Backward-compatible overload for callers that do not yet supply consent parameters.
      */
-    @Transactional
     public ForwardResult forward(UUID tenantId, String actorId, UUID correlationId,
                                  String sourceIp, String resourceType,
                                  String operation, String payload) {
