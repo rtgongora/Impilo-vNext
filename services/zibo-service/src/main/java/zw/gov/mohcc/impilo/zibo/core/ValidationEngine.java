@@ -3,6 +3,8 @@ package zw.gov.mohcc.impilo.zibo.core;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -16,6 +18,7 @@ import zw.gov.mohcc.impilo.zibo.domain.ArtifactType;
 import zw.gov.mohcc.impilo.zibo.domain.JobStatus;
 import zw.gov.mohcc.impilo.zibo.domain.PolicyMode;
 import zw.gov.mohcc.impilo.zibo.domain.ScopeType;
+import zw.gov.mohcc.impilo.zibo.domain.ValidationOutcome;
 import zw.gov.mohcc.impilo.zibo.domain.ValidationSeverity;
 import zw.gov.mohcc.impilo.zibo.persistence.entity.ArtifactEntity;
 import zw.gov.mohcc.impilo.zibo.persistence.entity.AssignmentEntity;
@@ -58,6 +61,8 @@ public class ValidationEngine {
     private final EventOutboxRepository outboxRepository;
     private final ZiboProperties ziboProperties;
     private final ObjectMapper objectMapper;
+    private final ArtifactResolutionService artifactResolutionService;
+    private final MeterRegistry meterRegistry;
 
     public ValidationEngine(ArtifactRepository artifactRepository,
                             AssignmentRepository assignmentRepository,
@@ -65,7 +70,9 @@ public class ValidationEngine {
                             ValidationLogRepository validationLogRepository,
                             EventOutboxRepository outboxRepository,
                             ZiboProperties ziboProperties,
-                            ObjectMapper objectMapper) {
+                            ObjectMapper objectMapper,
+                            ArtifactResolutionService artifactResolutionService,
+                            MeterRegistry meterRegistry) {
         this.artifactRepository = artifactRepository;
         this.assignmentRepository = assignmentRepository;
         this.validationJobRepository = validationJobRepository;
@@ -73,6 +80,8 @@ public class ValidationEngine {
         this.outboxRepository = outboxRepository;
         this.ziboProperties = ziboProperties;
         this.objectMapper = objectMapper;
+        this.artifactResolutionService = artifactResolutionService;
+        this.meterRegistry = meterRegistry;
     }
 
     /**
@@ -97,16 +106,13 @@ public class ValidationEngine {
 
         PolicyMode effectiveMode = resolveEffectiveMode(tenantId, facilityId, modeOverride);
 
-        // Look up the CodeSystem artifact by canonical URL
-        List<ArtifactEntity> artifacts = artifactRepository.findByTenantIdAndCanonicalUrl(tenantId, system);
+        // Resolution is delegated: highest version by version_sort_key (never by clock), effective
+        // window honoured, and national terminology reachable from either tenant plane. All three
+        // were wrong here — see ArtifactResolutionService.
+        Optional<ArtifactResolutionService.Resolved> resolvedOpt =
+                artifactResolutionService.resolveCurrent(tenantId, system, ArtifactType.CODE_SYSTEM);
 
-        // Filter to published CodeSystem artifacts only, pick the latest
-        Optional<ArtifactEntity> codeSystemOpt = artifacts.stream()
-                .filter(a -> a.getFhirType() == ArtifactType.CODE_SYSTEM)
-                .filter(a -> a.getStatus() == ArtifactStatus.PUBLISHED)
-                .max(Comparator.comparing(ArtifactEntity::getPublishedAt));
-
-        if (codeSystemOpt.isEmpty()) {
+        if (resolvedOpt.isEmpty()) {
             // No CodeSystem found for this system
             ValidationSeverity severity = effectiveMode == PolicyMode.STRICT
                     ? ValidationSeverity.ERROR : ValidationSeverity.WARNING;
@@ -117,17 +123,23 @@ public class ValidationEngine {
                     "CodeSystem not found for system: " + system,
                     system);
 
-            logValidation(tenantId, facilityId, severity, "not-found", system, null,
-                    "CodeSystem not found for system: " + system);
+            logOutcome(tenantId, facilityId, severity, "not-found", system, null,
+                    "CodeSystem not found for system: " + system,
+                    system, code, ValidationOutcome.UNKNOWN_SYSTEM, effectiveMode);
 
             boolean valid = severity != ValidationSeverity.ERROR;
             return new ValidationResult(valid, List.of(issue));
         }
 
-        ArtifactEntity codeSystem = codeSystemOpt.get();
+        ArtifactEntity codeSystem = resolvedOpt.get().artifact();
         boolean codeFound = lookupCodeInContent(codeSystem.getContentJson(), code);
 
         if (codeFound) {
+            // The denominator. Recording only failures is why nobody could state how coded this
+            // estate is: a hundred failures might be a catastrophe or a rounding error.
+            logOutcome(tenantId, facilityId, ValidationSeverity.INFORMATION, "resolved",
+                    system, codeSystem.getVersion(), null,
+                    system, code, ValidationOutcome.RESOLVED, effectiveMode);
             return new ValidationResult(true, Collections.emptyList());
         }
 
@@ -142,9 +154,10 @@ public class ValidationEngine {
                         + " (version " + codeSystem.getVersion() + ")",
                 system);
 
-        logValidation(tenantId, facilityId, severity, "code-invalid",
+        logOutcome(tenantId, facilityId, severity, "code-invalid",
                 system, codeSystem.getVersion(),
-                "Code '" + code + "' not found in CodeSystem");
+                "Code '" + code + "' not found in CodeSystem",
+                system, code, ValidationOutcome.UNKNOWN_CODE, effectiveMode);
 
         boolean valid = severity != ValidationSeverity.ERROR;
         return new ValidationResult(valid, List.of(issue));
@@ -488,20 +501,64 @@ public class ValidationEngine {
                 .findFirst();
     }
 
-    private void logValidation(UUID tenantId, UUID facilityId, ValidationSeverity severity,
-                               String issueCode, String canonicalUrl, String version, String details) {
-        ValidationLogEntity logEntry = new ValidationLogEntity();
-        logEntry.setId(UUID.randomUUID());
-        logEntry.setTenantId(tenantId);
-        logEntry.setFacilityId(facilityId);
-        logEntry.setServiceName("zibo-service");
-        logEntry.setSeverity(severity);
-        logEntry.setIssueCode(issueCode);
-        logEntry.setCanonicalUrl(canonicalUrl);
-        logEntry.setVersion(version);
-        logEntry.setDetails(details);
-        logEntry.setCreatedAt(OffsetDateTime.now());
-        validationLogRepository.save(logEntry);
+    /**
+     * Records what happened to one coding — <b>including when it resolved</b>.
+     *
+     * <p>This table held zero rows and, before {@code V400}, could not have answered the question
+     * anyway: no {@code code} column, and only failures written. Failures counted against no
+     * denominator, so a hundred of them might be a catastrophe or a rounding error and nothing on
+     * record could tell you which. A {@code RESOLVED} row is not noise; it is the denominator, and
+     * writing it is the entire point of Z1.</p>
+     *
+     * <p>Never throws. Telemetry that can fail a clinical validation is worse than no telemetry —
+     * this is a measurement, and a measurement must not become an outage.</p>
+     *
+     * <p><b>No PHI.</b> The coding, the FHIR element path and the calling service go in; the
+     * resource body does not, and {@code elementPath} is a path, never a value.</p>
+     */
+    private void logOutcome(UUID tenantId, UUID facilityId, ValidationSeverity severity,
+                            String issueCode, String canonicalUrl, String version, String details,
+                            String system, String code, ValidationOutcome outcome,
+                            PolicyMode mode) {
+        try {
+            ValidationLogEntity logEntry = new ValidationLogEntity();
+            logEntry.setId(UUID.randomUUID());
+            logEntry.setTenantId(tenantId);
+            logEntry.setFacilityId(facilityId);
+            logEntry.setServiceName("zibo-service");
+            logEntry.setSeverity(severity);
+            logEntry.setIssueCode(issueCode);
+            logEntry.setCanonicalUrl(canonicalUrl);
+            logEntry.setVersion(version);
+            logEntry.setDetails(details);
+            logEntry.setSystem(system);
+            logEntry.setCode(code);
+            logEntry.setResult(outcome);
+            logEntry.setPolicyMode(mode);
+            logEntry.setCreatedAt(OffsetDateTime.now());
+
+            TrustContext ctx = TrustContextHolder.get();
+            if (ctx != null) {
+                // service_name has always been the hardcoded literal "zibo-service", so it cannot
+                // distinguish oros from butano from the BFF. The actor carries who actually asked.
+                logEntry.setCallingService(ctx.actorId());
+                if (ctx.correlationId() != null) {
+                    logEntry.setCorrelationId(ctx.correlationId().toString());
+                }
+            }
+            validationLogRepository.save(logEntry);
+
+            Counter.builder("zibo_terminology_validation_total")
+                    .description("Terminology validations by outcome. RESOLVED is the denominator "
+                            + "for the estate's coding-coverage measurement.")
+                    .tag("outcome", outcome.name())
+                    .tag("system", system == null ? "unknown" : system)
+                    .register(meterRegistry)
+                    .increment();
+        } catch (RuntimeException e) {
+            log.warn("ZIBO: could not record validation telemetry ({}); the validation itself is "
+                    + "unaffected", e.getMessage());
+        }
     }
 
     private void writeOutbox(String aggregateType, String aggregateId,

@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.zibo.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -72,7 +73,10 @@ class TerminologyIntegrationTest {
                 artifactRepository, outboxRepository, objectMapper);
         validationEngine = new ValidationEngine(artifactRepository, assignmentRepository,
                 validationJobRepository, validationLogRepository, outboxRepository,
-                ziboProperties, objectMapper);
+                ziboProperties, objectMapper,
+                new ArtifactResolutionService(artifactRepository, new SimpleMeterRegistry(),
+                        "00000000-0000-0000-0000-000000000001"),
+                new SimpleMeterRegistry());
         mappingService = new MappingService(mappingIndexRepository, artifactRepository,
                 objectMapper, artifactService);
         governanceService = new GovernanceService(assignmentRepository, packRepository,
@@ -144,8 +148,9 @@ class TerminologyIntegrationTest {
             assertThat(published.getPublishedAt()).isNotNull();
 
             // Step 3: Validate a known coding
-            when(artifactRepository.findByTenantIdAndCanonicalUrl(
-                    TENANT_ID, "http://example.org/CodeSystem/test-diagnoses"))
+            when(artifactRepository.findCandidatesAcrossPlanes(
+                    "http://example.org/CodeSystem/test-diagnoses", java.util.List.of(TENANT_ID, java.util.UUID.fromString("00000000-0000-0000-0000-000000000001")),
+                    zw.gov.mohcc.impilo.zibo.domain.ArtifactType.CODE_SYSTEM))
                     .thenReturn(List.of(published));
             when(assignmentRepository.findByTenantIdAndScopeTypeAndScopeIdAndActiveTrue(
                     any(), any(), any())).thenReturn(Collections.emptyList());
@@ -303,8 +308,9 @@ class TerminologyIntegrationTest {
                     .thenReturn(List.of(facilityAssignment));
 
             // Step 3: Validate a known code
-            when(artifactRepository.findByTenantIdAndCanonicalUrl(
-                    TENANT_ID, "http://example.org/CodeSystem/strict-test"))
+            when(artifactRepository.findCandidatesAcrossPlanes(
+                    "http://example.org/CodeSystem/strict-test", java.util.List.of(TENANT_ID, java.util.UUID.fromString("00000000-0000-0000-0000-000000000001")),
+                    zw.gov.mohcc.impilo.zibo.domain.ArtifactType.CODE_SYSTEM))
                     .thenReturn(List.of(codeSystem));
 
             ValidationEngine.ValidationResult validResult = validationEngine.validateCoding(

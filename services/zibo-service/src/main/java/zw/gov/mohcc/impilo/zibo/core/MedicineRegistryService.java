@@ -41,9 +41,13 @@ public class MedicineRegistryService {
     private final ArtifactRepository artifactRepository;
     private final ObjectMapper objectMapper;
 
-    public MedicineRegistryService(ArtifactRepository artifactRepository, ObjectMapper objectMapper) {
+    private final ArtifactResolutionService artifactResolutionService;
+
+    public MedicineRegistryService(ArtifactRepository artifactRepository, ObjectMapper objectMapper,
+                                  ArtifactResolutionService artifactResolutionService) {
         this.artifactRepository = artifactRepository;
         this.objectMapper = objectMapper;
+        this.artifactResolutionService = artifactResolutionService;
     }
 
     /**
@@ -100,11 +104,13 @@ public class MedicineRegistryService {
      */
     private List<Medicine> loadConcepts() {
         TrustContext ctx = TrustContextHolder.require();
-        Optional<ArtifactEntity> artifact =
-                artifactRepository.findByTenantIdAndCanonicalUrl(ctx.tenantId(), ATC_SYSTEM).stream()
-                        .filter(a -> a.getFhirType() == ArtifactType.CODE_SYSTEM)
-                        .filter(a -> a.getStatus() == ArtifactStatus.PUBLISHED)
-                        .max(Comparator.comparing(ArtifactEntity::getPublishedAt));
+        // Resolution is delegated so the ATC registry gets the same rules as every other lookup:
+        // ordered by version_sort_key rather than by clock, effective window honoured, and the
+        // national plane reachable. ATC is national terminology — V007 inserts it into both tenant
+        // planes precisely because this lookup could not previously cross the boundary.
+        Optional<ArtifactEntity> artifact = artifactResolutionService
+                .resolveCurrent(ctx.tenantId(), ATC_SYSTEM, ArtifactType.CODE_SYSTEM)
+                .map(ArtifactResolutionService.Resolved::artifact);
         if (artifact.isEmpty()) {
             log.warn("No PUBLISHED ATC CodeSystem registered for tenant {} — medicine registry empty",
                     ctx.tenantId());

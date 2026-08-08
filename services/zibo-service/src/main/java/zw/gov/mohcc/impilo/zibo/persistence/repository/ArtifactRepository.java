@@ -10,6 +10,7 @@ import zw.gov.mohcc.impilo.zibo.domain.ArtifactStatus;
 import zw.gov.mohcc.impilo.zibo.domain.ArtifactType;
 import zw.gov.mohcc.impilo.zibo.persistence.entity.ArtifactEntity;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -59,8 +60,30 @@ public interface ArtifactRepository extends JpaRepository<ArtifactEntity, UUID> 
     long countByTenantId(UUID tenantId);
 
     /**
-     * Finds all versions of an artifact identified by canonical URL, ordered by creation date descending.
+     * Finds all versions of an artifact identified by canonical URL.
+     *
+     * <p>Ordered by {@code versionSortKey} descending, <b>not</b> by creation date. Creation order
+     * and version order agree only by coincidence: a 1.0.1 correction published after 1.1.0 is
+     * newer by clock and older by version, and for external terminologies whose versions are
+     * release dates the two have no relationship at all. Nulls sort last so a row predating the
+     * {@code V400} backfill can never outrank a real version.</p>
      */
-    @Query("SELECT a FROM ArtifactEntity a WHERE a.tenantId = :tenantId AND a.canonicalUrl = :canonicalUrl ORDER BY a.createdAt DESC")
+    @Query("SELECT a FROM ArtifactEntity a WHERE a.tenantId = :tenantId AND a.canonicalUrl = :canonicalUrl "
+            + "ORDER BY a.versionSortKey DESC NULLS LAST, a.createdAt DESC")
     List<ArtifactEntity> findAllVersions(@Param("tenantId") UUID tenantId, @Param("canonicalUrl") String canonicalUrl);
+
+    /**
+     * Candidate artifacts for a canonical URL across the requesting tenant and the national plane.
+     *
+     * <p>Both planes are queried in one pass so the caller can prefer a tenant-local artifact and
+     * fall back to the national one without a second round trip. Every ZIBO lookup was previously
+     * {@code findByTenantId…}, which is why {@code V007} inserts the ATC CodeSystem twice — once
+     * per plane — to work around terminology being invisible across the boundary.</p>
+     */
+    @Query("SELECT a FROM ArtifactEntity a WHERE a.canonicalUrl = :canonicalUrl "
+            + "AND a.tenantId IN :tenantIds AND a.fhirType = :fhirType "
+            + "ORDER BY a.versionSortKey DESC NULLS LAST, a.createdAt DESC")
+    List<ArtifactEntity> findCandidatesAcrossPlanes(@Param("canonicalUrl") String canonicalUrl,
+                                                    @Param("tenantIds") Collection<UUID> tenantIds,
+                                                    @Param("fhirType") ArtifactType fhirType);
 }

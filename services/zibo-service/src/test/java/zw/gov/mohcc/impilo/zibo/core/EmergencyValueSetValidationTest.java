@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.zibo.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -75,7 +76,10 @@ class EmergencyValueSetValidationTest {
         ZiboProperties props = new ZiboProperties();
         props.getValidation().setDefaultMode("STRICT");
         engine = new ValidationEngine(artifactRepository, assignmentRepository, validationJobRepository,
-                validationLogRepository, outboxRepository, props, new ObjectMapper());
+                validationLogRepository, outboxRepository, props, new ObjectMapper(),
+                new ArtifactResolutionService(artifactRepository, new SimpleMeterRegistry(),
+                        "00000000-0000-0000-0000-000000000001"),
+                new SimpleMeterRegistry());
     }
 
     private TrustContext ctx() {
@@ -107,7 +111,7 @@ class EmergencyValueSetValidationTest {
         try (MockedStatic<TrustContextHolder> h = mockStatic(TrustContextHolder.class)) {
             h.when(TrustContextHolder::require).thenReturn(ctx());
             h.when(TrustContextHolder::get).thenReturn(ctx());
-            when(artifactRepository.findByTenantIdAndCanonicalUrl(TENANT, PRIORITY_SYSTEM))
+            when(artifactRepository.findCandidatesAcrossPlanes(PRIORITY_SYSTEM, java.util.List.of(TENANT, java.util.UUID.fromString("00000000-0000-0000-0000-000000000001")), zw.gov.mohcc.impilo.zibo.domain.ArtifactType.CODE_SYSTEM))
                     .thenReturn(List.of(publishedCodeSystem(PRIORITY_SYSTEM, PRIORITY_CONTENT)));
 
             for (String code : List.of("RED", "YELLOW", "GREEN", "NOT_TRIAGEABLE")) {
@@ -123,7 +127,7 @@ class EmergencyValueSetValidationTest {
         try (MockedStatic<TrustContextHolder> h = mockStatic(TrustContextHolder.class)) {
             h.when(TrustContextHolder::require).thenReturn(ctx());
             h.when(TrustContextHolder::get).thenReturn(ctx());
-            when(artifactRepository.findByTenantIdAndCanonicalUrl(TENANT, TOOL_SYSTEM))
+            when(artifactRepository.findCandidatesAcrossPlanes(TOOL_SYSTEM, java.util.List.of(TENANT, java.util.UUID.fromString("00000000-0000-0000-0000-000000000001")), zw.gov.mohcc.impilo.zibo.domain.ArtifactType.CODE_SYSTEM))
                     .thenReturn(List.of(publishedCodeSystem(TOOL_SYSTEM, TOOL_CONTENT)));
 
             assertThat(engine.validateCoding(TOOL_SYSTEM, "WHO_IITT", null, PolicyMode.STRICT, null).valid()).isTrue();

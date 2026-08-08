@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.zibo.core;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -83,7 +84,10 @@ class ValidationEngineTest {
                 validationLogRepository,
                 outboxRepository,
                 ziboProperties,
-                objectMapper);
+                objectMapper,
+                new ArtifactResolutionService(artifactRepository, new SimpleMeterRegistry(),
+                        "00000000-0000-0000-0000-000000000001"),
+                new SimpleMeterRegistry());
     }
 
     private TrustContext createTrustContext() {
@@ -125,7 +129,7 @@ class ValidationEngineTest {
             String content = "{\"concept\":[{\"code\":\"A01\",\"display\":\"Typhoid fever\"},{\"code\":\"B02\",\"display\":\"Zoster\"}]}";
             ArtifactEntity codeSystem = createPublishedCodeSystem(content);
 
-            when(artifactRepository.findByTenantIdAndCanonicalUrl(TENANT_ID, CODE_SYSTEM_URL))
+            when(artifactRepository.findCandidatesAcrossPlanes(CODE_SYSTEM_URL, java.util.List.of(TENANT_ID, java.util.UUID.fromString("00000000-0000-0000-0000-000000000001")), zw.gov.mohcc.impilo.zibo.domain.ArtifactType.CODE_SYSTEM))
                     .thenReturn(List.of(codeSystem));
             when(assignmentRepository.findByTenantIdAndScopeTypeAndScopeIdAndActiveTrue(
                     any(), any(), any())).thenReturn(Collections.emptyList());
@@ -148,7 +152,7 @@ class ValidationEngineTest {
             String content = "{\"concept\":[{\"code\":\"A01\",\"display\":\"Typhoid fever\"}]}";
             ArtifactEntity codeSystem = createPublishedCodeSystem(content);
 
-            when(artifactRepository.findByTenantIdAndCanonicalUrl(TENANT_ID, CODE_SYSTEM_URL))
+            when(artifactRepository.findCandidatesAcrossPlanes(CODE_SYSTEM_URL, java.util.List.of(TENANT_ID, java.util.UUID.fromString("00000000-0000-0000-0000-000000000001")), zw.gov.mohcc.impilo.zibo.domain.ArtifactType.CODE_SYSTEM))
                     .thenReturn(List.of(codeSystem));
             when(validationLogRepository.save(any(ValidationLogEntity.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
@@ -173,7 +177,7 @@ class ValidationEngineTest {
             String content = "{\"concept\":[{\"code\":\"A01\",\"display\":\"Typhoid fever\"}]}";
             ArtifactEntity codeSystem = createPublishedCodeSystem(content);
 
-            when(artifactRepository.findByTenantIdAndCanonicalUrl(TENANT_ID, CODE_SYSTEM_URL))
+            when(artifactRepository.findCandidatesAcrossPlanes(CODE_SYSTEM_URL, java.util.List.of(TENANT_ID, java.util.UUID.fromString("00000000-0000-0000-0000-000000000001")), zw.gov.mohcc.impilo.zibo.domain.ArtifactType.CODE_SYSTEM))
                     .thenReturn(List.of(codeSystem));
             when(validationLogRepository.save(any(ValidationLogEntity.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));

@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.zibo.core;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -84,9 +85,14 @@ class AtcMedicineRegistryTest {
         ZiboProperties props = new ZiboProperties();
         props.getValidation().setDefaultMode("STRICT");
         engine = new ValidationEngine(artifactRepository, assignmentRepository, validationJobRepository,
-                validationLogRepository, outboxRepository, props, mapper);
-        registry = new MedicineRegistryService(artifactRepository, mapper);
-        lenient().when(artifactRepository.findByTenantIdAndCanonicalUrl(TENANT, ATC))
+                validationLogRepository, outboxRepository, props, mapper,
+                new ArtifactResolutionService(artifactRepository, new SimpleMeterRegistry(),
+                        "00000000-0000-0000-0000-000000000001"),
+                new SimpleMeterRegistry());
+        registry = new MedicineRegistryService(artifactRepository, mapper,
+                new ArtifactResolutionService(artifactRepository, new SimpleMeterRegistry(),
+                        "00000000-0000-0000-0000-000000000001"));
+        lenient().when(artifactRepository.findCandidatesAcrossPlanes(ATC, java.util.List.of(TENANT, java.util.UUID.fromString("00000000-0000-0000-0000-000000000001")), zw.gov.mohcc.impilo.zibo.domain.ArtifactType.CODE_SYSTEM))
                 .thenReturn(List.of(publishedAtcCodeSystem()));
     }
 
@@ -235,7 +241,7 @@ class AtcMedicineRegistryTest {
     void noRegisteredAtcCodeSystem_registryIsHonestlyEmpty() {
         try (MockedStatic<TrustContextHolder> h = mockStatic(TrustContextHolder.class)) {
             h.when(TrustContextHolder::require).thenReturn(ctx());
-            lenient().when(artifactRepository.findByTenantIdAndCanonicalUrl(TENANT, ATC))
+            lenient().when(artifactRepository.findCandidatesAcrossPlanes(ATC, java.util.List.of(TENANT, java.util.UUID.fromString("00000000-0000-0000-0000-000000000001")), zw.gov.mohcc.impilo.zibo.domain.ArtifactType.CODE_SYSTEM))
                     .thenReturn(List.of());
 
             assertThat(registry.resolveByCode("J01CA04")).isEmpty();
