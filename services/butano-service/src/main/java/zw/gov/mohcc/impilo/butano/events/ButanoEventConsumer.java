@@ -16,8 +16,10 @@ import org.hl7.fhir.r4.model.Condition;
 import org.hl7.fhir.r4.model.DetectedIssue;
 import org.hl7.fhir.r4.model.DiagnosticReport;
 import org.hl7.fhir.r4.model.DocumentReference;
+import org.hl7.fhir.r4.model.Encounter;
 import org.hl7.fhir.r4.model.Enumerations;
 import org.hl7.fhir.r4.model.IdType;
+import org.hl7.fhir.r4.model.Period;
 import org.hl7.fhir.r4.model.ImagingStudy;
 import org.hl7.fhir.r4.model.Meta;
 import org.hl7.fhir.r4.model.Observation;
@@ -70,6 +72,23 @@ public class ButanoEventConsumer {
     private static final String EXAMINATION_REGION_SYSTEM = "https://impilo.gov.zw/pct/examination-region";
     private static final String EXAMINATION_STATE_SYSTEM = "https://impilo.gov.zw/pct/examination-state";
     private static final String EXAMINATION_FINDING_SYSTEM = "https://impilo.gov.zw/pct/examination-finding";
+    /**
+     * PCT's {@code encounter_ref} — the business key that makes an encounter replay idempotent, and
+     * the anchor every other clinical resource in the record hangs off.
+     *
+     * <p>It is deliberately {@code encounter_ref} (the UUID PCT's Kafka payloads are keyed on) and
+     * not {@code pct_encounters.id} (the BIGSERIAL its REST surface is keyed on). Only the UUID
+     * travels between services: oros carries it as {@code encounter_ref}, inpatient as
+     * {@code encounter_id}, daidzai as {@code pct_encounter_ref}. A match URL on this system is
+     * therefore resolvable from all three planes, which is the entire point of writing an
+     * Encounter into the SHR at all.</p>
+     */
+    private static final String ENCOUNTER_IDENTIFIER_SYSTEM = "https://impilo.gov.zw/pct/encounter-id";
+    /** PCT's own closed encounter-context vocabulary, preserved verbatim alongside the FHIR class. */
+    private static final String ENCOUNTER_CONTEXT_SYSTEM = "https://impilo.gov.zw/pct/encounter-context";
+    /** PCT's encounter type (CONSULTATION, PROCEDURE, TRIAGE, LAB…) — free vocabulary, kept as-is. */
+    private static final String ENCOUNTER_TYPE_SYSTEM = "https://impilo.gov.zw/pct/encounter-type";
+    private static final String ACT_CODE_SYSTEM = "http://terminology.hl7.org/CodeSystem/v3-ActCode";
     private static final String DATA_ABSENT_SYSTEM = "http://terminology.hl7.org/CodeSystem/data-absent-reason";
     /** Subject-scoped key for one multimorbidity issue: {@code <cpid>|<finding code>}. */
     private static final String MULTIMORBIDITY_IDENTIFIER_SYSTEM =
@@ -343,6 +362,228 @@ public class ButanoEventConsumer {
         }
     }
 
+    /**
+     * Archives the facility visit itself — the anchor every other clinical resource hangs off.
+     *
+     * <p>The SHR held <b>zero</b> Encounters until this listener existed, and that absence was
+     * load-bearing. BUTANO enforces referential integrity on write, so a Procedure, DocumentReference
+     * or DiagnosticReport naming {@code Encounter/<something>} was rejected with HAPI-1094 — which
+     * is why theatre's operative notes and oros's lab reports had nowhere to land. PCT has published
+     * {@code pct.encounter.started} and {@code pct.encounter.completed} on routed topics all along,
+     * documented in {@code contracts/asyncapi/pct-clinical-encounter.asyncapi.yaml}; nothing
+     * subscribed.</p>
+     *
+     * <p>Both topics feed one handler because they are the same resource at two points in its life,
+     * and the completed event is not guaranteed to arrive second — or at all. The status is derived
+     * from the payload (an {@code endedAt} means finished) rather than from which topic delivered
+     * it, so a replay in either order converges on the same Encounter instead of resurrecting a
+     * closed visit as in-progress. {@code impilo.pct.encounter} is listened to alongside because
+     * {@code CompanionOutboxPublisher} dual-publishes every row to the v1.1 companion topic; the
+     * duplicate delivery is harmless precisely because the upsert is keyed on the business
+     * identifier.</p>
+     *
+     * <p>{@code Encounter.class} is required by FHIR and is mapped from PCT's {@code encounterContext},
+     * which is a closed vocabulary validated on write — not from {@code encounterType}, which is
+     * free text. Both are preserved verbatim in {@code Encounter.type} under impilo systems, so the
+     * mapping below is a convenience for FHIR consumers and never the only copy of what PCT said.</p>
+     */
+    @KafkaListener(
+            topics = {"pct.encounter.started", "pct.encounter.completed", "impilo.pct.encounter"},
+            groupId = "butano-shr"
+    )
+    public void consumePctEncounter(String message) {
+        try {
+            JsonNode root = objectMapper.readTree(message);
+            String correlationId = extractCorrelationId(root);
+            JsonNode payload = extractPayload(root);
+            if (payload == null || payload.isNull()) {
+                log.warn("BUTANO SHR: encounter event missing payload, skipping correlationId={}",
+                        correlationId);
+                return;
+            }
+
+            String encounterRef = firstNonBlank(
+                    text(payload, "encounter_ref"), text(payload, "encounterRef"));
+            String patientCpid = firstNonBlank(
+                    text(payload, "patient_cpid"), text(payload, "patientCpid"),
+                    text(payload, "subject_cpid"), text(payload, "subjectCpid"));
+
+            if (encounterRef == null || patientCpid == null) {
+                log.warn("BUTANO SHR: encounter event missing encounter_ref or patient_cpid — "
+                        + "skipping correlationId={}", correlationId);
+                return;
+            }
+
+            UUID tenantId = resolveTenantId(root, payload, patientCpid);
+            if (tenantId == null) {
+                log.warn("BUTANO SHR: cannot resolve tenant for encounter {} — skipping "
+                        + "correlationId={}", encounterRef, correlationId);
+                return;
+            }
+
+            archiveEncounter(tenantId, patientCpid, encounterRef, payload, correlationId);
+        } catch (JsonProcessingException e) {
+            log.error("BUTANO SHR: failed to parse PCT encounter event: {}", e.getMessage(), e);
+        } catch (RuntimeException e) {
+            log.error("BUTANO SHR: error handling PCT encounter event: {}", e.getMessage(), e);
+        }
+    }
+
+    private void archiveEncounter(UUID tenantId, String patientCpid, String encounterRef,
+                                  JsonNode payload, String correlationId) {
+        IFhirResourceDao<Patient> patientDao = daoRegistry.getResourceDao(Patient.class);
+        Optional<String> patientPid = findPatientId(patientDao, tenantId, patientCpid);
+        if (patientPid.isEmpty()) {
+            log.warn("BUTANO SHR: no FHIR Patient for CPID — cannot archive Encounter {} tenant={} "
+                    + "correlationId={}", encounterRef, tenantId, correlationId);
+            return;
+        }
+
+        IFhirResourceDao<Encounter> dao = daoRegistry.getResourceDao(Encounter.class);
+        Optional<String> existing = findEncounterIdBySource(dao, tenantId, encounterRef);
+
+        Encounter encounter = buildEncounter(tenantTagSystem, tenantId, patientPid.get(),
+                encounterRef, payload);
+        if (existing.isPresent()) {
+            encounter.setId(new IdType("Encounter", existing.get()));
+            dao.update(encounter, (RequestDetails) null);
+            log.info("BUTANO SHR: updated Encounter status={} encounter_ref={} patient_cpid={} "
+                            + "tenant={} correlationId={}", encounter.getStatus().toCode(),
+                    encounterRef, patientCpid, tenantId, correlationId);
+            return;
+        }
+        dao.create(encounter, (RequestDetails) null);
+        log.info("BUTANO SHR: archived Encounter status={} encounter_ref={} patient_cpid={} "
+                        + "tenant={} correlationId={}", encounter.getStatus().toCode(),
+                encounterRef, patientCpid, tenantId, correlationId);
+    }
+
+    /**
+     * Builds the FHIR Encounter from a PCT encounter event. Package-visible and static so the
+     * boundary it enforces can be tested without a HAPI server.
+     */
+    static Encounter buildEncounter(String tenantTagSystem, UUID tenantId, String patientPid,
+                                    String encounterRef, JsonNode payload) {
+        Encounter encounter = new Encounter();
+        encounter.setMeta(new Meta().addTag(new Coding(tenantTagSystem, tenantId.toString(), null)));
+        encounter.addIdentifier().setSystem(ENCOUNTER_IDENTIFIER_SYSTEM).setValue(encounterRef);
+        encounter.setSubject(new Reference("Patient/" + patientPid));
+
+        String endedAt = firstNonBlank(text(payload, "ended_at"), text(payload, "endedAt"));
+        String startedAt = firstNonBlank(text(payload, "started_at"), text(payload, "startedAt"));
+
+        // Derived from the payload, never from the topic. A completed event replayed before a
+        // started event must not reopen a closed visit.
+        encounter.setStatus(endedAt != null
+                ? Encounter.EncounterStatus.FINISHED
+                : Encounter.EncounterStatus.INPROGRESS);
+
+        String context = lower(firstNonBlank(
+                text(payload, "encounter_context"), text(payload, "encounterContext")));
+        String modality = lower(firstNonBlank(text(payload, "modality")));
+        encounter.setClass_(actCodeFor(context, modality));
+
+        if (context != null) {
+            encounter.addType(new CodeableConcept().addCoding(
+                    new Coding(ENCOUNTER_CONTEXT_SYSTEM, context, null)));
+        }
+        String encounterType = firstNonBlank(
+                text(payload, "encounter_type"), text(payload, "encounterType"));
+        if (encounterType != null) {
+            encounter.addType(new CodeableConcept().addCoding(
+                    new Coding(ENCOUNTER_TYPE_SYSTEM, encounterType, null)));
+        }
+
+        Period period = new Period();
+        applyInstant(startedAt, period::setStartElement, "encounter " + encounterRef + " started_at");
+        applyInstant(endedAt, period::setEndElement, "encounter " + encounterRef + " ended_at");
+        if (period.hasStart() || period.hasEnd()) {
+            encounter.setPeriod(period);
+        }
+
+        // Deliberately absent: assignedProvider / attendingProviderId, workspaceId, shiftId and
+        // facilityId. Encounter.participant and Encounter.serviceProvider take references to
+        // Practitioner and Organization resources, and the SHR holds neither — writing them would
+        // be a dangling reference (HAPI-1094) or, worse, a free-text display carrying a person's
+        // name into a record that must hold none. They stay in PCT until a provider directory
+        // exists here to point at.
+
+        return encounter;
+    }
+
+    /**
+     * Maps PCT's closed encounter-context vocabulary onto the FHIR-required class.
+     *
+     * <p>PCT validates {@code encounter_context} against exactly eight values on write, so this is
+     * a total mapping over a known set rather than a guess at free text. A virtual modality wins
+     * over the context, because a consultation delivered remotely is a virtual encounter whatever
+     * the clinic recorded around it.</p>
+     *
+     * <p>The three procedure contexts map to ambulatory. PCT models {@code inpatient} as its own
+     * distinct context, so a procedure context that is not {@code inpatient} is, in PCT's own model,
+     * not an admission. That inference is the weakest link here and is why the raw context is also
+     * written verbatim to {@code Encounter.type}: if it turns out theatre cases for admitted
+     * patients arrive as {@code operating_room}, the correction is derivable from the record rather
+     * than lost in it.</p>
+     */
+    private static Coding actCodeFor(String context, String modality) {
+        if ("virtual".equals(modality)) {
+            return new Coding(ACT_CODE_SYSTEM, "VR", "virtual");
+        }
+        String code = switch (context == null ? "" : context) {
+            case "emergency" -> "EMER";
+            case "inpatient" -> "IMP";
+            case "virtual" -> "VR";
+            case "community" -> "FLD";
+            case "outpatient", "procedure", "procedure_room", "operating_room" -> "AMB";
+            // An unrecognised context means PCT's vocabulary grew and this mapping did not. AMB is
+            // the least-wrong default for a facility contact, and the exact context still travels
+            // in Encounter.type, so nothing is lost while the gap is closed.
+            default -> "AMB";
+        };
+        return new Coding(ACT_CODE_SYSTEM, code, null);
+    }
+
+    private static String lower(String s) {
+        return s == null ? null : s.trim().toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * Sets a FHIR instant from an ISO-8601 string, or leaves it unset.
+     *
+     * <p>Normalised through {@link java.time.OffsetDateTime} rather than handed straight to
+     * {@link DateTimeType} for the reason documented on {@code buildObservation}: Java renders a
+     * zero-second timestamp without seconds, which FHIR rejects, so every visit that started on the
+     * minute would silently be archived with no time at all. An encounter with no period cannot be
+     * ordered against the resources that reference it.</p>
+     */
+    private static void applyInstant(String value, java.util.function.Consumer<DateTimeType> setter,
+                                     String what) {
+        if (value == null) {
+            return;
+        }
+        try {
+            java.time.OffsetDateTime parsed = java.time.OffsetDateTime.parse(value);
+            setter.accept(new DateTimeType(java.util.Date.from(parsed.toInstant())));
+        } catch (RuntimeException e) {
+            log.warn("BUTANO SHR: {} is unparseable ('{}'); archived without that time rather than "
+                    + "with a guessed one", what, value);
+        }
+    }
+
+    private Optional<String> findEncounterIdBySource(IFhirResourceDao<Encounter> dao, UUID tenantId,
+                                                     String encounterRef) {
+        SearchParameterMap map = new SearchParameterMap();
+        map.add(Encounter.SP_IDENTIFIER,
+                new TokenParam(ENCOUNTER_IDENTIFIER_SYSTEM, encounterRef));
+        map.add("_tag", new TokenParam(tenantTagSystem, tenantId.toString()));
+        IBundleProvider results = dao.search(map);
+        List<?> resources = results.getResources(0, 1);
+        if (resources.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(((Encounter) resources.get(0)).getIdElement().getIdPart());
+    }
 
     /**
      * Archives discrete clinical observations recorded in pct-service into the SHR as FHIR
