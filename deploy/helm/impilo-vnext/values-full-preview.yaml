@@ -18,6 +18,14 @@ global:
     port: "6379"
   kafka:
     bootstrapServers: kafka:9092
+  # OAuth resource-server defaults for every service — see the long note in
+  # templates/microservice.yaml. 36 services rejected EVERY real token on an iss mismatch until
+  # 2026-08-08 because their application.yml derives the issuer from the internal Keycloak URL.
+  # PUBLIC issuer (what the token's iss claim carries) + INTERNAL JWKS route (this VM cannot reach
+  # its own public address). A service that sets either key in its own env block still wins.
+  keycloak:
+    publicIssuerUri: "https://impilo.mohcc.gov.zw/realms/impilo"
+    internalJwksUri: "http://keycloak:8080/realms/impilo/protocol/openid-connect/certs"
   # Images already set -XX:+UseZGC on the java command; do not add a second GC via JAVA_TOOL_OPTIONS.
   javaToolOptions: "-XX:MaxRAMPercentage=70.0"
   # Preview has no OTLP collector; empty endpoint crashes Spring Boot 3.3 OTLP autoconfig.
