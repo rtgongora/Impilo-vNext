@@ -176,6 +176,22 @@ public class ArtifactResolutionService {
                 .increment();
     }
 
+    /**
+     * {@link #resolveVersion} when a version is named, {@link #resolveCurrent} otherwise.
+     *
+     * <p>The distinction matters: an unversioned request wants whatever is in force now, while a
+     * pinned one must resolve even a RETIRED version, so a record captured against an older
+     * vocabulary stays readable.</p>
+     */
+    @Transactional(readOnly = true)
+    public Optional<ArtifactEntity> resolveCurrentOrVersion(UUID tenantId, String canonicalUrl,
+                                                            String version, ArtifactType fhirType) {
+        Optional<Resolved> resolved = (version == null || version.isBlank())
+                ? resolveCurrent(tenantId, canonicalUrl, fhirType)
+                : resolveVersion(tenantId, canonicalUrl, version, fhirType);
+        return resolved.map(Resolved::artifact);
+    }
+
     /** The national plane, for callers that need to name it (e.g. seeding). */
     public UUID nationalPlane() {
         return nationalPlane;

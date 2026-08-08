@@ -49,6 +49,9 @@ public class ArtifactService {
     /** Lazily set via {@link #setMappingService} to break circular dependency. */
     private MappingService mappingService;
 
+    /** Lazily set, like {@link #mappingService}, so construction order cannot cycle. */
+    private ConceptProjectionService conceptProjectionService;
+
     public ArtifactService(ArtifactRepository artifactRepository,
                            EventOutboxRepository outboxRepository,
                            ObjectMapper objectMapper) {
@@ -63,6 +66,11 @@ public class ArtifactService {
      *
      * @param mappingService the mapping service instance
      */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void setConceptProjectionService(ConceptProjectionService conceptProjectionService) {
+        this.conceptProjectionService = conceptProjectionService;
+    }
+
     void setMappingService(MappingService mappingService) {
         this.mappingService = mappingService;
     }
@@ -231,6 +239,22 @@ public class ArtifactService {
 
         log.info("Artifact published: id={}, url={}, version={}, publishedBy={}",
                 artifactId, artifact.getCanonicalUrl(), artifact.getVersion(), publishedBy);
+
+        // Project concepts into the searchable index. Same shape as the ConceptMap rebuild below,
+        // and same failure posture: a projection that cannot be rebuilt must NOT roll back the
+        // publish. The artifact is the record; the index is derived and can be rebuilt later.
+        // Refusing to publish because a derived table failed would make an index outage look like
+        // a governance decision.
+        if (artifact.getFhirType() == ArtifactType.CODE_SYSTEM && conceptProjectionService != null) {
+            try {
+                int projected = conceptProjectionService.rebuild(artifact);
+                log.info("Concept index rebuilt for CodeSystem {}: {} concepts", artifactId, projected);
+            } catch (Exception e) {
+                log.error("Failed to project concepts for CodeSystem {} — the artifact is published "
+                        + "but will not be searchable until reprojected: {}",
+                        artifactId, e.getMessage(), e);
+            }
+        }
 
         // Rebuild mapping index if this is a ConceptMap
         if (artifact.getFhirType() == ArtifactType.CONCEPT_MAP && mappingService != null) {
