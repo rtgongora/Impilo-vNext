@@ -11,6 +11,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
+import zw.gov.mohcc.impilo.shared.auth.WorkloadTokenInterceptor;
+import zw.gov.mohcc.impilo.shared.auth.WorkloadTokenProvider;
+
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -25,6 +28,14 @@ import java.util.function.Consumer;
  * per call; tenant, correlation and actor context flow through from the
  * sign-off request, including the signing actor's bearer token so the owning
  * service authorizes and attributes the transition honestly.
+ *
+ * <p><strong>Authentication.</strong> The signing actor's bearer only exists while the
+ * write-back runs inside the sign-off request; a scheduled retry has no request context and
+ * previously sent no credential at all. A {@link WorkloadTokenInterceptor} now attaches
+ * Nhume's <em>own</em> workload token, and only when no {@code Authorization} header is
+ * already present — a delegated human token is never overwritten by the stronger service
+ * credential. When no token can be minted the header is simply absent and the callee
+ * refuses; the gateway never invents an unauthenticated fallback.
  */
 @Component
 public class HttpNhumeWriteBackGateway implements NhumeWriteBackGateway {
@@ -42,15 +53,31 @@ public class HttpNhumeWriteBackGateway implements NhumeWriteBackGateway {
             @Value("${nhume.writeback.madi-base-url:http://madi-service:8300}") String madiBaseUrl,
             @Value("${nhume.writeback.pct-base-url:http://pct-service:8088}") String pctBaseUrl,
             @Value("${nhume.writeback.msika-flow-base-url:http://msika-flow-service:8100}") String msikaFlowBaseUrl,
-            @Value("${nhume.writeback.timeout-ms:5000}") int timeoutMs) {
-        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(Duration.ofMillis(Math.min(timeoutMs, 3000)));
-        factory.setReadTimeout(Duration.ofMillis(timeoutMs));
-        this.restClient = RestClient.builder().requestFactory(factory).build();
+            @Value("${nhume.writeback.timeout-ms:5000}") int timeoutMs,
+            WorkloadTokenProvider workloadTokenProvider) {
+        this(orosBaseUrl, madiBaseUrl, pctBaseUrl, msikaFlowBaseUrl,
+                defaultBuilder(timeoutMs, workloadTokenProvider));
+    }
+
+    /** Testing seam: a builder the test binds a mock server to. */
+    HttpNhumeWriteBackGateway(String orosBaseUrl, String madiBaseUrl, String pctBaseUrl,
+                              String msikaFlowBaseUrl, RestClient.Builder builder) {
+        this.restClient = builder.build();
         this.orosBaseUrl = trim(orosBaseUrl);
         this.madiBaseUrl = trim(madiBaseUrl);
         this.pctBaseUrl = trim(pctBaseUrl);
         this.msikaFlowBaseUrl = trim(msikaFlowBaseUrl);
+    }
+
+    /** Package-private so the test exercises the real interceptor wiring, not a copy of it. */
+    static RestClient.Builder defaultBuilder(int timeoutMs,
+                                             WorkloadTokenProvider workloadTokenProvider) {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofMillis(Math.min(timeoutMs, 3000)));
+        factory.setReadTimeout(Duration.ofMillis(timeoutMs));
+        return RestClient.builder()
+                .requestFactory(factory)
+                .requestInterceptor(new WorkloadTokenInterceptor(workloadTokenProvider));
     }
 
     @Override
@@ -197,14 +224,38 @@ public class HttpNhumeWriteBackGateway implements NhumeWriteBackGateway {
     }
 
     /**
-     * Msika Flow dispatch-status is a service-originated (system) call, not an
-     * actor-attributed clinical transition: actor is pinned to nhume-service /
-     * SYSTEM, and purpose-of-use to SYSTEM to match.
+     * Msika Flow write-backs are service-originated marketplace fulfilment calls, not
+     * actor-attributed clinical transitions: the actor is pinned to nhume-service / SYSTEM.
      *
-     * <p>This previously sent LOGISTICS, which is not a PurposeOfUse code — so
-     * TSHEPO denied every one of these write-backs with INVALID_PURPOSE at Step 2,
-     * before any rule was consulted. SYSTEM is the code that expresses what the
-     * call already declares itself to be.
+     * <p>The purpose is {@code OPERATIONS}, and choosing it was the substance of this fix.
+     * Three codes were candidates:
+     *
+     * <ul>
+     *   <li><b>SYSTEM</b> — what this sent before, and wrong twice over. In
+     *       {@code PolicyEngine.evaluatePolicies} SYSTEM returns {@code continueWith(null)}
+     *       from both the no-rules and the no-matching-ALLOW-rule branches, and it
+     *       short-circuits consent as well. It is the broadest code in the vocabulary, and a
+     *       courier reporting that a parcel arrived has no business holding it. It is also
+     *       now refused outright unless the caller presents a validated workload session
+     *       ({@code AuthorizeController.isWorkloadSession}).</li>
+     *   <li><b>CARE_COORDINATION</b> — what the sibling {@link #trustHeaders} sends, and
+     *       tempting because the enum's own javadoc lists "delivery write-backs". But that
+     *       sentence describes the OROS / MADI / PCT write-backs next door, which move
+     *       specimens, blood orders and referrals. CARE_COORDINATION is HL7 ActReason COC, a
+     *       <em>specialization of TREAT</em> carrying the same visibility envelope as
+     *       TREATMENT. Attaching it to a marketplace parcel callback would widen clinical
+     *       visibility for a call that touches no patient and no clinical record.</li>
+     *   <li><b>OPERATIONS</b> — "facility operations, scheduling, queue management". What
+     *       these two endpoints actually drive: an order state machine, a courier
+     *       chain-of-custody record, and the proof-of-delivery projection that opens the
+     *       escrow / refund seams. Operational, non-clinical, and the narrowest honest fit.
+     *       The vocabulary has no LOGISTICS code — that was tried once and denied with
+     *       INVALID_PURPOSE at Step 2, because it is not a PurposeOfUse constant.</li>
+     * </ul>
+     *
+     * <p>Narrowing the purpose is not, by itself, what makes these calls safe — see the
+     * class javadoc. Authentication is; the purpose is what the decision log and any future
+     * rule will read.
      */
     private Consumer<HttpHeaders> msikaFlowHeaders(WriteBackContext ctx, String idempotencySuffix) {
         return headers -> {
@@ -219,7 +270,9 @@ public class HttpNhumeWriteBackGateway implements NhumeWriteBackGateway {
             headers.set("X-Idempotency-Key", idempotencyKey);
             headers.set("X-Actor-ID", "nhume-service");
             headers.set("X-Actor-Type", "SYSTEM");
-            headers.set("X-Purpose-Of-Use", "SYSTEM");
+            headers.set("X-Purpose-Of-Use", "OPERATIONS");
+            // Only a delegated bearer is set here; when there is none the workload-token
+            // interceptor attaches Nhume's own credential. Order matters: the human token wins.
             if (ctx.bearerToken() != null && !ctx.bearerToken().isBlank()) {
                 headers.set(HttpHeaders.AUTHORIZATION, ctx.bearerToken());
             }
