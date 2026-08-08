@@ -273,7 +273,38 @@ class ChannelsEndpointTest {
         }
 
         @Test
-        @DisplayName("Escalation writes 2 outbox events (escalation.requested + escalation.completed)")
+        @DisplayName("Outbound message is QUEUED, never SENT — no gateway exists to deliver it")
+        void outboundMessageIsQueuedNotSent() throws Exception {
+            String sessionId = createSession("SMS");
+
+            String key = "idem-queued-" + System.nanoTime();
+            MvcResult result = mockMvc.perform(post("/internal/v1/channels/messages")
+                            .header("X-Tenant-ID", TENANT)
+                            .header("X-Pod-ID", POD)
+                            .header("X-Request-ID", REQ_ID)
+                            .header("X-Correlation-ID", CORR_ID)
+                            .header("Idempotency-Key", key)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"sessionId\":\"" + sessionId + "\",\"contentType\":\"TEXT\",\"payloadJson\":\"{\\\"text\\\":\\\"hi\\\"}\"}"))
+                    .andExpect(status().isCreated())
+                    .andReturn();
+
+            // The response must not tell the caller the message was sent or delivered.
+            JsonNode body = MAPPER.readTree(result.getResponse().getContentAsString());
+            assertThat(body.get("deliveryStatus").asText()).isEqualTo("QUEUED");
+            assertThat(body.get("deliveryStatus").asText()).isNotEqualTo("SENT");
+
+            // ...and neither must the event stream.
+            List<OutboxEventEntity> events = outboxRepository.findAll().stream()
+                    .filter(e -> e.getIdempotencyKey() != null && e.getIdempotencyKey().startsWith(key))
+                    .toList();
+            assertThat(events).isNotEmpty();
+            assertThat(events).allSatisfy(e ->
+                    assertThat(e.getPayloadJson()).doesNotContain("\"delivery_status\":\"SENT\""));
+        }
+
+        @Test
+        @DisplayName("Escalation writes ONLY escalation.requested — completion is not ours to claim")
         void escalationOutbox() throws Exception {
             String sessionId = createSession("SMS");
 
@@ -293,12 +324,14 @@ class ChannelsEndpointTest {
                     .filter(e -> e.getIdempotencyKey() != null && e.getIdempotencyKey().startsWith(key))
                     .toList();
 
-            assertThat(escEvents).hasSize(2);
+            // This assertion previously required escalation.completed.v1 to be emitted in the
+            // same transaction as escalation.requested.v1 — the test enforced the false success.
+            // No agent has been notified and no acceptance recorded, so only the request happened.
+            assertThat(escEvents).hasSize(1);
             assertThat(escEvents.stream().map(OutboxEventEntity::getEventType).toList())
-                    .containsExactlyInAnyOrder(
-                            "impilo.channels.escalation.requested.v1",
-                            "impilo.channels.escalation.completed.v1"
-                    );
+                    .containsExactly("impilo.channels.escalation.requested.v1");
+            assertThat(escEvents.stream().map(OutboxEventEntity::getEventType).toList())
+                    .doesNotContain("impilo.channels.escalation.completed.v1");
         }
 
         @Test

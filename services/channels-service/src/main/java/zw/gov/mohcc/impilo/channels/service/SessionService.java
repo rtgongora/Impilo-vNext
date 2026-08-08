@@ -92,17 +92,17 @@ public class SessionService {
                         "tenant_id", ctx.tenantId()
                 ));
 
-        outboxService.persistEvent(ctx,
-                "impilo.channels.escalation.completed.v1",
-                "ChannelSession", session.getId().toString(),
-                "ChannelSession", session.getId().toString(),
-                idempotencyKey + ":escalation.completed",
-                Map.of(
-                        "session_id", session.getId().toString(),
-                        "agent_id", agentId,
-                        "status", "ESCALATED",
-                        "tenant_id", ctx.tenantId()
-                ));
+        // escalation.completed.v1 is deliberately NOT emitted here.
+        //
+        // It used to be written in this same transaction, one statement after
+        // escalation.requested — so "an agent has picked this up" was asserted at the instant of
+        // asking, for an agent id supplied by the caller, with no agent notified and no acceptance
+        // recorded. A consumer counting completed-vs-requested would have measured 100% handling
+        // of every escalation, always. Requesting is all that has happened, and requesting is all
+        // this event stream may claim.
+        //
+        // The completion event belongs to whatever records an agent actually accepting the
+        // session; when that exists, it emits escalation.completed.v1 at that point.
 
         return toResponse(session);
     }

@@ -18,6 +18,13 @@ import java.util.UUID;
 @Service
 public class MessageService {
 
+    /**
+     * Delivery status for an outbound message this service has recorded but not delivered.
+     * It is the terminal status here: advancing it to SENT/DELIVERED is a gateway adapter's
+     * job, and no such adapter exists yet.
+     */
+    static final String OUTBOUND_QUEUED_STATUS = "QUEUED";
+
     private final ChannelMessageRepository messageRepository;
     private final ChannelSessionRepository sessionRepository;
     private final OutboxService outboxService;
@@ -39,8 +46,13 @@ public class MessageService {
         ChannelMessageEntity message = new ChannelMessageEntity(
                 session.getId(), ctx.tenantId(), "OUTBOUND",
                 session.getChannelType(), request.contentType(), request.payloadJson());
-        message.setDeliveryStatus("SENT");
-        message.setDeliveredAt(OffsetDateTime.now());
+        // QUEUED, not SENT. There is no gateway adapter in this service for any channel type,
+        // so persisting the row is the whole of what happens — nothing leaves the building.
+        // "SENT" with a deliveredAt stamp claimed an external delivery that never occurred and
+        // that nothing could later correct, because no adapter exists to report back.
+        // Same honesty rule NotifyOnlyService already applies (QUEUED vs DISPATCHED).
+        // deliveredAt stays null: only a real delivery may set it.
+        message.setDeliveryStatus(OUTBOUND_QUEUED_STATUS);
 
         messageRepository.save(message);
 
@@ -69,7 +81,7 @@ public class MessageService {
                 Map.of(
                         "message_id", message.getId().toString(),
                         "session_id", session.getId().toString(),
-                        "delivery_status", "SENT",
+                        "delivery_status", OUTBOUND_QUEUED_STATUS,
                         "channel_type", session.getChannelType()
                 ));
 
