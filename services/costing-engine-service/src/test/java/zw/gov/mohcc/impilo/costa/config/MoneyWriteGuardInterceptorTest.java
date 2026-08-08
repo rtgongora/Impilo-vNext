@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  */
 class MoneyWriteGuardInterceptorTest {
 
-    private final MoneyWriteGuardInterceptor interceptor = new MoneyWriteGuardInterceptor();
+    private final MoneyWriteGuardInterceptor interceptor = new MoneyWriteGuardInterceptor("SHADOW");
 
     @AfterEach
     void clearContext() {

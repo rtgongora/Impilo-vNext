@@ -106,6 +106,26 @@ final class MoneyWriteAuthorization {
     }
 
     /**
+     * Whether a write DECIDES money rather than captures care — i.e. the paths where "which duty
+     * does this person hold?" is the real question and {@link ActorTypeGuard} cannot answer it.
+     *
+     * <p>Defined as the complement of the charge-capture list, so it cannot drift away from it: a
+     * path added to capture leaves the decision set automatically, and a newly-mapped path is a
+     * decision by default.</p>
+     */
+    static boolean isMoneyDecision(String path) {
+        if (isExempt(path)) {
+            return false;
+        }
+        for (var e : CHARGE_CAPTURE_PATHS.entrySet()) {
+            if (MATCHER.match(e.getKey(), path)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * The duty a write on {@code path} must satisfy. Never null: an unlisted path gets the
      * stricter set, so a newly-mapped endpoint is gated rather than open.
      */

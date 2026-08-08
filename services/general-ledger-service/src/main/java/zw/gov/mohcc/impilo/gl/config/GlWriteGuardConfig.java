@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.gl.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -14,8 +15,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class GlWriteGuardConfig implements WebMvcConfigurer {
 
+    /** OFF | SHADOW | ENFORCE — see {@code DutyShadow}. Defaults to SHADOW. */
+    @Value("${impilo.security.duty.mode:SHADOW}")
+    private String dutyMode;
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new GlWriteGuardInterceptor()).addPathPatterns("/**");
+        registry.addInterceptor(new GlWriteGuardInterceptor(dutyMode)).addPathPatterns("/**");
     }
 }
