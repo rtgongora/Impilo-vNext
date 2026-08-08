@@ -437,9 +437,18 @@ public class EncounterService {
      * Link a BUTANO (Shared Health Record) FHIR Encounter reference to a
      * local encounter.
      *
-     * <p>Called after the FHIR Encounter resource has been created in
-     * BUTANO to establish bidirectional traceability between the local
-     * PCT encounter and the FHIR SHR resource.</p>
+     * <p><b>Never called, and no longer needed.</b> It was written for a callback that does not
+     * exist — nothing in the estate invokes it, so {@code butano_encounter_ref} has always been
+     * null, which is why {@code QuestionnaireResponseMapper} emits no {@code encounter.reference}
+     * and {@code FormExtractionService} publishes {@code "butano_encounter_ref": null}.</p>
+     *
+     * <p>The link it was meant to store is now derivable without a callback: BUTANO archives the
+     * Encounter from {@code pct.encounter.started}/{@code .completed} keyed on this row's
+     * {@code encounter_ref}, so any consumer resolves it with
+     * {@code Encounter?identifier=https://impilo.gov.zw/pct/encounter-id|{encounter_ref}}. A stored
+     * copy of a FHIR logical id would only be a second thing to keep in step. Retiring the column
+     * and this method is a schema change and belongs with whichever wave removes the two null
+     * emissions above.</p>
      *
      * @param encounterId the local encounter primary key
      * @param butanoRef   the FHIR Encounter resource reference (e.g. "Encounter/abc-123")

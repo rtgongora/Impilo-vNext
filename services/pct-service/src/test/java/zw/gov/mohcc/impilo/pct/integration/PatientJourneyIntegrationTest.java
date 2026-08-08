@@ -105,7 +105,7 @@ class PatientJourneyIntegrationTest {
 
         admissionWorkflow = new AdmissionWorkflow(
                 admissionRepository, journeyRepository, journeyStateMachine,
-                outboxRepository, telemetryService, objectMapper);
+                outboxRepository, telemetryService, objectMapper, encounterRepository);
 
         transferService = new TransferService(
                 transferRepository, admissionRepository, journeyRepository,

@@ -8,9 +8,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.pct.domain.JourneyState;
 import zw.gov.mohcc.impilo.pct.persistence.entity.AdmissionEntity;
+import zw.gov.mohcc.impilo.pct.persistence.entity.EncounterEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.JourneyEntity;
 import zw.gov.mohcc.impilo.pct.persistence.repository.AdmissionRepository;
+import zw.gov.mohcc.impilo.pct.persistence.repository.EncounterRepository;
 import zw.gov.mohcc.impilo.pct.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.pct.persistence.repository.JourneyRepository;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
@@ -51,19 +53,71 @@ public class AdmissionWorkflow {
     private final EventOutboxRepository outboxRepository;
     private final TelemetryService telemetryService;
     private final ObjectMapper objectMapper;
+    private final EncounterRepository encounterRepository;
 
     public AdmissionWorkflow(AdmissionRepository admissionRepository,
                              JourneyRepository journeyRepository,
                              JourneyStateMachine journeyStateMachine,
                              EventOutboxRepository outboxRepository,
                              TelemetryService telemetryService,
-                             ObjectMapper objectMapper) {
+                             ObjectMapper objectMapper,
+                             EncounterRepository encounterRepository) {
         this.admissionRepository = admissionRepository;
         this.journeyRepository = journeyRepository;
         this.journeyStateMachine = journeyStateMachine;
         this.outboxRepository = outboxRepository;
         this.telemetryService = telemetryService;
         this.objectMapper = objectMapper;
+        this.encounterRepository = encounterRepository;
+    }
+
+    /**
+     * Resolves the encounter this admission belongs to, as a real {@code pct_encounters.encounter_ref}.
+     *
+     * <p>{@code admissions.encounter_id} is handed to inpatient-service on approval and becomes the
+     * census parent key. inpatient then writes it into the clinical record as
+     * {@code "Encounter/" + encounterId} — on discharge summaries, operative notes, specimens and
+     * pathology references. Until now it was whatever the API caller supplied, stored unvalidated,
+     * and nothing in PCT ever copied the real {@code encounter_ref} into it. So the value inpatient
+     * carried was a UUID of unverified provenance that might match no encounter at all, and every
+     * FHIR reference built from it dangled.</p>
+     *
+     * <p>Deriving from the journey — the authoritative source — makes it genuinely an
+     * {@code encounter_ref}, which is what lets a consumer resolve
+     * {@code Encounter?identifier=https://impilo.gov.zw/pct/encounter-id|{ref}} against the SHR.</p>
+     *
+     * <p>A supplied value that belongs to a different journey is <b>not</b> a reason to refuse the
+     * admission. Blocking a patient from being admitted over a bad reference trades a record
+     * linkage gap for clinical harm, which is the wrong way round. It is logged and replaced with
+     * the journey's own encounter instead — and if the journey has none, the admission proceeds
+     * with no reference rather than a fabricated one.</p>
+     */
+    private UUID resolveEncounterRef(String journeyId, UUID tenantId, UUID supplied) {
+        List<EncounterEntity> encounters =
+                encounterRepository.findByTenantIdAndJourneyId(tenantId, journeyId);
+
+        if (supplied != null) {
+            boolean belongsToThisJourney = encounters.stream()
+                    .anyMatch(e -> supplied.equals(e.getEncounterRef()));
+            if (belongsToThisJourney) {
+                return supplied;
+            }
+            log.warn("PCT admission: supplied encounterId {} is not an encounter_ref on journey {} — "
+                            + "deriving from the journey instead, so the reference inpatient writes "
+                            + "into the clinical record resolves", supplied, journeyId);
+        }
+
+        // The visit still open is the one an admission belongs to; otherwise the most recent.
+        return encounters.stream()
+                .filter(e -> !"COMPLETED".equalsIgnoreCase(e.getStatus()))
+                .findFirst()
+                .or(() -> encounters.stream().reduce((first, second) -> second))
+                .map(EncounterEntity::getEncounterRef)
+                .orElseGet(() -> {
+                    log.info("PCT admission: journey {} has no encounter — admission recorded with "
+                            + "no encounter reference rather than a fabricated one", journeyId);
+                    return null;
+                });
     }
 
     /**
@@ -87,7 +141,10 @@ public class AdmissionWorkflow {
     /**
      * Request admission, capturing the clinical context handed to inpatient-service on approval.
      *
-     * @param encounterId        encounter ref handed to inpatient as the census parent key; may be {@code null}
+     * @param encounterId        a preferred {@code pct_encounters.encounter_ref}; may be {@code null}.
+     *                           Honoured only if it belongs to this journey — otherwise the journey's
+     *                           own encounter is used, so the reference inpatient writes into the
+     *                           clinical record resolves. See {@link #resolveEncounterRef}.
      * @param admittingDiagnosis clinical context; may be {@code null}
      * @param admissionType      ELECTIVE | EMERGENCY | TRANSFER; may be {@code null}
      */
@@ -107,7 +164,7 @@ public class AdmissionWorkflow {
         admission.setPatientCpid(journey.getPatientCpid());
         admission.setWardId(wardId);
         admission.setBedId(bedId);
-        admission.setEncounterId(encounterId);
+        admission.setEncounterId(resolveEncounterRef(journeyId, ctx.tenantId(), encounterId));
         admission.setAdmittingDiagnosis(admittingDiagnosis);
         admission.setAdmissionType(admissionType);
         admission.setStatus("REQUESTED");
