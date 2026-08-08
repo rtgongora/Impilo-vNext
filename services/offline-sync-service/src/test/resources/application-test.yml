@@ -5,7 +5,13 @@ spring:
   application:
     name: offline-sync-service-test
   datasource:
-    url: jdbc:h2:mem:offlinesynctest;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    # Two things INIT has to fix before this datasource can hold anything at all:
+    #   1. the `offline_sync` schema the entities declare (@Table(schema="offline_sync"));
+    #   2. a JSONB domain — the entities carry columnDefinition="jsonb", which H2 does not know.
+    # Without (2) every `create table` failed with `Unknown data type: "JSONB"` as a Hibernate
+    # *WARNING*, so the context started green against a completely empty database. No test in
+    # this module touched persistence, so nothing ever reported it.
+    url: "jdbc:h2:mem:offlinesynctest;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;INIT=CREATE SCHEMA IF NOT EXISTS offline_sync\\;CREATE DOMAIN IF NOT EXISTS JSONB AS VARCHAR"
     driver-class-name: org.h2.Driver
     username: sa
     password:

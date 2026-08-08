@@ -80,34 +80,25 @@ public class SyncPackService {
     }
 
     /**
-     * Replays a sync pack by transitioning it from PENDING/FAILED/CONFLICT to SYNCING,
-     * then to SYNCED. Writes a SYNC_PACK_REPLAYED outbox event.
+     * Replay is <b>not implemented</b> and therefore refuses.
+     *
+     * <p>Applying a pack means writing its payload into the systems of record it came from
+     * (PCT, VITO, OROS…). Nothing in this service does that: there is no downstream client, no
+     * consumer, and no publisher for the event it used to emit. The previous implementation
+     * flipped the row {@code PENDING → SYNCING → SYNCED}, stamped {@code syncedAt} and returned
+     * 200 — all of it under {@code // Simulate replay: mark as SYNCED}.</p>
+     *
+     * <p>The pack is left exactly as it was, so it stays outstanding rather than being silently
+     * retired. See {@link SyncReplayNotImplementedException} for why a false success here is a
+     * data-loss path and not just a cosmetic lie.</p>
      */
-    @Transactional
+    @Transactional(readOnly = true)
     public SyncPackEntity replaySyncPack(Long id) {
+        // Resolve first: an unknown id is still a 404, not a 501.
         SyncPackEntity entity = getSyncPack(id);
-
-        String currentStatus = entity.getStatus();
-        if (SyncStatus.SYNCED.name().equals(currentStatus)) {
-            throw new IllegalStateException("Sync pack already synced: " + id);
-        }
-        if (SyncStatus.SYNCING.name().equals(currentStatus)) {
-            throw new IllegalStateException("Sync pack is already being synced: " + id);
-        }
-
-        entity.setStatus(SyncStatus.SYNCING.name());
-        syncPackRepository.save(entity);
-
-        // Simulate replay: mark as SYNCED
-        entity.setStatus(SyncStatus.SYNCED.name());
-        entity.setSyncedAt(OffsetDateTime.now());
-        entity = syncPackRepository.save(entity);
-
-        appendOutboxEvent(entity.getTenantId(), "SYNC_PACK_REPLAYED", buildSyncPackPayload(entity));
-
-        log.info("Sync pack replayed: id={}, status={}", entity.getId(), entity.getStatus());
-
-        return entity;
+        log.warn("Sync pack replay REFUSED (not implemented): id={}, status={}",
+                entity.getId(), entity.getStatus());
+        throw new SyncReplayNotImplementedException(id);
     }
 
     private Map<String, Object> buildSyncPackPayload(SyncPackEntity entity) {
